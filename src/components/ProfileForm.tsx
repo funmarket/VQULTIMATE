@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { UserProfile, registerProfile as registerExistingProfile, updateExistingProfile } from '../domains/d01_auth';
 import { supabase } from '../lib/supabase';
 const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(' ');
@@ -31,7 +31,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
     telegramHandle: originalProfile.telegramHandle || '',
     oracleMode: Boolean(originalProfile.cozyDiaryMode),
   } : null;
-  let savedProfile: UserProfile | null = null;
+  const savedProfile = useRef<UserProfile | null>(null);
   const updateProfile = async (updates: {
     displayName?: string; photoUrl?: string; avatarFile?: File;
     bio?: string; location?: string; tags?: string[];
@@ -39,7 +39,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
     oracleMode?: boolean; languages?: string[];
   }) => {
     if (!originalProfile) throw new Error('Sign in to edit your profile.');
-    savedProfile = await updateExistingProfile(originalProfile, {
+    savedProfile.current = await updateExistingProfile(originalProfile, {
       displayName: updates.displayName, photoUrl: updates.photoUrl,
       avatarFile: updates.avatarFile || null, bio: updates.bio, city: updates.location,
       interests: updates.tags, languages: updates.languages,
@@ -63,10 +63,10 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
       cozyDiaryMode: payload.oracleMode,
     });
     if (created.pendingVerification) return created;
-    savedProfile = created.profile;
+    savedProfile.current = created.profile;
     return { displayName: created.profile.full_name, avatarUploadNote: created.avatarUploadNote };
   };
-  const onSuccess = () => { if (savedProfile) onSaved(savedProfile); };
+  const onSuccess = () => { if (savedProfile.current) onSaved(savedProfile.current); };
   
   // Is this creation mode or editing mode? 
   // If the profile is "hannibal" (the default guest fallback) or doesn't exist, we allow creation
