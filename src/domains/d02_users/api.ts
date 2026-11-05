@@ -1,98 +1,45 @@
 import { supabase } from '../../lib/supabase';
 import { Guardian, UserProfile } from './types';
 
+/** Hydrate actual published Supabase profile records without invented values. */
+function fromProfile(row: Record<string, unknown>): UserProfile {
+  return {
+    id: String(row.id),
+    username: String(row.handle || ''),
+    full_name: String(row.display_name || row.handle || ''),
+    avatar_url: typeof row.photo_url === 'string' ? row.photo_url : '',
+    bio: typeof row.bio === 'string' ? row.bio : '',
+    city: typeof row.city === 'string' ? row.city : '',
+    district: typeof row.city === 'string' ? row.city : '',
+    interests: Array.isArray(row.interests) ? row.interests as string[] : [],
+    vq_balance: Number(row.points ?? 0),
+    reputation: 0,
+    role: row.account_type === 'pro' ? 'guardian' : 'explorer',
+    created_at: String(row.created_at || ''),
+  };
+}
+
 export async function fetchDemoProfiles(): Promise<UserProfile[]> {
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: true });
-
-    if (error || !data || data.length === 0) {
-      return [];
-    }
-
-    return (data as any[]).map((row) => ({
-      id: row.id,
-      username: row.handle || row.username || 'explorer',
-      full_name: row.display_name || row.full_name || 'Explorer',
-      avatar_url: row.avatar_url || row.avatar || '',
-      bio: row.bio || '',
-      district: row.district || 'Heritage Node',
-      vq_balance: row.vq_balance || 0,
-      reputation: row.reputation || 0,
-      role: (row.handle === 'funmarketmn' || row.email === 'funmarketmn@hotmail.com') ? 'admin' : (row.role || 'explorer'),
-      tier: row.tier || (row.role === 'admin' ? 'ADMIN SENTINEL' : 'EXPLORER'),
-      trust_score: row.trust_score || 90,
-      created_at: row.created_at || new Date().toISOString()
-    }));
-  } catch (err) {
-    console.warn('Error querying profiles:', err);
-    return [];
-  }
+  const { data, error } = await supabase.from('profiles').select('*')
+    .order('created_at', { ascending: true });
+  if (error) { console.warn('Unable to read public profiles:', error.message); return []; }
+  return (data || []).map(fromProfile);
 }
 
 export async function fetchPublicProfile(userId: string): Promise<UserProfile | null> {
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (!error && data) {
-      const row = data as any;
-      return {
-        id: row.id,
-        username: row.handle || row.username || 'explorer',
-        full_name: row.display_name || row.full_name || 'Explorer',
-        avatar_url: row.avatar_url || row.avatar || '',
-        bio: row.bio || '',
-        district: row.district || 'Heritage Node',
-        vq_balance: row.vq_balance || 0,
-        reputation: row.reputation || 0,
-        role: (row.handle === 'funmarketmn' || row.email === 'funmarketmn@hotmail.com') ? 'admin' : (row.role || 'explorer'),
-        tier: row.tier || 'EXPLORER',
-        trust_score: row.trust_score || 90,
-        created_at: row.created_at || new Date().toISOString()
-      };
-    }
-  } catch (err) {
-    console.warn('Error fetching public profile:', err);
-  }
-  return null;
+  const { data, error } = await supabase.from('profiles')
+    .select('*').eq('id', userId).maybeSingle();
+  if (error) { console.warn('Unable to read profile:', error.message); return null; }
+  return data ? fromProfile(data) : null;
 }
 
 export async function fetchPublicProfileByHandle(handle: string): Promise<UserProfile | null> {
-  const cleanHandle = handle.replace(/^@/, '');
-  try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .or(`handle.eq.${cleanHandle},username.eq.${cleanHandle}`)
-      .single();
-
-    if (!error && data) {
-      const row = data as any;
-      return {
-        id: row.id,
-        username: row.handle || row.username || cleanHandle,
-        full_name: row.display_name || row.full_name || cleanHandle,
-        avatar_url: row.avatar_url || row.avatar || '',
-        bio: row.bio || '',
-        district: row.district || 'Heritage Node',
-        vq_balance: row.vq_balance || 0,
-        reputation: row.reputation || 0,
-        role: (cleanHandle === 'funmarketmn') ? 'admin' : (row.role || 'explorer'),
-        tier: row.tier || 'EXPLORER',
-        trust_score: row.trust_score || 90,
-        created_at: row.created_at || new Date().toISOString()
-      };
-    }
-  } catch (err) {
-    console.warn('Error fetching public profile by handle:', err);
-  }
-  return null;
+  const cleanHandle = handle.replace(/^@/, '').trim();
+  if (!cleanHandle) return null;
+  const { data, error } = await supabase.from('profiles')
+    .select('*').ilike('handle', cleanHandle).maybeSingle();
+  if (error) { console.warn('Unable to read profile by handle:', error.message); return null; }
+  return data ? fromProfile(data) : null;
 }
 
 export async function fetchGuardians(): Promise<Guardian[]> {
