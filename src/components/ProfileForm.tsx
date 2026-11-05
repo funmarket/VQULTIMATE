@@ -1,183 +1,575 @@
-import React, { useEffect, useState } from 'react';
-import { UserProfile, ProfileRegistration, ProfileEdits, registerProfile, updateExistingProfile } from '../domains/d01_auth';
-import { User, Check, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { UserProfile, registerProfile as registerExistingProfile, updateExistingProfile } from '../domains/d01_auth';
 import { supabase } from '../lib/supabase';
+const cn = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(' ');
+import { AlertTriangle, Check, User, Globe, Hash, ShieldCheck } from 'lucide-react';
 
-const PRESET_TAGS = ['cyberpunk', 'web3', 'solana', 'neon', 'tokyo', 'tunis',
-  'coffee-seeker', 'retro-gaming', 'cultural-pass', 'minimalist'];
-
-type Props = {
+interface ProfileFormProps {
   profile: UserProfile | null;
   onSaved: (profile: UserProfile) => void;
   onCancel: () => void;
-};
+  onVerificationRequired?: (email: string, note?: string) => void;
+}
 
-export const ProfileForm: React.FC<Props> = ({ profile, onSaved, onCancel }) => {
+const PRESET_TAGS = [
+  'cyberpunk', 'web3', 'solana', 'neon', 'tokyo', 'tunis', 
+  'coffee-seeker', 'retro-gaming', 'cultural-pass', 'minimalist'
+];
+
+export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfile, onSaved, onCancel, onVerificationRequired }) => {
+  // Preserve the reference form and validation while mapping to the existing
+  // VQUltimate D01 public interface. Never create a second Auth provider.
+  const profile = originalProfile ? {
+    handle: originalProfile.username,
+    displayName: originalProfile.full_name,
+    photoUrl: originalProfile.avatar_url,
+    bio: originalProfile.bio || '',
+    location: originalProfile.city || originalProfile.district || '',
+    tags: originalProfile.interests || [],
+    contactMethod: originalProfile.contactMethod || 'none',
+    xHandle: originalProfile.xHandle || '',
+    telegramHandle: originalProfile.telegramHandle || '',
+    oracleMode: Boolean(originalProfile.cozyDiaryMode),
+  } : null;
+  let savedProfile: UserProfile | null = null;
+  const updateProfile = async (updates: {
+    displayName?: string; photoUrl?: string; avatarFile?: File;
+    bio?: string; location?: string; tags?: string[];
+    contactMethod?: string; xHandle?: string; telegramHandle?: string;
+    oracleMode?: boolean; languages?: string[];
+  }) => {
+    if (!originalProfile) throw new Error('Sign in to edit your profile.');
+    savedProfile = await updateExistingProfile(originalProfile, {
+      displayName: updates.displayName, photoUrl: updates.photoUrl,
+      avatarFile: updates.avatarFile || null, bio: updates.bio, city: updates.location,
+      interests: updates.tags, languages: updates.languages,
+      contactMethod: updates.contactMethod, xHandle: updates.xHandle,
+      telegramHandle: updates.telegramHandle, cozyDiaryMode: updates.oracleMode,
+    });
+  };
+  const registerProfile = async (payload: {
+    handle: string; displayName: string; email: string; password: string;
+    avatarFile?: File; photoUrl?: string; bio?: string; location?: string;
+    tags?: string[]; languages?: string[]; contactMethod?: string;
+    xHandle?: string; telegramHandle?: string; oracleMode?: boolean;
+  }) => {
+    const created = await registerExistingProfile({
+      handle: payload.handle, displayName: payload.displayName,
+      email: payload.email, password: payload.password,
+      avatarFile: payload.avatarFile || null, photoUrl: payload.photoUrl,
+      bio: payload.bio, city: payload.location, interests: payload.tags,
+      languages: payload.languages, contactMethod: payload.contactMethod,
+      xHandle: payload.xHandle, telegramHandle: payload.telegramHandle,
+      cozyDiaryMode: payload.oracleMode,
+    });
+    if (created.pendingVerification) return created;
+    savedProfile = created.profile;
+    return { displayName: created.profile.full_name, avatarUploadNote: created.avatarUploadNote };
+  };
+  const onSuccess = () => { if (savedProfile) onSaved(savedProfile); };
+  
+  // Is this creation mode or editing mode? 
+  // If the profile is "hannibal" (the default guest fallback) or doesn't exist, we allow creation
   const isEditing = Boolean(profile);
-  const [handle, setHandle] = useState(profile?.username || '');
-  const [displayName, setDisplayName] = useState(profile?.full_name || '');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [bio, setBio] = useState(profile?.bio || '');
-  const [city, setCity] = useState(profile?.city || profile?.district || '');
-  const [tags, setTags] = useState<string[]>(profile?.interests || []);
-  const [customTag, setCustomTag] = useState('');
-  const [languages, setLanguages] = useState((profile?.languages || []).join(', '));
-  const [xHandle, setXHandle] = useState(profile?.xHandle || '');
-  const [telegramHandle, setTelegramHandle] = useState(profile?.telegramHandle || '');
-  const [contactMethod, setContactMethod] = useState(profile?.contactMethod || 'none');
-  const [cozyDiaryMode, setCozyDiaryMode] = useState(Boolean(profile?.cozyDiaryMode));
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [availability, setAvailability] = useState<'checking' | 'available' | 'taken' | 'error' | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
 
+  const [photoUrl, setPhotoUrl] = useState(profile?.photoUrl || '');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   useEffect(() => {
-    if (!avatarFile) { setPreview(null); return; }
+    if (!avatarFile) { setAvatarPreview(null); return; }
     const url = URL.createObjectURL(avatarFile);
-    setPreview(url);
+    setAvatarPreview(url);
     return () => URL.revokeObjectURL(url);
   }, [avatarFile]);
+  const [handle, setHandle] = useState(profile?.handle || '');
+  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [displayName, setDisplayName] = useState(profile?.displayName || '');
+  const [bio, setBio] = useState(profile?.bio || '');
+  const [location, setLocation] = useState(profile?.location || '');
+  const [languages, setLanguages] = useState((originalProfile?.languages || []).join(', '));
+  const [tags, setTags] = useState<string[]>(profile?.tags || []);
+  const [contactMethod, setContactMethod] = useState(profile?.contactMethod || 'telegram');
+  const [xHandle, setXHandle] = useState(profile?.xHandle || '');
+  const [telegramHandle, setTelegramHandle] = useState(profile?.telegramHandle || '');
+  
+  // Oracle Mode forces ALL fields to be mandatory
+  const [oracleMode, setOracleMode] = useState(profile?.oracleMode || false);
 
+  const [isCheckingHandle, setIsCheckingHandle] = useState(false);
+  const [handleAvailable, setHandleAvailable] = useState<boolean | null>(null);
+  const [customTagInput, setCustomTagInput] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Uniqueness handle review
   useEffect(() => {
-    if (isEditing) return;
-    const clean = handle.replace(/^@/, '').toLowerCase().trim();
-    if (!/^[a-z0-9_]{3,32}$/.test(clean)) { setAvailability(null); return; }
-    let active = true;
-    setAvailability('checking');
-    const timer = setTimeout(async () => {
-      try {
-        const { data, error: lookupError } = await supabase.from('profiles')
-          .select('id').ilike('handle', clean).maybeSingle();
-        if (active) setAvailability(lookupError ? 'error' : data ? 'taken' : 'available');
-      } catch { if (active) setAvailability('error'); }
-    }, 450);
-    return () => { active = false; clearTimeout(timer); };
-  }, [handle, isEditing]);
+    if (!handle) {
+      setHandleAvailable(null);
+      return;
+    }
+    
+    // Skip checking if it's our own handle in editing mode
+    if (isEditing && handle.toLowerCase().trim() === profile?.handle?.toLowerCase()) {
+      setHandleAvailable(true);
+      return;
+    }
 
-  const toggleTag = (value: string) => {
-    const tag = value.toLowerCase().trim();
-    setTags(current => current.includes(tag) ? current.filter(t => t !== tag) : [...current, tag]);
+    const timer = setTimeout(async () => {
+      setIsCheckingHandle(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('handle', handle.trim());
+        setHandleAvailable(!error && (!data || data.length === 0));
+      } catch (e) {
+        setHandleAvailable(false); // Never claim username availability when verification fails.
+      } finally {
+        setIsCheckingHandle(false);
+      }
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [handle, isEditing, profile?.handle]);
+
+  // Pill list handlers
+  const handleToggleTag = (tag: string) => {
+    const formatted = tag.toLowerCase().trim();
+    if (tags.includes(formatted)) {
+      setTags(tags.filter(t => t !== formatted));
+    } else {
+      setTags([...tags, formatted]);
+    }
   };
 
-  const submit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setBusy(true); setError(null); setNotice(null);
-    try {
-      if (cozyDiaryMode && (!bio.trim() || !city.trim() || (!xHandle.trim() && !telegramHandle.trim()))) {
-        throw new Error('Cozy Diary Mode requires a bio, broad city and at least one contact handle.');
+  const handleAddCustomTag = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formatted = customTagInput.toLowerCase().trim();
+    if (formatted && !tags.includes(formatted)) {
+      setTags([...tags, formatted]);
+    }
+    setCustomTagInput('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccessMsg(null);
+
+    // Dynamic constraint validator
+    if (!handle) {
+      setError("Handle is required.");
+      return;
+    }
+    if (handleAvailable === false) {
+      setError("Handle is already registered by another citizen!");
+      return;
+    }
+    if (!isEditing && (!email.trim() || password.length < 8)) {
+      setError("Email and a password of at least 8 characters are required.");
+      return;
+    }
+    if (!displayName) {
+      setError("Display Name is required.");
+      return;
+    }
+
+    // Cozy Diary Mode constraints: mandate literally every field
+    if (oracleMode) {
+      if (!bio) {
+        setError("Cozy Diary Mode Requirement: Short bio cannot be empty.");
+        return;
       }
-      const common: ProfileEdits = {
-        displayName, bio, city, interests: tags,
-        languages: languages.split(',').map(s => s.trim()).filter(Boolean),
-        avatarFile, xHandle, telegramHandle, contactMethod, cozyDiaryMode,
-      };
-      if (profile) {
-        const saved = await updateExistingProfile(profile, common);
-        onSaved(saved);
+      if (!location) {
+        setError("Cozy Diary Mode requires a broad city or area.");
+        return;
+      }
+      if (!xHandle.trim() && !telegramHandle.trim()) {
+        setError("Cozy Diary Mode requires at least one contact handle (X or Telegram).");
+        return;
+      }
+    }
+
+    setSubmitting(true);
+    
+    const payload = {
+      avatarFile: avatarFile || undefined,
+      photoUrl,
+      handle: handle.toLowerCase().trim(),
+      password,
+      email,
+      displayName,
+      bio,
+      location,
+      tags,
+      languages: languages.split(',').map(value => value.trim()).filter(Boolean),
+      contactMethod,
+      xHandle,
+      telegramHandle,
+      oracleMode
+    };
+
+    try {
+      if (isEditing) {
+        await updateProfile({
+          displayName, photoUrl, avatarFile: avatarFile || undefined, bio, location, tags, contactMethod,
+          xHandle, telegramHandle, oracleMode, languages: payload.languages,
+        });
+        setSuccessMsg("Your profile changes were saved.");
+        if (onSuccess) setTimeout(() => onSuccess(), 900);
       } else {
-        if (availability !== 'available') throw new Error('Verify that your username is available.');
-        const payload: ProfileRegistration = {
-          ...common, handle, displayName, email, password,
-        };
-        const result = await registerProfile(payload);
-        if (result.pendingVerification) {
-          setNotice('Account created. Check ' + result.email + ' for the verification link, then return to sign in.' +
-            (result.avatarUploadNote ? ' ' + result.avatarUploadNote : ''));
+        const created = await registerProfile(payload);
+        if ('pendingVerification' in created) {
+          const notice = `Account created. Check ${created.email} for a verification email, then sign in.`;
+          setSuccessMsg(notice);
+          onVerificationRequired?.(created.email, created.avatarUploadNote);
         } else {
-          onSaved(result.profile);
-          if (result.avatarUploadNote) setNotice(result.avatarUploadNote);
+          setSuccessMsg(`Welcome, ${created.displayName}! Your account is ready.${created.avatarUploadNote ? ` ${created.avatarUploadNote}` : ''}`);
+          onSuccess?.();
         }
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Profile operation failed.');
-    } finally { setBusy(false); }
+    } catch (err: any) {
+      const message = err?.message || "Failed to save profile details.";
+      if (message.startsWith("Account created. Verify your email")) setSuccessMsg(message);
+      else setError(message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const inputClass = 'w-full rounded-xl bg-neutral-950 border border-neutral-700 px-3 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500';
-  const labelClass = 'block text-xs font-semibold text-neutral-300 mb-1.5';
-
   return (
-    <form onSubmit={submit} className="space-y-4 text-white">
-      <div className="flex items-center gap-3 bg-neutral-950/60 p-3 rounded-2xl">
-        <div className="w-20 h-20 rounded-xl bg-neutral-800 overflow-hidden shrink-0 flex items-center justify-center">
-          {(preview || profile?.avatar_url) ? <img src={preview || profile?.avatar_url} alt="Profile preview" className="w-full h-full object-cover" /> :
-            <User className="w-8 h-8 text-neutral-400" />}
+    <div className="bg-zinc-950 border border-white/20 rounded-3xl p-6 w-full max-w-lg mx-auto text-left space-y-6 text-white select-none">
+      
+      {/* Dynamic Header */}
+      <div className="flex justify-between items-center pb-4 border-b border-white/10">
+        <div>
+          <h2 className="text-xl font-extrabold uppercase tracking-tight italic flex items-center gap-2">
+            <span className="text-vibe-primary">🎒</span> 
+            {isEditing ? "Edit Traveler Profile" : "Create Your Account"}
+          </h2>
+          <p className="text-[10px] text-zinc-500 font-mono tracking-wider mt-0.5">
+            {isEditing ? "MODIFY YOUR TRAVELER COMPASS" : "JOIN THE COZY VIBE CIRCLE"}
+          </p>
         </div>
-        <div className="min-w-0 flex-1">
-          <label className={labelClass}>Profile photo (JPG, PNG or WebP, max 5 MB)</label>
-          <input className="text-xs max-w-full" type="file" accept="image/jpeg,image/png,image/webp"
-            onChange={e => {
-              const file = e.target.files?.[0] || null;
-              if (file && (file.size === 0 || file.size > 5 * 1024 * 1024 ||
-                !['image/jpeg','image/png','image/webp'].includes(file.type))) {
-                setError('Choose a JPG, PNG or WebP image up to 5 MB.'); e.target.value = ''; return;
-              }
-              setError(null); setAvatarFile(file);
-            }} />
-        </div>
+        
+        {onCancel && (
+          <button 
+            type="button"
+            onClick={onCancel}
+            className="text-xs font-mono border border-white/10 hover:border-white/30 text-zinc-400 px-3 py-1 rounded-xl transition-all cursor-pointer"
+          >
+            Cancel
+          </button>
+        )}
       </div>
 
-      <div><label className={labelClass}>Unique @username</label>
-        <input className={inputClass} value={handle} disabled={isEditing}
-          required pattern="[a-zA-Z0-9_]{3,32}" onChange={e => setHandle(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
-          placeholder="your_handle" />
-        {!isEditing && availability && <p className={`text-xs mt-1 ${availability === 'available' ? 'text-emerald-400' : 'text-amber-400'}`}>
-          {availability === 'checking' ? 'Checking availability…' : availability === 'available' ? 'Username available' :
-            availability === 'taken' ? 'Username already taken' : 'Unable to verify username availability'}
-        </p>}
-      </div>
-      {!isEditing && <>
-        <div><label className={labelClass}>Email address</label>
-          <input className={inputClass} type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} /></div>
-        <div><label className={labelClass}>Password (at least 8 characters)</label>
-          <input className={inputClass} type="password" autoComplete="new-password" minLength={8} required value={password}
-            onChange={e => setPassword(e.target.value)} /></div>
-      </>}
-      <div><label className={labelClass}>Display name</label>
-        <input className={inputClass} required maxLength={80} value={displayName} onChange={e => setDisplayName(e.target.value)} /></div>
-      <div><label className={labelClass}>Biography</label>
-        <textarea className={inputClass} maxLength={280} rows={3} value={bio} onChange={e => setBio(e.target.value)} /></div>
-      <div><label className={labelClass}>City or broad location</label>
-        <input className={inputClass} maxLength={100} value={city} onChange={e => setCity(e.target.value)} /></div>
-      <div><label className={labelClass}>Cultural tags & interests</label>
-        <div className="flex gap-1.5 flex-wrap">
-          {PRESET_TAGS.map(tag => <button type="button" key={tag} onClick={() => toggleTag(tag)}
-            className={`px-2.5 py-1.5 text-xs rounded-xl border ${tags.includes(tag)
-              ? 'border-orange-500 text-orange-300 bg-orange-500/15' : 'border-neutral-700 text-neutral-400'}`}>#{tag}</button>)}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        
+        {/* Alerts */}
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-xl flex items-start gap-2.5 text-xs text-red-400 animate-pulse">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl flex items-start gap-2.5 text-xs text-emerald-400">
+            <Check className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{successMsg}</span>
+          </div>
+        )}
+
+        {/* 1. Live Avatar Preview & Hex Entry */}
+        <div className="flex flex-col sm:flex-row items-center gap-5 bg-zinc-900/30 p-4 rounded-2xl border border-white/5">
+          <div className="relative shrink-0">
+            <div className="absolute inset-0 bg-vibe-primary/5 blur-xl rounded-full" />
+            <div className="relative w-20 h-20 rounded-full border border-white/20 p-1 bg-black flex items-center justify-center overflow-hidden">
+              {(avatarPreview || photoUrl) ? (
+                <img 
+                  src={avatarPreview || photoUrl} 
+                  alt="Live Preview" 
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full rounded-full object-cover"
+                  onError={(event) => {
+                    event.currentTarget.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <User className="w-8 h-8 text-zinc-600" />
+              )}
+            </div>
+          </div>
+          
+          <div className="space-y-1.5 w-full flex-1">
+            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500 flex items-center gap-1">
+              <Globe className="w-3 h-3 text-vibe-primary" /> Avatar Photo URL (Optional)
+            </label>
+            <input 
+              type="text" 
+              placeholder="https://images.unsplash.com/..." 
+              value={photoUrl}
+              onChange={(e) => setPhotoUrl(e.target.value)}
+              className="w-full h-10 px-3.5 bg-zinc-950 border border-white/10 rounded-xl text-xs text-zinc-200 focus:outline-none focus:border-vibe-primary transition-colors font-mono"
+            />
+            <label className="block text-[10px] font-semibold text-vibe-primary cursor-pointer">
+              Upload a JPG, PNG or WebP photo (up to 5 MB)
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="mt-1 block w-full text-xs text-zinc-400 file:mr-2 file:rounded-lg file:border-0 file:bg-zinc-800 file:px-3 file:py-2 file:text-white"
+                onChange={event => {
+                  const file = event.target.files?.[0] || null;
+                  if (file && (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024)) {
+                    setError('Choose a JPG, PNG or WebP image under 5 MB.');
+                    event.target.value = '';
+                    return;
+                  }
+                  setAvatarFile(file);
+                }}
+              />
+            </label>
+            <span className="text-[8px] text-zinc-600 block">
+              Or paste an image URL above. Uploaded signup photos are saved after email verification on this device.
+            </span>
+          </div>
         </div>
-        <div className="flex gap-2 mt-2"><input className={inputClass} value={customTag} onChange={e => setCustomTag(e.target.value)}
-          placeholder="Add your own interest" />
-          <button type="button" className="px-3 bg-neutral-700 rounded-lg" onClick={() => {
-            if (customTag.trim()) toggleTag(customTag); setCustomTag('');
-          }}>Add</button></div>
-      </div>
-      <div><label className={labelClass}>Languages (comma-separated)</label>
-        <input className={inputClass} value={languages} onChange={e => setLanguages(e.target.value)} placeholder="English, Arabic" /></div>
-      <div><label className={labelClass}>Telegram handle (optional)</label>
-        <input className={inputClass} maxLength={64} value={telegramHandle} onChange={e => setTelegramHandle(e.target.value)} /></div>
-      <div><label className={labelClass}>X handle (optional)</label>
-        <input className={inputClass} maxLength={64} value={xHandle} onChange={e => setXHandle(e.target.value)} /></div>
-      <div><label className={labelClass}>Preferred contact</label>
-        <select className={inputClass} value={contactMethod} onChange={e => setContactMethod(e.target.value)}>
-          <option value="none">None</option><option value="telegram">Telegram</option><option value="x">X</option><option value="email">Email</option>
-        </select>
-      </div>
-      <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={cozyDiaryMode} onChange={e => setCozyDiaryMode(e.target.checked)} />
-        Cozy Diary Mode (requires bio, city and contact handle)</label>
-      {error && <p role="alert" className="text-red-400 bg-red-950/30 border border-red-800 rounded-lg p-2 text-xs flex gap-2">
-        <AlertCircle className="w-4 h-4" />{error}</p>}
-      {notice && <p role="status" className="text-emerald-300 text-xs bg-emerald-950/30 border border-emerald-800 rounded-lg p-3 flex gap-2">
-        <Check className="w-4 h-4 shrink-0" />{notice}</p>}
-      <div className="flex gap-3">
-        <button type="button" onClick={onCancel} className="flex-1 py-3 bg-neutral-800 rounded-xl font-bold">Back</button>
-        <button type="submit" disabled={busy || (!isEditing && availability !== 'available')}
-          className="flex-1 py-3 bg-orange-600 rounded-xl font-bold disabled:opacity-50">
-          {busy ? 'Saving…' : isEditing ? 'Save Profile' : 'Create Account'}
+
+        {/* 2. Credentials Form Group */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500 flex items-center gap-1">
+              {isCheckingHandle ? "⏳" : "@"} Unique username (@)
+            </label>
+            <input 
+              type="text" 
+              placeholder="e.g. yassine_medina" 
+              value={handle}
+              onChange={(e) => setHandle(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+              required
+              disabled={isEditing}
+              className={cn(
+                "w-full h-11 px-3.5 bg-zinc-950 border rounded-xl text-xs font-mono transition-colors focus:outline-none focus:ring-0",
+                isEditing ? "text-zinc-500 border-white/5 bg-zinc-950/50 cursor-not-allowed" : "text-white border-white/10 focus:border-vibe-primary",
+                handle && handleAvailable === true && "border-emerald-500/50 focus:border-emerald-500",
+                handle && handleAvailable === false && "border-red-500/50 focus:border-red-500"
+              )}
+            />
+            {!isEditing && handle && (
+              <span className={cn(
+                "text-[8px] font-mono tracking-tight",
+                handleAvailable ? "text-emerald-400" : "text-red-400"
+              )}>
+                {handleAvailable ? "✓ Handle is unique" : "✗ Handle already taken by another node"}
+              </span>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
+              Password
+            </label>
+            <input 
+              type="password" 
+              placeholder="Secret encryption key" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required={!isEditing}
+              minLength={8}
+              className="w-full h-11 px-3.5 bg-zinc-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-vibe-primary transition-colors font-mono"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
+            Citizen Display Name
+          </label>
+          <input 
+            type="text" 
+            placeholder="e.g. Dr. Walter" 
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            required
+            className="w-full h-11 px-3.5 bg-zinc-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-vibe-primary transition-colors"
+          />
+        </div>
+
+        {!isEditing && (
+          <div className="space-y-1.5">
+            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">Email address</label>
+            <input type="email" autoComplete="email" required value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="w-full h-11 px-3.5 bg-zinc-950 border border-white/10 rounded-xl text-xs text-white outline-none focus:border-vibe-primary" />
+          </div>
+        )}
+
+        {/* 3. Vibe Tags (Pills) Selection */}
+        <div className="space-y-2 bg-zinc-900/10 p-4 rounded-xl border border-white/5">
+          <div className="flex justify-between items-center">
+            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500 flex items-center gap-1">
+              <Hash className="w-3 h-3 text-vibe-primary" /> Cultural Tags (Select Min 3)
+            </label>
+            <span className="text-[8px] font-mono text-zinc-500">
+              {tags.length} SELECTED
+            </span>
+          </div>
+
+          {/* Preset Pill Map */}
+          <div className="flex flex-wrap gap-1.5 pb-2">
+            {PRESET_TAGS.map((pTag) => {
+              const isSelected = tags.includes(pTag);
+              return (
+                <button
+                  type="button"
+                  key={pTag}
+                  onClick={() => handleToggleTag(pTag)}
+                  className={cn(
+                    "text-[10px] font-mono tracking-tight px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer",
+                    isSelected 
+                      ? "bg-vibe-primary/20 hover:bg-vibe-primary/30 border-vibe-primary text-vibe-secondary scale-102 font-bold" 
+                      : "bg-zinc-950/60 border-white/5 hover:border-white/15 text-zinc-400"
+                  )}
+                >
+                  #{pTag}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Add custom tag */}
+          <div className="flex gap-2">
+            <input 
+              type="text" 
+              placeholder="Type custom tag..." 
+              value={customTagInput}
+              onChange={(e) => setCustomTagInput(e.target.value.replace(/\s+/g, '-'))}
+              className="flex-1 h-9 px-3 bg-zinc-950 border border-white/10 rounded-lg text-xs text-zinc-300 focus:outline-none focus:border-vibe-primary font-mono"
+            />
+            <button 
+              type="button"
+              onClick={handleAddCustomTag}
+              className="h-9 px-3 bg-white/5 border border-white/10 rounded-lg text-xs font-bold hover:bg-white/10 transition-colors cursor-pointer text-zinc-300"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+
+        {/* 4. Oracle mode mandate checker */}
+        <div className="flex items-center justify-between bg-zinc-900/40 p-4 rounded-2xl border border-white/5">
+          <div className="space-y-0.5 flex-1 pr-3">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#ef4444]" /> Cozy Diary Mode
+            </span>
+            <p className="text-[9px] text-zinc-500 leading-normal">
+              Optional completion assistance for your bio, broad location and at least one contact handle.
+            </p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer select-none">
+            <input 
+              type="checkbox" 
+              checked={oracleMode} 
+              onChange={() => setOracleMode(!oracleMode)}
+              className="sr-only peer" 
+            />
+            <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#ef4444] peer-checked:after:bg-white" />
+          </label>
+        </div>
+
+        {/* 5. Extended Information (Optional, required under Oracle mode) */}
+        <div className="space-y-4 bg-zinc-900/20 p-4 rounded-xl border border-white/5">
+          <div className="space-y-1.5 animate-in fade-in duration-200">
+            <label className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-500">
+              Biography {oracleMode && <span className="text-red-500">(Mandated)</span>}
+            </label>
+            <textarea 
+              placeholder="Tell other voyagers about your cultural frequencies..." 
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              rows={2}
+              required={oracleMode}
+              className="w-full bg-zinc-950 border border-white/10 rounded-lg p-3 text-xs text-white focus:outline-none focus:border-vibe-primary"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-500">
+              City or broad location {oracleMode && <span className="text-red-500">(Mandated)</span>}
+            </label>
+            <input 
+              type="text" 
+              placeholder="e.g. Tunis, Tunisia / Shibuya, Tokyo" 
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              required={oracleMode}
+              className="w-full h-10 px-3 bg-zinc-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-black uppercase tracking-wider text-zinc-500">
+                Contact Protocol
+              </label>
+              <select
+                value={contactMethod}
+                onChange={(e) => setContactMethod(e.target.value)}
+                className="w-full h-10 bg-zinc-950 border border-white/10 rounded-lg text-xs text-zinc-300 focus:outline-none px-2 cursor-pointer"
+              >
+                <option value="telegram">Telegram Direct</option>
+                <option value="x">X Direct Message</option>
+                <option value="email">Email Terminal</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-black uppercase tracking-wider text-zinc-500">
+                Telegram Handle
+              </label>
+              <input 
+                type="text" 
+                placeholder="e.g. paul_active" 
+                value={telegramHandle}
+                onChange={(e) => setTelegramHandle(e.target.value.replace('@', ''))}
+                className="w-full h-10 px-3 bg-zinc-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none font-mono"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-black uppercase tracking-wider text-zinc-500">
+                X (Twitter) Handle
+              </label>
+              <input 
+                type="text" 
+                placeholder="e.g. paul_cultural" 
+                value={xHandle}
+                onChange={(e) => setXHandle(e.target.value.replace('@', ''))}
+                className="w-full h-10 px-3 bg-zinc-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none font-mono"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-[9px] font-black uppercase tracking-wider text-zinc-500">Languages</label>
+          <input type="text" value={languages} onChange={event => setLanguages(event.target.value)}
+            placeholder="English, Arabic" className="w-full h-10 px-3 bg-zinc-950 border border-white/10 rounded-xl text-xs text-white" />
+        </div>
+
+        {/* Action button */}
+        <button
+          type="submit"
+          disabled={submitting || (handleAvailable === false && !isEditing)}
+          className="w-full h-12 bg-white text-black hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-600 rounded-xl flex items-center justify-center font-bold tracking-[0.1em] text-xs uppercase italic transition-all cursor-pointer"
+        >
+          {submitting ? "Tying your boots..." : (isEditing ? "Save Diary Changes" : "Start Your Adventure")}
         </button>
-      </div>
-    </form>
+
+      </form>
+    </div>
   );
 };
