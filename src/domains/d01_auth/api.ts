@@ -1,93 +1,83 @@
 import { supabase } from '../../lib/supabase';
 import { UserProfile } from './types';
 
-export async function getCurrentUserProfile(): Promise<UserProfile | null> {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      return null;
-    }
+type ProfileRow = Record<string, unknown>;
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
-
-    if (error || !data) {
-      const isAdmin = session.user.email === 'funmarketmn@hotmail.com';
-      const fallbackProfile: UserProfile = {
-        id: session.user.id,
-        username: session.user.email?.split('@')[0] || 'explorer',
-        full_name: session.user.user_metadata?.full_name || (isAdmin ? 'Funmarket Admin' : 'Explorer Voyager'),
-        avatar_url: session.user.user_metadata?.avatar_url || '',
-        vq_balance: isAdmin ? 5000 : 1000,
-        reputation: isAdmin ? 100 : 90,
-        role: isAdmin ? 'admin' : 'explorer',
-        created_at: new Date().toISOString()
-      };
-      return fallbackProfile;
-    }
-
-    const profile = data as UserProfile;
-    // Sole admin rule enforcement: only funmarketmn is admin
-    if (session.user.email !== 'funmarketmn@hotmail.com' && profile.username !== 'funmarketmn') {
-      profile.role = 'explorer';
-    }
-    return profile;
-  } catch (err) {
-    console.warn('Supabase auth getSession error:', err);
-    return null;
+async function linkedProfile(authId: string): Promise<UserProfile | null> {
+  let row: ProfileRow | null = null;
+  for (const id of ['usr_' + authId, authId]) {
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', id).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (data) { row = data; break; }
   }
+  if (!row) {
+    const { data: link, error } = await supabase.from('s00_test_identity_links')
+      .select('legacy_profile_id').eq('auth_user_id', authId).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (link) {
+      const found = await supabase.from('profiles').select('*').eq('id', link.legacy_profile_id).maybeSingle();
+      if (found.error) throw new Error(found.error.message);
+      row = found.data;
+    }
+  }
+  if (!row) return null;
+  const { data: admin, error: adminError } = await supabase.from('vq_admin_assignments')
+    .select('role').eq('auth_user_id', authId).eq('active', true).maybeSingle();
+  if (adminError) throw new Error(adminError.message);
+  return {
+    id: String(row.id),
+    username: String(row.handle || ''),
+    full_name: String(row.display_name || row.handle || ''),
+    avatar_url: String(row.photo_url || ''),
+    bio: String(row.bio || ''),
+    district: String(row.city || ''),
+    vq_balance: Number(row.points || 0),
+    reputation: 0,
+    role: admin?.role === 'platform_admin' ? 'admin' : row.account_type === 'pro' ? 'guardian' : 'explorer',
+    created_at: String(row.created_at || ''),
+  };
 }
 
-export async function signInWithEmail(email: string, password: string): Promise<UserProfile> {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw error;
-  if (data.user) {
-    const isAdmin = data.user.email === 'funmarketmn@hotmail.com';
-    const { data: profileRow } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', data.user.id)
-      .single();
+export async function getCurrentUserProfile(): Promise<UserProfile | null> {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) return null;
+  return linkedProfile(data.user.id);
+}
 
-    if (profileRow) {
-      const prof = profileRow as UserProfile;
-      if (!isAdmin && prof.username !== 'funmarketmn') {
-        prof.role = 'explorer';
-      }
-      return prof;
+/** Use VQgemini's real email or @username Supabase authentication paths. */
+export async function signInWithEmail(identifier: string, password: string): Promise<UserProfile> {
+  const value = identifier.trim();
+  if (!value || !password) throw new Error('Email or @username and password are required.');
+  if (value.includes('@') && !value.startsWith('@')) {
+    const { error } = await supabase.auth.signInWithPassword({ email: value, password });
+    if (error) throw new Error(error.message);
+  } else {
+    const username = value.replace(/^@/, '').toLowerCase();
+    if (!/^[a-z0-9_]{3,32}$/.test(username)) throw new Error('Invalid username.');
+    const { data, error } = await supabase.functions.invoke('sign-in-by-username', { body: { username, password } });
+    if (error || !data?.access_token || !data?.refresh_token) {
+      throw new Error('Invalid username or password, or username sign-in is unavailable.');
     }
-
-    const profile: UserProfile = {
-      id: data.user.id,
-      username: data.user.email?.split('@')[0] || 'explorer',
-      full_name: data.user.user_metadata?.full_name || (isAdmin ? 'Funmarket Admin' : 'Authenticated Voyager'),
-      avatar_url: data.user.user_metadata?.avatar_url || '',
-      vq_balance: isAdmin ? 5000 : 1000,
-      reputation: isAdmin ? 100 : 90,
-      role: isAdmin ? 'admin' : 'explorer',
-      created_at: new Date().toISOString()
-    };
-    return profile;
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token: data.access_token, refresh_token: data.refresh_token,
+    });
+    if (sessionError) throw new Error(sessionError.message);
   }
-  throw new Error('User authentication failed');
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) throw new Error('Authenticated session could not be verified.');
+  const profile = await linkedProfile(data.user.id);
+  if (!profile) throw new Error('Signed in, but no linked profile was found. Contact the administrator.');
+  return profile;
 }
 
 export async function signInWithGoogle(): Promise<void> {
-  await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: window.location.origin
-    }
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google', options: { redirectTo: window.location.origin },
   });
+  if (error) throw new Error(error.message);
 }
 
 export async function signOutUser(): Promise<void> {
-  try {
-    await supabase.auth.signOut();
-  } catch (e) {
-    // ignore
-  }
+  const { error } = await supabase.auth.signOut();
+  if (error) throw new Error(error.message);
 }
