@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles, MapPin, Shield, Compass, ChevronRight, Flame, Award, Users } from 'lucide-react';
+import { Sparkles, MapPin, Shield, Compass, ChevronRight, Flame, Award, Users, Zap } from 'lucide-react';
 import { fetchGuardians, Guardian } from '../domains/d02_users';
 import { fetchVibePlaces, VibePlace } from '../domains/d03_vibe_orbit';
 import { fetchCulturalTrails, CulturalTrail } from '../domains/d07_trails';
+import { fetchFlashEvent, fetchActivities, FlashEvent, ActivityFeedItem } from '../domains/d10_activities';
 import { UserProfile } from '../domains/d01_auth';
 
 interface HomeTabProps {
@@ -15,15 +16,37 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const [guardians, setGuardians] = useState<Guardian[]>([]);
   const [places, setPlaces] = useState<VibePlace[]>([]);
   const [trails, setTrails] = useState<CulturalTrail[]>([]);
+  const [flashEvent, setFlashEvent] = useState<FlashEvent | null>(null);
+  const [activities, setActivities] = useState<ActivityFeedItem[]>([]);
 
   useEffect(() => {
     fetchGuardians().then(setGuardians);
     fetchVibePlaces().then(setPlaces);
     fetchCulturalTrails().then(setTrails);
+    fetchFlashEvent().then(setFlashEvent);
+    fetchActivities().then(setActivities);
   }, []);
 
   return (
     <div className="space-y-6 pb-24 text-white">
+      {/* Flash Event Banner */}
+      {flashEvent && (
+        <div className="rounded-2xl bg-gradient-to-r from-orange-500/20 via-amber-500/20 to-teal-500/20 border border-orange-500/40 p-4 flex items-center justify-between shadow-xl animate-pulse">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 rounded-xl bg-orange-500/30 text-orange-300">
+              <Zap className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-black text-xs sm:text-sm text-white">{flashEvent.title}</h4>
+              <p className="text-[11px] text-neutral-300">{flashEvent.location} • Ends in {flashEvent.duration_mins}m</p>
+            </div>
+          </div>
+          <span className="text-xs font-black text-amber-300 bg-amber-500/20 px-3 py-1.5 rounded-xl border border-amber-500/40 whitespace-nowrap">
+            +{flashEvent.vq_reward} VQ
+          </span>
+        </div>
+      )}
+
       {/* Hero Welcome Card */}
       <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-900/90 to-neutral-950 border border-neutral-800 p-6 shadow-2xl">
         <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -168,6 +191,32 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
                   <span>Curated by {t.guardian_name}</span>
                   <span className="text-teal-400 font-semibold">{t.waypoints_count} Waypoints</span>
                 </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Live Activity Stream */}
+      <div className="space-y-3 pt-2">
+        <h2 className="text-lg font-bold flex items-center space-x-2">
+          <Users className="w-5 h-5 text-teal-400" />
+          <span>Live District Activity Feed</span>
+        </h2>
+        <div className="space-y-2">
+          {activities.map((act) => (
+            <div key={act.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-3.5 flex items-center justify-between text-xs">
+              <div className="flex items-center space-x-2.5">
+                <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                <div>
+                  <span className="font-bold text-white">{act.user_name}</span>{' '}
+                  <span className="text-neutral-400">{act.action}</span>{' '}
+                  <span className="text-teal-300 font-semibold">{act.target}</span>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-amber-300 font-bold">+{act.vq_earned} VQ</span>
+                <span className="text-[10px] text-neutral-500">{act.time_ago}</span>
               </div>
             </div>
           ))}

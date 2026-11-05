@@ -15,7 +15,8 @@ import { VibePlace } from './domains/d03_vibe_orbit';
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('home');
-  const [lang, setLang] = useState<'en' | 'fr' | 'ar'>('en');
+  const [lang, setLang] = useState<string>('en');
+  const [themeMode, setThemeMode] = useState<'midnight' | 'cream'>('midnight');
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<VibePlace | null>(null);
@@ -26,30 +27,27 @@ export default function App() {
     });
   }, []);
 
-  const handleToggleLang = () => {
-    const nextLang = lang === 'en' ? 'fr' : lang === 'fr' ? 'ar' : 'en';
-    setLang(nextLang);
-  };
-
   const isRtl = lang === 'ar';
 
   return (
     <div
       dir={isRtl ? 'rtl' : 'ltr'}
-      className="min-h-screen bg-neutral-950 text-white font-sans antialiased selection:bg-orange-500 selection:text-white pb-20"
+      className={`min-h-screen ${
+        themeMode === 'cream' ? 'bg-amber-100 text-neutral-900' : 'bg-neutral-950 text-white'
+      } font-sans antialiased selection:bg-orange-500 selection:text-white overflow-x-hidden max-w-md mx-auto w-full box-border pb-32 transition-colors duration-300`}
     >
       {/* Top Navbar */}
-      <Navbar
-        user={user}
-        onOpenNotifications={() => setIsNotificationsOpen(true)}
-        onOpenProfile={() => setIsProfileOpen(true)}
-        unreadCount={2}
-        currentLang={lang}
-        onToggleLang={handleToggleLang}
-      />
+      <div className="max-w-md mx-auto w-full box-border">
+        <Navbar
+          user={user}
+          onOpenNotifications={() => setIsNotificationsOpen(true)}
+          onOpenProfile={() => setIsProfileOpen(true)}
+          unreadCount={2}
+        />
+      </div>
 
       {/* Main Content Container */}
-      <main className="max-w-md mx-auto px-4 pt-4">
+      <main className="max-w-md mx-auto px-4 pt-4 w-full box-border overflow-x-hidden pb-8">
         {activeTab === 'home' && (
           <HomeTab
             user={user}
@@ -83,6 +81,11 @@ export default function App() {
           user={user}
           onClose={() => setIsProfileOpen(false)}
           onUserSwitch={(newUser) => setUser(newUser)}
+          currentLang={lang}
+          onChangeLang={setLang}
+          themeMode={themeMode}
+          onToggleTheme={() => setThemeMode(themeMode === 'midnight' ? 'cream' : 'midnight')}
+          onOpenAdmin={() => alert('Platform Admin Dashboard: Opening D01/D21 management console.')}
         />
       )}
 

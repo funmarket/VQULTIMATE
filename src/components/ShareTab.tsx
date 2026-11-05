@@ -19,6 +19,7 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user, onPostSuccess }) => {
   const [compositeBlob, setCompositeBlob] = useState<Blob | null>(null);
   const [compositeUrl, setCompositeUrl] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
+  const [destination, setDestination] = useState<'gossip' | 'squad' | 'orbit'>('gossip');
   const [timeLeft, setTimeLeft] = useState(120); // 2 minute BeReal authenticity window
   const [submitting, setSubmitting] = useState(false);
 
@@ -184,7 +185,8 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user, onPostSuccess }) => {
         selfie_url: selfieUrl,
         composite_url: compUrl,
         lat: 25.2048,
-        lng: 55.2708
+        lng: 55.2708,
+        destination
       });
 
       setSubmitting(false);
@@ -288,6 +290,27 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user, onPostSuccess }) => {
               placeholder="What's happening in your Vibe Orbit? #VQgemini"
               className="w-full rounded-2xl bg-neutral-900 border border-neutral-800 p-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500 transition resize-none h-24"
             />
+          </div>
+
+          {/* Post Destination Selector */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-neutral-300">Post Destination Network</label>
+            <div className="grid grid-cols-3 gap-2">
+              {(['gossip', 'squad', 'orbit'] as const).map((dest) => (
+                <button
+                  key={dest}
+                  type="button"
+                  onClick={() => setDestination(dest)}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold uppercase transition border ${
+                    destination === dest
+                      ? 'bg-orange-500/20 border-orange-500 text-orange-300 shadow-lg shadow-orange-500/20'
+                      : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:bg-neutral-800'
+                  }`}
+                >
+                  {dest === 'gossip' ? 'Gossip (D12)' : dest === 'squad' ? 'Squad (D05)' : 'Orbit (D03)'}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="flex space-x-3">

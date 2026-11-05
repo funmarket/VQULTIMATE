@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Compass, Maximize2, Minimize2, Sparkles, Filter, Navigation, Flame, MapPin } from 'lucide-react';
+import { Compass, Maximize2, Minimize2, Sparkles, Filter, Navigation, Flame, MapPin, Shield, Route, Clock, Award } from 'lucide-react';
 import { fetchVibePlaces, VibePlace, VibeCategory } from '../domains/d03_vibe_orbit';
+import { fetchCulturalTrails, fetchVibeGuardians, CulturalTrail, VibeGuardian } from '../domains/d07_trails';
 
 interface ExploreTabProps {
   onSelectPlace: (place: VibePlace) => void;
@@ -10,6 +11,8 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({ onSelectPlace }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const [places, setPlaces] = useState<VibePlace[]>([]);
+  const [trails, setTrails] = useState<CulturalTrail[]>([]);
+  const [guardians, setGuardians] = useState<VibeGuardian[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<VibeCategory | 'All'>('All');
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -17,8 +20,14 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({ onSelectPlace }) => {
   const categories: (VibeCategory | 'All')[] = ['All', 'Food', 'Art', 'Spots', 'Culture', 'Night Owl'];
 
   useEffect(() => {
-    fetchVibePlaces(selectedCategory === 'All' ? undefined : selectedCategory).then((data) => {
-      setPlaces(data);
+    Promise.all([
+      fetchVibePlaces(selectedCategory === 'All' ? undefined : selectedCategory),
+      fetchCulturalTrails(),
+      fetchVibeGuardians()
+    ]).then(([placesData, trailsData, guardiansData]) => {
+      setPlaces(placesData);
+      setTrails(trailsData);
+      setGuardians(guardiansData);
       setLoading(false);
     });
   }, [selectedCategory]);
@@ -58,7 +67,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({ onSelectPlace }) => {
   }, []);
 
   return (
-    <div className={`space-y-4 pb-24 text-white transition-all duration-300 ${isFullScreen ? 'fixed inset-0 z-50 bg-neutral-950 p-4 overflow-y-auto' : ''}`}>
+    <div className={`space-y-6 pb-24 text-white transition-all duration-300 ${isFullScreen ? 'fixed inset-0 z-50 bg-neutral-950 p-4 overflow-y-auto' : ''}`}>
       {/* Header & Fullscreen Toggle */}
       <div className="flex items-center justify-between">
         <div>
@@ -179,6 +188,56 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({ onSelectPlace }) => {
           ))}
         </div>
       </div>
+
+      {/* Vibe Trails Section */}
+      <div className="space-y-3 pt-4 border-t border-neutral-800">
+        <h3 className="text-base font-bold flex items-center space-x-2">
+          <Route className="w-4 h-4 text-teal-400" />
+          <span>Curated Cultural Vibe Trails ({trails.length})</span>
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {trails.map((trail) => (
+            <div key={trail.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 space-y-3">
+              <img src={trail.image_url} alt={trail.title} className="w-full h-32 rounded-xl object-cover" />
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded">{trail.difficulty}</span>
+                <span className="text-xs font-bold text-amber-300">+{trail.vq_reward} VQ</span>
+              </div>
+              <h4 className="font-bold text-sm text-white">{trail.title}</h4>
+              <p className="text-xs text-neutral-400 line-clamp-2">{trail.description}</p>
+              <div className="flex items-center justify-between text-[11px] text-neutral-400 pt-2 border-t border-neutral-800">
+                <span className="flex items-center space-x-1"><Clock className="w-3 h-3 text-orange-400" /><span>{trail.duration_mins} mins</span></span>
+                <span>Guardian: {trail.guardian_name}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Vibe Guardians Section */}
+      <div className="space-y-3 pt-4 border-t border-neutral-800">
+        <h3 className="text-base font-bold flex items-center space-x-2">
+          <Shield className="w-4 h-4 text-orange-400" />
+          <span>District Vibe Guardians ({guardians.length})</span>
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {guardians.map((guardian) => (
+            <div key={guardian.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 space-y-3 flex flex-col items-center text-center">
+              <img src={guardian.avatar_url} alt={guardian.name} className="w-16 h-16 rounded-full object-cover ring-2 ring-orange-500/50" />
+              <div>
+                <h4 className="font-bold text-sm text-white">{guardian.name}</h4>
+                <p className="text-xs text-teal-400">{guardian.handle}</p>
+              </div>
+              <p className="text-xs text-neutral-400 line-clamp-2">{guardian.bio}</p>
+              <div className="w-full pt-2 border-t border-neutral-800 flex items-center justify-between text-[11px]">
+                <span className="text-neutral-400">{guardian.district}</span>
+                <span className="text-amber-300 font-bold flex items-center space-x-1"><Award className="w-3 h-3 text-amber-400" /><span>{guardian.trust_score}%</span></span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
+

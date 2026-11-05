@@ -18,4 +18,6 @@ export interface SharePostPayload {
   lat: number;
   lng: number;
   place_id?: string;
+  destination?: 'gossip' | 'squad' | 'orbit';
 }
+

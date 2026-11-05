@@ -8,4 +8,6 @@ export interface Guardian {
   trustScore: number;
   lat: number;
   lng: number;
+  bio?: string;
 }
+

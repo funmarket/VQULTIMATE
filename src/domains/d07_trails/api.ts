@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase';
-import { CulturalTrail } from './types';
+import { CulturalTrail, VibeGuardian } from './types';
 
 export const INITIAL_TRAILS: CulturalTrail[] = [
   {
@@ -37,6 +37,39 @@ export const INITIAL_TRAILS: CulturalTrail[] = [
   }
 ];
 
+export const INITIAL_GUARDIANS: VibeGuardian[] = [
+  {
+    id: 'g-1',
+    name: 'Tariq Al-Mansoori',
+    handle: '@tariq_guardian',
+    district: 'Dubai Creek & Heritage District',
+    tier: 'Supreme Guardian',
+    avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+    bio: 'Master cartographer of ancient trade routes and maritime lore.',
+    trust_score: 99
+  },
+  {
+    id: 'g-2',
+    name: 'Layla Chen',
+    handle: '@layla_synth',
+    district: 'Marina & Neon Waterfront',
+    tier: 'Pro Guardian',
+    avatar_url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80',
+    bio: 'Curator of augmented reality synth installations and night markets.',
+    trust_score: 96
+  },
+  {
+    id: 'g-3',
+    name: 'Zainab Nuru',
+    handle: '@zainab_dunes',
+    district: 'Al Quoz Industrial Arts Quarter',
+    tier: 'Cultural Guide',
+    avatar_url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80',
+    bio: 'Sculptor, coffee connoisseur, and subterranean gallery founder.',
+    trust_score: 94
+  }
+];
+
 export async function fetchCulturalTrails(): Promise<CulturalTrail[]> {
   try {
     const { data, error } = await supabase.from('cultural_trails').select('*');
@@ -48,3 +81,16 @@ export async function fetchCulturalTrails(): Promise<CulturalTrail[]> {
     return INITIAL_TRAILS;
   }
 }
+
+export async function fetchVibeGuardians(): Promise<VibeGuardian[]> {
+  try {
+    const { data, error } = await supabase.from('vibe_guardians').select('*');
+    if (error || !data || data.length === 0) {
+      return INITIAL_GUARDIANS;
+    }
+    return data as VibeGuardian[];
+  } catch {
+    return INITIAL_GUARDIANS;
+  }
+}
+

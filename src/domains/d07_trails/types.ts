@@ -16,3 +16,15 @@ export interface CulturalTrail {
   waypoints_count: number;
   guardian_name: string;
 }
+
+export interface VibeGuardian {
+  id: string;
+  name: string;
+  handle: string;
+  district: string;
+  tier: string;
+  avatar_url: string;
+  bio: string;
+  trust_score: number;
+}
+
