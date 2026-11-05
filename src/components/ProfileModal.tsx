@@ -177,6 +177,15 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 className="w-full py-3 rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-sm font-semibold">
                 Create Profile
               </button>
+              <button type="button" disabled={loading} onClick={async () => {
+                setLoading(true); setError(null);
+                try { await signInWithGoogle(); }
+                catch (err) { setError(err instanceof Error ? err.message : 'Google sign-in failed.'); }
+                finally { setLoading(false); }
+              }} className="w-full py-3 rounded-2xl bg-neutral-950 border border-neutral-700 text-sm font-semibold disabled:opacity-60">
+                Sign In with Google
+              </button>
+              {error && <p role="alert" className="text-red-400 text-xs">{error}</p>}
             </div>
           </div>
         )}
