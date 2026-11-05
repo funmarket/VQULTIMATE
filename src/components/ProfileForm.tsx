@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { UserProfile, ProfileRegistration, ProfileEdits, registerProfile, updateExistingProfile } from '../domains/d01_auth';
 import { User, Check, AlertCircle } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 const PRESET_TAGS = ['cyberpunk', 'web3', 'solana', 'neon', 'tokyo', 'tunis',
   'coffee-seeker', 'retro-gaming', 'cultural-pass', 'minimalist'];
@@ -48,7 +49,6 @@ export const ProfileForm: React.FC<Props> = ({ profile, onSaved, onCancel }) => 
     setAvailability('checking');
     const timer = setTimeout(async () => {
       try {
-        const { supabase } = await import('../lib/supabase');
         const { data, error: lookupError } = await supabase.from('profiles')
           .select('id').ilike('handle', clean).maybeSingle();
         if (active) setAvailability(lookupError ? 'error' : data ? 'taken' : 'available');
