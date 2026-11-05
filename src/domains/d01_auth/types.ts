@@ -16,6 +16,7 @@ export interface UserProfile {
   tier?: string;
   trust_score?: number;
   vq_balance: number;
+  streaks?: number;
   reputation: number;
   role: 'guardian' | 'explorer' | 'admin';
   created_at: string;
