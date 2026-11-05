@@ -1,10 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   Flame, Heart, MessageCircle, Share2, Sparkles, Send, Camera, Shield,
-  User, ChevronLeft, ChevronRight, Check, X, Compass, Radio, Users, CheckCircle2
+  User, ChevronLeft, ChevronRight, Check, X, Compass, Radio, Users, CheckCircle2,
+  Lock, AlertCircle
 } from 'lucide-react';
 import { fetchVibePosts, VibePostItem, fetchCommentsForPost, addCommentToPost, VibeComment } from '../domains/d05_vibe';
 import { fetchDemoProfiles, fetchPublicProfileByHandle, UserProfile } from '../domains/d02_users';
+import { fetchOrbitProfiles, fetchEchoProfiles, unfollowUser, followUser } from '../domains/d03_social_graph';
+import { fetchPendingPulls, fetchConfirmedVibes, acceptConnectionPull, passConnectionPull, ConnectionPull, ConfirmedVibe } from '../domains/d17_matching';
+import { checkDmAuthorization, fetchDirectMessages, sendDirectMessage, DirectMessage } from '../domains/d14_messaging';
 import { UserProfileCard } from './UserProfileCard';
 
 interface VibeTabProps {
@@ -16,43 +20,47 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
   const [activeSubTab, setActiveSubTab] = useState<'gossip' | 'drift' | 'vibes' | 'orbit' | 'echo' | 'pulls'>('gossip');
   const [posts, setPosts] = useState<VibePostItem[]>([]);
   const [demoProfiles, setDemoProfiles] = useState<UserProfile[]>([]);
+  const [orbitProfiles, setOrbitProfiles] = useState<UserProfile[]>([]);
+  const [echoProfiles, setEchoProfiles] = useState<UserProfile[]>([]);
+  const [pendingPulls, setPendingPulls] = useState<ConnectionPull[]>([]);
+  const [confirmedVibes, setConfirmedVibes] = useState<ConfirmedVibe[]>([]);
+  
   const [activePostId, setActivePostId] = useState<string | null>(null);
   const [comments, setComments] = useState<VibeComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [newPostCaption, setNewPostCaption] = useState('');
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
-  const [activeChatUser, setActiveChatUser] = useState<{ name: string; handle: string; avatar: string } | null>(null);
-  const [chatMessages, setChatMessages] = useState<Array<{ id: string; sender: 'me' | 'them'; text: string; time: string }>>([
-    { id: 'm1', sender: 'them', text: 'Hey explorer! Saw your pulse at the Heritage Node. Excited to vibe on the next trail!', time: '10:42 AM' }
-  ]);
+  
+  // 1:1 D14 Chat State
+  const [activeChatUser, setActiveChatUser] = useState<{ id: string; name: string; handle: string; avatar: string } | null>(null);
+  const [chatMessages, setChatMessages] = useState<DirectMessage[]>([]);
   const [newChatMessage, setNewChatMessage] = useState('');
+  const [dmAuthError, setDmAuthError] = useState<string | null>(null);
+  
   const [tunedWavelength, setTunedWavelength] = useState<string | null>('chill');
-  const [orbitList, setOrbitList] = useState<Array<{ id: string; name: string; handle: string; avatar: string; role: string; district: string }>>([
-    { id: 'orb-1', name: 'Yassine B.', handle: 'yassine_medina', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80', role: 'Pro Guardian', district: 'Tunis Medina architect & historic coffee connoisseur' },
-    { id: 'orb-2', name: 'Sarah K.', handle: 'sarah_carthage', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80', role: 'Local Legend', district: 'Carthage ruins photographer & sea cliff cyclist' }
-  ]);
-  const [echoFollowers, setEchoFollowers] = useState<Array<{ id: string; name: string; handle: string; avatar: string; bio: string; followed: boolean }>>([
-    { id: 'echo-1', name: 'Layla Chen', handle: 'layla_vibes', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80', bio: 'Urban food anthropologist & street tea seeker', followed: false }
-  ]);
-  const [pullRequests, setPullRequests] = useState<Array<{ id: string; name: string; handle: string; avatar: string; match: string; reason: string }>>([
-    { id: 'pull-1', name: 'Hannibal Barca', handle: 'hannibal', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', match: '98% Match', reason: 'Sent connection Pull to expand mutual district orbit.' },
-    { id: 'pull-2', name: 'Zainab Nuru', handle: 'zainab_nuru', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80', match: '92% Match', reason: 'High music resonance: Shared interest in Old Souk acoustic sessions.' }
-  ]);
-  const [confirmedVibes, setConfirmedVibes] = useState<Array<{ id: string; name: string; handle: string; avatar: string; score: string }>>([
-    { id: 'v-1', name: 'Sarah K.', handle: 'sarah_carthage', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80', score: '92% Vibe' },
-    { id: 'v-2', name: 'Yassine B.', handle: 'yassine_medina', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80', score: '95% Vibe' }
-  ]);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [notificationToast, setNotificationToast] = useState<string | null>(null);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    Promise.all([fetchVibePosts(), fetchDemoProfiles()]).then(([postData, profilesData]) => {
-      setPosts(postData);
-      setDemoProfiles(profilesData);
-    });
+    fetchVibePosts().then(setPosts);
+    fetchDemoProfiles().then(setDemoProfiles);
   }, []);
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchOrbitProfiles(user.id).then(setOrbitProfiles);
+      fetchEchoProfiles(user.id).then(setEchoProfiles);
+      fetchPendingPulls(user.id).then(setPendingPulls);
+      fetchConfirmedVibes(user.id).then(setConfirmedVibes);
+    } else {
+      setOrbitProfiles([]);
+      setEchoProfiles([]);
+      setPendingPulls([]);
+      setConfirmedVibes([]);
+    }
+  }, [user]);
 
   const showToast = (msg: string) => {
     setNotificationToast(msg);
@@ -77,15 +85,15 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
 
   const handleSendComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activePostId || !newComment.trim()) return;
-    const authorHandle = user?.username || 'explorer';
-    const authorAvatar = user?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80';
+    if (!activePostId || !newComment.trim() || !user) return;
     const added = await addCommentToPost(activePostId, newComment, {
-      username: authorHandle,
-      avatar_url: authorAvatar
+      username: user.username,
+      avatar_url: user.avatar_url
     });
-    setComments([...comments, added]);
-    setNewComment('');
+    if (added) {
+      setComments([...comments, added]);
+      setNewComment('');
+    }
   };
 
   const handleToggleLike = (postId: string) => {
@@ -114,69 +122,98 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
 
   const handleCreatePost = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPostCaption.trim()) return;
-    const authorHandle = user?.username || 'explorer';
-    const authorAvatar = user?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80';
+    if (!newPostCaption.trim() || !user) {
+      showToast('Please sign in to publish a vibe post.');
+      return;
+    }
     const newPost: VibePostItem = {
       id: 'post_' + Date.now(),
-      user_id: user?.id || 'usr_guest',
-      username: authorHandle,
-      avatar_url: authorAvatar,
+      user_id: user.id,
+      username: user.username,
+      avatar_url: user.avatar_url,
       caption: newPostCaption,
       image_url: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80',
-      selfie_url: authorAvatar,
-      lat: 25.2048,
-      lng: 55.2708,
+      selfie_url: user.avatar_url,
       created_at: new Date().toISOString(),
       reactions_count: 1,
       comments_count: 0
     };
-    const updated = [newPost, ...posts];
-    setPosts(updated);
-    // Cache locally
-    const currentLocals = JSON.parse(localStorage.getItem('vq_local_posts') || '[]');
-    localStorage.setItem('vq_local_posts', JSON.stringify([newPost, ...currentLocals]));
+    setPosts([newPost, ...posts]);
     setNewPostCaption('');
     showToast('Vibe broadcast published to district live feed!');
   };
 
-  const handleSendChatMessage = (e: React.FormEvent) => {
+  // D14 Direct Message Flow with strict invariant: ECHO never grants DMs
+  const handleOpenChat = async (targetUser: { id: string; name: string; handle: string; avatar: string }) => {
+    setDmAuthError(null);
+    if (!user) {
+      showToast('Authentication required before starting conversations.');
+      return;
+    }
+
+    const authCheck = await checkDmAuthorization(user.id, targetUser.id);
+    if (!authCheck.authorized) {
+      setDmAuthError(authCheck.reason || 'D14 1:1 DMs require an accepted D17 confirmed Vibe.');
+      setActiveChatUser(targetUser);
+      setChatMessages([]);
+      return;
+    }
+
+    setActiveChatUser(targetUser);
+    const msgs = await fetchDirectMessages(user.id, targetUser.id);
+    setChatMessages(msgs);
+  };
+
+  const handleSendChatMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newChatMessage.trim()) return;
-    const newMsg = {
-      id: 'msg_' + Date.now(),
-      sender: 'me' as const,
-      text: newChatMessage,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    setChatMessages([...chatMessages, newMsg]);
-    setNewChatMessage('');
+    if (!activeChatUser || !newChatMessage.trim() || !user) return;
+    
+    const res = await sendDirectMessage(user.id, activeChatUser.id, newChatMessage);
+    if (res.success && res.message) {
+      setChatMessages([...chatMessages, res.message]);
+      setNewChatMessage('');
+    } else {
+      setDmAuthError(res.error || 'Failed to send message');
+    }
   };
 
-  const handleAcceptPull = (pull: typeof pullRequests[0]) => {
-    setPullRequests((prev) => prev.filter((p) => p.id !== pull.id));
-    setConfirmedVibes((prev) => [
-      { id: 'v_' + Date.now(), name: pull.name, handle: pull.handle, avatar: pull.avatar, score: pull.match },
-      ...prev
-    ]);
-    showToast(`Accepted Vibe Pull from ${pull.name}! Mutual 1:1 chat unlocked.`);
+  const handleAcceptPull = async (pull: ConnectionPull) => {
+    if (!user) return;
+    const res = await acceptConnectionPull(pull.id, user.id, pull.sender_id);
+    if (res.success) {
+      setPendingPulls(prev => prev.filter(p => p.id !== pull.id));
+      fetchConfirmedVibes(user.id).then(setConfirmedVibes);
+      showToast(`Accepted Connection Pull! Confirmed Vibe established & D14 1:1 DMs unlocked.`);
+    } else {
+      showToast(res.error || 'Failed to accept pull');
+    }
   };
 
-  const handlePassPull = (pullId: string) => {
-    setPullRequests((prev) => prev.filter((p) => p.id !== pullId));
-    showToast('Passed connection pull.');
+  const handlePassPull = async (pullId: string) => {
+    if (!user) return;
+    const res = await passConnectionPull(pullId, user.id);
+    if (res.success) {
+      setPendingPulls(prev => prev.filter(p => p.id !== pullId));
+      showToast('Passed connection pull.');
+    }
   };
 
-  const handleUnfollowOrbit = (orbitId: string, name: string) => {
-    setOrbitList((prev) => prev.filter((o) => o.id !== orbitId));
-    showToast(`Unfollowed ${name} from your Orbit.`);
+  const handleUnfollowOrbit = async (targetId: string, name: string) => {
+    if (!user) return;
+    const res = await unfollowUser(user.id, targetId);
+    if (res.success) {
+      setOrbitProfiles(prev => prev.filter(p => p.id !== targetId));
+      showToast(`Removed @${name} from your Orbit.`);
+    }
   };
 
-  const handleFollowBackEcho = (echoId: string) => {
-    setEchoFollowers((prev) =>
-      prev.map((e) => (e.id === echoId ? { ...e, followed: true } : e))
-    );
-    showToast('Followed back into your Orbit!');
+  const handleFollowBackEcho = async (targetId: string, name: string) => {
+    if (!user) return;
+    const res = await followUser(user.id, targetId);
+    if (res.success) {
+      fetchOrbitProfiles(user.id).then(setOrbitProfiles);
+      showToast(`ECHO back successful! Followed @${name} into your Orbit.`);
+    }
   };
 
   const wavelengths = [
@@ -197,10 +234,10 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
   const subTabs = [
     { id: 'gossip', label: 'GOSSIP' },
     { id: 'drift', label: 'DRIFT' },
-    { id: 'vibes', label: 'VIBES', badge: confirmedVibes.length.toString() },
-    { id: 'orbit', label: 'ORBIT', badge: orbitList.length.toString() },
-    { id: 'echo', label: 'ECHO', badge: echoFollowers.filter(e => !e.followed).length.toString() },
-    { id: 'pulls', label: 'PULLS', badge: pullRequests.length.toString() },
+    { id: 'vibes', label: 'VIBES', badge: confirmedVibes.length ? confirmedVibes.length.toString() : undefined },
+    { id: 'orbit', label: 'ORBIT', badge: orbitProfiles.length ? orbitProfiles.length.toString() : undefined },
+    { id: 'echo', label: 'ECHO', badge: echoProfiles.length ? echoProfiles.length.toString() : undefined },
+    { id: 'pulls', label: 'PULLS', badge: pendingPulls.length ? pendingPulls.length.toString() : undefined },
   ];
 
   return (
@@ -334,7 +371,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
           })}
         </div>
 
-        {/* Track / Indicator bar under tabs (matching reference screenshots) */}
+        {/* Track / Indicator bar under tabs */}
         <div className="flex items-center space-x-2 px-1">
           <span className="text-[10px] text-teal-500">◀</span>
           <div className="flex-1 h-1.5 rounded-full bg-neutral-900 border border-neutral-800 overflow-hidden">
@@ -430,7 +467,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                 const isLiked = likedPosts.has(post.id);
                 return (
                   <div key={post.id} className="rounded-3xl bg-neutral-900 border border-neutral-800 overflow-hidden shadow-2xl">
-                    {/* Post Header (Never @undefined!) */}
+                    {/* Post Header */}
                     <div className="p-4 flex items-center justify-between border-b border-neutral-800/80">
                       <div
                         onClick={async () => {
@@ -598,201 +635,248 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
         </div>
       )}
 
-      {/* VIBES TAB CONTENT */}
+      {/* VIBES TAB CONTENT (D17 Confirmed Vibes Squad) */}
       {activeSubTab === 'vibes' && (
         <div className="space-y-4">
           <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
             <div className="space-y-0.5">
               <h3 className="font-bold text-xs text-teal-400 uppercase tracking-wider">CONFIRMED VIBES SQUAD (D17)</h3>
-              <p className="text-[11px] text-neutral-400">Only confirmed mutual Vibes unlock ordinary 1:1 personal messaging (SOC-002).</p>
+              <p className="text-[11px] text-neutral-400">
+                Only confirmed mutual Vibes unlock ordinary 1:1 personal messaging (SOC-002).
+              </p>
             </div>
             <span className="text-xs px-2.5 py-1 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 font-bold whitespace-nowrap">
               {confirmedVibes.length} Confirmed
             </span>
           </div>
 
-          <div className="space-y-3">
-            {confirmedVibes.map((v) => (
-              <div key={v.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
-                <div
-                  onClick={async () => {
-                    const profile = await fetchPublicProfileByHandle(v.handle);
-                    if (profile) setSelectedProfile(profile);
-                  }}
-                  className="flex items-center space-x-3 cursor-pointer group"
-                >
-                  <img src={v.avatar} alt={v.name} className="w-12 h-12 rounded-full object-cover border border-teal-500/40 group-hover:border-teal-400 transition" />
-                  <div>
-                    <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition">{v.name}</h4>
-                    <p className="text-xs text-neutral-400">@{v.handle}</p>
-                    <span className="text-[10px] text-amber-300 font-medium">⚡ Cultural Explorer • Unlocked</span>
+          {confirmedVibes.length > 0 ? (
+            <div className="space-y-3">
+              {confirmedVibes.map((v) => {
+                const partnerId = v.user_1_id === user?.id ? v.user_2_id : v.user_1_id;
+                const partnerProfile = {
+                  id: partnerId,
+                  name: v.partner_profile?.full_name || 'Matched Explorer',
+                  handle: v.partner_profile?.username || 'explorer',
+                  avatar: v.partner_profile?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'
+                };
+                return (
+                  <div key={v.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
+                    <div
+                      onClick={async () => {
+                        const profile = await fetchPublicProfileByHandle(partnerProfile.handle);
+                        if (profile) setSelectedProfile(profile);
+                      }}
+                      className="flex items-center space-x-3 cursor-pointer group"
+                    >
+                      <img src={partnerProfile.avatar} alt={partnerProfile.name} className="w-12 h-12 rounded-full object-cover border border-teal-500/40 group-hover:border-teal-400 transition" />
+                      <div>
+                        <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition">{partnerProfile.name}</h4>
+                        <p className="text-xs text-neutral-400">@{partnerProfile.handle}</p>
+                        <span className="text-[10px] text-amber-300 font-medium">⚡ Cultural Explorer • Unlocked</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end space-y-2">
+                      <span className="text-[10px] font-bold text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded border border-teal-500/20">
+                        ✨ {v.vibe_score || 95}% Vibe
+                      </span>
+                      <button
+                        onClick={() => handleOpenChat(partnerProfile)}
+                        className="px-3 py-1.5 rounded-xl bg-teal-500 hover:bg-teal-600 text-neutral-950 font-black text-xs shadow transition flex items-center space-x-1 cursor-pointer"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        <span>Chat</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <div className="flex flex-col items-end space-y-2">
-                  <span className="text-[10px] font-bold text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded border border-teal-500/20">
-                    ✨ {v.score}
-                  </span>
-                  <button
-                    onClick={() => setActiveChatUser({ name: v.name, handle: v.handle, avatar: v.avatar })}
-                    className="px-3 py-1.5 rounded-xl bg-teal-500 hover:bg-teal-600 text-neutral-950 font-black text-xs shadow transition flex items-center space-x-1 cursor-pointer"
-                  >
-                    <MessageCircle className="w-3.5 h-3.5" />
-                    <span>Chat</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800 p-8 text-center space-y-2">
+              <Users className="w-8 h-8 text-teal-400/60 mx-auto" />
+              <h4 className="font-bold text-xs text-white">No confirmed mutual vibes yet</h4>
+              <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
+                Send PULLs to explorers in your sector. Once they accept, your mutual vibe unlocks direct 1:1 DMs (SOC-002).
+              </p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* ORBIT TAB CONTENT */}
+      {/* ORBIT TAB CONTENT (D03 Outbound Follows) */}
       {activeSubTab === 'orbit' && (
         <div className="space-y-4">
           <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
             <div className="space-y-0.5">
               <h3 className="font-bold text-xs text-orange-400 uppercase tracking-wider">YOUR ORBIT (D03 OUTBOUND)</h3>
-              <p className="text-[11px] text-neutral-400">Accounts you actively follow. Following is directed and distinct from confirmed Vibes.</p>
+              <p className="text-[11px] text-neutral-400">
+                Accounts you actively follow via ECHO. Following is directed and distinct from confirmed Vibes (ECHO never grants DMs).
+              </p>
             </div>
             <span className="text-xs px-2.5 py-1 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30 font-bold whitespace-nowrap">
-              {orbitList.length} Orbiting
+              {orbitProfiles.length} Orbiting
             </span>
           </div>
 
-          <div className="space-y-3">
-            {orbitList.map((g) => (
-              <div key={g.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
-                <div
-                  onClick={async () => {
-                    const prof = await fetchPublicProfileByHandle(g.handle);
-                    if (prof) setSelectedProfile(prof);
-                  }}
-                  className="flex items-center space-x-3 min-w-0 cursor-pointer group"
-                >
-                  <img src={g.avatar} alt={g.name} className="w-12 h-12 rounded-full object-cover border border-orange-500/40 group-hover:border-teal-400 transition" />
-                  <div className="min-w-0">
-                    <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition truncate">{g.name}</h4>
-                    <p className="text-xs text-neutral-400 truncate">@{g.handle}</p>
-                    <p className="text-[11px] text-neutral-300 truncate mt-0.5">{g.district}</p>
+          {orbitProfiles.length > 0 ? (
+            <div className="space-y-3">
+              {orbitProfiles.map((g) => (
+                <div key={g.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
+                  <div
+                    onClick={() => setSelectedProfile(g)}
+                    className="flex items-center space-x-3 min-w-0 cursor-pointer group"
+                  >
+                    <img src={g.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'} alt={g.full_name} className="w-12 h-12 rounded-full object-cover border border-orange-500/40 group-hover:border-teal-400 transition" />
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition truncate">{g.full_name}</h4>
+                      <p className="text-xs text-neutral-400 truncate">@{g.username}</p>
+                      <p className="text-[11px] text-neutral-300 truncate mt-0.5">{g.district}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end space-y-2 flex-shrink-0">
+                    <span className="text-[9px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                      {g.tier || g.role}
+                    </span>
+                    <button
+                      onClick={() => handleUnfollowOrbit(g.id, g.username)}
+                      className="px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-semibold text-xs transition cursor-pointer"
+                    >
+                      Unfollow
+                    </button>
                   </div>
                 </div>
-                <div className="flex flex-col items-end space-y-2 flex-shrink-0">
-                  <span className="text-[9px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
-                    {g.role}
-                  </span>
-                  <button
-                    onClick={() => handleUnfollowOrbit(g.id, g.name)}
-                    className="px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-semibold text-xs transition cursor-pointer"
-                  >
-                    Unfollow
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800 p-8 text-center space-y-2">
+              <Radio className="w-8 h-8 text-orange-400/60 mx-auto" />
+              <h4 className="font-bold text-xs text-white">Your Orbit is clear</h4>
+              <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
+                Tap ECHO on public profile cards to follow local legends and district explorers into your Orbit.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* ECHO TAB CONTENT */}
+      {/* ECHO TAB CONTENT (D03 Inbound Followers) */}
       {activeSubTab === 'echo' && (
         <div className="space-y-4">
           <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
             <div className="space-y-0.5">
               <h3 className="font-bold text-xs text-purple-400 uppercase tracking-wider">ECHO FOLLOWERS (D03 INBOUND)</h3>
-              <p className="text-[11px] text-neutral-400">Explorers who are tuning into your profile and presence frequency.</p>
+              <p className="text-[11px] text-neutral-400">
+                Explorers who are tuning into your profile and presence frequency.
+              </p>
             </div>
             <span className="text-xs px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold whitespace-nowrap">
-              {echoFollowers.length} Tuning In
+              {echoProfiles.length} Tuning In
             </span>
           </div>
 
-          <div className="space-y-3">
-            {echoFollowers.map((echo) => (
-              <div key={echo.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
-                <div
-                  onClick={async () => {
-                    const p = await fetchPublicProfileByHandle(echo.handle);
-                    if (p) setSelectedProfile(p);
-                  }}
-                  className="flex items-center space-x-3 cursor-pointer group"
-                >
-                  <img src={echo.avatar} alt={echo.name} className="w-12 h-12 rounded-full object-cover border border-purple-500/40 group-hover:border-teal-400 transition" />
-                  <div>
-                    <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition">{echo.name}</h4>
-                    <p className="text-xs text-neutral-400">@{echo.handle}</p>
-                    <p className="text-[11px] text-neutral-300 mt-0.5">{echo.bio}</p>
+          {echoProfiles.length > 0 ? (
+            <div className="space-y-3">
+              {echoProfiles.map((echo) => (
+                <div key={echo.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
+                  <div
+                    onClick={() => setSelectedProfile(echo)}
+                    className="flex items-center space-x-3 cursor-pointer group"
+                  >
+                    <img src={echo.avatar_url || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80'} alt={echo.full_name} className="w-12 h-12 rounded-full object-cover border border-purple-500/40 group-hover:border-teal-400 transition" />
+                    <div>
+                      <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition">{echo.full_name}</h4>
+                      <p className="text-xs text-neutral-400">@{echo.username}</p>
+                      <p className="text-[11px] text-neutral-300 mt-0.5">{echo.bio || echo.district}</p>
+                    </div>
                   </div>
+                  <button
+                    onClick={() => handleFollowBackEcho(echo.id, echo.username)}
+                    className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold text-xs shadow transition cursor-pointer hover:opacity-90"
+                  >
+                    ECHO Back
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleFollowBackEcho(echo.id)}
-                  disabled={echo.followed}
-                  className={`px-3.5 py-1.5 rounded-xl font-bold text-xs shadow transition cursor-pointer ${
-                    echo.followed
-                      ? 'bg-neutral-800 text-teal-400 border border-teal-500/30'
-                      : 'bg-gradient-to-r from-teal-500 to-emerald-600 text-white hover:opacity-90'
-                  }`}
-                >
-                  {echo.followed ? 'Orbiting' : 'Follow Back'}
-                </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800 p-8 text-center space-y-2">
+              <Radio className="w-8 h-8 text-purple-400/60 mx-auto" />
+              <h4 className="font-bold text-xs text-white">No active Echo frequencies</h4>
+              <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
+                Broadcast your vibe or check in at high-intensity pulses to attract inbound explorers.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* PULLS TAB CONTENT */}
+      {/* PULLS TAB CONTENT (D17 Inbound Connection Pulls) */}
       {activeSubTab === 'pulls' && (
         <div className="space-y-4">
           <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
             <div className="space-y-0.5">
               <h3 className="font-bold text-xs text-amber-400 uppercase tracking-wider">CONNECTION PULLS (D17 INBOUND)</h3>
-              <p className="text-[11px] text-neutral-400">Explorers inviting you into their Vibe squad. Accept establishes a confirmed Vibe and unlocks 1:1 personal DMs.</p>
+              <p className="text-[11px] text-neutral-400">
+                Explorers inviting you into their Vibe squad. Accept establishes a confirmed Vibe and unlocks 1:1 personal DMs.
+              </p>
             </div>
             <span className="text-xs px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold whitespace-nowrap">
-              {pullRequests.length} Pending
+              {pendingPulls.length} Pending
             </span>
           </div>
 
-          {pullRequests.length > 0 ? (
+          {pendingPulls.length > 0 ? (
             <div className="space-y-3">
-              {pullRequests.map((p) => (
-                <div key={p.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div
-                      onClick={async () => {
-                        const profile = await fetchPublicProfileByHandle(p.handle);
-                        if (profile) setSelectedProfile(profile);
-                      }}
-                      className="flex items-center space-x-3 cursor-pointer group"
-                    >
-                      <img src={p.avatar} alt={p.name} className="w-12 h-12 rounded-full object-cover border border-amber-500/40 group-hover:border-teal-400 transition" />
-                      <div>
-                        <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition">{p.name}</h4>
-                        <p className="text-xs text-neutral-400">@{p.handle}</p>
+              {pendingPulls.map((p) => {
+                const sender = p.sender_profile || {
+                  username: 'explorer',
+                  full_name: 'District Voyager',
+                  avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80'
+                };
+                return (
+                  <div key={p.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div
+                        onClick={async () => {
+                          const profile = await fetchPublicProfileByHandle(sender.username);
+                          if (profile) setSelectedProfile(profile);
+                        }}
+                        className="flex items-center space-x-3 cursor-pointer group"
+                      >
+                        <img src={sender.avatar_url} alt={sender.full_name} className="w-12 h-12 rounded-full object-cover border border-amber-500/40 group-hover:border-teal-400 transition" />
+                        <div>
+                          <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition">{sender.full_name}</h4>
+                          <p className="text-xs text-neutral-400">@{sender.username}</p>
+                        </div>
                       </div>
+                      <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/30">
+                        ✨ Pending Pull
+                      </span>
                     </div>
-                    <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/30">
-                      ✨ {p.match}
-                    </span>
+                    {p.reason && (
+                      <p className="text-xs text-neutral-300 italic bg-neutral-950/60 p-2.5 rounded-xl border border-neutral-800">
+                        &ldquo;{p.reason}&rdquo;
+                      </p>
+                    )}
+                    <div className="flex space-x-2 pt-1">
+                      <button
+                        onClick={() => handlePassPull(p.id)}
+                        className="flex-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs transition cursor-pointer"
+                      >
+                        Pass
+                      </button>
+                      <button
+                        onClick={() => handleAcceptPull(p)}
+                        className="flex-2 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-black text-xs shadow-lg shadow-teal-500/20 transition hover:opacity-90 flex items-center justify-center space-x-1 cursor-pointer"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>ACCEPT</span>
+                      </button>
+                    </div>
                   </div>
-                  <p className="text-xs text-neutral-300 italic bg-neutral-950/60 p-2.5 rounded-xl border border-neutral-800">&ldquo;{p.reason}&rdquo;</p>
-                  <div className="flex space-x-2 pt-1">
-                    <button
-                      onClick={() => handlePassPull(p.id)}
-                      className="flex-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs transition cursor-pointer"
-                    >
-                      Pass
-                    </button>
-                    <button
-                      onClick={() => handleAcceptPull(p)}
-                      className="flex-2 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-black text-xs shadow-lg shadow-teal-500/20 transition hover:opacity-90 flex items-center justify-center space-x-1 cursor-pointer"
-                    >
-                      <Check className="w-4 h-4" />
-                      <span>ACCEPT</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800 p-8 text-center space-y-2">
@@ -806,7 +890,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
         </div>
       )}
 
-      {/* 1:1 Secure Chat Modal (SOC-002) */}
+      {/* 1:1 Secure Chat Modal (SOC-002) governed by D14 authorization */}
       {activeChatUser && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
           <div className="w-full sm:max-w-md bg-neutral-900 border border-neutral-800 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[85vh] flex flex-col shadow-2xl text-white">
@@ -819,48 +903,76 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                 </div>
               </div>
               <button
-                onClick={() => setActiveChatUser(null)}
+                onClick={() => {
+                  setActiveChatUser(null);
+                  setDmAuthError(null);
+                }}
                 className="p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-3 min-h-[220px]">
-              {chatMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[75%] p-3 rounded-2xl text-xs space-y-1 ${
-                      msg.sender === 'me'
-                        ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-br-sm'
-                        : 'bg-neutral-950 border border-neutral-800 text-neutral-200 rounded-bl-sm'
-                    }`}
-                  >
-                    <p>{msg.text}</p>
-                    <p className="text-[9px] text-white/60 text-right">{msg.time}</p>
-                  </div>
+            {dmAuthError ? (
+              <div className="py-8 px-4 text-center space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto text-red-400">
+                  <Lock className="w-6 h-6" />
                 </div>
-              ))}
-            </div>
+                <h4 className="font-bold text-sm text-white">D14 DM Access Denied</h4>
+                <p className="text-xs text-neutral-300 leading-relaxed max-w-xs mx-auto">
+                  {dmAuthError}
+                </p>
+                <p className="text-[11px] text-amber-300/80 bg-neutral-950 p-3 rounded-xl border border-neutral-800">
+                  Rule SOC-002: One-way ECHO follows do not unlock personal messages. Only mutual accepted Vibe requests (D17) unlock 1:1 DMs.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="flex-1 overflow-y-auto space-y-3 min-h-[220px]">
+                  {chatMessages.length > 0 ? (
+                    chatMessages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-[75%] p-3 rounded-2xl text-xs space-y-1 ${
+                            msg.sender_id === user?.id
+                              ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-br-sm'
+                              : 'bg-neutral-950 border border-neutral-800 text-neutral-200 rounded-bl-sm'
+                          }`}
+                        >
+                          <p>{msg.content}</p>
+                          <p className="text-[9px] text-white/60 text-right">
+                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-12 text-center text-xs text-neutral-500 italic">
+                      Confirmed Vibe established. Start your 1:1 conversation!
+                    </div>
+                  )}
+                </div>
 
-            <form onSubmit={handleSendChatMessage} className="flex items-center space-x-2 pt-2 border-t border-neutral-800">
-              <input
-                type="text"
-                value={newChatMessage}
-                onChange={(e) => setNewChatMessage(e.target.value)}
-                placeholder="Send a private vibe message..."
-                className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
-              />
-              <button
-                type="submit"
-                className="p-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-teal-500 text-white hover:opacity-90 transition cursor-pointer"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
+                <form onSubmit={handleSendChatMessage} className="flex items-center space-x-2 pt-2 border-t border-neutral-800">
+                  <input
+                    type="text"
+                    value={newChatMessage}
+                    onChange={(e) => setNewChatMessage(e.target.value)}
+                    placeholder="Send a private vibe message..."
+                    className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
+                  />
+                  <button
+                    type="submit"
+                    className="p-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-teal-500 text-white hover:opacity-90 transition cursor-pointer"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -883,7 +995,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
               {comments.length > 0 ? (
                 comments.map((comm) => (
                   <div key={comm.id} className="flex space-x-3 items-start bg-neutral-950/60 p-3 rounded-2xl border border-neutral-800">
-                    <img src={comm.avatar_url} alt={comm.username} className="w-8 h-8 rounded-full object-cover" />
+                    <img src={comm.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'} alt={comm.username} className="w-8 h-8 rounded-full object-cover" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-xs text-white">@{comm.username}</span>
@@ -925,9 +1037,9 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
       {selectedProfile && (
         <UserProfileCard
           profile={selectedProfile}
+          currentUser={user}
           onClose={() => setSelectedProfile(null)}
-          onFollow={(p) => showToast(`Followed @${p.username} into your Orbit!`)}
-          onSendPull={(p) => showToast(`Sent Vibe Pull to @${p.username}!`)}
+          onToast={showToast}
         />
       )}
     </div>

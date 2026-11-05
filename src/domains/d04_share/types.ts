@@ -15,8 +15,8 @@ export interface SharePostPayload {
   image_url: string;
   selfie_url: string;
   composite_url: string;
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
   place_id?: string;
   destination?: 'gossip' | 'squad' | 'orbit';
 }

@@ -1,22 +1,23 @@
 import { supabase } from '../../lib/supabase';
 import { SharePostPayload } from './types';
 
-export async function uploadMediaBlob(blob: Blob, path: string): Promise<string> {
+export async function uploadMediaBlob(blob: Blob, path: string, isProfilePhoto = false): Promise<string> {
+  const bucketName = isProfilePhoto ? 'users' : 'media';
   try {
     const { error: uploadError } = await supabase.storage
-      .from('media')
+      .from(bucketName)
       .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
 
     if (uploadError) {
-      console.warn('Storage upload error (using data URL fallback):', uploadError);
-      return URL.createObjectURL(blob);
+      console.warn(`Storage upload error to ${bucketName} bucket:`, uploadError);
+      return '';
     }
 
-    const { data } = supabase.storage.from('media').getPublicUrl(path);
+    const { data } = supabase.storage.from(bucketName).getPublicUrl(path);
     return data.publicUrl;
   } catch (err) {
-    console.warn('Storage exception, returning object URL:', err);
-    return URL.createObjectURL(blob);
+    console.warn(`Storage exception uploading to ${bucketName}:`, err);
+    return '';
   }
 }
 
@@ -29,15 +30,12 @@ export async function publishVibePost(payload: SharePostPayload): Promise<boolea
       }
     ]);
     if (error) {
-      console.warn('Supabase insert post error, storing locally:', error);
-      const existing = JSON.parse(localStorage.getItem('vq_local_posts') || '[]');
-      localStorage.setItem('vq_local_posts', JSON.stringify([{ ...payload, id: 'local_' + Date.now(), created_at: new Date().toISOString() }, ...existing]));
+      console.warn('Supabase insert post error:', error);
+      return false;
     }
     return true;
   } catch (err) {
     console.warn('Publish post exception:', err);
-    const existing = JSON.parse(localStorage.getItem('vq_local_posts') || '[]');
-    localStorage.setItem('vq_local_posts', JSON.stringify([{ ...payload, id: 'local_' + Date.now(), created_at: new Date().toISOString() }, ...existing]));
-    return true;
+    return false;
   }
 }

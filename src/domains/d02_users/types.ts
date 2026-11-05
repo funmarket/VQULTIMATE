@@ -21,8 +21,8 @@ export interface Guardian {
   badge: string;
   status: 'active' | 'patrolling' | 'resting';
   trustScore: number;
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
   bio?: string;
 }
 

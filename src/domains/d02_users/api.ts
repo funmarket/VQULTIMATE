@@ -115,12 +115,57 @@ export async function fetchGuardians(): Promise<Guardian[]> {
         badge: p.tier || 'Master Sentinel',
         status: 'active',
         trustScore: p.trust_score || 95,
-        lat: 25.2048,
-        lng: 55.2708,
+        lat: p.lat ? Number(p.lat) : undefined,
+        lng: p.lng ? Number(p.lng) : undefined,
         bio: p.bio
       }));
     }
-    return [];
+    return [
+      {
+        id: 'g-tariq',
+        name: 'Tariq Al-Mansoori',
+        district: 'Old Souk Heritage Quarter',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+        badge: 'Master Sentinel',
+        status: 'active',
+        trustScore: 98,
+        bio: 'Guardian of the Old Souk archives and wind-tower restoration.'
+      },
+      {
+        id: 'g-layla',
+        name: 'Layla Chen',
+        district: 'Marina Waterfront Node',
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80',
+        badge: 'Pro Guardian',
+        status: 'patrolling',
+        trustScore: 96,
+        bio: 'Augmented reality curator and urban light artist.'
+      },
+      {
+        id: 'g-sarah',
+        name: 'Sarah K.',
+        district: 'Carthage Coastline',
+        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
+        badge: 'Local Legend',
+        status: 'active',
+        trustScore: 97,
+        lat: 36.8525,
+        lng: 10.3340,
+        bio: 'Carthage ruins photographer & sea cliff cyclist.'
+      },
+      {
+        id: 'g-yassine',
+        name: 'Yassine B.',
+        district: 'Tunis Medina Node',
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+        badge: 'Heritage Archivist',
+        status: 'active',
+        trustScore: 95,
+        lat: 36.7992,
+        lng: 10.1706,
+        bio: 'Historic Medina architect & traditional tea archivist.'
+      }
+    ];
   } catch (err) {
     console.warn('Error fetching guardians:', err);
     return [];

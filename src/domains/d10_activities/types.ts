@@ -1,10 +1,15 @@
 export interface FlashEvent {
   id: string;
   title: string;
-  location: string;
-  vq_reward: number;
-  duration_mins: number;
-  active: boolean;
+  description?: string;
+  place_id?: string;
+  secret_id?: string;
+  ends_at: string;
+  seconds_left: number;
+  kind: 'secret_party' | 'after_hours' | 'private_game' | 'happy_hour' | 'limited_promo' | 'other';
+  location?: string;
+  vq_reward?: number;
+  active?: boolean;
 }
 
 export interface ActivityFeedItem {

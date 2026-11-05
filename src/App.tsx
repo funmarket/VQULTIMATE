@@ -73,7 +73,11 @@ export default function App() {
           />
         )}
         {activeTab === 'explore' && (
-          <ExploreTab onSelectPlace={(place) => setSelectedPlace(place)} />
+          <ExploreTab
+            user={user}
+            onSelectPlace={(place) => setSelectedPlace(place)}
+            onRequireAuth={() => setIsProfileOpen(true)}
+          />
         )}
         {activeTab === 'share' && (
           <ShareTab
@@ -119,7 +123,6 @@ export default function App() {
             if (user) {
               const updatedUser = { ...user, vq_balance: user.vq_balance + place.vq_reward };
               setUser(updatedUser);
-              localStorage.setItem('vq_active_user', JSON.stringify(updatedUser));
             }
           }}
         />

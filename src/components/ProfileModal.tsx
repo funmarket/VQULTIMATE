@@ -70,7 +70,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       bio: editBio
     };
     onUserSwitch(updated);
-    localStorage.setItem('vq_active_user', JSON.stringify(updated));
     setEditSaved(true);
     setTimeout(() => {
       setEditSaved(false);

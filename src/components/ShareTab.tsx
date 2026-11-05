@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Camera, Sparkles, RefreshCw, Send, CheckCircle2, Clock } from 'lucide-react';
 import { uploadMediaBlob, publishVibePost } from '../domains/d04_share';
+import { getDeviceLocation } from '../domains/d03_vibe_orbit';
 import { UserProfile } from '../domains/d01_auth';
 
 interface ShareTabProps {
@@ -176,6 +177,8 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user, onPostSuccess }) => {
         compUrl = await uploadMediaBlob(compositeBlob, `comp_${user.id}_${Date.now()}.jpg`);
       }
 
+      const loc = await getDeviceLocation();
+
       await publishVibePost({
         user_id: user.id,
         username: user.username,
@@ -184,8 +187,8 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user, onPostSuccess }) => {
         image_url: imageUrl,
         selfie_url: selfieUrl,
         composite_url: compUrl,
-        lat: 25.2048,
-        lng: 55.2708,
+        lat: loc.coords?.lat,
+        lng: loc.coords?.lng,
         destination
       });
 

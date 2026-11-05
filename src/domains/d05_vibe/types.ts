@@ -16,8 +16,8 @@ export interface VibePostItem {
   image_url: string;
   selfie_url?: string;
   composite_url?: string;
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
   place_id?: string;
   created_at: string;
   reactions_count: number;
