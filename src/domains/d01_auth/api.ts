@@ -214,8 +214,8 @@ export async function updateExistingProfile(profile: UserProfile, edits: Profile
   const cozy = edits.cozyDiaryMode ?? current.cozyDiaryMode ?? false;
   if (telegram.length > 64 || xHandle.length > 64) throw new Error('Contact handle is too long.');
   if (!['none','telegram','x','email'].includes(contact)) throw new Error('Invalid contact preference.');
-  if (cozy && (!(String(fields.bio ?? current.bio || '')).trim() ||
-    !(String(fields.city ?? current.city || '')).trim() || !(telegram.trim() || xHandle.trim()))) {
+  if (cozy && (!(String(fields.bio ?? current.bio ?? '')).trim() ||
+    !(String(fields.city ?? current.city ?? '')).trim() || !(telegram.trim() || xHandle.trim()))) {
     throw new Error('Cozy Diary Mode requires bio, city and a contact handle.');
   }
   if (edits.avatarFile) fields.photo_url = await uploadProfileAvatar(edits.avatarFile, current.id);
