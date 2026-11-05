@@ -4,7 +4,7 @@ import { VQTransaction } from './types';
 export const INITIAL_TRANSACTIONS: VQTransaction[] = [
   {
     id: 'tx-1',
-    user_id: 'usr_guardian_01',
+    user_id: 'usr_funmarketmn',
     type: 'earned',
     amount: 150,
     description: 'Verified Vibe Orbit waypoint at Souk Rooftop',
@@ -12,7 +12,7 @@ export const INITIAL_TRANSACTIONS: VQTransaction[] = [
   },
   {
     id: 'tx-2',
-    user_id: 'usr_guardian_01',
+    user_id: 'usr_funmarketmn',
     type: 'reward',
     amount: 500,
     description: 'Weekly Guardian District Patrol Bonus',
@@ -20,7 +20,7 @@ export const INITIAL_TRANSACTIONS: VQTransaction[] = [
   },
   {
     id: 'tx-3',
-    user_id: 'usr_guardian_01',
+    user_id: 'usr_funmarketmn',
     type: 'staked',
     amount: -200,
     description: 'Staked in Trail Pathfinder Pool #4',

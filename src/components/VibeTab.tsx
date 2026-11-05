@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Flame, Heart, MessageCircle, Share2, Sparkles, Send, Camera, Shield, User, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { fetchVibePosts, VibePostItem, fetchCommentsForPost, addCommentToPost, VibeComment } from '../domains/d05_vibe';
-import { fetchGuardians, Guardian } from '../domains/d02_users';
-import { UserProfile, REAL_TEST_USERS } from '../domains/d01_auth';
+import { fetchDemoProfiles, fetchPublicProfileByHandle, UserProfile } from '../domains/d02_users';
+import { UserProfileCard } from './UserProfileCard';
 
 interface VibeTabProps {
   user: UserProfile | null;
@@ -12,19 +12,19 @@ interface VibeTabProps {
 export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
   const [activeSubTab, setActiveSubTab] = useState<'gossip' | 'drift' | 'vibes' | 'orbit' | 'echo' | 'pulls'>('gossip');
   const [posts, setPosts] = useState<VibePostItem[]>([]);
-  const [guardians, setGuardians] = useState<Guardian[]>([]);
+  const [demoProfiles, setDemoProfiles] = useState<UserProfile[]>([]);
   const [activePostId, setActivePostId] = useState<string | null>(null);
   const [comments, setComments] = useState<VibeComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [newPostCaption, setNewPostCaption] = useState('');
   const [loading, setLoading] = useState(true);
-  const [selectedProfileUser, setSelectedProfileUser] = useState<any | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    Promise.all([fetchVibePosts(), fetchGuardians()]).then(([postData, guardData]) => {
+    Promise.all([fetchVibePosts(), fetchDemoProfiles()]).then(([postData, profilesData]) => {
       setPosts(postData);
-      setGuardians(guardData);
+      setDemoProfiles(profilesData);
       setLoading(false);
     });
   }, []);
@@ -126,7 +126,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
       <div className="space-y-2">
         <div className="flex items-center justify-between px-1">
           <span className="text-[10px] uppercase tracking-widest font-bold text-neutral-400">
-            Active Crew & Guardians ({guardians.length})
+            Active Crew & Guardians ({demoProfiles.length})
           </span>
           <div className="flex items-center space-x-1">
             <button
@@ -148,57 +148,22 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
           ref={scrollContainerRef}
           className="flex items-center space-x-3 overflow-x-auto pb-2 scrollbar-none px-1"
         >
-          {REAL_TEST_USERS.map((tu) => (
+          {demoProfiles.map((p) => (
             <div
-              key={tu.id}
-              onClick={() => setSelectedProfileUser({
-                name: tu.full_name,
-                handle: '@' + tu.username,
-                avatar: tu.avatar_url,
-                tier: tu.role.toUpperCase(),
-                district: 'Active Node',
-                bio: 'Authenticated Supabase test user & active VibeQuest participant.',
-                vq: tu.vq_balance || 1420
-              })}
+              key={p.id}
+              onClick={() => setSelectedProfile(p)}
               className="flex-shrink-0 w-36 rounded-2xl bg-neutral-900 border border-neutral-800 p-3 flex flex-col items-center text-center space-y-2 shadow-lg hover:border-teal-500/50 transition cursor-pointer"
             >
               <div className="relative">
-                <img src={tu.avatar_url} alt={tu.username} className="w-12 h-12 rounded-full object-cover border-2 border-orange-500 shadow" />
+                <img src={p.avatar_url} alt={p.username} className="w-12 h-12 rounded-full object-cover border-2 border-orange-500 shadow" />
                 <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-neutral-900 animate-pulse" />
               </div>
               <div className="min-w-0 w-full">
-                <h5 className="font-bold text-xs text-white truncate">{tu.full_name}</h5>
-                <p className="text-[10px] text-teal-400 truncate">@{tu.username}</p>
+                <h5 className="font-bold text-xs text-white truncate">{p.full_name}</h5>
+                <p className="text-[10px] text-teal-400 truncate">@{p.username}</p>
               </div>
-              <span className="text-[9px] bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full font-bold uppercase">
-                {tu.role}
-              </span>
-            </div>
-          ))}
-          {guardians.map((g) => (
-            <div
-              key={g.id}
-              onClick={() => setSelectedProfileUser({
-                name: g.name,
-                handle: '@' + g.name.toLowerCase().replace(' ', '_'),
-                avatar: g.avatar,
-                tier: g.badge.toUpperCase(),
-                district: g.district,
-                bio: g.bio || 'Certified district guardian and cultural curator.',
-                vq: 2450
-              })}
-              className="flex-shrink-0 w-36 rounded-2xl bg-neutral-900 border border-neutral-800 p-3 flex flex-col items-center text-center space-y-2 shadow-lg hover:border-teal-500/50 transition cursor-pointer"
-            >
-              <div className="relative">
-                <img src={g.avatar} alt={g.name} className="w-12 h-12 rounded-full object-cover border-2 border-teal-500 shadow" />
-                <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-neutral-900" />
-              </div>
-              <div className="min-w-0 w-full">
-                <h5 className="font-bold text-xs text-white truncate">{g.name}</h5>
-                <p className="text-[10px] text-neutral-400 truncate">{g.district}</p>
-              </div>
-              <span className="text-[9px] bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-full font-bold uppercase">
-                {g.badge}
+              <span className="text-[9px] bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full font-bold uppercase truncate max-w-full">
+                {p.tier || p.role}
               </span>
             </div>
           ))}
@@ -255,7 +220,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
           {/* Composer */}
           <form onSubmit={handleCreatePost} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 space-y-3 shadow-xl">
             <div className="flex space-x-3 items-start">
-              <img src={user?.avatar_url || REAL_TEST_USERS[0].avatar_url} alt="User" className="w-9 h-9 rounded-full object-cover border border-orange-500/40" />
+              <img src={user?.avatar_url || demoProfiles[0]?.avatar_url} alt="User" className="w-9 h-9 rounded-full object-cover border border-orange-500/40" />
               <textarea
                 value={newPostCaption}
                 onChange={(e) => setNewPostCaption(e.target.value)}
@@ -304,10 +269,16 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
               <div key={post.id} className="rounded-3xl bg-neutral-900 border border-neutral-800 overflow-hidden shadow-2xl">
                 {/* Post Header */}
                 <div className="p-4 flex items-center justify-between border-b border-neutral-800/80">
-                  <div className="flex items-center space-x-3">
-                    <img src={post.avatar_url} alt={post.username} className="w-10 h-10 rounded-full object-cover border border-orange-500/40" />
+                  <div
+                    onClick={async () => {
+                      const profile = await fetchPublicProfileByHandle(post.username);
+                      if (profile) setSelectedProfile(profile);
+                    }}
+                    className="flex items-center space-x-3 cursor-pointer group"
+                  >
+                    <img src={post.avatar_url} alt={post.username} className="w-10 h-10 rounded-full object-cover border border-orange-500/40 group-hover:border-teal-400 transition" />
                     <div>
-                      <h4 className="font-bold text-sm text-white">@{post.username}</h4>
+                      <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition">@{post.username}</h4>
                       <p className="text-[10px] text-neutral-400">Just now • 📍 Local Node</p>
                     </div>
                   </div>
@@ -410,15 +381,21 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
 
           <div className="space-y-3">
             {[
-              { id: 'v-1', name: 'Sarah K.', handle: '@sarah_carthage', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80', score: '92% Vibe' },
-              { id: 'v-2', name: 'Yassine B.', handle: '@yassine_medina', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80', score: '95% Vibe' },
+              { id: 'v-1', name: 'Sarah K.', handle: 'sarah_carthage', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80', score: '92% Vibe' },
+              { id: 'v-2', name: 'Yassine B.', handle: 'yassine_medina', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80', score: '95% Vibe' },
             ].map((v) => (
               <div key={v.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <img src={v.avatar} alt={v.name} className="w-12 h-12 rounded-full object-cover border border-teal-500/40" />
+                <div
+                  onClick={async () => {
+                    const profile = await fetchPublicProfileByHandle(v.handle);
+                    if (profile) setSelectedProfile(profile);
+                  }}
+                  className="flex items-center space-x-3 cursor-pointer group"
+                >
+                  <img src={v.avatar} alt={v.name} className="w-12 h-12 rounded-full object-cover border border-teal-500/40 group-hover:border-teal-400 transition" />
                   <div>
-                    <h4 className="font-bold text-sm text-white">{v.name}</h4>
-                    <p className="text-xs text-neutral-400">{v.handle}</p>
+                    <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition">{v.name}</h4>
+                    <p className="text-xs text-neutral-400">@{v.handle}</p>
                     <span className="text-[10px] text-amber-300 font-medium">⚡ Cultural Explorer • Unlocked</span>
                   </div>
                 </div>
@@ -449,27 +426,30 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
               <p className="text-[11px] text-neutral-400">Accounts you actively follow. Following is directed and distinct from confirmed Vibes.</p>
             </div>
             <span className="text-xs px-2.5 py-1 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30 font-bold whitespace-nowrap">
-              2 Orbiting
+              {demoProfiles.slice(1, 3).length} Orbiting
             </span>
           </div>
 
           <div className="space-y-3">
-            {guardians.map((g) => (
+            {demoProfiles.slice(1, 3).map((g) => (
               <div key={g.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-3 min-w-0">
-                  <img src={g.avatar} alt={g.name} className="w-12 h-12 rounded-full object-cover border border-orange-500/40" />
+                <div
+                  onClick={() => setSelectedProfile(g)}
+                  className="flex items-center space-x-3 min-w-0 cursor-pointer group"
+                >
+                  <img src={g.avatar_url} alt={g.full_name} className="w-12 h-12 rounded-full object-cover border border-orange-500/40 group-hover:border-teal-400 transition" />
                   <div className="min-w-0">
-                    <h4 className="font-bold text-sm text-white truncate">{g.name}</h4>
-                    <p className="text-xs text-neutral-400 truncate">@{g.name.toLowerCase().replace(' ', '_')}</p>
+                    <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition truncate">{g.full_name}</h4>
+                    <p className="text-xs text-neutral-400 truncate">@{g.username}</p>
                     <p className="text-[11px] text-neutral-300 truncate mt-0.5">{g.district} guide & explorer</p>
                   </div>
                 </div>
                 <div className="flex flex-col items-end space-y-2 flex-shrink-0">
                   <span className="text-[9px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
-                    {g.badge}
+                    {g.tier || g.role}
                   </span>
                   <button
-                    onClick={() => alert(`Unfollowed ${g.name}`)}
+                    onClick={() => alert(`Unfollowed ${g.full_name}`)}
                     className="px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-semibold text-xs transition"
                   >
                     Unfollow
@@ -496,11 +476,17 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
 
           <div className="space-y-3">
             <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <img src={REAL_TEST_USERS[1].avatar_url} alt="Layla" className="w-12 h-12 rounded-full object-cover border border-purple-500/40" />
+              <div
+                onClick={async () => {
+                  const p = await fetchPublicProfileByHandle('layla_vibes');
+                  if (p) setSelectedProfile(p);
+                }}
+                className="flex items-center space-x-3 cursor-pointer group"
+              >
+                <img src={demoProfiles[2]?.avatar_url || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80'} alt="Layla" className="w-12 h-12 rounded-full object-cover border border-purple-500/40 group-hover:border-teal-400 transition" />
                 <div>
-                  <h4 className="font-bold text-sm text-white">{REAL_TEST_USERS[1].full_name}</h4>
-                  <p className="text-xs text-neutral-400">@{REAL_TEST_USERS[1].username}</p>
+                  <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition">{demoProfiles[2]?.full_name || 'Layla Chen'}</h4>
+                  <p className="text-xs text-neutral-400">@{demoProfiles[2]?.username || 'layla_vibes'}</p>
                   <p className="text-[11px] text-neutral-300 mt-0.5">Urban food anthropologist</p>
                 </div>
               </div>
@@ -530,16 +516,22 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
 
           <div className="space-y-3">
             {[
-              { id: 'p-1', name: 'Hannibal Barca', handle: '@hannibal', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', match: '98% Match', reason: 'High music resonance & shared heritage interest.' },
-              { id: 'p-2', name: 'Zainab Nuru', handle: '@zainab_nuru', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80', match: '92% Match', reason: 'Neon dunes & midnight trail companion.' },
+              { id: 'p-1', name: 'Hannibal Barca', handle: 'hannibal', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', match: '98% Match', reason: 'High music resonance & shared heritage interest.' },
+              { id: 'p-2', name: 'Zainab Nuru', handle: 'zainab_nuru', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80', match: '92% Match', reason: 'Neon dunes & midnight trail companion.' },
             ].map((p) => (
               <div key={p.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <img src={p.avatar} alt={p.name} className="w-12 h-12 rounded-full object-cover border border-amber-500/40" />
+                  <div
+                    onClick={async () => {
+                      const profile = await fetchPublicProfileByHandle(p.handle);
+                      if (profile) setSelectedProfile(profile);
+                    }}
+                    className="flex items-center space-x-3 cursor-pointer group"
+                  >
+                    <img src={p.avatar} alt={p.name} className="w-12 h-12 rounded-full object-cover border border-amber-500/40 group-hover:border-teal-400 transition" />
                     <div>
-                      <h4 className="font-bold text-sm text-white">{p.name}</h4>
-                      <p className="text-xs text-neutral-400">{p.handle}</p>
+                      <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition">{p.name}</h4>
+                      <p className="text-xs text-neutral-400">@{p.handle}</p>
                     </div>
                   </div>
                   <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/30">
@@ -618,60 +610,15 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
         </div>
       )}
       {/* User Profile Card Modal */}
-      {selectedProfileUser && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-6 space-y-4 shadow-2xl text-white relative">
-            <button
-              onClick={() => setSelectedProfileUser(null)}
-              className="absolute top-4 right-4 text-xs text-neutral-400 hover:text-white px-2.5 py-1 rounded-xl bg-neutral-800"
-            >
-              ✕ Close
-            </button>
-            <div className="flex flex-col items-center text-center space-y-3 pt-2">
-              <img src={selectedProfileUser.avatar} alt={selectedProfileUser.name} className="w-20 h-20 rounded-full object-cover ring-4 ring-orange-500/50 shadow-xl" />
-              <div>
-                <h3 className="font-black text-base text-white">{selectedProfileUser.name}</h3>
-                <p className="text-xs text-teal-400">{selectedProfileUser.handle}</p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-[10px] bg-orange-500/20 text-orange-300 border border-orange-500/30 px-2.5 py-1 rounded-full font-bold uppercase">
-                  {selectedProfileUser.tier}
-                </span>
-                <span className="text-[10px] bg-teal-500/20 text-teal-300 border border-teal-500/30 px-2.5 py-1 rounded-full font-bold">
-                  ⚡ {selectedProfileUser.vq} VQ
-                </span>
-              </div>
-              <p className="text-xs text-neutral-300 italic bg-neutral-950 p-3 rounded-2xl border border-neutral-800 w-full">
-                &ldquo;{selectedProfileUser.bio}&rdquo;
-              </p>
-              <div className="text-[11px] text-neutral-400 flex items-center space-x-1">
-                <span>District:</span>
-                <span className="text-white font-semibold">{selectedProfileUser.district}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 w-full pt-2">
-                <button
-                  onClick={() => {
-                    alert(`Followed ${selectedProfileUser.name} in your Orbit!`);
-                    setSelectedProfileUser(null);
-                  }}
-                  className="py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-bold text-xs transition"
-                >
-                  Follow Orbit
-                </button>
-                <button
-                  onClick={() => {
-                    alert(`Sent Vibe Pull to ${selectedProfileUser.name}!`);
-                    setSelectedProfileUser(null);
-                  }}
-                  className="py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-teal-500 text-white font-black text-xs shadow-lg transition hover:opacity-90"
-                >
-                  Send Pull
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {selectedProfile && (
+        <UserProfileCard
+          profile={selectedProfile}
+          onClose={() => setSelectedProfile(null)}
+          onFollow={(p) => alert(`Followed @${p.username} into your Orbit!`)}
+          onSendPull={(p) => alert(`Sent Vibe Pull to @${p.username}!`)}
+        />
       )}
     </div>
   );
 };
+
