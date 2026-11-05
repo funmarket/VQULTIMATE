@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import {
-  X, MapPin, Clock, Route, Award, Navigation, GitFork, Bookmark,
-  Share2, CheckCircle2, ChevronRight, Sparkles, Shield, Compass
+  X, Clock, Route, GitFork, Download, Heart, Navigation,
+  ChevronDown, ChevronRight, CheckCircle2, Sparkles, MapPin, Compass
 } from 'lucide-react';
-import { CulturalTrail, TrailWaypoint } from '../domains/d07_trails';
+import { CommunityTrail, TrailStop } from '../domains/d07_trails';
 
 interface TrailDetailModalProps {
-  trail: CulturalTrail;
+  trail: CommunityTrail;
   onClose: () => void;
-  onStartNavigation?: (trail: CulturalTrail) => void;
-  onCheckInWaypoint?: (waypoint: TrailWaypoint, trail: CulturalTrail) => void;
+  onStartNavigation?: (trail: CommunityTrail) => void;
+  onCheckInWaypoint?: (waypoint: any, trail: CommunityTrail) => void;
   onToast?: (message: string) => void;
 }
 
@@ -21,215 +21,284 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
   onToast
 }) => {
   const [completedStops, setCompletedStops] = useState<Set<string>>(new Set());
-  const [isSaved, setIsSaved] = useState(false);
-  const [isRemixed, setIsRemixed] = useState(false);
-  const [remixCount, setRemixCount] = useState(trail.remix_count || 12);
+  const [isCached, setIsCached] = useState(false);
+  const [isAdopted, setIsAdopted] = useState(false);
+  const [likeCount, setLikeCount] = useState<number>(trail.remix_count || 0);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [expandedStopId, setExpandedStopId] = useState<string | null>(null);
 
-  const waypoints = trail.waypoints || [];
+  const stops: TrailStop[] = trail.stops && trail.stops.length > 0
+    ? trail.stops
+    : (trail.waypoints && trail.waypoints.length > 0
+        ? trail.waypoints.map((wp, idx) => ({
+            id: wp.id || `stop-${idx}`,
+            name: wp.title || `Stop #${idx + 1}`,
+            address: wp.title || 'Itinerary Stop',
+            vibeNote: wp.description || wp.hint || 'Cultural checkpoint on trail route.',
+            timeOfDay: (idx === 0 ? 'Morning' : idx === 1 ? 'Sunset' : 'Night'),
+            durationMinutes: 60,
+            vq_reward: wp.vq_reward || 75
+          }))
+        : []);
 
-  const handleCheckIn = (wp: TrailWaypoint) => {
+  const handleToggleLike = () => {
+    if (!hasLiked) {
+      setHasLiked(true);
+      setLikeCount((prev) => prev + 1);
+      if (onToast) onToast('Added to your favorite trail bookmarks!');
+    } else {
+      setHasLiked(false);
+      setLikeCount((prev) => Math.max(0, prev - 1));
+    }
+  };
+
+  const handleAdopt = () => {
+    if (!isAdopted) {
+      setIsAdopted(true);
+      if (onToast) onToast(`🌿 Adopted trail derivative attributed to ${trail.authorName || trail.guardian_name || 'Curator'}!`);
+    } else {
+      if (onToast) onToast('You already adopted this itinerary derivative.');
+    }
+  };
+
+  const handleCacheOffline = () => {
+    setIsCached(!isCached);
+    if (onToast) {
+      onToast(!isCached ? '💾 Trail cached offline for zero-data navigation!' : 'Trail removed from offline cache.');
+    }
+  };
+
+  const handleToggleStop = (id: string) => {
+    setExpandedStopId((prev) => (prev === id ? null : id));
+  };
+
+  const handleCheckInStop = (stop: TrailStop) => {
     setCompletedStops((prev) => {
       const next = new Set(prev);
-      next.add(wp.id);
+      next.add(stop.id);
       return next;
     });
     if (onCheckInWaypoint) {
-      onCheckInWaypoint(wp, trail);
+      onCheckInWaypoint(stop, trail);
     } else if (onToast) {
-      onToast(`Checked in at "${wp.title}"! Claimed +${wp.vq_reward} VQ.`);
+      onToast(`Checked in at "${stop.name}"! +${stop.vq_reward || 75} VQ claimed.`);
     }
   };
 
-  const handleToggleSave = () => {
-    setIsSaved(!isSaved);
-    if (onToast) {
-      onToast(!isSaved ? 'Trail saved to your Pocket!' : 'Trail removed from Pocket.');
-    }
-  };
-
-  const handleRemix = () => {
-    if (!isRemixed) {
-      setIsRemixed(true);
-      setRemixCount(remixCount + 1);
-      if (onToast) {
-        onToast(`Trail remixed! Created derivative branch attributed to ${trail.guardian_name}.`);
-      }
-    } else if (onToast) {
-      onToast('You have already adopted this trail derivative.');
-    }
-  };
-
-  const handleShare = () => {
-    if (onToast) {
-      onToast(`Trail link for "${trail.title}" copied to clipboard!`);
+  const getTimeBadge = (timeOfDay: string) => {
+    switch (timeOfDay) {
+      case 'Morning':
+        return { label: '🌅 Morning', bg: 'bg-amber-500/20 text-amber-300 border-amber-500/30' };
+      case 'Afternoon':
+        return { label: '☀️ Afternoon', bg: 'bg-orange-500/20 text-orange-300 border-orange-500/30' };
+      case 'Sunset':
+        return { label: '🌆 Sunset', bg: 'bg-pink-500/20 text-pink-300 border-pink-500/30' };
+      case 'Night':
+        return { label: '🌙 Night', bg: 'bg-purple-500/20 text-purple-300 border-purple-500/30' };
+      default:
+        return { label: '✨ Flexible', bg: 'bg-teal-500/20 text-teal-300 border-teal-500/30' };
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-      <div className="w-full sm:max-w-lg bg-neutral-900 border border-neutral-800 rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl text-white max-h-[90vh] flex flex-col">
-        {/* Hero Image Header */}
-        <div className="relative h-60 w-full bg-neutral-950 flex-shrink-0">
+    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
+      <div className="w-full sm:max-w-lg bg-neutral-950 border border-neutral-800 rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl text-white max-h-[92vh] flex flex-col">
+        {/* Edge-to-Edge Hero Image matching reference image_86e0ae07.png */}
+        <div className="relative h-64 sm:h-72 w-full bg-neutral-900 flex-shrink-0">
           <img
-            src={trail.image_url}
+            src={trail.imageUrl || trail.image_url}
             alt={trail.title}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/40 to-transparent" />
 
-          {/* Close Button */}
+          {/* Close Button Top Right */}
           <button
             onClick={onClose}
-            aria-label="Close Trail Modal"
-            className="absolute top-4 right-4 p-2 rounded-full bg-neutral-950/70 text-white hover:bg-neutral-900 transition backdrop-blur-md border border-white/10 cursor-pointer z-10"
+            aria-label="Close Trail Detail"
+            className="absolute top-4 right-4 p-2 rounded-full bg-neutral-950/70 hover:bg-neutral-900 text-white transition backdrop-blur-md border border-white/10 cursor-pointer z-10"
           >
             <X className="w-4 h-4" />
           </button>
 
-          {/* Badges on Top */}
+          {/* Badges Overlay */}
           <div className="absolute top-4 left-4 flex items-center space-x-2 z-10">
-            <span className="px-3 py-1 rounded-full bg-neutral-950/80 text-amber-300 font-black text-[10px] uppercase tracking-wider backdrop-blur-md border border-amber-500/30">
-              {trail.category || 'Cultural Heritage'}
-            </span>
-            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md border ${
-              trail.difficulty === 'Easy' ? 'bg-emerald-500/30 text-emerald-300 border-emerald-500/40' :
-              trail.difficulty === 'Moderate' ? 'bg-orange-500/30 text-orange-300 border-orange-500/40' :
-              'bg-purple-500/30 text-purple-300 border-purple-500/40'
-            }`}>
-              {trail.difficulty}
+            <span className="px-3 py-1 rounded-full bg-neutral-950/80 text-emerald-400 font-black text-[10px] uppercase tracking-wider backdrop-blur-md border border-emerald-500/40 flex items-center space-x-1">
+              <span>📍 {trail.category || 'FULL DAY CIRCUIT'}</span>
             </span>
           </div>
 
-          {/* Title & Stats Overlay */}
-          <div className="absolute bottom-4 left-4 right-4 z-10 space-y-1">
-            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight drop-shadow-md">
-              {trail.title}
-            </h2>
-            <div className="flex items-center space-x-3 text-xs text-neutral-300">
-              <span className="flex items-center space-x-1">
-                <Clock className="w-3.5 h-3.5 text-teal-400" />
-                <span>{trail.duration_mins} mins</span>
-              </span>
-              <span>•</span>
-              <span className="flex items-center space-x-1">
-                <Route className="w-3.5 h-3.5 text-orange-400" />
-                <span>{trail.distance_km || 2.4} km</span>
-              </span>
-              <span>•</span>
-              <span className="text-amber-300 font-black bg-amber-500/20 px-2 py-0.5 rounded-lg border border-amber-500/30">
-                +{trail.vq_reward} VQ
-              </span>
-            </div>
+          <div className="absolute bottom-4 right-4 z-10">
+            <span className="px-3 py-1 rounded-full bg-neutral-950/80 text-amber-300 font-bold text-[11px] backdrop-blur-md border border-amber-500/40 flex items-center space-x-1">
+              <Clock className="w-3.5 h-3.5 text-amber-400" />
+              <span>{trail.durationHours ? `${trail.durationHours}h` : `${Math.round((trail.duration_mins || 180)/60)}h`} • {stops.length} Stops</span>
+            </span>
           </div>
         </div>
 
         {/* Scrollable Content Body */}
         <div className="p-6 overflow-y-auto space-y-5 flex-1">
-          {/* Curator Attributed Card */}
-          <div className="rounded-2xl bg-neutral-950/80 border border-neutral-800 p-3.5 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <img
-                src={trail.guardian_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
-                alt={trail.guardian_name}
-                className="w-11 h-11 rounded-full object-cover border-2 border-orange-500/50"
-              />
-              <div>
-                <span className="text-[10px] text-neutral-400 uppercase tracking-wider font-semibold">Curated by District Guardian</span>
-                <h4 className="font-bold text-sm text-white">{trail.guardian_name}</h4>
-                <p className="text-[11px] text-teal-400">{trail.guardian_handle || '@guardian'}</p>
+          {/* Title & Author Action Bar */}
+          <div className="space-y-3">
+            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug">
+              {trail.title}
+            </h2>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="font-black text-sm text-white tracking-wide">
+                  {trail.authorName || trail.guardian_name || 'MR B'}
+                </span>
+                <span className="text-neutral-500 text-xs">•</span>
+                <span className="text-xs text-neutral-400 font-mono">
+                  {trail.authorHandle || trail.guardian_handle || '@curator'}
+                </span>
+              </div>
+
+              {/* Action Buttons: Adopt, Cache, Like */}
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={handleAdopt}
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer ${
+                    isAdopted
+                      ? 'bg-emerald-500/30 text-emerald-300 border-emerald-400'
+                      : 'bg-emerald-950/40 text-emerald-400 border-emerald-500/50 hover:bg-emerald-900/50'
+                  }`}
+                >
+                  <GitFork className="w-3.5 h-3.5" />
+                  <span>Adopt</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCacheOffline}
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer ${
+                    isCached
+                      ? 'bg-neutral-800 text-white border-neutral-600'
+                      : 'bg-neutral-900 text-neutral-300 border-neutral-800 hover:text-white'
+                  }`}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Cache</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleToggleLike}
+                  className={`px-2.5 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1 cursor-pointer ${
+                    hasLiked
+                      ? 'bg-pink-500/20 text-pink-400 border-pink-500/50'
+                      : 'bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white'
+                  }`}
+                >
+                  <Heart className={`w-3.5 h-3.5 ${hasLiked ? 'fill-pink-400 text-pink-400' : ''}`} />
+                  <span>{likeCount}</span>
+                </button>
               </div>
             </div>
-            <div className="flex items-center space-x-1 text-xs text-neutral-400 bg-neutral-900 px-2.5 py-1 rounded-xl border border-neutral-800">
-              <GitFork className="w-3.5 h-3.5 text-teal-400" />
-              <span>{remixCount} Remixes</span>
-            </div>
           </div>
 
-          {/* Overview & Story Description */}
-          <div className="space-y-1.5">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400">Trail Narrative & Story</h4>
-            <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed bg-neutral-950/40 p-3 rounded-2xl border border-neutral-800/60">
-              {trail.description}
-            </p>
-          </div>
+          {/* Narrative Story Snippet */}
+          <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed font-light">
+            {trail.story || trail.description}
+          </p>
 
-          {/* Sequential Ordered Waypoints / Stops */}
-          <div className="space-y-3">
+          {/* CURATED TRAIL ITINERARY Section */}
+          <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400 flex items-center space-x-1.5">
-                <Compass className="w-4 h-4 text-teal-400" />
-                <span>Sequential Waypoints ({waypoints.length} Stops)</span>
-              </h4>
-              <span className="text-[10px] text-emerald-400 font-semibold">
-                {completedStops.size} of {waypoints.length} Completed
+              <span className="text-[11px] font-black uppercase tracking-wider text-neutral-400 font-mono">
+                CURATED TRAIL ITINERARY ({stops.length} STOPS)
+              </span>
+              <span className="text-[10px] text-neutral-500 font-medium">
+                Tap stop for pro-tips
               </span>
             </div>
 
             <div className="space-y-2.5">
-              {waypoints.map((wp, index) => {
-                const isChecked = completedStops.has(wp.id);
+              {stops.map((stop, index) => {
+                const isChecked = completedStops.has(stop.id);
+                const isExpanded = expandedStopId === stop.id;
+                const timeBadge = getTimeBadge(stop.timeOfDay);
+
                 return (
                   <div
-                    key={wp.id}
-                    className={`rounded-2xl border p-3.5 space-y-2 transition ${
-                      isChecked
-                        ? 'bg-emerald-950/20 border-emerald-500/40'
-                        : 'bg-neutral-950/60 border-neutral-800 hover:border-teal-500/40'
+                    key={stop.id}
+                    className={`rounded-2xl border transition duration-200 overflow-hidden ${
+                      isExpanded
+                        ? 'bg-neutral-900/90 border-emerald-500/40'
+                        : 'bg-neutral-900/50 border-neutral-800 hover:border-neutral-700'
                     }`}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-2.5">
-                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 mt-0.5 ${
+                    <div
+                      onClick={() => handleToggleStop(stop.id)}
+                      className="p-3.5 flex items-center justify-between cursor-pointer select-none"
+                    >
+                      <div className="flex items-center space-x-3 min-w-0 flex-1 pr-2">
+                        <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 ${
                           isChecked
-                            ? 'bg-emerald-500 text-neutral-950'
-                            : 'bg-neutral-800 text-teal-300 border border-teal-500/30'
+                            ? 'bg-emerald-500 text-neutral-950 shadow-md shadow-emerald-500/30'
+                            : 'bg-neutral-900 text-emerald-400 border border-emerald-500/40'
                         }`}>
                           {isChecked ? '✓' : index + 1}
                         </span>
-                        <div>
-                          <h5 className="font-bold text-xs text-white">{wp.title}</h5>
-                          <p className="text-[11px] text-neutral-400 mt-0.5 leading-normal">{wp.description}</p>
-                          {wp.hint && (
-                            <p className="text-[10px] text-amber-300/90 italic mt-1">
-                              💡 Hint: {wp.hint}
-                            </p>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-bold text-xs sm:text-sm text-white truncate">
+                            {stop.name}
+                          </h4>
+                          {stop.address && stop.address !== stop.name && (
+                            <p className="text-[10px] text-neutral-400 truncate">{stop.address}</p>
                           )}
                         </div>
                       </div>
-                      <span className="text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 flex-shrink-0 ml-2">
-                        +{wp.vq_reward} VQ
-                      </span>
+
+                      <div className="flex items-center space-x-2 flex-shrink-0">
+                        <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${timeBadge.bg}`}>
+                          {timeBadge.label}
+                        </span>
+                        {isExpanded ? (
+                          <ChevronDown className="w-4 h-4 text-neutral-400" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-neutral-500" />
+                        )}
+                      </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-1 border-t border-neutral-800/60 text-[10px] text-neutral-500">
-                      <span>
-                        Coordinates:{' '}
-                        {wp.lat !== undefined && wp.lng !== undefined
-                          ? `${wp.lat.toFixed(4)}, ${wp.lng.toFixed(4)}`
-                          : 'Guided Waypoint'}
-                      </span>
-                      <button
-                        onClick={() => handleCheckIn(wp)}
-                        disabled={isChecked}
-                        className={`px-3 py-1 rounded-xl font-bold transition flex items-center space-x-1 cursor-pointer ${
-                          isChecked
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                            : 'bg-neutral-800 hover:bg-teal-500/20 text-neutral-300 hover:text-teal-300 border border-neutral-700'
-                        }`}
-                      >
-                        {isChecked ? (
-                          <>
-                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                            <span>Stop Verified</span>
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="w-3 h-3 text-orange-400" />
-                            <span>Check-In Stop</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
+                    {/* Expanded Pro-Tips & Check-In Area */}
+                    {isExpanded && (
+                      <div className="px-4 pb-4 pt-1 space-y-3 border-t border-neutral-800/80 bg-neutral-950/60 animate-fadeIn">
+                        <div className="p-3 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-neutral-300 leading-relaxed">
+                          <span className="text-emerald-400 font-bold block mb-1">💡 Curator Pro-Tip:</span>
+                          {stop.vibeNote || 'Follow the trail markers and savor the authentic cultural atmosphere.'}
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs pt-1">
+                          <span className="text-amber-300 font-bold bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20 text-[11px]">
+                            +{stop.vq_reward || 75} VQ Check-in
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => handleCheckInStop(stop)}
+                            disabled={isChecked}
+                            className={`px-4 py-1.5 rounded-xl font-bold transition flex items-center space-x-1.5 cursor-pointer ${
+                              isChecked
+                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                                : 'bg-emerald-500 hover:bg-emerald-400 text-neutral-950 shadow-md shadow-emerald-500/20'
+                            }`}
+                          >
+                            {isChecked ? (
+                              <>
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Checked In</span>
+                              </>
+                            ) : (
+                              <span>Check In Here</span>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -237,57 +306,18 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Action Controls Bar */}
-        <div className="p-4 bg-neutral-950 border-t border-neutral-800 space-y-3 flex-shrink-0">
-          <div className="grid grid-cols-3 gap-2">
-            {/* Save / Pocket Button */}
-            <button
-              onClick={handleToggleSave}
-              className={`py-2.5 rounded-2xl text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer border ${
-                isSaved
-                  ? 'bg-teal-500/20 text-teal-300 border-teal-500/50'
-                  : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border-neutral-800'
-              }`}
-            >
-              <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-teal-400 text-teal-400' : ''}`} />
-              <span>{isSaved ? 'In Pocket' : 'Save'}</span>
-            </button>
-
-            {/* Remix / Adopt Derivative Button */}
-            <button
-              onClick={handleRemix}
-              className={`py-2.5 rounded-2xl text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer border ${
-                isRemixed
-                  ? 'bg-purple-500/20 text-purple-300 border-purple-500/50'
-                  : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border-neutral-800'
-              }`}
-            >
-              <GitFork className="w-3.5 h-3.5 text-purple-400" />
-              <span>{isRemixed ? 'Adopted' : 'Remix'}</span>
-            </button>
-
-            {/* Share Button */}
-            <button
-              onClick={handleShare}
-              className="py-2.5 rounded-2xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-800 text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-              <span>Share</span>
-            </button>
-          </div>
-
-          {/* Primary Action: Start Navigation */}
+        {/* Sticky Full Trail Walking Route Button (Solid Neon Green #00e599) */}
+        <div className="p-4 bg-neutral-950 border-t border-neutral-800">
           <button
+            type="button"
             onClick={() => {
-              if (onStartNavigation) {
-                onStartNavigation(trail);
-              }
+              if (onStartNavigation) onStartNavigation(trail);
               onClose();
             }}
-            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-teal-500 text-neutral-950 font-black text-sm shadow-xl shadow-orange-500/25 flex items-center justify-center space-x-2 hover:opacity-95 transition cursor-pointer"
+            className="w-full py-4 rounded-2xl bg-[#00e599] hover:bg-[#00c985] text-neutral-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl shadow-emerald-500/20 transition flex items-center justify-center space-x-2 cursor-pointer active:scale-98"
           >
             <Navigation className="w-4 h-4 fill-neutral-950" />
-            <span>Start Trail Navigation (+{trail.vq_reward} VQ)</span>
+            <span>FULL TRAIL WALKING ROUTE</span>
           </button>
         </div>
       </div>

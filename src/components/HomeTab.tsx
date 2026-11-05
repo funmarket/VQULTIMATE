@@ -31,6 +31,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const [homeToast, setHomeToast] = useState<string | null>(null);
 
   const trailsScrollRef = useRef<HTMLDivElement>(null);
+  const guardiansScrollRef = useRef<HTMLDivElement>(null);
 
   const loadFlash = async () => {
     const ev = await fetchActiveFlashEvent();
@@ -66,6 +67,16 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
     if (trailsScrollRef.current) {
       const scrollAmount = 300;
       trailsScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleScrollGuardians = (direction: 'left' | 'right') => {
+    if (guardiansScrollRef.current) {
+      const scrollAmount = 300;
+      guardiansScrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
       });
@@ -252,15 +263,18 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         )}
       </div>
 
-      {/* Curated Cultural Trails (Horizontally Scrollable & Clickable) */}
+      {/* Curated Cultural Trails & Vibe Tours (Horizontally Scrollable & Clickable) */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold flex items-center space-x-2">
-            <Award className="w-5 h-5 text-amber-400" />
-            <span>Curated Cultural Trails</span>
-          </h2>
+          <div>
+            <h2 className="text-lg font-bold flex items-center space-x-2">
+              <Award className="w-5 h-5 text-amber-400" />
+              <span>Cultural Vibes Trails & Tours</span>
+            </h2>
+            <p className="text-[11px] text-neutral-400">Curated multi-stop circuits & pro guided expeditions</p>
+          </div>
           <div className="flex items-center space-x-1.5">
-            <span className="text-xs text-neutral-400 font-semibold">{trails.length} Trails</span>
+            <span className="text-xs text-neutral-400 font-semibold">{trails.length} Total</span>
             <div className="flex items-center space-x-1 pl-2">
               <button
                 onClick={() => handleScrollTrails('left')}
@@ -294,7 +308,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
                 {/* Hero Image Section */}
                 <div className="relative h-40 w-full overflow-hidden bg-neutral-950">
                   <img
-                    src={t.image_url}
+                    src={t.imageUrl || t.image_url}
                     alt={t.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                   />
@@ -302,8 +316,12 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
 
                   {/* Top Badges */}
                   <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-wider bg-neutral-950/80 text-amber-300 px-2.5 py-1 rounded-full border border-amber-500/30 backdrop-blur-md">
-                      {t.difficulty}
+                    <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border backdrop-blur-md ${
+                      t.isTour
+                        ? 'bg-amber-950/80 text-amber-300 border-amber-500/40'
+                        : 'bg-neutral-950/80 text-emerald-300 border-emerald-500/30'
+                    }`}>
+                      {t.isTour ? '⬡ VIBE TOUR' : (t.category || '🧭 VIBE TRAIL')}
                     </span>
                     <span className="text-xs font-black text-amber-300 bg-amber-500/20 px-2.5 py-1 rounded-xl border border-amber-500/40 backdrop-blur-md">
                       +{t.vq_reward} VQ
@@ -314,14 +332,14 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
                   <div className="absolute bottom-2.5 left-3 right-3 flex items-center space-x-2 text-[11px] text-neutral-300">
                     <span className="flex items-center space-x-1 bg-neutral-950/70 px-2 py-0.5 rounded-lg backdrop-blur-md">
                       <Clock className="w-3 h-3 text-teal-400" />
-                      <span>{t.duration_mins}m</span>
+                      <span>{t.durationHours ? `${t.durationHours}h` : `${t.duration_mins}m`}</span>
                     </span>
                     <span className="flex items-center space-x-1 bg-neutral-950/70 px-2 py-0.5 rounded-lg backdrop-blur-md">
                       <Route className="w-3 h-3 text-orange-400" />
                       <span>{t.distance_km || 2.4}km</span>
                     </span>
                     <span className="flex items-center space-x-1 bg-neutral-950/70 px-2 py-0.5 rounded-lg backdrop-blur-md text-teal-300 font-semibold ml-auto">
-                      <span>{t.waypoints_count} Stops</span>
+                      <span>{t.stopsCount || t.waypoints_count || 3} Stops</span>
                     </span>
                   </div>
                 </div>
@@ -333,19 +351,19 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
                       {t.title}
                     </h3>
                     <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed">
-                      {t.description}
+                      {t.story || t.description}
                     </p>
                   </div>
 
                   <div className="pt-2 border-t border-neutral-800/80 flex items-center justify-between text-xs">
                     <div className="flex items-center space-x-2">
                       <img
-                        src={t.guardian_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
-                        alt={t.guardian_name}
+                        src={t.authorAvatarUrl || t.guardian_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
+                        alt={t.authorName || t.guardian_name}
                         className="w-6 h-6 rounded-full object-cover border border-orange-500/40"
                       />
                       <span className="text-[11px] text-neutral-300 font-medium truncate max-w-[120px]">
-                        {t.guardian_name}
+                        {t.authorName || t.guardian_name}
                       </span>
                     </div>
                     <span className="text-[11px] text-teal-400 font-bold flex items-center space-x-0.5 group-hover:translate-x-0.5 transition">
@@ -368,47 +386,101 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         )}
       </div>
 
-      {/* District Guardians */}
+      {/* Active Guardians & Local Legends (Horizontally Scrollable) */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold flex items-center space-x-2">
-            <Shield className="w-5 h-5 text-teal-400" />
-            <span>Active Guardians</span>
-          </h2>
-          <span className="text-xs text-neutral-400">{guardians.length} On Duty</span>
+          <div>
+            <h2 className="text-lg font-bold flex items-center space-x-2">
+              <Shield className="w-5 h-5 text-teal-400" />
+              <span>Active Guardians & Local Legends</span>
+            </h2>
+            <p className="text-[11px] text-neutral-400">Verified human guides & friendly neighborhood sentinels</p>
+          </div>
+          <div className="flex items-center space-x-1.5">
+            <span className="text-xs text-neutral-400 font-semibold">{guardians.length} On Duty</span>
+            <div className="flex items-center space-x-1 pl-2">
+              <button
+                onClick={() => handleScrollGuardians('left')}
+                className="p-1 rounded-lg bg-neutral-900 border border-neutral-800 text-teal-400 hover:bg-neutral-800 cursor-pointer"
+                aria-label="Scroll guardians left"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => handleScrollGuardians('right')}
+                className="p-1 rounded-lg bg-neutral-900 border border-neutral-800 text-teal-400 hover:bg-neutral-800 cursor-pointer"
+                aria-label="Scroll guardians right"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
         </div>
 
         {guardians.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {guardians.map((g) => (
-              <div
-                key={g.id}
-                onClick={() => setSelectedGuardian(g)}
-                className="rounded-2xl bg-neutral-900 border border-neutral-800 hover:border-orange-500/50 p-4 flex items-center space-x-3 transition cursor-pointer group shadow-lg"
-              >
-                <div className="relative">
-                  <img
-                    src={g.avatar_url}
-                    alt={g.name}
-                    className="w-12 h-12 rounded-full object-cover border border-teal-500/30 group-hover:scale-105 transition duration-300"
-                  />
-                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-neutral-900 animate-pulse" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-bold text-sm text-white truncate group-hover:text-amber-300 transition">
-                    {g.name}
-                  </h4>
-                  <p className="text-xs text-neutral-400 truncate">{g.district}</p>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-[10px] text-emerald-300 font-medium">Trust {g.trust_score}%</span>
-                    <span className="text-[10px] text-teal-400 font-bold flex items-center space-x-0.5 group-hover:translate-x-0.5 transition">
+          <div
+            ref={guardiansScrollRef}
+            className="flex items-center space-x-3.5 overflow-x-auto pb-3 scrollbar-none px-1"
+          >
+            {guardians.map((g) => {
+              const isPro = g.type === 'pro';
+              return (
+                <div
+                  key={g.id}
+                  onClick={() => setSelectedGuardian(g)}
+                  className="w-72 sm:w-80 flex-shrink-0 rounded-3xl bg-neutral-900 border border-neutral-800 hover:border-teal-500/60 p-4 flex flex-col justify-between space-y-3 transition cursor-pointer group shadow-xl"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="relative flex-shrink-0">
+                      <img
+                        src={g.avatarUrl || g.avatar_url}
+                        alt={g.name}
+                        className="w-12 h-12 rounded-full object-cover border border-teal-500/40 group-hover:scale-105 transition duration-300"
+                      />
+                      <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-neutral-900 animate-pulse" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center space-x-1.5">
+                        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.2 rounded border ${
+                          isPro
+                            ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                            : 'bg-teal-500/10 text-teal-300 border-teal-500/30'
+                        }`}>
+                          {g.tier || (isPro ? 'PRO GUIDE' : 'LOCAL LEGEND')}
+                        </span>
+                        {g.hourlyRate ? (
+                          <span className="text-[10px] font-bold text-amber-300 bg-amber-500/10 px-1.5 py-0.2 rounded">
+                            ${g.hourlyRate}/h
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-teal-300 bg-teal-500/10 px-1.5 py-0.2 rounded">
+                            Free
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="font-bold text-sm text-white truncate group-hover:text-amber-300 transition mt-0.5">
+                        {g.name}
+                      </h4>
+                      <p className="text-xs text-neutral-400 truncate">{g.city || g.district}</p>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-neutral-300 line-clamp-2 leading-relaxed font-light">
+                    {g.bio || 'District guardian and cultural pathfinder.'}
+                  </p>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-neutral-800 text-xs">
+                    <span className="text-[11px] text-emerald-300 font-bold">
+                      Trust {g.trustScore || g.trust_score || 95}%
+                    </span>
+                    <span className="text-[11px] text-teal-400 font-bold flex items-center space-x-0.5 group-hover:translate-x-0.5 transition">
                       <span>Inspect</span>
-                      <ChevronRight className="w-3 h-3" />
+                      <ChevronRight className="w-3.5 h-3.5" />
                     </span>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800/80 p-5 text-center space-y-2">
