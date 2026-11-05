@@ -86,7 +86,10 @@ export async function signInWithEmail(identifier: string, password: string): Pro
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) throw new Error('Authenticated session could not be verified.');
   const profile = await linkedProfile(data.user.id);
-  if (!profile) throw new Error('Signed in, but no linked profile was found. Contact the administrator.');
+  if (!profile) {
+    await supabase.auth.signOut();
+    throw new Error('Your account exists but its profile is not linked or recognized. Contact the administrator.');
+  }
   return profile;
 }
 
