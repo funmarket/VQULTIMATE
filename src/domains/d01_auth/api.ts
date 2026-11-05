@@ -221,6 +221,7 @@ export async function updateExistingProfile(profile: UserProfile, edits: Profile
     !(String(fields.city ?? current.city ?? '')).trim() || !(telegram.trim() || xHandle.trim()))) {
     throw new Error('Cozy Diary Mode requires bio, city and a contact handle.');
   }
+  if (typeof edits.photoUrl === 'string') fields.photo_url = edits.photoUrl.trim();
   if (edits.avatarFile) fields.photo_url = await uploadProfileAvatar(edits.avatarFile, current.id);
   if (Object.keys(fields).length > 0) {
     const { data, error } = await supabase.from('profiles').update(fields).eq('id', current.id).select('id').maybeSingle();
