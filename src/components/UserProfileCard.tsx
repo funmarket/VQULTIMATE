@@ -88,7 +88,7 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
     setLoading(false);
   };
 
-  const avatar = profile.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80';
+  const avatar = profile.avatar_url;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
@@ -104,11 +104,13 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
 
         {/* Photo-First Hero Section */}
         <div className="relative aspect-[4/4.5] w-full bg-neutral-950 overflow-hidden">
-          <img
-            src={avatar}
-            alt={profile.full_name}
-            className="w-full h-full object-cover"
-          />
+          {avatar ? (
+            <img src={avatar} alt={profile.full_name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-neutral-900 text-neutral-500">
+              <span className="text-5xl" aria-hidden="true">👤</span>
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/40 to-transparent" />
 
           {/* Badges Overlay */}
@@ -120,7 +122,7 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
               </span>
             ) : (
               <span className="px-3 py-1 rounded-full bg-neutral-900/80 text-amber-300 font-bold text-[10px] uppercase tracking-wider backdrop-blur-md border border-amber-500/30">
-                {profile.tier || 'EXPLORER'}
+                {profile.role === 'guardian' ? 'GUARDIAN' : 'EXPLORER'}
               </span>
             )}
           </div>
@@ -141,10 +143,12 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
               <Coins className="w-3.5 h-3.5 text-amber-400" />
               <span>{profile.vq_balance} VQ</span>
             </span>
-            <span className="text-[11px] text-teal-300 font-bold flex items-center space-x-1 bg-teal-500/10 px-3 py-1 rounded-xl border border-teal-500/30">
-              <Award className="w-3.5 h-3.5 text-teal-400" />
-              <span>Trust {profile.trust_score || 95}%</span>
-            </span>
+            {typeof profile.trust_score === 'number' && (
+              <span className="text-[11px] text-teal-300 font-bold flex items-center space-x-1 bg-teal-500/10 px-3 py-1 rounded-xl border border-teal-500/30">
+                <Award className="w-3.5 h-3.5 text-teal-400" />
+                <span>Trust {profile.trust_score}%</span>
+              </span>
+            )}
           </div>
 
           {profile.bio && (
@@ -153,10 +157,18 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
             </p>
           )}
 
+          {profile.interests && profile.interests.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {profile.interests.map(tag => (
+                <span key={tag} className="px-2 py-1 text-[11px] rounded-xl border border-neutral-700 bg-neutral-800 text-neutral-300">{tag}</span>
+              ))}
+            </div>
+          )}
+
           <div className="text-[11px] text-neutral-400 flex items-center justify-between px-1">
             <span className="flex items-center space-x-1">
               <MapPin className="w-3.5 h-3.5 text-orange-400" />
-              <span>{profile.district || 'Heritage Node'}</span>
+              <span>{profile.city || profile.district || 'Location not provided'}</span>
             </span>
             <span className="text-neutral-500 text-[10px]">
               ECHO = Follow • PULL = Request Vibe
