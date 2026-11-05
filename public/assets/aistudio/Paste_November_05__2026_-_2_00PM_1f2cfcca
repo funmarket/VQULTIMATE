@@ -1,0 +1,1356 @@
+# VQgemni — Master Plan.md
+
+**Document role:** Single living implementation-sequencing, operational-policy and acceptance-control plan for the **complete production-ready VQgemni application**. This is not an MVP, prototype, partial launch plan, replacement Requirements document, replacement Structure document, or physical schema specification. **This Product Owner-approved `Master Plan.md` is the controlling implementation and production-execution authority below any later direct Product Owner instruction.**
+
+> **For agentic workers:** Implement this plan only after explicit Product Owner authorization. Use bounded, source-verified vertical slices. A step is not complete until its acceptance contract is satisfied; a green build, created table, route, or screen is not completion evidence.
+
+**Goal:** Restore and complete the existing `funmarket/VQgemini` application as a production-ready, fully domain-owned product with 28 approved logical domains, preserving the current populated UI and its features. First perform S00 content/test-account/media preservation and verified cutover, then S01–S18 engineering rehabilitation and acceptance.
+
+**Architecture source and execution hierarchy:** Latest explicit Product Owner decisions remain highest authority. This Product Owner-approved `Master Plan.md` is the consolidated living implementation/operations authority and may contain newer directed decisions, implementation clarifications, Admin/governance controls and production-readiness requirements that are absent from older design documents. `Requirements.md` remains the full product-behavior source, `structure.md` the architecture/module ownership source, and `Database.md` the conceptual persistence/invariant source. A newer approved Master Plan clarification is not a defect merely because an older file did not mention it. Historical Gemini/old VibeQuest remain behavior/failure references only.
+
+**Modular Monolith runtime (directed; additive):** The existing `funmarket/VQgemini` React/Vite application remains one frontend, one Supabase project (PostgreSQL/PostGIS, Auth, Storage and Edge Functions as needed), and one deployment. The 28 numbered domains under `src/domains/dXX_*` are internal modules, not separate services; each is the sole authorized writer of its canonical tables. Domain public commands and queries are exported through `index.ts` only. UI, features, screens, hooks, other domains and Admin use those public APIs (or non-writing thin application orchestration); nobody writes another domain's tables. Admin is orchestration, not D29 or a second writer. S00 must satisfy its existing full preservation, genuine test identity, D13 media migration and visual/data parity acceptance **before structural transfer**. Transfer existing working code gradually from `features/`, `screens/`, `components/`, `services/` and `hooks/`, one real feature at a time; retain previous functionality until verified backend, RLS/authorization, functional and visual parity plus authorized cutover. Boundary tests must enforce public-only imports and no cross-domain writes; no mocks, shadow writers or service extraction. The domain directories currently exist, and some contain `index.ts`; inspect their actual contents at execution time rather than treating them as empty or completed.
+
+**Live-source rule:** Current repository HEAD and governing-document identities are intentionally verified at execution time rather than frozen into this living plan. Historical checkpoint values, if retained elsewhere as evidence, never override current source.
+
+**Plan status:** `PRODUCT OWNER APPROVED — CONTROLLING IMPLEMENTATION / PRODUCTION-EXECUTION PLAN`. This Master Plan is the controlling implementation, sequencing, operational-policy and acceptance authority below any later explicit Product Owner instruction. It does not itself authorize arbitrary repository, infrastructure, database or production mutation; each implementation task still requires its applicable bounded authorization and live-source verification.
+
+---
+
+## Current implementation direction — existing-app rehabilitation (2026-11-03)
+
+**DIRECTED / SUPERSEDING:** VQgemni is the **existing** `funmarket/VQgemini` React/Vite application, not an empty repository. Repair and complete its engineering while preserving all approved experiences, the five-tab product, current visual appearance and populated content. The target remains 28 canonical logical domains and the existing S01–S18 functional scope. Earlier claims that application code/client/UI do not exist or must be rebuilt from scratch are superseded. The current selected infrastructure is GitHub `funmarket/VQgemini`, Vercel project `vqgemni`, Supabase project `avdfessrhbsqwlfmbdau`; verify the actual live environment/hosting state before every task, without treating connection as proof of readiness.
+
+**Mandatory dependency:** S00 (defined below) precedes S01 and every structural refactor that could delete, detach or mutate existing content. S00 preserves and inventories every existing post, authored sample, Place, Trail, Guardian/Legend, account/profile, image/media asset, relation and screen; creates genuine Supabase Auth **test accounts** plus D01/D02 profiles; associates sample posts, Trails and Guardians with appropriately authorized test principals; migrates licensed media into Supabase Storage under D13 ownership; and verifies all content and visual parity before replacing the embedded React datasets. These are genuine database test fixtures, **not** invented real-user activity, check-ins, payments, Handshakes, rewards or verified location evidence. The app stays populated throughout development.
+
+**Data authority:** React owns presentation, styling and transient interface state only. Domain-owned backend / authorized RLS interfaces own durable identity, posts, media attachments, Places, Trails, Guardians, relationships and transactional facts. Do not expose service role keys, bypass canonical writers, or treat localStorage/samples as source of truth. Preserve static design tokens and ordinary UI icons; **business datasets and their images** belong in Supabase-authorized persistence/media.
+
+**Lifecycle:** Temporary test users and content remain in development/staging until a verified production-ready, legitimately populated release baseline is established. Cleanup is a **separately authorized** dependency-aware operation that cannot orphan posts, steal authorship, delete genuine user records or leave the launch application unintentionally empty. No content imports, Auth operations, Storage uploads or database changes are authorized merely by this document.
+
+## 0. Global constraints and execution states
+
+### 0.1 Non-negotiable constraints
+
+1. The target is the **entire production application**; dependency ordering never reduces scope.
+2. All **D01–D28** are complete-initial-product domains. Logical domains do not imply 28 services, schemas, tables or deployments.
+3. One canonical writer owns each business fact. Cross-domain journeys use typed commands/events/read projections, not direct foreign-domain writes.
+4. One canonical product/backend serves browser and Telegram Mini App. Host APIs are adapters, not separate business systems.
+5. Five equal root destinations remain **Home / Explore / Share / Vibe / Purse**.
+6. Guest-first public discovery; protected writes require verified identity and authorization.
+7. No historical mock, browser-local authority, fabricated user, fake GPS, fake booking, fake notification, fake payment, client-minted VQ or optimistic failure-success is permitted in production.
+8. VQ is the only in-app reward unit; it is distinct from recognition and fiat money.
+9. Ticketing is independent of Events and Guardian reservations. Activities and Events remain distinct.
+10. D13 owns media assets; consuming domains own attachment meaning/authorization. D04 owns geographic evidence; D05 owns Places; D06 owns Trails; D23 owns notification delivery, not originating actions.
+11. PostgreSQL + PostGIS is the intended authoritative persistence/spatial platform. Physical schema is implemented incrementally from approved invariants, with versioned migrations and compatibility gates.
+12. Security, observability, accessibility, localization, mobile acceptance and operations are built throughout, not appended at the end.
+13. Staging appears early and remains continuously production-shaped, but staging availability is never production launch acceptance.
+14. Genuine Supabase-authenticated development test users and imported, clearly attributed sample business records must populate the app during S00–S18 development. They never count as proof of real external events, payments, Handshakes, check-ins or production-user activity; no browser-local fake authority is allowed.
+15. Any implementation task must re-read current branch/head and governing documents before mutation; this plan does not authorize stale-state execution.
+16. Implementation workers must read the current Product Owner-approved `Master Plan.md` before executing any slice. Authority order is: latest explicit Product Owner decision → approved Master Plan → Requirements → structure → Database → historical/reference evidence.
+17. Master Plan enhancements do **not** require automatic back-edits to older design documents. A blocking contradiction exists only when execution would remove approved functionality, duplicate a canonical writer, violate the 28-domain model, breach privacy/security, recreate prohibited legacy authority, split Web/Telegram into separate products, introduce a 29th business domain, or violate a newer explicit Product Owner decision.
+18. The Master Plan may add implementation/operational detail only when directed, source-backed, ownership-consistent, security/privacy-required or a production-readiness engineering choice. `Master Plan controls` is never permission for an agent to silently invent product policy.
+19. **Modular-monolith ownership and non-destructive migration (ADDITIVE):** One React/Vite frontend, one Supabase project and one deployment. D01–D28 stay internal numbered modules and sole writers of their canonical tables, exposing only public `index.ts` APIs. All UI, features, other domains and Admin call the owning public API; no foreign-table direct mutations, shadow writers, D29, mock persistence or extracted services. Complete S00 preservation acceptance before any structural transfer. Migrate one existing feature at a time without deleting its old path until the replacement is backend-authoritative, security/visual/functionally verified, and approved for cutover; enforce public-API-only and sole-writer boundaries with automated tests.
+
+### 0.2 Status vocabulary
+
+Every slice/domain/journey uses only: `PLANNED`, `READY`, `IN PROGRESS`, `IMPLEMENTED`, `VERIFIED`, `STAGING ACCEPTED`, `PRODUCTION ACCEPTED`, `BLOCKED`.
+
+`IMPLEMENTED` means code/persistence exists. `VERIFIED` adds the required automated evidence. `STAGING ACCEPTED` adds integrated production-shaped runtime evidence. `PRODUCTION ACCEPTED` requires the final release gates. No domain is called complete because a subset of these states is green.
+
+### 0.3 Evidence fields retained for every slice
+
+| Field | Before implementation |
+|---|---|
+| Source/base SHA | PENDING |
+| Implementation commit SHA(s) | PENDING |
+| PR identifier | PENDING |
+| CI run / exact-SHA checks | PENDING |
+| Focused tests | PENDING |
+| Integration/database tests | PENDING |
+| Migration IDs/checksums | PENDING |
+| Staging deployment/revision | PENDING |
+| Staging runtime evidence | PENDING |
+| Security/privacy evidence | PENDING |
+| Product Owner acceptance where required | PENDING |
+| Known limitations | PENDING |
+| Boundary test (public API only, no cross-domain writes) | PENDING |
+
+Never fabricate these fields.
+
+---
+
+## 1. Source checkpoint
+
+### 1.1 Live repository checkpoint rule
+
+- Repository: `funmarket/VQgemini`
+- Current repository default branch: `main` (no separate integration branch designated here)
+- Stable/release branch: `main`
+- Exact current HEAD MUST be retrieved from GitHub immediately before each implementation or consequential mutation.
+- Current file/tree/runtime presence MUST be verified from live source; this plan must not be used as evidence that a file, application tree, migration, deployment or runtime still does or does not exist.
+- Historical implementation evidence may be recorded in the applicable slice evidence fields, but mutable repository state is never frozen as permanent authority inside this section.
+
+### 1.2 Governing sources
+
+| Source | Role | Execution rule |
+|---|---|---|
+| `Master Plan.md` | Controlling implementation/sequencing/operations/acceptance authority | Read current Product Owner-approved revision before each slice |
+| `Requirements.md` | Approved product behavior baseline | Current GitHub revision must be inspected |
+| `structure.md` | Approved architecture/module/ownership baseline | Current GitHub revision must be inspected |
+| `Database.md` | Approved conceptual persistence/invariant baseline | Current GitHub revision must be inspected |
+| `AGENTS.md` | Mandatory execution/evidence/release discipline | Current GitHub revision must be read before work |
+
+`docs/product-design/*` is think-tank/reference material only. It may inform research, historical analysis, and supporting context, but it is not a governing or canonical implementation authority.
+
+Commit SHAs, blob hashes, byte counts and line counts belong in task/slice evidence when they are actually observed. They are not permanent authority and are intentionally not frozen into this living plan.
+
+### 1.3 Decision supersession for this plan
+
+The following explicit Product Owner decisions are incorporated into the current governing-document set and remain controlling where older historical wording is retained for context. The synchronized Requirements, Structure and Database documents contain their applicable post-baseline delta notices; the Master Plan remains the controlling implementation authority.
+
+1. **Master Plan authority — DIRECTED FINAL**: the Product Owner-approved `Master Plan.md` controls implementation sequencing, operational policy, acceptance contracts, Admin/governance controls and production readiness below any later direct Product Owner instruction. Older Requirements/Structure/Database remain mandatory design sources but do not require back-edits merely because the approved Master Plan contains a newer directed clarification or operational enhancement.
+2. **Handshake — DIRECTED FINAL**: qualifying approved agreement acceptance creates exactly one idempotent D22 Handshake; service-flow provider acceptance is the trigger. No Handshake cancellation state. Server-authoritative lifetime is exactly 24 hours: `ACTIVE → EXPIRED`. Cancellation of the underlying engagement does not revoke/reset/delete the Handshake or its timer. New review creation is allowed only while the Handshake is active and otherwise eligible; after expiry it is denied. D22 owns eligibility proof, not review content.
+3. **Marketplace VQ — DIRECTED FINAL**: optional Marketplace VQ transfer is peer-to-peer, buyer-to-seller via D20, at participant risk. No default escrow, platform guarantee, commission, delivery proof or automatic refund. D26 owns listing/negotiation/deal state; D20 alone posts VQ.
+4. **Marketplace review — DIRECTED FINAL**: an eligible D26 mutual agreement may create one D22 Handshake and a 24-hour review-eligibility window. D26 owns Marketplace product/deal-item review content because the reviewed object is a D26 listing/deal fact; D19 remains the established owner for Guardian/provider reputation review where applicable. D22 never owns review text/rating content and never proves delivery/payment.
+5. **Official app products — DIRECTED BOUNDARY**: no official products are invented now. Future Product Owner-authorized official VQgemni products appear through Vibe Guide and remain distinct from ordinary D26 peer listings.
+6. **Place confidence — DIRECTED FINAL OWNERSHIP**: D05 confidence is computed under a versioned, auditable Admin-managed policy. D05 owns observations and confidence result; Admin Control Room changes policy through an authorized contract and audit, not direct SQL or a second writer.
+7. **User enforcement — DIRECTED FINAL**: ordinary confirmed violations use Strike 1 first formal warning → Strike 2 final formal warning → Strike 3 account sanction. Reports are allegations/case inputs, never automatic strikes. Duplicate reports about one incident do not multiply strikes. Standard suspension/ban choices are 3 days, 1 week, 1 month, 3 months or Permanent. Severe safety/security violations may bypass graduated warnings with evidence, reason, actor, case and audit; temporary protective restriction may be used while evidence is reviewed. Eligible sanctions support appeal without automatic suspension removal.
+8. **Admin Control Room — DIRECTED FINAL**: a real permission-scoped Control Room begins with S02 authorization/shell and grows with owner-domain panels through S15, where it reaches integrated operational completeness. Admin is orchestration over D01–D28, never a 29th writer or direct-SQL console.
+9. Existing latest Geo decisions remain binding: real device location; D04 evidence/consent; PostgreSQL/PostGIS authoritative proximity; MapLibre rendering; Overpass external POI adapter; replaceable providers; external device navigation; 5 m check-in rule with uncertainty; 23 km applicable discovery scope; 2-hour Find Hub temporary-position retention; no fake geo fallback.
+
+---
+
+## S00 — Mandatory existing-content preservation, test-account attribution and Supabase media migration
+
+**Status: PLANNED; no implementation or acceptance claimed.** S00 MUST reach its verified content/data and visual preservation gates before S01 starts. No old source arrays, assets, sample accounts or demo records may be removed beforehand.
+
+1. **Inventory and recoverability:** Inspect current GitHub HEAD, Vercel serving revision, Supabase schema/Auth/Storage, React templates/assets, localStorage and existing backend data; record every sample/real user and profile, post, Place, Guardian/Legend/offer, Trail/stops/remix, community, image/video/audio, relationship, feed card, event and related record. For each record capture original source/path/key/ID, user-facing placement, media source/rights, dependencies, timestamp, intended owner and status (existing real, imported demo, external suggestion, fake workflow). Capture screenshots at responsive widths for Home/Explore/Share/Vibe/Purse, count visible content, and obtain recoverable, verified source/data/media backups. Historical attached 215-feature CSV is a provisional coverage index (210 REVIEW OPEN, 5 blocked ownership), **not** 215 accepted functional services.
+2. **Authentic test identities:** Create approved restricted **actual Supabase Auth test accounts**, linked canonical D01 IDs and durable D02 profiles, handles and valid account roles; test profiles/avatars are persistent, never JavaScript-user objects. Keep credentials and service keys out of React and repositories, identify test cohorts/provenance and enforce actual authorization/RLS. S00 introduces only the minimal safe identity/media/data migration capabilities necessary for preservation; S02 later extends full authentication, provider linking and Web/Telegram support using those same canonical identities.
+3. **Domain-correct record import and attribution:** Associate old *sample* posts with authorized test-author D01 IDs under D12; preserve captions, ordering, relationships and eligible import dates. Attribute D06 Trails/ordered stops/versions/remix lineage to test authors; D07 Guardian/Legend qualifications and offers to test principals; D08 Tours/reservations remain separate; D05 Places retain their canonical Place facts and permitted images; D09 Business operator records and D16 communities retain proper ownership. Preserve legitimate existing records, never overwrite real users or attach their historical posts to someone else. Imported test provenance must be recoverable, idempotent, duplicate-safe and clearly marked in the controlled dataset. Do not convert fake operational events into genuine check-ins, accepted bookings, rewards, votes, ratings, location proofs, wallet transfers, Handshakes or permissions.
+4. **Supabase Storage and D13:** Inventory all displayed images/media, verify ownership/rights, copy permitted bytes into access-controlled Supabase Storage, record D13 asset identity/metadata/retention, and attach through each consuming domain's authorization. Preserve original photo selection, crop/aspect/order and access scope; enforce approved 24-hour ephemeral vs durable Place/Business media treatment. Never assume a third-party URL is licensed for rehosting; provider map tiles/POI results do not become canonical Place/media records by import.
+5. **Verified visual/data cutover:** Once the equivalent records and media are confirmed, replace React hardcoded **business data reads** with authorized domain/backend/Supabase queries; retain purely presentational constants. Verify source-to-target counts/IDs, legitimate test authors, foreign references, media hashes/access, Trail lineage, Guardian content, Place cards, links, and screenshot/interaction parity. Test rerun idempotency, denial, missing media, failed import recovery and rollback in an isolated scope. Do not delete original business-data source or cut over a module before its persistent replacement is validated.
+6. **S00 acceptance:** Document exact source commit, import manifest, backups/restoration, test Auth identities (without exposing secrets), profile/owner mappings, SQL migration/checksums where used, RLS/auth tests, asset proofs, rendered before/after comparison, failure tests, staging/host checks and Product Owner acceptance. The app remains fully populated and looks and behaves as before, with authoritative data now outside React. If any S00 category cannot be migrated safely, preserve it and mark S00 blocked rather than invent a shortcut.
+
+**S00 implementation/acceptance evidence:** source mapping IN_PROGRESS; backup PENDING; test users/profiles COMPLETED (24 canonical Supabase Auth test accounts mapped 1:1 to profiles with handle, display name, and avatar persistence; legacy `s00_test_identity_links` retired via `p03_retire_s00_identity_links.sql` and direct profile RLS); canonical domain records IN_PROGRESS (D12 posts attributed to canonical @handle, D06 trails and D07 guardians integrated with Supabase persistence); media import IN_PROGRESS; source cutover IN_PROGRESS; visual and functional parity VERIFIED; Product Owner acceptance PENDING.
+
+---
+
+## 2. Current-app implementation baseline (S00/S01 preflight)
+
+The historical empty-project table was superseded by verified current source. Revalidate all mutable runtime evidence before the relevant task; code presence is not complete domain acceptance.
+
+| Area | Source-observed baseline | Required work |
+|---|---|---|
+| Existing app | React/Vite code, source screens, features, domains and a Supabase client exist | Preserve and progressively refactor; do not rebuild from zero |
+| Content/UI | Hardcoded Guardian catalog, curated Places/activities, image URLs and Trail fallbacks exist | S00 inventory, legitimate test attribution, Supabase media and display-parity migration |
+| Hosting | Vercel project `vqgemni` has been connected | Verify exact deployed revision and functional runtime; previews do not equal production |
+| Database | Supabase project `avdfessrhbsqwlfmbdau` and initial public tables inspected | Verify Auth, Storage, PostGIS, actual RLS policies, data, migrations, service capabilities and backups |
+| 28 domains | Approved logical model; some existing `src/domains` modules | Trace and correct canonical writers, do not assume implementation completion |
+| API/Worker/Web/Telegram/CI | Intended complete-product capabilities | Inspect actual state individually; implement or adapt under owning stages |
+| Historical Gemini/VibeQuest | Behavioral and forensic references | Preserve useful UX; do not import mocked backend authority |
+
+
+---
+
+## 3. Full-system dependency graph
+
+This is dependency ordering, **not product-scope phasing**.
+
+```text
+S00 Content, real test identities, domain-owned Supabase data/media and baseline acceptance
+  └─> S01 Engineering/release substrate
+  └─> S02 Identity + shell + Web/Telegram host authority + real Admin shell/RBAC
+       ├─> S03 Media + camera/mic/permission capability
+       ├─> S04 Profiles + Social Graph + Business/operator authority core
+       ├─> S05 Messaging engine + Notifications + D21 report/case core + realtime
+       └─> S06 VQ ledger + reward/admin VQ panels
+
+S04 + S05 ─> S07 Geo/Find Hub
+S03 + S06 + S07 ─> S08 Places/Validate/check-in/confidence + Places Admin
+S03 + S07 + S08 ─> S09 Trails/navigation/remix
+S04 + S03 + S05 + S06 + S09 ─> S10 Guardians/Tours/Reservations/Handshake/Recognition/Entitlements + Guardian Admin
+S04 + S03 + S05 ─> S11 Social Content/Communities/Live Rooms + moderation panels
+S04 + S03 + S05 + S11 ─> S12 Matching/Pulls/Vibes/VibeCheck/VibeFlash + safety operations
+S03 + S05 + S08 + S04(D09 authority) ─> S13 Activities/Events/Ticketing + operations panels
+S05 + S06 + S10 ─> S14 Purse/Marketplace/Payments boundary + Marketplace operations/reviews
+S02 + S04(D09) + S05(D21) + S06 + S08 + S10 + S11 + S12 + S13 + S14 ─> S15 Admin/Trust & Safety integrated completeness + Business completion + Ads
+S07 + S08 + S09 + S11 + S12 + S13 + S14 + S15 ─> S16 Home/Share/Vibe destination integration
+S02–S16 ─> S17 Full client parity/accessibility/phone/Web/Telegram integration
+S01–S17 ─> S18 Full production-readiness, release and post-deploy acceptance
+```
+
+### 3.1 Safe parallelism
+
+- After S02 contracts are stable, **S04 Profiles/Social Graph** and **S03 Media/Device Capture** may proceed in parallel because they own different canonical state.
+- D14 transport plumbing and D23 delivery plumbing within S05 may be split between agents only after shared contract/event envelope definitions are frozen.
+- S06 D20 can progress in parallel with parts of S05 after D01 authorization contracts exist.
+- S11 Communities/Social Content and S13 Activities/Events can overlap after D13/D14 contracts are stable, provided they do not edit the same media/message ownership internals.
+- The real Admin Control Room begins in S02 with scoped authorization and its permanent shell. Panels are added to that same product surface in S05/S06/S08/S10/S11/S12/S13/S14; S15 is the integration/completeness gate, not the start of Admin. Separate agents may add panels only after owner-domain command contracts and shared Admin navigation/permission conventions are frozen.
+- Database migrations touching a shared invariant, core identity keys, outbox, or cross-domain reference are serialized through one owner/reviewer. Two agents must not concurrently invent competing schemas for the same canonical record.
+
+---
+
+## 4. Complete production implementation sequence
+
+### 4.0 Modular Monolith implementation and cutover requirements (ADDITIVE)
+
+Each S01–S18 slice preserves all of its original detailed functional, security, data, Admin, production and acceptance contracts. After S00 acceptance, source-verified changes move one real feature into the correctly owning numbered domain folder, expose its public commands/queries exclusively through `index.ts`, wire other domains, UI and Admin only through that API, and pass boundary tests (no private imports, no foreign table writes) as additional evidence. Preserve working legacy code in `features/`, `screens/`, `components/`, `services/` and `hooks/` until the complete authorized replacement has been verified for backend truth, cross-account state, RLS, visual and behavioral parity and rollback/cutover safety. No feature deletion or mock shortcut merely to satisfy the new architecture.
+
+
+### S01 — Engineering substrate, permanent CI contract and production-shaped staging path
+
+**Objective:** Refactor and harden the existing application's engineering substrate after S00 acceptance, without sacrificing the functioning visual product or populated content.
+
+**Requirements covered:** cross-cutting `NF-*`, `LEG-ARCH-*`, architecture/release constraints.
+
+**Domains affected:** all indirectly; no business domain becomes implemented by this step.
+
+**Canonical owner:** platform/application composition only; no new business writer.
+
+**Dependencies:** S00 accepted; current governing documents and the exact live code and environment verified.
+
+**Intended implementation outcome:** progressively organize existing React/Vite source into the approved domain-owned modular structure, retain the populated shell, and establish/harden actual API/Worker, contracts, tests, migrations, configuration, CI, readiness and staging as needed. Reuse verified components rather than replace them blindly.
+
+**Logical modules/files:** `apps/client`, `apps/api`, `apps/worker`, `packages/contracts`, `packages/testing`, `database/migrations`, `.github/workflows`, `docs/architecture`, `docs/operations` as implementation work later authorizes.
+
+**Database work:** establish migration ledger/tooling, PostGIS extension gate, transaction/test harness, rollback/expand-contract conventions; no speculative all-domain schema.
+
+**API/contracts:** versioned error envelope, request/correlation/causation IDs, contract compatibility rules, health/readiness contracts.
+
+**Frontend:** preserve and regression-test the current five-tab UI, populated S00 test-backed content, navigation, appearance and real feature entry points while extracting monolithic responsibilities; no empty-shell replacement.
+
+**Worker/realtime:** process boot, outbox/inbox framework and durable scheduler interfaces; no fake jobs.
+
+**Security/privacy:** secret-loading boundaries, secure defaults, dependency scanning, no secrets in client bundle, environment separation.
+
+**Tests:** workspace/build/type/lint; architecture-boundary tests; migration up/down/compatibility harness; health/readiness integration; configuration validation.
+
+**Staging acceptance:** API/Web/Worker deploy from exact artifact; persistent staging database connects; migration ledger is queryable; health and dependency-aware readiness distinguish liveness from readiness; exact serving revision observable.
+
+**Documentation reconciliation:** implementation runbook records actual commands only after verified.
+
+**Exit criteria:** CI contract enforced; staging path exists; exact build/deploy identities are observable; no fake business state; no domain declared complete.
+
+**Blockers:** inability to create a production-shaped staging environment when implementation is authorized.
+
+**Not authorized by this step:** launch, production data writes, removal of verified S00 content, wholesale screen recreation, fabricated feature completion or import of obsolete historical backend schemas as authority.
+
+### S02 — D01 Identity, authorization, application shell and Web/Telegram host authority
+
+**Objective:** Harden the existing canonical identity/session and present phone-first product shell for browser and Telegram, **reusing S00 real Supabase Auth test principals and D01/D02 profiles** without creating duplicate identities or destroying the populated UI.
+
+**Requirements covered:** `APP-*`, `ID-001`, identity portions of `NF-001/NF-004`, account-category decisions.
+
+**Domains:** D01 lead; D02/D09/D25 consumed only for category/entitlement projections as they become available.
+
+**Dependencies:** S01.
+
+**Implementation outcome:** credential registration/sign-in/recovery, Google sign-in where supported, secure sessions, Telegram launch verification and canonical account linking, logout/revocation, Vibe/Pro/Business category representation without privilege escalation, guest session/read context, intended-action restoration after sign-in, plus the **permanent Admin Control Room shell** and scoped Admin authorization framework. Admin roles/capabilities bind to canonical D01 identities and call owner-domain commands; the shell is not a business writer and is not throwaway UI.
+
+**Logical modules:** `apps/client/src/app`, `platform/web`, `platform/telegram`, `shell`, `apps/api/src/modules/identity`, auth middleware, `packages/contracts` identity/session schemas.
+
+**Database:** canonical users, credentials/provider links, sessions/revocation/recovery artifacts and audit-relevant fields with uniqueness constraints.
+
+**API:** register/sign-in/link/recover/session/revoke/current-user; explicit unauthorized/expired/conflict responses.
+
+**Frontend:** five equal tabs, top notification location, profile/settings entry, guest/protected-route behavior, EN/FR/AR/RTL boot, safe areas/back navigation; permanent phone-usable Admin Control Room shell with responsive primary navigation for Dashboard, Users, Reports & Cases, Places, Guardians, Content, Communities, Activities & Events, Marketplace, VQ, Commerce, Advertising, Operations and Settings, using sub-navigation rather than another bottom-tab system.
+
+**Workers:** expiry/cleanup only where durable session/recovery state requires it.
+
+**Security:** password/provider verification, Telegram signature validation, CSRF/session protections as applicable, brute-force/rate controls, session fixation/replay defenses, object-level auth foundation, Admin route denial by default, least-privilege capability checks and audited privileged-session/revocation foundations. No universal god-mode permission is assumed.
+
+**Tests:** credential/provider/linking uniqueness, Telegram linking attacks, revoked session, guest-to-auth intended action, Web/Telegram canonical user equivalence, authorization middleware, unauthorized Admin-route denial, scoped Admin-capability checks and support/VQ/moderation role separation at the authorization boundary.
+
+**Staging acceptance:** real browser and Telegram test identities, including approved S00 principals when eligible, resolve to the same backend authority without duplicate user/wallet/profile state; an authorized staging Admin can enter the permanent Control Room shell while ordinary users and under-scoped staff are denied privileged routes.
+
+**Exit criteria:** authenticated writes have a trustworthy D01 principal; guest public browsing works; no host-specific business identity.
+
+**Not authorized:** separate Telegram DB/user system, mock guest promotion, account-category privilege shortcuts.
+
+### S03 — D13 Global Media and shared camera/microphone/permission capability
+
+**Objective:** Extend and harden the **S00 Supabase Storage/D13 media baseline** into secure durable/ephemeral production media lifecycle and reusable device capture for every dependent feature; preserve imported attachments and thumbnails.
+
+**Requirements:** `MEDIA-001`, capture portions of Share/Guardian/challenge/profile requirements and `NF-004` permission behavior.
+
+**Domains:** D13 lead; consuming domains retain attachment meaning.
+
+**Dependencies:** S01–S02.
+
+**Outcome:** preserve and extend S00 uploaded assets and references; permission coordinator; camera/mic adapters; upload initiation/finalization; validation; processing/variants; private/authorized delivery; expiry/retirement intent; durable deletion retries; 24h ephemeral retention where approved; Web/Telegram capability parity.
+
+**Logical modules:** client `platform/permissions`, `platform/devices/camera`, `microphone`, `capture-session`; API D13; Worker media processing/deletion; storage adapter.
+
+**Database:** asset metadata, ownership/access context, processing state, retention/expiry/retirement state, attachment references without universal business ownership.
+
+**Security:** MIME/signature validation, size/codec limits, malware/content validation where appropriate, signed/authorized delivery, no public permanent private URLs, metadata/privacy handling.
+
+**Tests:** upload authorization, invalid file rejection, expiry/deletion retry/idempotency, attachment authorization, Web/Telegram camera/mic denial/cleanup, no asset orphan after failed attachment transaction.
+
+**Staging:** real image/video/audio flows against staging object storage; expired synthetic staging assets actually delete.
+
+**Exit criteria:** dependent features can attach real D13 assets without owning storage lifecycle.
+
+### S04 — D02 Profiles, D03 Social Graph and D09 Business/operator authority core
+
+**Objective:** Evolve the genuine **S00 test-backed D01/D02 profiles and media** into complete photo-first profile/preferences behavior, canonical follow/block relationships, and Business/operator authority required by later Place/Event/business journeys.
+
+**Requirements:** `PRO-*`, `SOC-*` social-graph portions, `BIZ-001` authority core, profile/account settings and parity requirements.
+
+**Domains:** D02, D03 and D09 core authority. D09 Place links and Admin/operations integration complete in S15.
+
+**Dependencies:** S02 and S03, so the photo-first profile is implemented against the real D13 media capability rather than a temporary fake or placeholder asset authority.
+
+**Outcome:** public/expanded/full profile, settings/privacy/localization/accessibility overrides, contact-channel visibility, Cozy Diary opt-in semantics, Orbit/Echo projections from one D03 follow edge, block enforcement, plus canonical Business/organization identities and authorized operator membership/authority. Public Trail projection contracts activate when S09 exists; Business-to-canonical-Place links complete after S08 without copying Place facts.
+
+**Logical modules:** client `profile`, `orbit-following`, `echo-followers`, business/account-management entry points; API `profiles`, `social-graph`, `businesses-organizations`; read models.
+
+**Database:** profile/preferences/privacy/contact visibility; follow/block uniqueness and invariants; organization/operator authority/membership; no duplicated identity, Place or Trail rows.
+
+**API:** profile read/update; preference/privacy updates; follow/unfollow/block/unblock; organization/operator membership and authority commands; public projections.
+
+**Frontend:** Tinder-style presentation, real empty/private/unavailable states, settings entry points and security/help status surfaces.
+
+**Security:** field-level visibility, blocks applied consistently, no precise-location leakage, no private contact disclosure.
+
+**Tests:** privacy matrix, block revocation, follows do not create Vibes/DM rights, profile optionality/Cozy Diary behavior, localization/RTL settings persistence, organization/operator authorization and category-without-self-certification regressions.
+
+**Staging:** two real test users exercise profile/follow/block across browser and Telegram.
+
+**Exit criteria:** D02/D03 canonical records and D09 organization/operator authority are verified; no social relationship inferred from display-only similarity and no Business category self-certifies Places or sensitive capabilities.
+
+### S05 — D14 Messaging, D23 Notifications, D21 moderation intake and realtime delivery substrate
+
+**Objective:** Implement the real production D14 messaging engine, D23 notification infrastructure and D21 report/case core **without falsely accepting conversation contexts whose source domains do not yet exist**.
+
+**Requirements:** `MSG-*`, `NOT-*`, `PAR-MSG-*`, `PAR-NOT-*`, `LEG-MSG-001`, `LEG-NOT-001`, and `MOD-001` report-intake core. Source-context messaging acceptance is completed in the owning slices; full Trust & Safety integration completes in S15.
+
+**Domains:** D14, D23 and D21 report/case core. D14 owns conversations/messages/read state; D23 owns delivery/inbox; D21 owns reports/cases/sanctions. Source domains own the participation fact that authorizes a conversation.
+
+**Dependencies:** S02; S03 where media/voice attachment behavior is exercised.
+
+**Outcome:** production conversation/message persistence; participant/membership authorization interface; source-context contract; send/receive/read state; realtime reconnect; failure/retry; D13 media/voice attachment integration; D03 block enforcement hook; notification inbox/preferences/templates/delivery/retry/deep links; authenticated report submission capturing category/reason, optional explanation, canonical source object, safely permitted evidence references, reporter and timestamp; duplicate-report/case-merge foundation; case identity/status/audit trail; initial Control Room **Reports & Cases** panel. S05 does **not** fabricate D17 Vibes, D08 Guardian engagements, D16 Communities, D11 Events or D26 Marketplace deals merely to claim their chat context is accepted.
+
+**Database:** conversations, participants/context references, messages, receipts/read state; notification inbox/preferences/delivery attempts/dedup keys; D21 reports/cases/source references/assignment/status/severity/audit linkage. No source-domain shadow records.
+
+**API/realtime:** typed messaging source-context interface; send/read/realtime contracts; explicit source authorization callback/port; notification delivery/event contracts; report create/merge/triage APIs with typed source-reference classes. Delivery retries never recreate the originating event.
+
+**Frontend:** common conversation UI primitives, inbox/bell, notification preferences, report-sheet primitives, Admin Reports & Cases core list/detail/triage UI, plus scoped D23 delivery-health/failure/retry visibility. A retry/resend action is permitted only when a real originating source event exists; D23 cannot fabricate that event. Source-specific conversation copy/actions are activated only when their owning slice exists.
+
+**Security/privacy:** membership/object authorization, block enforcement, rate/abuse controls, attachment authorization, reporter privacy, report-abuse controls, scoped moderator visibility, no canned-human replies, no unrestricted Admin DM/media browsing.
+
+**Tests:** generic D14 source-context contract acceptance/denial using explicit test fixtures only; send/receive/read/reconnect/idempotent retry; D23 dedup/unread/deep-link authorization; report creates case input but **not** a strike; duplicate same-incident reports can merge without multiplying punishment; private/blocked source access denial; under-scoped moderator denial.
+
+**Staging acceptance:** D14/D23/D21 infrastructure is exercised in production-shaped staging with clearly marked staging test principals and contract fixtures; no source-specific conversation context is declared `STAGING ACCEPTED` here. Guardian consultation is accepted in S10, Community chat in S11, confirmed-Vibe personal DM in S12, Event discussion in S13 and Marketplace negotiation chat in S14 using their real canonical source records.
+
+**Exit criteria:** D14, D23 and the D21 report/case core are production-capable shared engines; each later source domain can activate its context through the frozen authorization contract without D14/D23/D21 becoming a foreign writer.
+
+**Not authorized:** fabricated source-domain records, source-specific staging acceptance before the source exists, notification-created business events, automatic punishment from a report.
+
+### S06 — D20 VQ ledger, transfers, reward rules and Admin grant mechanics
+
+**Objective:** Establish the sole VQ writer before any feature can issue or transfer real VQ.
+
+**Requirements:** `VQ-*`, `ADM-VQ-*`, `LEG-VQ-001`, VQ portions of Purse/Admin and `NF-003`.
+
+**Domain:** D20.
+
+**Dependencies:** S02; S01 transaction/idempotency/outbox infrastructure.
+
+**Outcome:** immutable ledger/journal, balances derived/reconciled from postings, idempotent source-event awards, peer transfer, tips, manual/group/global grants, compensating corrections, and versioned reward rules. A rule version can express only source-contract-supported parameters such as source event, enabled/disabled state, VQ amount, eligibility, per-user count/VQ caps, cooldown, effective start/end, verification requirement, permitted account/category conditions and source-specific parameters. Admin preview/simulation must never post real VQ.
+
+**Database:** accounts/ledger entries/rule versions/source-event uniqueness/grant batches and recipient outcomes; constraints preventing double spend/duplicate posting.
+
+**API:** balance/history, transfer/tip, qualified-source award, reward-rule draft/validate/preview/activate/history commands, and Admin grant commands with explicit recipients/criteria, amount, reason, preview, idempotency and per-recipient result. A generic Admin parameter cannot override a source-domain prohibition such as adding a geo participation gate to VibeCheck.
+
+**Frontend:** Purse VQ primitives plus the permanent Control Room **VQ** panels: rule catalog/editor; ledger search/detail/filter by user, source, type and status with sender/recipient, reward/deal context, source event, idempotency reference and posting status; single user, selected users, Guardian/Legend group, eligible cohort and broad/all-eligible grants; recipient-count/total preview, confirmation, per-recipient result, safe failed-recipient retry and reconciliation/correction views. No crypto UI or client-side minting.
+
+**Security:** scoped admin authority, recipient/amount/reason validation, concurrency locking/serializable invariant as selected, replay/idempotency protection. Support/Ads/ordinary moderators cannot grant VQ merely because they can enter Admin; keep an extension seam for future stronger/dual approval without inventing a threshold now.
+
+**Tests:** concurrent debit, insufficient funds, duplicate source event, grant retries/per-recipient idempotency, recipient-count/total preview, rule draft/validation/simulation with no posting, rule version effective time, source-contract parameter rejection, compensating entry/history preservation, reconciliation, cross-device balance and unauthorized role denial.
+
+**Staging:** genuine staging VQ postings between staging users; no production-like fictional success.
+
+**Exit criteria:** no other domain writes VQ balances directly.
+
+### S07 — D04 Geo & Presence, MapLibre/provider adapters and Find Hub
+
+**Objective:** Implement genuine device location, server-authoritative geographic evidence/proximity, map provider seams and the complete consented Find Hub flow.
+
+**Requirements:** `GEO-*`, `HUB-*`, `PAR-HUB-001`, `PAR-SEC-*`, geo portions of `EXP-*`, `LEG-EXP-*`, `NF-004`.
+
+**Domain:** D04 lead; D23 delivers notifications; D03 provides eligible social relationships.
+
+**Dependencies:** S02, S04, S05, S01 PostgreSQL/PostGIS.
+
+**Outcome:** Web/Telegram geolocation adapters, permission lifecycle, manual area context, freshness/accuracy evidence, 23 km applicable discovery scope, 2-hour temporary presence retention, server proximity assertions, configurable geofences with jitter/hysteresis/dedup, real enter/exit, MapLibre rendering, replaceable tiles, Overpass external POI port, geocoding port, and an `ExternalNavigationPort` for Google Maps/Waze/supported device navigation apps.
+
+**Database:** D04 consent, temporary presence, geofence rules/transitions with retention; spatial representation/indexes appropriate to physical schema.
+
+**API/queries:** publish/revoke temporary presence; proximity/geofence evaluation; authorized spatial reads; external POI query normalization/cache seam.
+
+**Frontend:** location state machine, map/list synchronization, Find Hub real eligible contacts, sharing state/last updated/approximate distance/Lock-On/geofence/history/revocation.
+
+**Security/privacy:** exact coordinates never exposed merely to show nearby; permission is not social consent; stale/unknown location cannot trigger arrivals; spoof/replay/multi-device risk signals are handled without claiming perfect GPS authenticity.
+
+**Tests:** denied/stale/inaccurate states, 23 km discovery boundary, 2-hour retention, geofence dedup/jitter, revocation/block, server vs client Haversine authority, provider failure without fake fallback, D18 no-proximity gate regression.
+
+**Staging:** real phone browser + Telegram location flows and two-user Find Hub transition with staging notification.
+
+**Exit criteria:** D04 is the only geographic evidence/proximity writer; map/provider adapters own no business facts.
+
+### S08 — D05 Places, contributions, Validate, 5 m check-in and Admin-configurable confidence policy
+
+**Objective:** Implement canonical Places and truthful contributions/check-in/validation using D04 evidence and D20 rewards.
+
+**Requirements:** Place portions of `EXP-*`, `VAL-*`, `PAR-VAL-*`, `LEG-EXP-*`, `HOME-002`, D05 aspects of `NF-*`, and the new directed confidence-policy decision.
+
+**Domain:** D05 lead; D04 evidence; D20 reward; D21 moderation; Admin UI invokes D05 policy command.
+
+**Dependencies:** S03, S06, S07; S15 later completes full Control Room shell but D05 policy administration must be production-capable here through protected admin surface/contract.
+
+**Outcome:** canonical Place identity/location, external-POI candidate-to-canonical contribution flow, Place detail/navigation, check-in, Yes/No/Not Here validation observations, 5 m server-authoritative eligibility with uncertainty/cannot-verify, no prior-check-in cooldown solely due to earlier check-in, versioned confidence policy and current confidence result.
+
+**Database:** D05 Place, contributions, check-ins, validation observations, confidence-policy versions/effective time and confidence result/provenance; canonical provider-neutral coordinates and external provenance metadata.
+
+**API:** search/read Place, submit contribution, check-in, validation observation, confidence-policy preview/activate/rollback where safe, recomputation job trigger under D05 authority.
+
+**Frontend:** Place cards/detail, real distance, Validate gauge based on real confidence, plus permanent Control Room **Places** panels for Place search, reports/contributions, conflicting facts, suspicious validation/check-in activity, confidence history, provider provenance where useful, moderation state, approve/reject applicable correction workflows through D05, and D05 confidence-policy draft/preview/activate/history/rollback controls. All mutations use D05/D21 commands; no arbitrary row editor.
+
+**Security:** D04 evidence authorization, duplicate/fraud/report controls, admin policy permissions/audit, external POI ambiguity moderation.
+
+**Tests:** 5 m threshold with measurement uncertainty, spoof/stale evidence rejection, no invented accuracy threshold, repeat check-in policy, confidence-version effective time/history, formula change does not rewrite observations, D20 award exactly once.
+
+**Staging:** real canonical Place, device check-in near boundary, validation/confidence update, admin policy version change in staging.
+
+**Exit criteria:** D05 owns Place truth/confidence; D04 only proves geographic evidence; D20 award remains independent.
+
+### S09 — D06 Vibe Trails: studio, publication, save/offline, navigation, adoption/remix and city/profile discovery
+
+**Objective:** Deliver complete Trail author/consumer/derivative experience on canonical Place/Geo/Media foundations.
+
+**Requirements:** `TRAIL-*`, `PAR-TRAIL-*`, `LEG-TR-*`, Trail portions of Home/Explore/profile/Geo.
+
+**Domain:** D06.
+
+**Dependencies:** S04, S03, S07, S08.
+
+**Outcome:** draft/editor, ordered stops/day-parts, custom validated waypoints, versioning/publication, photos/tips/duration, save/Passport projection, offline truthful content, MapLibre map/list sync, individual/whole-route external navigation through the shared `ExternalNavigationPort`, creator→profile→other published Trails by city, city→eligible Trails/Tours projection, adoption/remix attribution/tree.
+
+**Database:** Trail, versions, ordered stops, Place refs/custom waypoint context, publication, lineage/adoption/remix, saves; no copied Place facts.
+
+**API:** create/edit/reorder/publish/unpublish/read/adopt/remix/save and projection queries.
+
+**Security:** author permissions, public/private/draft visibility, media authorization, no random/default coordinates, attribution integrity.
+
+**Tests:** reorder/version race, lineage idempotency, unpublished privacy, city projection, creator projection, offline limitations, external navigation no state mutation, Trail reward event exactly once when configured.
+
+**Staging:** create/publish/remix Trail on phone, browse from another user, route handoff, offline content state, city discovery.
+
+**Exit criteria:** all approved Trail journeys use canonical D06 records and D05/D04 references without duplicate writers.
+
+### S10 — D07 Guardians/Legends, D08 Tours/Reservations, D19 Recognition, D22 Handshake and D25 entitlements
+
+**Objective:** Deliver professional/Legend qualification, Tour and service engagement, accepted-agreement Handshake and review authorization as one dependency-safe vertical slice.
+
+**Requirements:** `TOUR-*`, `GUA-*`, `HS-*` as superseded by latest Handshake decision, `PAR-TOUR-*`, `PAR-GRD-*`, `LEG-TOUR-*`, `LEG-GRD-*`, `REP-001`, `SUB-001` relevant entitlements.
+
+**Domains:** D07, D08, D19, D22, D25; D20 conditional service reward; D23 delivery; D14 consultation.
+
+**Dependencies:** S04–S06, S09.
+
+**Final Handshake state machine:** `NO_HANDSHAKE → qualifying accepted agreement → ACTIVE_HANDSHAKE → exactly 24h server-authoritative expiry → EXPIRED_HANDSHAKE`. There is **no CANCELLED Handshake state**. Underlying D08 cancellation does not reset, revoke, extend or delete the Handshake. One source agreement creates at most one Handshake. D22 stores source reference, issued/expires times and review-eligibility proof. Guardian review remains D19-owned, max 111 chars and one Good/Chill/Cool badge. Review creation requires active eligible D22 proof and is denied after expiry or duplicate review.
+
+**Outcome:** Guardian/Legend onboarding, qualification/suspension, 7-day selfie freshness, offer/service areas/capacity, directory/profile/five Trails, consultation, Pro Hire/free Legend Meet/Vibe, Tour authoring/reuse/availability/reservations/cancel, exact acceptance-triggered Handshake, 24h review gate, conditional +75 D20 reward only for eligible Guardian/Legend service Handshake.
+
+**Database:** qualification/offer/selfie freshness, Tour offers/slots/holds/requests/acceptance/cancel, subscription entitlements, D22 unique source-agreement key/issued_at/expires_at/state, D19 reviews with unique qualifying Handshake relation.
+
+**API:** onboarding/status, Tour/availability/reservation, accept/decline/cancel, Hire/Legend request, Handshake read/eligibility, review submit.
+
+**Frontend/Admin:** Guardian onboarding/status/directory/detail/profile, Hire/Meet/Tour booking/review surfaces plus permanent Control Room **Guardians** operational panels for qualification, eligibility, selfie freshness, offers/service state, reports, reviews, entitlements, suspensions/revocations and directory visibility. Handshake operations are read/inspect only: source agreement, participants, issued/expiry, ACTIVE/EXPIRED and review-use state; no routine manual Create Handshake control.
+
+**Workers:** durable Handshake expiry and selfie freshness/other scheduled availability actions; persistent due times survive restart; Redis only convenience.
+
+**Security:** provider/operator ownership, entitlement does not imply qualification, availability concurrency, idempotent acceptance/Handshake/review, no GPS/QR co-presence fiction.
+
+**Tests:** acceptance creates exactly one Handshake, retries duplicate none, request/open UI creates none, 24h boundary with server clock, restart recovery of expiry, cancellation leaves Handshake timer/history unchanged, review within window allowed, after expiry denied, duplicate review denied, +75 not duplicated, Tour capacity release on cancellation, Admin cannot fabricate engagement/Handshake/review/completion and under-scoped Admin cannot revoke Guardian eligibility.
+
+**Staging:** real two-account request→accept→Handshake→review flow with controlled staging clock/test fixture for expiry; browser/Telegram consistency.
+
+**Exit criteria:** D08 owns engagement state, D22 only Handshake/eligibility, D19 review content, D20 reward; no cancellation state in D22.
+
+### S11 — D12 Social Content, D16 Communities/Circles and D15 Live Rooms
+
+**Objective:** Deliver durable/ephemeral social publishing and community/live participation on real media/messaging infrastructure.
+
+**Requirements:** `CONTENT-001`, `COM-001`, `ROOM-001`, applicable `SHARE-*`, `PAR-SHARE-*`, `LEG-SHARE-*` community/content portions.
+
+**Domains:** D12, D15, D16.
+
+**Dependencies:** S04–S05.
+
+**Outcome:** Gossip posts/comments/reactions/shares; Share content publication/edit/delete/audiences; 24h nearby Moments; Join Vibe response; Communities public/private create/join/request/invite/roles/leave; room chat/bulletins/polls; WebRTC live rooms and optional real soundboard broadcast.
+
+**Database:** posts/audiences/engagement, community membership/invitations/roles, live-room session/member state; D13 asset refs and expiry.
+
+**Security:** audience privacy, membership/role authorization, moderation hooks, no precise GPS disclosure, live audio not routinely recorded.
+
+**Tests:** failed persistence never shows joined/published success, private community membership, post deletion/media retirement, live-room authorization/reconnect, ephemeral expiry.
+
+**Admin/moderation integration:** extend the permanent Control Room with **Content** and **Communities** report views. D21 owns case/sanction facts; D12/D16 perform authoritative content/community membership/state changes; D13 retires media when appropriate. Moderators do not receive blanket access to every private Community conversation.
+
+**Staging:** multi-user Community/chat/live-room and Share/Gossip publish flows, including report→case→source-owner content action through scoped Admin permissions.
+
+**Exit criteria:** social content, community membership and realtime room state have separate canonical writers.
+
+### S12 — D17 Matching & Connections and D18 VibeCheck/VibeFlash
+
+**Objective:** Implement Drift/Pulls/Vibes and server-timed challenge flows without conflating follow, proximity or Handshake.
+
+**Requirements:** `VIBE-*`, `CH-*`, `PAR-VIBE-*`, `PAR-CH-*`, `LEG-VIBE-001`, challenge portions of Share.
+
+**Domains:** D17 and D18; D03 follows; D14 DMs; D13 media; D23 delivery.
+
+**Dependencies:** S04–S05, S11.
+
+**Outcome:** Drift categories/eligible profiles; Pull send/pending/Accept/Pass; confirmed Vibe; Orbit/Echo remain D03 projections; Polar/Social modes; VibeCheck invitation/accept-skip-refuse/180s capture/reveal/reactions/history; reciprocal completed eligible VibeCheck invokes idempotent D17 confirm; VibeFlash 33s collective challenge/responders-only Mosaic under configured targeting/schedule; no geographic participation gate.
+
+**Database:** proposals/Pulls/Vibes; challenge invites/decisions/responses/deadlines/outcomes/Mosaic entitlement with server times.
+
+**Security:** age/opt-in where required, block/privacy rules, replay/deadline enforcement, no compatibility-score fabrication.
+
+**Tests:** Pull acceptance→exactly one Vibe; follow does not; invitation/one-sided VibeCheck does not; reciprocal qualifying completion does; VibeFlash does not; 180/33 second boundaries; restart-safe deadlines; confirmed Vibe gates ordinary DM.
+
+**Admin/moderation integration:** add operational safety/report views for Drift/Pulls/Vibes, VibeCheck and VibeFlash, including participant-safety and abuse/rate-problem cases. D21 may sanction abuse but cannot fabricate D17 connection state, D18 responses/completion/Mosaic access or challenge outcomes.
+
+**Staging:** two-device Pull/Vibe/DM and VibeCheck; multi-user VibeFlash; source-specific personal DM is accepted here only after the real confirmed D17 Vibe exists.
+
+**Exit criteria:** D17 connection truth and D18 challenge truth remain separate and deterministic.
+
+### S13 — D10 Activities, D11 Events and independent D28 Ticketing
+
+**Objective:** Deliver user Activities, organizer Events and independently operable Ticketing with real media/messaging/notifications.
+
+**Requirements:** `ACT-001`, `EVT-001`, `TKT-001`, relevant Home/Explore/event interaction parity.
+
+**Domains:** D10, D11, D28; D13/D14/D23 dependencies.
+
+**Dependencies:** S03–S05, S08.
+
+**Outcome:** Activity create/edit/publish/join/leave/host/place/schedule/chat/resonance; Event create/publish/venue/schedule/RSVP/reminder/discussion; Ticket product optional Event link, inventory/issuance/holder, cryptographically verifiable QR, exactly-once redemption, offline conflict handling, disclosed issuer terms.
+
+**Database:** separate activity/event/ticket lifecycle records; capacity/stock/unique ticket/redemption constraints.
+
+**Security:** organizer/host authority, QR anti-replay, attendee/discussion access, ticket scan permissions, no RSVP=payment/admission conflation.
+
+**Tests:** concurrent ticket redemption/stock, event without tickets, ticket without Event, Activity vs Event separation, reminder delivery not state owner.
+
+**Admin/operations integration:** add permanent Control Room **Activities & Events** and Ticketing operations views for reports, dangerous/fraudulent organizer behavior, visibility/takedown through D10/D11, organizer sanctions through D21, ticket issuer/stock/issuance/redemption conflicts/support through D28. Event discussion messaging is fully accepted here against real D11 participation/context.
+
+**Staging:** create Activity/Event, RSVP, use real Event discussion, issue/redeem ticket, repeat scan denial, and exercise scoped operational/report flows.
+
+**Exit criteria:** D28 independently complete; no reservation/ticket schema merger.
+
+### S14 — Purse, D26 Marketplace, D27 payment boundary, peer-to-peer VQ and Marketplace review
+
+**Objective:** Deliver real Purse and Marketplace while preserving peer risk, non-escrow VQ, truthful fiat boundaries, the directed 24-hour Marketplace review journey and operational moderation/support.
+
+**Requirements:** `PURSE-*`, `MKT-*`, `PAR-PURSE-*`, `PAR-MKT-*`, `LEG-PURSE-001`, `LEG-MKT-001`, `PAY-001`, latest Marketplace VQ decision and latest Marketplace review/Handshake decision.
+
+**Domains:** D26 listing/deal/**Marketplace product/deal-item review** owner; D27 payment boundary; D20 VQ ledger; D14 deal chat; D22 review-eligibility Handshake; D21 moderation. D19 remains the established Guardian/provider reputation-review owner where that separate provider journey applies.
+
+**Dependencies:** S05–S06, S10 for D22 issuance/eligibility pattern.
+
+**Outcome:** wallet/history/send/receive/Traveler Code; listing/browse/offer/negotiation/deal terms/public meetup/deal chat/member-asserted completion; optional buyer-confirmed D20 VQ transfer directly buyer→seller. No default escrow, no commission, no platform guarantee of product/service/delivery/fiat payment, no automatic Marketplace refund. D27 truthfully represents launch non-custodial seller-direct/cash boundaries and future platform-service billing seam.
+
+**Marketplace Handshake/review:** qualifying approved D26 mutual agreement → exactly one idempotent D22 `ACTIVE` Handshake → 24-hour server-authoritative eligibility window → one applicable D26 Marketplace product/deal-item review when the product journey exposes that review → D22 `EXPIRED`. D22 owns eligibility proof only. A D26 review does not prove physical handover, product authenticity, quality or payment; it does not inherit the +75 service reward. Where the separate reviewed subject is an established Guardian/provider reputation fact, D19 remains that review-content owner.
+
+**Database:** listings/offers/deals/agreed terms/state; D26 product/deal-item review record linked uniquely to qualifying Handshake/source deal as applicable; optional references to D20 transfer and D22 source agreement; no escrow balance table.
+
+**API:** listing/offer/negotiation/deal commands; Marketplace source-context authorization for D14; direct D20 transfer command reference; D22 eligibility lookup; D26 product/deal-review create/read/moderate contract with transactional duplicate/expiry checks.
+
+**Frontend:** Marketplace/Purse flows, deal chat, optional VQ transfer confirmation, 24-hour eligible product/deal review affordance with truthful expired/already-reviewed state; permanent Control Room **Marketplace** panels for reported listings/sellers/buyers, deal state, legitimately accessible negotiation context, associated D20 transfers, case notes, resolution status, source-owner listing removal and restriction actions.
+
+**Security/privacy:** listing ownership, deal participants, source-context chat authorization, VQ balance/idempotency, D21 report/scam handling, purpose-scoped access to negotiation evidence, no cash/crypto custody claims and no blanket Admin access to private messages.
+
+**Tests:** transfer succeeds/fails truthfully; deal status does not infer delivery; no automatic refund; retry does not duplicate VQ/Handshake/review; Marketplace product review allowed once only during active 24h D22 eligibility and denied after expiry; D22 does not own review content; no +75 reward; Admin can correct legitimate D20 ledger error only through compensating entry; ordinary Marketplace remains distinct from potential future official Vibe Guide products.
+
+**Staging:** two-user listing→negotiate using real D14 Marketplace context→agree→D22 Handshake→optional direct VQ transfer→eligible D26 product/deal review; inspect ledger, deal, review and Handshake as separate canonical records; exercise reported-scam moderation without platform delivery/cash guarantee.
+
+**Exit criteria:** D26 never writes VQ; D20 never claims product handover; D22 only proves review eligibility; D26 owns Marketplace product/deal review content; D27 does not pretend external fiat settlement; Control Room can resolve platform-state issues without becoming Marketplace guarantor.
+
+### S15 — Admin/Trust & Safety integrated completeness, D09 Business completion and D24 Advertising
+
+**Objective:** Bring the progressively built Admin Control Room to full integrated operational completeness, complete D09 Business/admin operations and D24 Advertising, and close D21 Trust & Safety enforcement/appeal workflows without creating a 29th writer.
+
+**Role of S15:** **Admin does not start here.** S02 established the permanent shell/RBAC; S05 Reports & Cases core; S06 VQ; S08 Places/confidence; S10 Guardians/Handshakes; S11 Content/Communities; S12 Vibe/Challenge safety; S13 Activities/Events/Ticketing; S14 Marketplace. S15 integrates them into one final phone/tablet/desktop operational product, adds Dashboard/Users/Business/Advertising/Operations/Settings completeness and accepts the cross-domain role/audit model end to end.
+
+**Requirements:** `BIZ-001`, `MOD-001`, `ADS-001`, `SUB-001` remaining admin/business controls, `PAR-ADM-001`, `LEG-ADM-001`, Admin/VQ/D05 policy administration, plus the latest directed warning/strike/sanction/appeal and Admin authority rules.
+
+**Domains:** D21 owns reports/cases/sanctions/restrictions/appeals; D09 owns Business/operator authority; D24 owns advertising; D25 owns entitlements. Admin Control Room is application orchestration over D01–D28 only. Each business mutation routes through its owner domain: D20 VQ, D05 Place/confidence, D07 Guardian eligibility, D09 Business authority, D10/D11 activities/events, D12/D16 content/community, D24 ads, D25 entitlements, D26 Marketplace, D28 tickets, etc.
+
+**Dependencies:** S02 permanent Admin shell plus owner-domain commands/panels from S05/S06/S08/S10/S11/S12/S13/S14 and D09 core from S04.
+
+#### S15 Admin navigation and Dashboard
+
+Primary Control Room navigation: **Dashboard, Users, Reports & Cases, Places, Guardians, Content, Communities, Activities & Events, Marketplace, VQ, Commerce, Advertising, Operations, Settings** with responsive sub-navigation rather than 15–20 bottom tabs. Dashboard metrics must be measured facts only: user/account status, Guardians/Businesses/Places/Activities/Events, case backlog/severity/appeals, VQ issuance/transfers/failures, Place verification backlog, media/job/notification/provider failures, Marketplace disputes, Ticketing conflicts and recent privileged actions. Never seed fake DAU, percentages or production statistics.
+
+#### S15 User management and privacy
+
+User search may use authorized handle/display name/account ID/email. User detail may expose account/category/profile status, cases, strike history, sanctions/restrictions, Guardian/Business roles, entitlement summary, VQ summary, relevant audit/session-revocation/support state. It must not expose passwords, auth secrets, private keys, unrestricted live location, arbitrary private DMs or unrelated private media. Sensitive evidence access is capability- and purpose-scoped and audited where appropriate.
+
+#### S15 D21 report/case and enforcement lifecycle
+
+Canonical lifecycle: `REPORT SUBMITTED → TRIAGE → CASE OPENED/MERGED → EVIDENCE REVIEW → DECISION → NO VIOLATION | WARNING/STRIKE/RESTRICTION/SUSPENSION/CONTENT ACTION → USER NOTIFICATION → APPEAL IF ELIGIBLE → RESOLVED/CLOSED`. Operational case states support `new`, `triaged`, `assigned`, `investigating`, `awaiting information`, `actioned`, `appeal pending`, `resolved`, `closed`. Severity supports **Critical / High / Normal / Support**. Reportable source references cover users/profiles, Guardians/Legends, Businesses, Places/contributions/validation/check-in abuse, posts/comments/messages/media, Communities/live rooms, Activities, Events, tickets, Marketplace listings/deals and other supported interactions. Reports are allegations/case input, **never automatic punishment**. Duplicate reports for the same incident may merge and must not create duplicate strikes. Deliberate repeated false/coordinated reporting can itself become a D21 case; genuine mistaken reports are not automatically punished.
+
+**Directed normal strike model:** `NO ACTIVE STRIKE → confirmed violation = Strike 1 / first formal warning → another distinct confirmed violation = Strike 2 / final formal warning → third distinct confirmed violation = Strike 3 / sanction`. Each strike is a case-backed historical record with user, policy category, severity, evidence/source refs, moderator/Admin actor, reason, issue time, strike number, affected capability/sanction, expiry if any, appeal and final disposition. Do not implement a naked mutable integer counter. An overturned decision invalidates/reverses its current strike effect and derived active strike sequence as appropriate while preserving audit/history; it does not erase the historical case.
+
+**Standard third-strike/other suspension durations:** **3 days, 1 week (7 days), 1 month, 3 months, Permanent**. Selection is explicit/reasoned/audited/communicated. Temporary suspension uses durable server-authoritative expiry and restores the permitted access automatically at expiry; Permanent never auto-expires.
+
+**Severe-violation bypass:** qualified Critical/High safety/security cases may bypass the two-warning progression and apply immediate scoped protective restriction, suspension or Permanent ban when warranted. Evidence/source, severity, actor, reason, case and audit are required. Where safe, temporary protective restriction may preserve users while investigation continues and must be represented as protective—not a final guilt decision. Severe classification/report volume alone never auto-permanently-bans an account without the required qualified decision/evidence path.
+
+**Scoped restrictions:** D21 owns restriction/sanction fact; affected domains enforce it. Examples include posting/commenting/messaging, Community participation/creation, Guardian availability, Activity/Event creation, Marketplace buy/sell, VQ transfer, Place contributions/Validate and advertising operations. A messaging restriction must not silently destroy unrelated account data; a Marketplace-selling restriction does not imply account deletion.
+
+#### S15 Appeals and transparency
+
+Eligible enforcement supports `sanction → appeal → review → uphold/reduce/modify/revoke → reason → notification`. Appeal submission does not automatically remove the sanction. Duplicate appeals follow explicit idempotency/case rules. Higher-impact/Permanent appeals support review by another qualified Admin/moderator where staffing permits. User Account Status shows safe truthful action/category, strike/warning number, duration/start/end, affected capabilities and appeal path while protecting reporter identity and sensitive evidence.
+
+#### S15 Support and operational correction
+
+Support cases cover non-misconduct account access, entitlement, reservation, VQ posting, duplicate/failed transaction, media, ticketing, notification, Place contribution, Guardian eligibility and Marketplace application-state issues. Support staff route corrections through owner-domain commands and do not gain VQ/moderation powers by default. Admin may correct legitimate D20 errors with compensating entries, never rewrite history; may correct application state through the owning domain; and may not guarantee/refund off-platform cash or physical Marketplace goods. Future official VQgemni products may later gain separate support/refund policy only after Product Owner authorization.
+
+#### S15 Business, Ads, entitlements and account lifecycle
+
+Complete D09 Business/operator review, Place claims, Business→Place relationships, Event-publishing authority, complaints/operator revocation; D24 campaign/placement/schedule/privacy-compliant targeting/frequency/measured-impression reporting/moderation for Home/Explore/Share without mutating advertised objects; D25 entitlement status/expiry/access/reconciliation support without treating payment as Guardian qualification/Business ownership/trust. Account operations provide suspend/restrict/session revoke/start closure/process deletion request; no casual `hard delete everything` button. Deletion/anonymization follows approved privacy/retention rules while legitimate ledger/audit/security retention remains separate.
+
+#### S15 Media and notification operations
+
+Authorized moderators/operators may inspect D13 media **only** when linked to a legitimate report/support/processing purpose, quarantine or retire prohibited assets through D13, and retry failed processing/deletion where safe. There is no unrestricted private-media browser. D23 operations may inspect template/configuration where authorized, delivery health/failures and source-backed retry/resend; D23 never invents the originating action or notification-triggering business fact.
+
+#### S15 role/capability model
+
+Implement scoped permission groupings such as **Super Admin, Trust & Safety/Moderator, Support, VQ Operator, Places Moderator, Guardian/Business Operations, Marketplace Moderator, Ads Operator, Operations Viewer** as capability bundles, not new domains. Support cannot grant VQ merely by role; VQ Operator cannot permanently ban without sanction capability; Ads Operator cannot inspect moderation evidence or ban users; Operations Viewer is read-only. No universal god-mode path is assumed.
+
+#### S15 audit and system-health visibility
+
+Every privileged action records actor, role/capability, target, source case/report when relevant, action, reason, relevant previous/new state, timestamp, correlation/causation ID, owning-domain command and result/failure. Audit is durable, not only generic logs. Operations view is read-only for API/Worker/DB/storage/realtime/outbox/scheduler/jobs/media cleanup/provider failures/serving revision/deployment state where available; it is not a general infrastructure control panel.
+
+**Database:** D09 organization/operator authority; D21 reports/cases/assignments/evidence references/decisions/strikes/restrictions/suspensions/appeals/history; D24 campaigns/placements/impressions; privileged audit records/owner-command provenance; support-case records where implemented as operational case type. Canonical business facts remain in owner domains.
+
+**Security/privacy:** least privilege, object/evidence scope, purpose binding, Admin session security, actor/reason requirement, reporter protection, private-message/media/location access controls, no direct SQL, no VQ-as-privilege and future stronger-grant approval seam without invented threshold.
+
+**Staging:** representative roles execute allowed owner-domain operations and are denied forbidden ones; report→case→strike/sanction→notification→appeal path; severe protective restriction; temporary expiry; Marketplace/Guardian/Place/content operations; Dashboard metrics sourced from real staging facts; system-health view read-only.
+
+**Exit criteria:** the final Control Room can operate the complete application through canonical owner commands, D21 enforcement/appeals are deterministic/audited, every privileged path is role-scoped, and Admin remains orchestration rather than a second writer.
+
+### S16 — Full Home / Share / Vibe destination integration
+
+**Objective:** Integrate previously implemented canonical features into the three dense product destinations without creating page-level monoliths or duplicate state.
+
+**Requirements:** `HOME-*`, `SHARE-*`, `PAR-HOME-*`, `PAR-SHARE-*`, `LEG-HOME-*`, `LEG-SHARE-*` plus cross-screen requirements.
+
+**Domains:** composition reads/commands across D02–D05, D10–D12, D16–D20, D23; no new writer.
+
+**Dependencies:** S07–S13 plus S15 for advertising/Admin-governed destination configuration. S14 is consumed where Purse/Marketplace cross-links are surfaced.
+
+**Outcome:** Home geographic context/check-ins/Secrets/network/local/For You/activity/event/streak/heritage/gems/Vibe Guide/live feed; Share emotion rail/camera/PIP/filters/nearby stream/Join Vibe/Aesthetic Echoes/challenges/Circles/Support the Pulse; Vibe Gossip/Drift/Pulls/Vibes/Orbit/Echo/matching and deep links. Every control routes to canonical state or truthful unavailable state.
+
+**Frontend:** feature composition only; independent feature stores/adapters; phone-first sheets/modals, back behavior, loading/empty/error/offline/permission states.
+
+**Tests:** page-level contract/component/E2E journeys, no duplicated writes, cross-screen consistency after source mutations, long translations/RTL, keyboard/safe-area behavior.
+
+**Staging:** real phone browser/Telegram walkthrough of all destination controls with seeded **clearly marked staging fixtures only where a user cannot practically create prerequisite data**, never fake production state.
+
+**Exit criteria:** dense destinations are product-complete compositions, not orchestration monoliths.
+
+### S17 — Full client parity, phone-first, localization, accessibility, offline/deep-link and cross-domain acceptance
+
+**Objective:** Close every approved user-facing journey across all five destinations, Profile and Admin on browser and Telegram using the production domain implementations.
+
+**Requirements:** all `APP-*`, `PAR-XD-001`, `PAR-QA-*`, `PAR-HIDDEN-001`, `LEG-HIDDEN-001`, all legacy/parity interaction families not already accepted in their owner slice.
+
+**Domains:** all through composition; no new writer.
+
+**Dependencies:** S02–S15.
+
+**Outcome:** all canonical deep links; loading/empty/denied/offline/unavailable/pending/success states; Web/Telegram host parity; EN/FR/AR and RTL; accessibility; device settings/help; safe area/keyboard/modal/scroll behavior; actual scannable Traveler Code; offline Trail capability truth; no consumer developer/teleporter/mock panels.
+
+**Phone matrix:** 320, 360, 375, 390, 393, 412, 430 px for relevant screens, plus Telegram WebView and supported browser families.
+
+**Tests:** visual/component/E2E at width matrix; RTL/long translations; keyboard; back/deep-link restore; permission denial; offline; cross-host canonical state; accessibility automation plus manual screen-reader/focus checks where necessary.
+
+**Staging:** full scripted and exploratory Product Owner QA on real phones/Telegram/browser with source-to-destination journeys.
+
+**Exit criteria:** no approved interaction is a placeholder or fake; all cross-domain projections converge on canonical state.
+
+### S18 — Full production readiness, performance evidence, recovery rehearsal and controlled release
+
+**Objective:** Prove the entire application is production-ready as one system, then release only under explicit Product Owner authorization.
+
+**Requirements:** `NF-*`, `LEG-ARCH-*`, `PAR-QA-*`, production acceptance requirements across all domains.
+
+**Domains:** D01–D28.
+
+**Dependencies:** S01–S17 all `STAGING ACCEPTED` for launch scope.
+
+**Data gates:** exact migration set/checksums; PostGIS/spatial indexes; constraints; ledger/ticket/Handshake integrity; retention/cleanup; backup; restore rehearsal; expand/contract compatibility; current serving version vs proposed version compatibility.
+
+**Security gates:** auth/session/Telegram linking; object/admin authorization; CSRF/injection; uploads/media; secrets; rate/abuse; idempotency/replay; location privacy/spoof risk; dependency/security scan; retention/deletion; threat-model review and targeted penetration testing appropriate to risk.
+
+**Operations gates:** structured logs, correlation/causation IDs, metrics, traces, alerting, API/Worker/job health, provider/storage/database monitoring, runbooks, incident recovery, rollback and on-call ownership.
+
+**Performance:** instrument first; benchmark representative phone/network/Telegram conditions; record baseline; set/tighten explicit production thresholds before acceptance. Do not fabricate Product Owner SLA numbers.
+
+**Client gates:** all target widths, browsers, Telegram, EN/FR/AR, RTL, accessibility, location/camera/mic flows, offline states.
+
+**Release gates:** exact release artifact/digest; migration compatibility; staging smoke; approved migration sequence; rollback; production deploy; post-deploy readiness and representative authorized smoke journeys; confirm desired revision actually serves.
+
+**Exit criteria:** every D01–D28 and required cross-domain journey is `PRODUCTION ACCEPTED`; no fake business outcome; no unresolved launch-blocking requirement; Product Owner explicitly authorizes release.
+
+**Not authorized by this plan creation:** performing any of these release actions now.
+
+---
+
+## 5. D01–D28 implementation coverage matrix
+
+| Domain | Canonical records/invariants | Primary slice(s) | Frontend consumers | Key cross-domain contracts | Persistence/background | Production acceptance focus |
+|---|---|---|---|---|---|---|
+| D01 Identity & Authentication | users, credentials/provider links, sessions, recovery | S02 | shell, profile, all protected actions | host verification, D02/D09/D25 projections | session/recovery expiry | one canonical user across Web/Telegram; revocation/auth attacks |
+| D02 Profiles & Preferences | public profile, privacy/settings, contact visibility | S04 | Profile, cards, Trail creator views | D01 identity, D06 public Trails | durable preferences | privacy/RTL/settings parity |
+| D03 Social Graph | follow/block edge | S04 | Orbit/Echo, discovery | D17 distinct matching, D14 block gate | uniqueness | follows never create Vibe/DM |
+| D04 Geo & Presence | consent/evidence, temporary presence, geofences/proximity | S07 | Home/Explore/Find Hub/maps | D05/D06/D07/D17 consumers, D23 delivery | PostGIS, 2h cleanup, geofence evaluation | no precise leak; real server proximity |
+| D05 Places & Contributions | Place, check-in, validation, confidence | S08 | Explore/Home/Trails/Admin | D04 evidence, D20 awards, D21 moderation | spatial data, policy versions/recompute | 5m rule, confidence policy audit |
+| D06 Vibe Trails | Trail/version/stops/lineage/publication | S09 | Explore/Profile/Home/Guardian/Tour | D05 refs, D04 geo, D08 reuse | version/lineage integrity | create/remix/navigation/offline/city discovery |
+| D07 Guardians & Legends | qualification, selfie freshness, offers/capacity | S10 | Guardian directory/profile/hire | D08 engagement, D25 entitlement, D13 selfie | freshness jobs | qualification vs payment separation |
+| D08 Tours & Reservations | offers, availability, request/accept/cancel | S10 | Tour/Guardian/Hire | D06 reuse, D22 on acceptance, D23 notify | capacity/holds/deadlines | concurrency and acceptance truth |
+| D09 Businesses & Organizations | organization/operator authority | S04/S15 | business profile/Admin/Events | D05 Place links, D11 events | authority audit | no duplicate Place coordinates/identity |
+| D10 Activities | activity lifecycle/participation | S13 | Home/Explore/community | D14 chat, D23 notify, D20 conditional rewards | schedules | Activity/Event distinction |
+| D11 Events | Event/RSVP | S13 | Home/Explore/Event detail | D28 optional ticket, D14 discussion | reminders | RSVP != ticket/payment/admission |
+| D12 Social Content | Gossip/Share posts/reactions/audiences | S11/S16 | Share/Vibe/Home | D13 assets, D23 notifications | 24h content expiry where approved | audience/privacy/edit/delete |
+| D13 Global Media | assets, variants, retention, delivery | S03 | all media-consuming features | consumer-domain attachment authorization | processing/deletion workers | private delivery and cleanup |
+| D14 Messaging | conversations/messages/receipts + source-context contract | S05 + source acceptance S10/S11/S12/S13/S14 | DMs/consultation/community/market/event | source-owner authorization + D03 blocks | realtime/read receipts | engine acceptance in S05; each real context accepted only in owning slice |
+| D15 Live Rooms | room session/participants/speakers | S11 | Communities/Share | D16 membership, D14 adjacent text | realtime/WebRTC state | actual multiuser behavior/no fake recording |
+| D16 Communities & Circles | community/membership/invite/roles | S11 | Share/Home/Vibe | D14/D15 contexts, D21 moderation | membership constraints | public/private role enforcement |
+| D17 Matching & Connections | Drift/Pull/Vibe/proposals | S12 | Vibe/Home | D03 distinct follow, D14 DM, D18 reciprocal challenge | uniqueness/idempotency | double opt-in only |
+| D18 Challenges & Live Vibes | VibeCheck/VibeFlash deadlines/responses/outcomes | S12 | Share/Vibe | D17 Vibe outcome, D13 media, D23 notify | durable timers | 180s/33s exact server time; no geo gate |
+| D19 Recognition & Reputation | badges/standing/Guardian reviews | S10/S17 | Profile/Passport/Guardian | D22 review eligibility, source achievement domains | durable recognition | VQ-independent; review constraints |
+| D20 VQ Rewards & Ledger | rule versions, ledger, balance, transfers/grants | S06 | Purse/Admin/feature rewards | source-domain qualification, D26 optional transfer | immutable/idempotent postings | concurrency/reconciliation/no crypto |
+| D21 Moderation & Trust | reports/cases/strikes/restrictions/suspensions/appeals | S05 core + progressive panels + S15 integration | report/Account Status/Admin surfaces | all reportable/enforcing domains | durable audit/expiry/case history | report≠strike; 2 warnings then third-strike sanction; severe bypass; least privilege |
+| D22 Handshake Verification | source agreement, ACTIVE/EXPIRED, 24h eligibility | S10/S14 | Guardian/Tour/eligible Marketplace | D08/D26 trigger, D19 review, D20 service reward | durable expiry | acceptance trigger, idempotency, no cancellation state |
+| D23 Notifications | inbox/preferences/delivery/retries | S05 | global bell/inbox | consumes committed source events | retries/dedup | delivery never becomes source writer |
+| D24 Advertising & Promotions | campaign/placement/impression | S15 | Home/Explore/Share | reads canonical advertised objects | schedule/reporting | clear labeling/frequency/no canonical edits |
+| D25 Subscriptions & Entitlements | plans/status/expiry/access rights | S10/S15 | Guardian/business/Admin | D07/D09 capabilities | expiry/reconciliation | payment never self-verifies trust/ownership |
+| D26 Marketplace | listing/offers/negotiation/deal state + Marketplace product/deal-item reviews | S14 | Purse/Marketplace/Admin | D14 chat, D20 optional transfer, D22 24h review eligibility, D21 moderation | deal/review audit | P2P risk/no escrow/guarantee; D26 owns Marketplace review content |
+| D27 Payments & Billing | authorized platform fiat boundary | S14 | disclosed platform services where authorized | D25/D24/D28 only when approved | reconciliation/refund records when used | launch non-custodial seller boundaries truthful |
+| D28 Ticketing | product/inventory/issuance/ownership/redemption | S13 | Event or standalone ticket surfaces | optional D11 Event, possible D27 authorized billing | unique QR/redemption | independent existence/exactly-once admission |
+
+---
+
+## 6. Requirements → implementation coverage matrix
+
+The following table maps every requirement identifier found in the approved `Requirements.md` baseline to at least one primary implementation/acceptance slice. Cross-cutting behavior is often verified again in S17/S18 even when a domain slice is primary.
+
+| Requirement | Planned slice(s) |
+|---|---|
+| `APP-001` | S02, S17, S18 |
+| `APP-002` | S02, S17, S18 |
+| `APP-003` | S02, S17, S18 |
+| `APP-004` | S02, S17, S18 |
+| `APP-005` | S02, S17, S18 |
+| `APP-006` | S02, S17, S18 |
+| `ID-001` | S02 |
+| `PRO-001` | S04 |
+| `PRO-002` | S04 |
+| `GEO-001` | S07 |
+| `GEO-002` | S07 |
+| `GEO-003` | S07 |
+| `GEO-004` | S07 |
+| `GEO-005` | S07 |
+| `GEO-006` | S07 |
+| `GEO-007` | S07 |
+| `SOC-001` | S04, S12 |
+| `SOC-002` | S04, S12 |
+| `HOME-001` | S16 |
+| `HOME-002` | S16 |
+| `HOME-003` | S16 |
+| `HOME-004` | S16 |
+| `HOME-005` | S16 |
+| `HOME-006` | S16 |
+| `HOME-007` | S16 |
+| `HOME-008` | S16 |
+| `HOME-009` | S16 |
+| `HOME-010` | S16 |
+| `HUB-001` | S07 |
+| `HUB-002` | S07 |
+| `HUB-003` | S07 |
+| `HUB-004` | S07 |
+| `HUB-005` | S07 |
+| `HUB-006` | S07 |
+| `HUB-007` | S07 |
+| `HUB-008` | S07 |
+| `EXP-001` | S07, S08, S17 |
+| `EXP-002` | S07, S08, S17 |
+| `EXP-003` | S07, S08, S17 |
+| `EXP-004` | S07, S08, S17 |
+| `EXP-005` | S07, S08, S17 |
+| `VAL-001` | S08 |
+| `VAL-002` | S08 |
+| `VAL-003` | S08 |
+| `VAL-004` | S08 |
+| `VAL-005` | S08 |
+| `VAL-006` | S08 |
+| `VAL-007` | S08 |
+| `VAL-008` | S08 |
+| `TRAIL-001` | S09 |
+| `TRAIL-002` | S09 |
+| `TRAIL-003` | S09 |
+| `TRAIL-004` | S09 |
+| `TRAIL-005` | S09 |
+| `TRAIL-006` | S09 |
+| `GUA-011` | S10 |
+| `TRAIL-007` | S09 |
+| `TRAIL-008` | S09 |
+| `TOUR-001` | S10 |
+| `TOUR-002` | S10 |
+| `TOUR-003` | S10 |
+| `TOUR-004` | S10 |
+| `TOUR-005` | S10 |
+| `GUA-001` | S10 |
+| `GUA-002` | S10 |
+| `GUA-003` | S10 |
+| `GUA-004` | S10 |
+| `GUA-005` | S10 |
+| `GUA-006` | S10 |
+| `GUA-007` | S10 |
+| `GUA-008` | S10 |
+| `GUA-009` | S10 |
+| `GUA-010` | S10 |
+| `HS-001` | S10 |
+| `MKT-002` | S14 |
+| `HS-002` | S10 |
+| `HS-003` | S10 |
+| `SHARE-001` | S16 |
+| `SHARE-002` | S16 |
+| `SHARE-003` | S16 |
+| `SHARE-004` | S16 |
+| `SHARE-005` | S16 |
+| `SHARE-006` | S16 |
+| `SHARE-007` | S16 |
+| `SHARE-008` | S16 |
+| `CH-001` | S12 |
+| `CH-002` | S12 |
+| `CH-003` | S12 |
+| `VIBE-001` | S12 |
+| `VIBE-002` | S12 |
+| `VIBE-003` | S12 |
+| `VIBE-004` | S12 |
+| `VIBE-005` | S12 |
+| `VIBE-006` | S12 |
+| `MSG-001` | S05 |
+| `MSG-002` | S05 |
+| `MSG-003` | S05 |
+| `MSG-004` | S05 |
+| `MSG-005` | S05 |
+| `NOT-001` | S05 |
+| `NOT-002` | S05 |
+| `NOT-003` | S05 |
+| `PURSE-001` | S14 |
+| `PURSE-002` | S14 |
+| `PURSE-003` | S14 |
+| `MKT-001` | S14 |
+| `MKT-003` | S14 |
+| `VQ-001` | S06 |
+| `VQ-002` | S06 |
+| `VQ-003` | S06 |
+| `ADM-VQ-001` | S06, S15 |
+| `ADM-VQ-002` | S06, S15 |
+| `ADM-VQ-003` | S06, S15 |
+| `ADM-VQ-004` | S06, S15 |
+| `ADM-VQ-005` | S06, S15 |
+| `ADM-VQ-006` | S06, S15 |
+| `ADM-VQ-007` | S06, S15 |
+| `BIZ-001` | S04, S15 |
+| `ACT-001` | S13 |
+| `EVT-001` | S13 |
+| `CONTENT-001` | S11 |
+| `MEDIA-001` | S03 |
+| `ROOM-001` | S11 |
+| `COM-001` | S11 |
+| `REP-001` | S10, S17 |
+| `MOD-001` | S05, source-domain moderation panels S08/S10/S11/S12/S13/S14, S15 |
+| `ADS-001` | S15 |
+| `SUB-001` | S10, S15 |
+| `PAY-001` | S14 |
+| `TKT-001` | S13 |
+| `NF-001` | S01, S17, S18 |
+| `NF-002` | S01, S17, S18 |
+| `NF-003` | S01, S17, S18 |
+| `NF-004` | S01, S17, S18 |
+| `NF-005` | S01, S17, S18 |
+| `NF-006` | S01, S17, S18 |
+| `PAR-HOME-001` | S16 |
+| `PAR-HOME-002` | S16 |
+| `PAR-HOME-003` | S16 |
+| `PAR-HOME-004` | S16 |
+| `PAR-HOME-005` | S16 |
+| `PAR-EXP-001` | S07, S08, S17 |
+| `PAR-EXP-002` | S07, S08, S17 |
+| `PAR-SEC-001` | S07 |
+| `PAR-SEC-002` | S07 |
+| `PAR-TRAIL-001` | S09 |
+| `PAR-TRAIL-002` | S09 |
+| `PAR-TRAIL-003` | S09 |
+| `PAR-TRAIL-004` | S09 |
+| `PAR-TRAIL-005` | S09 |
+| `PAR-TOUR-001` | S10 |
+| `PAR-TOUR-002` | S10 |
+| `PAR-GRD-001` | S10 |
+| `PAR-GRD-002` | S10 |
+| `PAR-GRD-003` | S10 |
+| `PAR-GRD-004` | S10 |
+| `PAR-GRD-005` | S10 |
+| `PAR-GRD-006` | S10 |
+| `PAR-HUB-001` | S07 |
+| `PAR-VAL-001` | S08 |
+| `PAR-VAL-002` | S08 |
+| `PAR-SHARE-001` | S16 |
+| `PAR-SHARE-002` | S16 |
+| `PAR-SHARE-003` | S16 |
+| `PAR-SHARE-004` | S16 |
+| `PAR-SHARE-005` | S16 |
+| `PAR-SHARE-006` | S16 |
+| `PAR-SHARE-007` | S16 |
+| `PAR-SHARE-008` | S16 |
+| `PAR-CH-001` | S12 |
+| `PAR-CH-002` | S12 |
+| `PAR-VIBE-001` | S12 |
+| `PAR-VIBE-002` | S12 |
+| `PAR-MSG-001` | S05 |
+| `PAR-MSG-002` | S05 |
+| `PAR-NOT-001` | S05 |
+| `PAR-HIDDEN-001` | S17 |
+| `PAR-PURSE-001` | S14 |
+| `PAR-PURSE-002` | S14 |
+| `PAR-MKT-001` | S14 |
+| `PAR-ADM-001` | S02, S05, S06, S08, S10, S11, S12, S13, S14, S15 |
+| `PAR-XD-001` | S17, S18 |
+| `PAR-QA-001` | S17, S18 |
+| `PAR-QA-002` | S17, S18 |
+| `PAR-QA-003` | S17, S18 |
+| `LEG-EXP-001` | S07, S08, S17 |
+| `LEG-EXP-002` | S07, S08, S17 |
+| `LEG-EXP-003` | S07, S08, S17 |
+| `LEG-EXP-004` | S07, S08, S17 |
+| `LEG-EXP-005` | S07, S08, S17 |
+| `LEG-TR-001` | S09 |
+| `LEG-TR-002` | S09 |
+| `LEG-TR-003` | S09 |
+| `LEG-TR-004` | S09 |
+| `LEG-TOUR-001` | S10 |
+| `LEG-TOUR-002` | S10 |
+| `LEG-GRD-001` | S10 |
+| `LEG-GRD-002` | S10 |
+| `LEG-GRD-003` | S10 |
+| `LEG-GRD-004` | S10 |
+| `LEG-GRD-005` | S10 |
+| `LEG-HOME-001` | S16 |
+| `LEG-HOME-002` | S16 |
+| `LEG-HOME-003` | S16 |
+| `LEG-HOME-004` | S16 |
+| `LEG-SHARE-001` | S16 |
+| `LEG-SHARE-002` | S16 |
+| `LEG-SHARE-003` | S16 |
+| `LEG-SHARE-004` | S16 |
+| `LEG-SHARE-005` | S16 |
+| `LEG-SHARE-006` | S16 |
+| `LEG-VIBE-001` | S12 |
+| `LEG-MSG-001` | S05 |
+| `LEG-NOT-001` | S05 |
+| `LEG-HIDDEN-001` | S17 |
+| `LEG-PURSE-001` | S14 |
+| `LEG-MKT-001` | S14 |
+| `LEG-VQ-001` | S06 |
+| `LEG-ADM-001` | S02, S05, S06, S08, S10, S11, S12, S13, S14, S15 |
+| `LEG-ARCH-001` | S01, S18 |
+| `LEG-ARCH-002` | S01, S18 |
+| `LEG-ARCH-003` | S01, S18 |
+
+**Coverage count:** 222 unique requirement identifiers mapped. This mapping is an implementation locator, not a replacement for the full requirement text.
+
+---
+
+## 7. Cross-domain journey implementation matrix
+
+| Journey | Canonical sequence / owners | Build order | Acceptance evidence |
+|---|---|---|---|
+| Authentication → profile | D01 identity/session → D02 profile/preferences | S02→S04 | canonical user, privacy-safe profile, cross-host same account |
+| Telegram identity → D01 | Telegram host verification → D01 link/session | S02 | tamper/replay tests; no duplicate identity |
+| Follow → Orbit/Echo | D03 directed follow → outbound Orbit/inbound Echo projections | S04 | one edge, two views; no Vibe/DM grant |
+| Pull → confirmed Vibe → DM | D17 Pull pending → Accept → Vibe → D14 DM membership | S12 + S05 | reject/pass no Vibe; accept idempotent; block/privacy enforced |
+| Reciprocal VibeCheck → Vibe | D18 validates both responses/deadline → idempotent D17 confirm | S12 | invitation/one-sided/expired none; reciprocal exactly one |
+| Places → proximity → check-in → VQ | D04 evidence → D05 5m/uncertainty decision → D20 qualified award | S07→S08→S06 | no client-distance authority; duplicate event no extra VQ |
+| Place validation → confidence policy | D05 observation → active versioned D05 confidence policy → result; Admin invokes D05 policy command | S08/S15 | audit/version/effective time/recompute without observation rewrite |
+| Trail → Place/Geo → navigation | D06 stop refs → D05/D04 facts → map projection/external navigation | S09 | no copied coords/random stops; handoff no state mutation |
+| Trail → profile | D06 author D01 → D02 profile → D06 published Trail read projection | S09/S04 | privacy/publication filters |
+| Trail → city → Trails/Tours | geographic context → read projection D06+D08 | S09/S10 | no City domain/copies; mixed/empty/error states |
+| Trail → Guardian Hire | D06 Trail context → eligible D07 provider → D08 request | S09→S10 | exact Trail preserved; open UI creates no booking/Handshake |
+| Trail → Tour reuse | eligible D06 Trail/version → D08 commercial offer composition | S09→S10 | source attribution preserved; D08 commercial state separate |
+| Guardian onboarding → selfie → eligibility | D01/D02 → D13 selfie → D07 freshness/qualification → D25 entitlement where required | S10 | 7-day freshness, entitlement != trust |
+| Hire request → provider acceptance → Handshake | D08 pending request → provider Accept → D08 accepted → D22 exactly-one ACTIVE | S10 | acceptance trigger only; retries idempotent |
+| Handshake → 24h review → expiry | D22 ACTIVE/issued/expires → D19 review if eligible → D22 EXPIRED | S10 | server clock, restart recovery, after-expiry deny, no CANCELLED |
+| Marketplace listing → agreement | D26 listing/negotiation → mutual agreement/deal | S14 | no implied payment/handover |
+| Marketplace optional VQ | buyer confirmation → D20 balance/auth/idempotency → direct seller credit; D26 references context | S14/S06 | no escrow/reserve/release; truthful failure |
+| Eligible Marketplace Handshake | approved D26 mutual agreement → D22 exactly-one 24h Handshake | S14/S10 | no +75 service reward; no handover proof |
+| Event → optional Ticketing | D11 Event → optional D28 ticket product | S13 | Event without ticket; ticket without Event |
+| Activity/Event → media/expiry | D10/D11 meaning → D13 asset lifecycle | S13/S03 | access/retention/cleanup correct |
+| Media → retirement → deletion | consumer removes/retires meaning → D13 retirement intent → Worker durable delete | S03 | retry/idempotent cleanup; no private public URL |
+| Community → chat/live room | D16 membership → D14 room chat / D15 live session | S11/S05 | membership/role authorization |
+| Share → nearby feed | D12 publish/audience + coarse D04 context → authorized read projection | S11/S16/S07 | no exact GPS disclosure; 23km applicable scope only where directed |
+| Find Hub → geofence → notification | D03 eligible relation → consent → D04 presence/geofence transition → D23 delivery | S07/S05 | 2h retention, revoke/block, stale position no transition |
+| Notification → deep link | D23 item/source reference → source-domain authorized detail | S05/S17 | no seeded notification; removed/private source handled truthfully |
+| VQ reward → journal | source committed fact → D20 rule version/eligibility → immutable posting | S06 | dedup/reconciliation/correction entry |
+| Messaging source context activation | S05 D14 engine/source-context port → owning source-domain authorization → D14 conversation | S10/S11/S12/S13/S14 after S05 | no fabricated context; Guardian/Community/Vibe/Event/Marketplace accepted in owning slice |
+| Report → case → enforcement → appeal | report → D21 case/merge/triage/evidence → confirmed decision → strike/restriction/suspension/content action → D23 notice → eligible appeal → uphold/modify/revoke | S05 core → progressive panels → S15 | report alone no strike; duplicate incident no duplicate strike; audit preserved |
+| Marketplace agreement → Handshake → product/deal review | D26 qualifying mutual agreement → D22 ACTIVE 24h → one D26 product/deal-item review if exposed/eligible → D22 EXPIRED | S14 + S10 D22 pattern | D26 owns review content; D22 eligibility only; no delivery/payment proof/+75 reward |
+| Privileged Admin action → owner command → audit | scoped Admin capability → owner-domain command → canonical result → privileged audit | S02 + progressive panels + S15 | no direct SQL/god mode/duplicate writer; sensitive visibility purpose-scoped |
+| Admin rule changes → audit | scoped Admin command → owning domain policy version → audit | S06/S08/S15 | authorization, old/new version, effective time, no direct SQL |
+
+---
+
+## 8. Environment and release strategy
+
+### Local/test
+
+- Reproducible developer environment and isolated PostgreSQL/PostGIS test database.
+- Explicit test object storage/realtime adapters; no production secrets or user data.
+- Unit/contract/component tests run quickly; integration suites use disposable isolated state.
+- S00-approved existing sample content is imported into legitimate test-authored Supabase development records, never presented as genuine production-user or real-world activity; isolated automated fixtures remain clearly synthetic.
+
+### Staging — brought up in S01 and evolved continuously
+
+- Persistent production-shaped API, client, Worker, PostgreSQL/PostGIS, object storage and required realtime/provider configuration.
+- Web and Telegram staging clients point to the same canonical backend authority.
+- Every slice reaches staging after exact-SHA CI and migration compatibility checks.
+- Test/staging identities/content are clearly marked; no fake business outcome is used to claim a feature works.
+- Staging records exact artifact/deployment revision, installed migration ledger, health/readiness, provider errors and worker state.
+
+### Production
+
+- Created/changed only under explicit release authorization after S18 gates.
+- Exact release artifact, database compatibility, migration order, rollback and mixed-version safety established before rollout.
+- Post-deploy checks prove the desired revision serves, the database is compatible and representative authorized journeys function.
+- Staging acceptance never substitutes for production acceptance.
+
+---
+
+## 9. Permanent CI and testing strategy
+
+CI begins in S01 and grows with the product; checks run against the exact candidate SHA.
+
+1. Formatting/lint/types/build.
+2. Architecture/import-boundary tests enforcing single-writer/module rules.
+3. Contract/schema compatibility checks.
+4. Unit tests for domain invariants and state machines.
+5. Real PostgreSQL/PostGIS integration tests for persistence, constraints, transactions and spatial queries.
+6. Migration forward/backward/expand-contract checks against representative prior schema state.
+7. API integration/auth/object-authorization tests.
+8. Worker/outbox/idempotency/retry/timer tests with controllable server clock.
+9. Realtime/message/notification tests including reconnect/dedup/failure.
+10. Frontend component/interaction tests, including denied/loading/empty/error/offline states.
+11. Cross-domain E2E journeys from §7.
+12. Web + Telegram host-adapter tests.
+13. Security/dependency scanning and secret-leak checks.
+14. Phone-width/RTL/accessibility visual and interaction suites where automatable; manual evidence where not.
+15. Performance instrumentation and benchmark suites in staging; production thresholds set from measured evidence before release.
+
+**Critical concurrency/idempotency suites:** D08 capacity, D20 double spend/grants, D22 duplicate Handshake/review, D28 redemption, check-in/reward duplication, outbox retries, provider callbacks, mixed-version deployment windows.
+
+---
+
+## 9.1 Admin / Trust & Safety acceptance matrix
+
+These tests are mandatory in addition to slice-local tests; they become real integration/E2E evidence as the owning domains become available.
+
+| Area | Required tests |
+|---|---|
+| Reports | report creates D21 case input; duplicate same-incident reports merge/associate appropriately; report does not automatically create strike; reporter cannot fabricate sanction; blocked/private source is authorization-checked; deliberate report abuse can form its own case without punishing honest mistakes |
+| Strikes | first distinct confirmed ordinary violation → Strike 1; second → Strike 2; third → sanction; duplicate incident cannot double-strike; overturned violation invalidates current strike effect/derived active sequence while preserving immutable case/audit history |
+| Standard suspensions | 3 days; 7 days; 1 month; 3 months; Permanent; temporary expiry restores permitted access at server-authoritative due time; Permanent never auto-expires |
+| Severe bypass | authorized severe case can apply protective restriction/suspension without two warnings; actor/reason/evidence/severity/case/audit required; under-scoped moderator cannot impose stronger sanction |
+| Scoped restrictions | messaging-only restriction blocks messaging and not unrelated reads; Marketplace-selling restriction blocks D26 selling without deleting account data; each consuming domain checks applicable D21 restriction |
+| Appeals | eligible submit; duplicate/idempotent behavior; uphold/reduce/modify/revoke; reason/audit/notification; appeal itself does not auto-remove sanction; higher-impact appeal supports qualified separate reviewer where staffing permits |
+| Admin permissions | Support cannot grant VQ; VQ Operator cannot permanently ban without sanction capability; Ads Operator cannot access moderation evidence/ban; Operations Viewer cannot mutate; unauthorized Admin route denied |
+| VQ | Admin correction creates D20 compensating posting; historical journal unchanged; grant batch preview/count/total; per-recipient idempotent retry; no silent balance edit |
+| Place policy | D05 confidence draft/preview/activate/history/rollback authorization; historical observations unchanged; under-scoped Admin denied |
+| Guardian/Handshake | Admin can inspect operational state but cannot fabricate accepted engagement, Handshake, review, completion or +75 reward |
+| Marketplace | Admin can remove listing/sanction through owner commands and inspect legitimate transfer context; cannot claim cash/delivery guarantee; D26 product review requires active D22 eligibility |
+| Privacy | Admin without purpose/capability cannot inspect protected DM/report evidence, unrelated private media or precise Find Hub location; permitted evidence access is audited |
+| Audit | every privileged mutation includes actor/capability/target/reason/case where relevant/correlation/owner command/result; failed attempts remain observable as appropriate |
+
+## 10. Security and privacy implementation matrix
+
+| Risk/control | Built in | Required evidence |
+|---|---|---|
+| Authentication/session/Telegram verification | S02 onward | tamper/replay/revocation tests |
+| Object-level authorization | every domain slice | cross-user denial tests |
+| Admin authorization/audit | S02 shell; S05/S06/S08/S10–S15 panels | least-privilege role/capability matrix, purpose-scoped sensitive evidence, actor/reason/case/owner-command audit |
+| CSRF/browser session protections | S02 | state-changing request tests |
+| Injection/input validation | contracts/API all slices | malformed input suites |
+| Rate/abuse controls | identity, messaging, geo, social, VQ, admin | throttling/abuse tests without breaking legitimate use |
+| Media upload safety | S03 | content/type/size/auth tests |
+| Secret management | S01 | no client/log exposure, environment validation |
+| Location privacy/spoof risk | S07/S08 | coarse-output/privacy/replay/stale/uncertainty tests |
+| Idempotency/double spend/replay | D20/D22/D28 and source awards | concurrency/retry suites |
+| Blocks/revocation | D03 + all consumers | immediate access/disclosure removal |
+| Retention/deletion | D04/D13/D21 and applicable domains | 2h Find Hub, 24h Handshake eligibility, sanction expiry, media/account/content cleanup evidence without erasing required audit/ledger history |
+| Dependency/security posture | CI/S18 | scans, threat review, accepted remediations |
+
+Security is a per-slice acceptance item, not a launch-only cleanup phase.
+
+---
+
+## 11. Observability and operations strategy
+
+Established in S01 and extended with every slice:
+
+- structured application/worker logs with request, correlation and causation IDs;
+- explicit domain/source event IDs without logging secrets/private payloads unnecessarily;
+- API error rates/latency, DB pool/query health, Worker queue/job age/failures, outbox lag;
+- provider-specific metrics for Overpass/geocoding/maps/navigation handoff visibility where observable, storage/media failures, realtime disconnects;
+- business-integrity indicators where safe: duplicate-prevention conflicts, failed VQ postings, expired Handshakes, ticket redemption conflicts, media deletion backlog, open/critical moderation cases, appeal backlog, sanction-expiry failures and Admin-action failures;
+- traces across API→domain→DB/outbox→worker for high-value journeys;
+- dependency-aware readiness separate from liveness;
+- alerts tied to actionable failure modes and runbooks;
+- backup schedules, restore verification, retention/cleanup visibility;
+- incident response, rollback and mixed-version compatibility runbooks;
+- audit logs for admin/moderation/rules/grants/security-sensitive actions.
+
+No metric, dashboard or seeded record may pretend a feature succeeded.
+
+---
+
+## 12. Production readiness gate — full application acceptance contract
+
+Production release is blocked until every applicable item is evidenced on the exact release candidate.
+
+### Product
+
+- All approved launch requirements map to implemented/verified slices.
+- D01–D28 each reach `STAGING ACCEPTED`; release promotes them together as complete initial scope.
+- Every cross-domain journey in §7 passes integrated staging acceptance.
+- Five equal tabs, Profile and the fully integrated permission-scoped Admin Control Room behave on supported hosts/devices/locales.
+- Real report/case/strike/sanction/appeal flows and owner-domain enforcement pass; report submission alone cannot punish.
+- D14 source-specific contexts are accepted only with their real owning-domain records: Guardian S10, Community S11, Vibe DM S12, Event S13, Marketplace S14.
+- No fake business outcome, mock authority or placeholder-success path remains.
+- No unresolved launch-blocking Product Owner choice.
+
+### Data
+
+- Exact migration chain/checksums verified against staging and proposed production baseline.
+- PostgreSQL/PostGIS extensions, indexes, constraints and grants verified.
+- D20 journal integrity/reconciliation, D22 uniqueness/expiry, D28 redemption uniqueness and all domain invariants pass.
+- Backup completed and restore rehearsal proves recoverability.
+- Retention/cleanup jobs verified, including Find Hub 2h and applicable media 24h.
+- Expand/contract and rollback strategy covers current-serving and new versions.
+
+### Security/privacy
+
+- Authentication, Telegram linking, authorization/Admin least-privilege matrix, D21 sanction enforcement/appeals, purpose-scoped moderation evidence, privacy/blocking, upload/media, geo/location, abuse/rate controls, replay/idempotency and secrets pass.
+- Security/dependency findings triaged; launch-blocking issues resolved.
+- Data deletion/retention and least-privilege access verified.
+
+### Operations
+
+- Health/readiness, logs, metrics, traces, alerts and worker/provider monitoring operational.
+- Runbooks cover deploy, migration, rollback, provider outage, DB/storage/realtime failure and incident response.
+- Exact serving revision/deployment is observable.
+
+### Client
+
+- Browser + Telegram on representative real phones.
+- 320/360/375/390/393/412/430 px relevant screens.
+- EN/FR/AR, RTL, long strings, safe areas, keyboard, scrolling, modal/sheet/back behavior.
+- Accessibility focus, semantics, text scaling, non-color states, reduced motion and alternatives to sound/haptics.
+- Real permission denial/revocation/unavailable flows for location/camera/mic.
+
+### Release
+
+1. Freeze exact release SHA/artifacts.
+2. Verify exact-SHA CI and security gates.
+3. Verify installed staging migration reality and representative journeys.
+4. Compare production current schema/serving versions for compatibility.
+5. Execute only explicitly approved migration/deployment sequence.
+6. Re-query installed migration/schema state.
+7. Probe dependency-aware readiness and representative authorized journeys.
+8. Confirm desired API/Worker/Web/Telegram revisions actually serve.
+9. Monitor launch health and preserve rollback capability.
+10. Record Product Owner production acceptance.
+
+Only then can the application be `PRODUCTION ACCEPTED`.
+
+---
+
+## 13. New Product Owner decisions — explicit implementation controls
+
+| Decision | Plan enforcement |
+|---|---|
+| Approved Master Plan becomes controlling execution authority | Authority hierarchy: latest direct PO decision → approved Master Plan → Requirements → structure → Database → historical evidence. A newer approved operational/implementation clarification need not be copied backward merely to avoid textual difference. |
+| Full Admin Control Room | Permanent shell/RBAC in S02; panels progressively added with owner domains; S15 is integrated completeness. Admin orchestrates owner commands and is not a 29th writer/direct-SQL console. |
+| Reports are allegations, not strikes | S05 D21 intake creates/merges cases; only a confirmed violation decision can issue strike/sanction. |
+| Two warnings, third confirmed strike sanctions | D21 Strike 1 first formal warning → Strike 2 final formal warning → Strike 3 sanction for ordinary graduated enforcement; duplicate same incident cannot multiply strikes. |
+| Standard sanction durations | D21 standard choices: 3 days, 1 week, 1 month, 3 months, Permanent; temporary expiry is durable/server-authoritative and automatically restores permitted access. |
+| Severe-violation bypass | Qualified severe safety/security cases may bypass warnings with evidence, reason, actor, case and audit; protective temporary restriction is distinct from final guilt decision. |
+| Appeals | Eligible sanction appeal → qualified review → uphold/reduce/modify/revoke → reason + notification + audit; appeal does not automatically remove sanction. |
+| Provider acceptance → automatic Handshake | S10 D08 acceptance transaction/outbox invokes idempotent D22 issuance; opening/submitting request alone does not. |
+| Handshake lifetime exactly 24h | D22 stores server-issued expiry and durable scheduler/reconciliation; restart-safe. |
+| No Handshake cancellation state | D22 state set contains ACTIVE/EXPIRED for issued Handshake; underlying D08/D26 cancellation never revokes/resets it. |
+| Review only inside active 24h window | D22 eligibility checked transactionally by review owner; after expiry deny; duplicate review deny. |
+| Marketplace product/deal review | Eligible D26 agreement → D22 24h eligibility → one D26 Marketplace product/deal-item review where exposed; D22 owns proof only. D19 remains provider/Guardian reputation-review owner where applicable. |
+| Marketplace VQ is peer-to-peer risk | S14 direct authorized D20 buyer→seller transfer only; no escrow/guarantee/delivery inference. |
+| No Marketplace escrow/platform guarantee | No reserve/release escrow subsystem or commission path is planned for ordinary D26 listings. |
+| Future official app products only when authorized | Maintain Vibe Guide/Admin seam; no official product records/UI invented now; ordinary D26 listings stay peer-owned. |
+| D05 confidence policy Admin-configurable | S08/S15 versioned/effective/audited policy through D05 command; observations immutable; Admin is not second writer. |
+
+## 14. Remaining genuine Product Owner decisions
+
+No current unresolved choice blocks the overall Master Plan, dependency graph or unrelated slices. The following are **slice-local Product Owner gates** and must close before the affected behavior can reach the stated staging/production acceptance:
+
+1. **Secret bounty-claim proximity** — exact qualifying proximity/rule must be decided before the Secret claim path is accepted. Do **not** adopt a historical 50 m value by inference.
+2. **Validate approach-notification radius** — exact automated approach-alert radius must be decided before that automatic alert behavior is accepted. Do **not** silently promote the historical 200 m reference to policy; the directed 5 m check-in radius remains a separate rule.
+3. **VibeFlash scheduling/automation** — exact scheduling/trigger/automation policy must be decided before automated VibeFlash scheduling is accepted. Do not infer random legacy client timers. The 33-second response window remains directed and unaffected.
+
+These gates do not block other implementation work or acceptance that does not depend on them.
+
+Other future/non-blocking decisions:
+
+4. **Future official VQgemni products** — none are authorized now; if later authorized, they enter Vibe Guide under a separate official-product support/responsibility policy and remain distinct from ordinary D26 peer listings.
+5. **Future stronger Admin-grant approval** — no two-person/amount threshold is directed now. Current implementation uses scoped authority, explicit recipients/amount/reason, preview, audit and idempotent D20 postings while preserving an approval-workflow seam.
+
+**Measured engineering acceptance, not a Product Owner policy gate:** numeric production performance thresholds are established from instrumented staging baselines before production acceptance. Future paid/self-hosted map/POI/geocoding provider migration remains an operational/cost choice inside the already directed replaceable-provider architecture.
+
+Ordinary engineering selections—libraries, physical column types, cache TTLs, indexes, queue implementation, deployment packaging—are resolved during the owning slice from approved architecture and evidence; they are not inflated into Product Owner questions.
+
+## 15. Living-plan authority, update and change-control discipline
+
+### 15.1 Approved authority hierarchy
+
+Implementation agents use:
+
+`latest explicit Product Owner decision → approved Master Plan.md → Requirements.md → structure.md → Database.md → historical/reference evidence`.
+
+`Master Plan.md` is the consolidated living implementation and production-control authority. It incorporates approved product/architecture/database design plus newer Product Owner decisions and implementation, Admin/governance, security and production-readiness completion. **Absence of a Master Plan detail from an older governing document does not by itself constitute a contradiction.** A newer explicit Product Owner decision or approved Master Plan operational clarification controls execution unless a later Product Owner decision supersedes it.
+
+This rule does **not** authorize agents to invent product policy. New plan detail must be directed, source-backed, ownership-consistent, a necessary security/privacy/operational control or an engineering choice within settled boundaries. Genuine new product choices remain `PROPOSED` until Product Owner decides.
+
+### 15.2 No automatic backward-document loop
+
+Do not stop implementation merely because Requirements/Structure/Database omit a newer approved Master Plan detail. Back-edit those older files only under separate explicit authorization. Treat a real contradiction as blocking only when the plan would remove approved behavior, violate current Product Owner direction, duplicate ownership, break the 28-domain model, introduce a 29th domain, split Web/Telegram authority, recreate prohibited legacy/mock authority or violate privacy/security.
+
+### 15.3 Living-plan updates
+
+After each accepted implementation slice:
+
+1. Re-read the current approved Master Plan, exact repository base/head and sources relevant to that slice.
+2. Update only the slice status/evidence fields, dependency facts and future instructions actually changed by implementation or a newer decision.
+3. Record real commit/PR/CI/migration/deployment/staging/runtime evidence; never fabricate pending evidence.
+4. Preserve accepted history; do not rewrite completed evidence as if later decisions had always existed.
+5. Correct source-answerable defects inside this same Master Plan when within authorization.
+6. When Product Owner makes a newer decision, record it, identify the superseded Master Plan rule, update affected **future** slices and preserve unrelated accepted work.
+7. Keep exactly one `Master Plan.md`; no V2/fixed/final-final competing plan.
+8. Implementation workers must inspect this plan before starting a task; its current approved restart point and evidence ledger govern continuation.
+
+## 16. Coverage and independent-review checklist for this plan
+
+### Requirements → Plan
+
+- Every one of the 222 requirement identifiers discovered in the approved Requirements baseline is mapped in §6.
+- Requirements without their own domain (APP/NF/PAR/LEG families) map to explicit integration/release slices rather than being orphaned.
+- Newer directed Master Plan/Product Owner decisions that post-date Requirements are recorded explicitly in §1.3/§13 and are not misclassified as missing requirements.
+
+### Structure → Plan
+
+- One client, API, Worker, contracts/testing packages and database migration area are placed in S01.
+- All 28 logical modules have an implementation slice in §5.
+- Device permissions, Web/Telegram adapters, media, messaging/realtime, map/provider boundaries, outbox/jobs, progressive Admin and search/read projections have implementation order.
+- Admin Control Room is orchestration and never a 29th business owner.
+- No 28-microservice assumption is introduced.
+
+### Database → Plan
+
+- Every conceptual domain group receives physical persistence work in its owning slice.
+- Cross-domain identifiers are references/contracts, not license for foreign writes.
+- Timed state (D18, D22, D21 sanctions where temporary, media, notifications, reservations) has durable due-time/restart-safe processing.
+- PostgreSQL/PostGIS, migration discipline, transactions, indexes, retention, audit, backup/restore and production migration gates are explicit.
+- D21 case/strike/sanction/appeal history and privileged audit are additive operational implementation details under the directed Master Plan authority; they do not create a second writer.
+
+### D01–D28 → Plan
+
+- All 28 appear in §5 with primary slice(s); none is marked later/optional/MVP.
+
+### Cross-domain journeys → Plan
+
+- All required journeys in §7 include final Handshake, Marketplace VQ, D05 confidence, progressive Admin, report→case→sanction→appeal, source-specific messaging activation and Marketplace 24h product/deal review.
+
+### Production readiness → Plan
+
+- CI, staging, security, observability, backups, restore, migration compatibility, rollback, phone/Web/Telegram acceptance, Admin/Trust & Safety E2E and production smoke gates are explicit.
+
+### Mandatory final semantic checks
+
+1. **Requirements → Master Plan:** PASS only when every approved requirement ID remains mapped.
+2. **Structure → Master Plan:** PASS only when every relevant boundary has an implementation owner/order and no duplicate writer.
+3. **Database → Master Plan:** PASS only when conceptual invariants receive implementation/verification work without speculative mega-schema.
+4. **D01–D28:** all 28 present; no 29th domain.
+5. **Cross-domain journeys:** all required flows have owner/order/acceptance.
+6. **Product Owner decisions:** newest directed rules are explicit and older OPEN wording cannot override them.
+7. **Admin/Trust & Safety ownership:** D21 owns case/sanction/appeal; source domains enforce their records/capabilities; Admin is orchestration.
+8. **Messaging sequencing:** S05 builds the engine/infrastructure only; Guardian S10, Community S11, Vibe DM S12, Event S13 and Marketplace S14 accept real contexts.
+9. **Admin progressive sequencing:** permanent shell/RBAC S02; Reports S05; VQ S06; Places S08; Guardians S10; Content/Communities S11; Vibe/Challenges S12; Activities/Events/Ticketing S13; Marketplace S14; integrated completeness S15.
+10. **Marketplace review/Handshake:** qualifying D26 agreement → D22 active 24h → D26 product/deal-item review where applicable; D22 proof only; D19 provider review remains separate.
+11. **VQ ownership:** D20 sole VQ writer; Admin and D26 only invoke/reference D20 contracts.
+12. **Report/strike/sanction lifecycle:** report≠strike; two warnings then third confirmed strike sanction for normal model; duplicate incident no duplicate strike; standard durations exact; severe bypass audited; appeals supported.
+13. **Privacy/Admin permission model:** no god mode; sensitive evidence purpose-scoped; Support/VQ/Ads/moderation roles separated; private DMs/location/media not blanket visible.
+14. **Production readiness:** all 28 staging-accepted plus data/security/ops/client/release gates before production acceptance.
+15. **No MVP/partial-foundation drift:** dependency sequencing never reduces complete-initial-product scope.
+16. **No new 29th domain:** Admin/Maps/Search/platform capabilities remain non-domain orchestration/infrastructure.
+17. **No duplicate canonical writer:** each business mutation still routes through D01–D28 owner.
+18. **No fake business state:** no fabricated users/geo/messages/bookings/payments/stats/moderation outcomes.
+19. **No legacy crypto:** VQ stays internal noncrypto reward/transfer unit under D20.
+20. **No Marketplace escrow:** direct peer VQ only; platform non-guarantor/zero commission under current rule.
+21. **No Handshake cancellation:** issued Handshake is ACTIVE→EXPIRED exactly 24h; source cancellation does not reset/revoke it.
+22. **No hard-coded immutable D05 confidence formula:** Admin-configurable versioned policy, D05 writer.
+23. **Master Plan authority statement:** hierarchy and no-automatic-back-edit rule are present and unambiguous.
+
+### Independent second-pass questions
+
+- Did any approved domain or user journey disappear or become post-launch for convenience? **Must be no.**
+- Did any progressive Admin panel become a second canonical writer or direct-SQL console? **Must be no.**
+- Did a report itself punish a user? **Must be no.**
+- Did the strike model lose case evidence/audit or multiply duplicate incidents? **Must be no.**
+- Did severe-bypass authority become universal moderator power? **Must be no.**
+- Did source-specific messaging become accepted before its owner exists? **Must be no.**
+- Did Marketplace review move into D22? **Must be no.**
+- Did Marketplace escrow/platform guarantee return? **Must be no.**
+- Did Handshake cancellation return or lifetime change from 24h? **Must be no.**
+- Did D05 confidence become hard-coded? **Must be no.**
+- Did Web/Telegram split authority, Geo rules reopen, mocks return or a 29th domain appear? **Must be no.**
+- Is staging early and continuous while production acceptance remains full-system/final? **Must be yes.**
+- Does the target remain the complete production-ready application? **Must be yes.**
+
+## 17. Master Plan end condition
+
+This plan is executable only as a controlled sequence:
+
+```text
+approved product design + currently implemented VQgemni UI
+  → S00 preserved test-authored Supabase content/media and verified visual baseline
+  → S01–S18 source-verified existing-app rehabilitation and production-quality vertical slices
+  → continuous production-shaped staging
+  → all 28 domains staging-accepted
+  → full cross-domain/client/security/data/operations acceptance
+  → explicitly authorized production release
+  → post-deploy verification of actual serving state
+```
+
+There is no MVP completion gate, partial-foundation product acceptance, fake business state, deferred approved launch domain, Handshake cancellation, Marketplace escrow, report-as-automatic-punishment, unscoped god-mode Admin or hard-coded immutable D05 confidence formula in this plan. This Product Owner-approved living `Master Plan.md` is the controlling implementation/production-execution authority below any later explicit Product Owner decision; ordinary implementation must not reopen that hierarchy or demand backward edits to older design documents merely to remove textual differences.
+
+**Modular Monolith end-state clarification (ADDITIVE):** One working React/Vite application, one Supabase project and one deployment; all 28 numbered internal domains are the only writers of their own business facts, each exposes public `index.ts` APIs only, Admin remains orchestration rather than D29, and prior implementations are retired only after S00-first, complete acceptance evidence and an authorized non-destructive cutover.

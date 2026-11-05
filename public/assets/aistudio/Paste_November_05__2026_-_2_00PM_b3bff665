@@ -1,0 +1,794 @@
+# VQgemni — Requirements.md
+
+**ID:** VQ-REQ-001  
+**Date:** 2026-10-30  
+**Product:** VQgemni  
+**Repository:** `funmarket/VQgemini`, default branch `main`  
+**Status:** **PRODUCT OWNER APPROVED GOVERNING PRODUCT REQUIREMENTS.**  
+This document is the approved product-behavior baseline. Implementation remains subject to the approved Master Plan, current source verification, task authorization and acceptance gates.  
+**Purpose:** Reconstruct the intended VibeQuest app experience from the user-supplied latest Gemini application ZIP and safe-behavior extraction, with explicit owner-directed updates and independently designed, real engineering.
+
+# Post-Baseline Product & Policy Updates — Master Plan Controlled
+
+> **Authority notice:** This document remains the full product-behavior requirements baseline. The Product Owner-approved `Master Plan.md` and any later explicit Product Owner decisions supersede conflicting, incomplete, OPEN or UNSPECIFIED wording in this older baseline. Absence of a newer Master Plan rule from this file does not invalidate it. Latest explicit Product Owner direction remains highest authority; the approved `Master Plan.md` is the controlling implementation/production-execution authority beneath it.
+
+## Architecture Note — Modular Monolith (ADDITIVE; original requirements unchanged)
+
+The existing `funmarket/VQgemini` React/Vite application remains one frontend, one Supabase project (PostgreSQL/PostGIS, Auth, Storage and Edge Functions as needed), and one deployment. The 28 numbered domains under `src/domains/dXX_*` are internal modules, not separate services; each is the sole authorized writer of its canonical tables. Domain public commands and queries are exported through `index.ts` only. UI, features, screens, hooks, other domains and Admin use those public APIs (or non-writing thin application orchestration); nobody writes another domain's tables. Admin is orchestration, not D29 or a second writer. S00 must satisfy its existing full preservation, genuine test identity, D13 media migration and visual/data parity acceptance **before structural transfer**. Transfer existing working code gradually from `features/`, `screens/`, `components/`, `services/` and `hooks/`, one real feature at a time; retain previous functionality until verified backend, RLS/authorization, functional and visual parity plus authorized cutover. Boundary tests must enforce public-only imports and no cross-domain writes; no mocks, shadow writers or service extraction. The domain directories currently exist, and some contain `index.ts`; inspect their actual contents at execution time rather than treating them as empty or completed.
+
+All existing product behavior, timings, distances, eligibility, media/retention, five-destination UX, Admin, safety, security, and anti-mock requirements remain binding and unchanged.
+
+## Requirements Delta M — Existing-app rehabilitation, S00 real test accounts and Supabase data/media — DIRECTED 2026-11-03
+
+1. **Preserve and rehabilitate the existing VQgemni app.** The existing `funmarket/VQgemini` React/Vite product is the implementation starting point, not an empty replacement app. Preserve its currently presented five-section UI, navigation, color/themes, imagery, posts, Places, Trails, Guardians/Legends, community/social features and meaningful interactions while correcting monolithic code and domain ownership. No removal of a feature merely because its current code is defective, mocked, embedded or unfinished.
+2. **S00 MUST precede S01 and structural refactoring.** Inventory existing real and sample records, sources and all images/assets; create recoverable pre-change snapshots and visible before-state screenshots; make real, authenticated, restricted **Supabase Auth test users** and linked canonical D01/D02 profiles; attribute the currently displayed sample posts, Trails and Guardian/Legend offers to these controlled test principals with explicit imported/test provenance; populate D05 Places and remaining legitimate sample records under their canonical domains; migrate permitted image/media bytes into authorized **Supabase Storage** with D13 asset references. Compare before/after counts, relations and presentation before removing any hardcoded business-data source.
+3. **No embedded authoritative content.** React/TSX templates may contain UI presentation logic, styles, icons, empty/loading states and static design decoration, but no canonical sample users, posts, Places, Guardian records, Trails, ratings, authored image collections, simulated network identities or fake transactional state. Once verified, records are loaded via authorized domain/API or secured Supabase data-access paths, not hardcoded arrays, invented URLs, random GPS, localStorage truth or silent fallback. Sample content remains visible and functional throughout development as **genuine database data**.
+4. **Accurate authorship and media handling.** Every imported sample post/Trail/Guardian requires a valid linked test-user identity and correct D12/D06/D07/D08 attribution. Preserve captions, timestamps as source context, ordered stops/remix lineage, Guardian qualifications/offers, valid relationships and image composition. Test fixture/import provenance is identifiable; do not represent a test account as a genuine person or its sample posts as historic user-authored actions. D13 owns bytes and media lifecycle; consuming domains own attachment permissions. Verify image rights, uploads, authorized delivery and applicable ephemeral/durable retention.
+5. **Truthful operational state.** Never turn demo text/cards into verified check-ins, consents, GPS presence, accepted reservations, Handshakes, VQ ledger postings, payments, notifications, reviews or social approvals. These require genuine domain-owned transactions/evidence and appropriate test-only lifecycle. Test accounts and development fixtures may participate in actual authorized staging workflows, but fake success is not an implementation.
+6. **Retain content throughout development, controlled eventual cleanup.** S00 fixtures remain for S01–S18 testing and visual population. Cleanup only after complete production acceptance, a legitimately populated launch-content plan and separate explicit authorization, without orphaning retained posts, deleting real users, impersonating new authors or leaving unintended blank screens. Do not silently seed into real public production as genuine community activity.
+7. **Acceptance gate.** Before S01: evidence of full inventory and restoration, valid Supabase Auth/profile/author mappings, RLS/permission coverage, idempotent imports, nonmissing media, ownership/referential integrity, controlled failures and full visual/interaction parity across existing routes and mobile widths. Preserve original content if a safe migration cannot be verified; never destructively refactor to reach an appearance of progress.
+
+**Authority:** This delta is a newer explicit Product Owner decision. It supersedes earlier empty-repository assumptions, historical prohibitions on using **any** sample fixtures during development and proposals to start feature refactoring before preserving the current app. It does **not** relax actual production truth, privacy or the distinct accepted feature/domain policies elsewhere in this document.
+
+## Requirements Delta A — Handshake — DIRECTED
+
+- A qualifying source agreement acceptance creates exactly one idempotent **D22 Handshake**.
+- For Guardian/Legend/Tour-style service flow, the qualifying trigger is real provider acceptance of the request/agreement. Opening Hire or merely submitting a request does **not** create a Handshake.
+- D22 Handshake state is **ACTIVE** then **EXPIRED**. There is **no Handshake cancellation state**.
+- Expiry occurs exactly **24 hours after issuance**, using server-authoritative time.
+- Later booking/deal cancellation does not revoke, reset, delete or extend that Handshake.
+- Review creation is allowed only while the Handshake is ACTIVE and the reviewer/subject remain otherwise eligible; after 24 hours, new review creation from that Handshake is denied.
+- D22 owns Handshake identity, issuance/expiry/idempotency and review-eligibility proof; D22 does **not** own review content.
+- These rules supersede older OPEN/UNSPECIFIED Handshake cancellation/review wording in the original baseline below.
+
+## Requirements Delta B — Marketplace VQ — DIRECTED
+
+- Marketplace VQ is a **peer-to-peer** transfer between buyer/user and seller/provider through D20.
+- Ordinary Marketplace does **not** use default escrow, does **not** charge a platform Marketplace commission under current policy, and does **not** make the platform guarantor of delivery, quality, authenticity, physical handover or off-platform payment.
+- A VQ transfer must not be represented as proof that goods/services were delivered or that external/cash payment occurred.
+- Ordinary Marketplace transactions remain at buyer/seller risk.
+- Admin may investigate fraud, remove listings through D26/D21, sanction accounts through D21 and correct legitimate VQ/application errors through the owning domains. Admin does not guarantee off-platform cash or physical goods and does not create automatic refunds.
+
+## Requirements Delta C — Marketplace Review — DIRECTED
+
+- A qualifying D26 mutual agreement may create one idempotent D22 Handshake.
+- While that Handshake is ACTIVE, it provides the applicable **24-hour review eligibility** window.
+- **D26 owns Marketplace product/deal-item review content.** D22 owns only the review-eligibility proof.
+- **D19 continues to own established Guardian/provider reputation review content** where that separate provider-review journey applies.
+- Marketplace review eligibility/content does not prove physical delivery, authenticity, quality, external payment or successful physical handover.
+
+## Requirements Delta D — D05 Confidence — DIRECTED
+
+- D05 Place confidence policy/formula is **Admin-configurable, versioned and auditable**.
+- Each active policy has a known version and effective time.
+- Admin Control Room changes policy through authorized **D05 commands**; D05 remains the sole canonical confidence writer.
+- No permanently hard-coded immutable confidence formula is product policy.
+- Changing the active formula/policy does not rewrite historical validation observations. Current confidence may be recomputed under the active versioned policy while retaining provenance.
+
+## Requirements Delta E — Full Admin Control Room — DIRECTED
+
+The Admin Control Room is an explicit full-product operational requirement and a privileged orchestration surface over D01–D28, not a new business domain or direct database editor. Its applicable product navigation covers:
+
+- Dashboard
+- Users
+- Reports & Cases
+- Places
+- Guardians
+- Content
+- Communities
+- Activities & Events
+- Marketplace
+- VQ
+- Commerce
+- Advertising
+- Operations
+- Settings
+
+Its operational responsibilities include, where applicable: reports, case management, moderation, sanctions, appeals, support, VQ rules/grants/corrections, D05 confidence policy, Guardian/Business operations, Marketplace disputes, Advertising, Ticketing support, Notifications, Media operations, system-health visibility and privileged audit. Every mutation must invoke the appropriate canonical D01–D28 owner; Admin does not become a duplicate writer.
+
+## Requirements Delta F — User Warning / Strike System — DIRECTED
+
+Normal confirmed-violation enforcement is:
+
+```text
+Strike 1 = first formal warning
+Strike 2 = final formal warning
+Strike 3 = sanction
+```
+
+- A user report is an allegation/case input, **not** a strike.
+- A strike requires a confirmed violation decision by an authorized moderator/Admin.
+- Duplicate reports concerning the same incident do not automatically create multiple strikes; they may be merged into one case.
+- Standard suspension/ban choices are **3 days, 1 week, 1 month, 3 months, Permanent**.
+- Temporary sanctions use server-authoritative due time and expire automatically; Permanent does not auto-expire.
+
+## Requirements Delta G — Severe Violation Bypass — DIRECTED
+
+Severe safety/security violations may bypass the normal two-warning progression. Serious threats, harassment, stalking, exploitation, fraud/scams, malicious impersonation, severe privacy abuse, dangerous conduct, security abuse or ban evasion may justify immediate protective restriction, suspension or permanent ban according to the reviewed case. Such action requires evidence/source, severity, authorized actor, reason, linked case and audit. Where safe and appropriate, a temporary protective restriction may be used during investigation rather than treating every serious report as an automatic final guilt decision.
+
+## Requirements Delta H — Appeals / Enforcement Transparency — DIRECTED
+
+- Eligible sanctions support an appeal path. Appeal does not automatically remove the sanction.
+- Review may uphold, reduce, modify or revoke the action, with reason and audit recorded.
+- User Account Status should expose, where safe: action taken, general policy/reason category, warning/strike number, restriction/suspension duration, start/end time, affected capabilities and appeal path.
+- Reporter identity and sensitive evidence remain protected where privacy/safety policy requires it.
+
+## Requirements Delta I — Scoped Restrictions — DIRECTED
+
+D21 sanctions may be capability-specific instead of account-wide, including appropriate restrictions on messaging, posting/commenting, Community participation, Guardian activity, Event/Activity creation, Marketplace buying/selling, VQ transfers, Place contributions, Validate participation and Advertising operations. **D21 owns the sanction/restriction fact; affected domains enforce it** through their write-authorization checks.
+
+## Requirements Delta J — Support / Issue Resolution — DIRECTED
+
+Admin/support operations must also handle non-misconduct application issues such as account access, entitlement problems, failed VQ postings, stuck reservation state, failed media processing, ticketing problems, notification failures, Place contribution issues, Guardian eligibility issues and Marketplace application-state issues. Support/case tooling may reference those canonical records, but corrections must be executed through the owning domains; support visibility does not grant unrestricted moderator or VQ authority.
+
+## Requirements Delta K — Geo/Maps — DIRECTED
+
+Preserve the latest directed Geo architecture and behavior:
+
+- genuine device location through shared Web/Telegram capability adapters;
+- D04 geographic consent/evidence authority;
+- PostgreSQL + PostGIS for authoritative VQgemni-owned spatial operations;
+- MapLibre for in-app interactive map rendering;
+- OSM Overpass as the current replaceable low-cost external POI discovery adapter;
+- replaceable tile/style/geocoding/provider boundaries;
+- Google Maps/Waze/supported device navigation handoff for applicable Place/Trail directions;
+- **5 m** maximum Place check-in distance, with evidence freshness/measurement uncertainty sufficient to support the 5 m conclusion or a truthful cannot-verify/insufficient-accuracy result;
+- **23 km** applicable Secrets / Find Hub / nearby-feed discovery scope, distinct from individual Find Hub geofence radius;
+- Find Hub temporary-position retention capped at **2 hours**;
+- no fabricated coordinates, Places, users, movement, distances or provider-success fallback.
+
+## Requirements Delta L — Remaining Genuine Product Policy Gates
+
+Only these currently remain Product Owner decisions before their affected behavior can reach acceptance:
+
+1. **Secret bounty-claim proximity** — do not infer the historical 50 m value.
+2. **Validate approach-notification radius** — do not infer the historical 200 m value; this is separate from the directed 5 m check-in eligibility rule.
+3. **VibeFlash scheduling/automation** — exact automated scheduling/trigger policy remains to be decided; do not infer random legacy timers.
+
+These gates are slice-local and do not reopen unrelated accepted decisions.
+
+## 1. Non-negotiable scope and source-truth contract
+
+**Preserve the existing VQgemni product and its currently populated presentation. Rebuild the engineering without replacing the app.** The supplied `vibequest-fixed-v2 (2).zip` is the primary reference for historical features, functional interactions, screens, flows, labels and visual character. The attached `VIBEQUEST_LEGACY_SAFE_BEHAVIOR_EXTRACTION_EXPLORE_SHARE_HOME_GENERAL_PURSE_2026-10-30.md` and historical `funmarket/VibeQuest` (`phase-0-foundation`) provide complementary evidence and warnings. Never copy the old scripts, services, localStorage authority, database tables, schema, fake workflows, folder topology or deployments. The existing application's target **28 locked logical domains** and one authoritative owner per business invariant govern engineering; 28 domains do not imply 28 microservices or databases.
+
+**Precedence:** Latest explicit Product Owner decision > approved `Master Plan.md` > approved `Requirements.md` > approved `structure.md` > approved `Database.md` > historical/reference/think-tank material. A source-visible button is evidence of intended interaction, not that any old server completed it. A directed requirement is a product target and does not need to be implemented in Gemini to be authoritative.
+
+**No superficial completion:** Every meaningful interaction must define actors, trigger, eligibility, states, UI feedback, canonical side effect, permissions, failure/retry, cross-page implications and acceptance tests. The original inventory of 215 items is a source-coverage aid, not a target number of new features. A rigorous source-to-control-to-requirement semantic audit is an independent acceptance gate. The ZIP-wide mechanical inventory covers 212 first-party TS/TSX files, but that catalog does **not** prove that all controls are reachable, correctly implemented or completely mapped; this requirements baseline does not claim implementation or runtime verification.
+
+**Decision classification:** `DIRECTED` / `LOCKED` / `REVISED` for owner policy; `HISTORICAL` for ZIP/narration behavior; `PROPOSED SAFEGUARD` for necessary operational protection; `UNSPECIFIED` where an exact policy is genuinely absent. This document has Product Owner approval as a governing requirements source. Repository mutation, implementation, database changes, deployment and release still require their applicable authorization and live-source verification.
+
+## 2. Product identity, shell and platform — APP
+
+**APP-001** VQgemni is a mobile-first local exploration, cultural Trails, Guardian, community, social and local commerce product. Preserve Midnight Obsidian, neon/cybernetic smiles, visual radar, expressive camera composition, cultural photography and inviting community feel. Redesign technical implementation independently, preserving the visual language and meaningful original journeys.
+
+**APP-002** Five **equal-sized** bottom destinations: **Home / Explore / Share / Vibe / Purse**; Share retains heart imagery but is **not** elevated, floating or oversized. Global bell in the top bar; settings under user/profile menu. Use accessible modals/sheets and consistent back navigation/deep links.
+
+**APP-003** One responsive frontend codebase serves browser and Telegram Mini App with the same canonical backend, identity and data. Detect and validate Telegram host/launch context on the server where identity is involved; adapt viewport, safe areas, colors, native BackButton, haptics and text sizing. Browser mode operates normally without Telegram. No separate Telegram business ledger or backend.
+
+**APP-004** Support **English, French and Arabic**, Arabic RTL, device/host typography and accessibility settings, and eligible user overrides. Guest-first read-only discovery of public Places, Trails, Guardians, Events, Activities and Gossip; sign-in only for protected actions. Restore intended task after sign-in where feasible.
+
+**APP-005** Every interactive page and entry method supports real loading, empty, permission-denied, offline, unavailable, pending, failure, expired, cancelled and completed states as applicable. Browser-local state may improve UI responsiveness but never becomes proof of a booking, identity, chat, check-in, payment or VQ effect.
+
+**APP-006** The current five-tab shell preserves Home to Explore trails, map, Find Hub, event and Place links; Explore to Profile, Guardian, Tour, Share; Share to Home/Vibe/Communities; Vibe to DMs/Home/Purse; Purse to authentic Marketplace and VQ history. A tap must navigate to the actual canonical authorized object, not a placeholder alert.
+
+## 3. Authentication, profile, social and privacy — ID/PRO
+
+**ID-001** D01 owns authenticated users, sessions, browser/Telegram account linking and credential recovery. Preserve browser sign-in/registration with member credentials and the source-visible **Google account sign-in** option; any external-provider sign-in must create or link the same canonical D01 identity through genuine provider/server verification rather than a simulated local profile. Handle uniqueness, rate limits, session revocation and proper credential storage. Never substitute guest mock profiles after authentication failure. Different users may not be merged through untrusted Telegram browser values.
+
+**PRO-001** D02 owns photo-first, Tinder-inspired user presentation: prominent real photo/gallery, display name, concise bio, interests, languages, area preferences, cultural identity, authentic badges, public Trails and contextual follow/message actions. This describes **presentation**, not an automatically introduced dating/swipe mechanism. Tap compact preview → expanded card → full profile. The profile exposes the member's eligible published D06 Trails as a permission-aware read projection, including discovery/grouping by their real city/location context; D02 does not own or duplicate those Trail records. Respect optional fields and privacy.
+
+**PRO-002** Cultural Passport presents legitimately saved Trails, visited Places, heritage stamps, milestones and recognition, not client-edited balances. Profile settings include EN/FR/AR, appearance, text/accessibility, notification and privacy preferences and separate adult-only Polar Romance opt-in. Profile editing also retains custom interest tags, an optional preferred contact channel with user-entered Telegram/X contact handles, and the source-visible opt-in **Cozy Diary Mode** completion-assist: while a member explicitly enables that mode it may require the profile's otherwise-optional biography, broad location and configured contact handles before that profile edit can be saved, but it does not create a global account-eligibility requirement or make those fields public by default. Contact fields obey explicit visibility/privacy controls. The source-visible Profile menu also preserves real entry points for Sync/Device Settings, Security/Identity Verification status where an approved identity flow applies, and Help/Support; each must open its applicable canonical settings/help state or an honest unavailable state rather than a placeholder alert, and the Identity Verification label does not create a new mandatory government-document requirement. Public cards never reveal exact real-time coordinates, secret content, credentials or private contacts.
+
+## 3A. GEO, MAPS AND LOCATION — shared real-location product guarantees
+
+**GEO-001** Browser/Web and Telegram Mini App obtain genuine device location through host-appropriate capabilities feeding one shared application location boundary. The product distinguishes not requested, requesting, granted, denied, blocked/unavailable, interrupted where detectable, revoked where detectable, stale and inaccurate states. Operating-system/device permission is not consent to expose location socially, and manual city/district/area selection remains a browsing/discovery context rather than verified physical presence.
+
+**GEO-002** D04 is the canonical authority for location consent/evidence, accuracy, freshness, temporary presence, proximity assertions and geofence transitions. Consuming features receive only the precision they are permitted to use; public/social surfaces expose coarse city/district/area or permitted approximate distance rather than exact live coordinates. Temporary Find Hub position pings retain the directed 2-hour maximum retention; no permanent movement history is created by ordinary location use.
+
+**GEO-003** Interactive in-app maps use real canonical or explicitly external discovery coordinates and keep eligible pins, cards/lists and selected objects synchronized. Map rendering never becomes authority for Place, Trail, Tour, Business, Event, Activity, person or challenge state. Missing/denied/stale location, provider failure, offline state and partial results are shown truthfully; the product must never synthesize Places, routes, distances, contacts, movement or arrivals to preserve a happy path.
+
+**GEO-004** At the current low-cost stage, Explore/Radar may discover real external OpenStreetMap POIs through an Overpass-backed discovery capability using the existing approved Explore categories. External results remain discovery candidates and are clearly distinct from canonical D05 Places where necessary; if a candidate becomes an accepted VibeQuest Place, D05 becomes the canonical owner. Provider failure yields cached valid results where permitted, retry, partial/empty/unavailable or error states rather than invented fallback POIs, ratings, reviews, crowd counts or Business ownership.
+
+**GEO-005** Protected proximity outcomes are server-authoritative. Client Haversine or other local distance calculations may present provisional distance from already-authorized coordinates but cannot authorize check-in, Place validation, VQ, geofence transitions, Trail completion, Find Hub disclosure or another protected geographic action. VibeCheck and VibeFlash retain their existing rule that participation has no geographic/proximity gate.
+
+**GEO-006** The directed discovery/search scope for **Secrets, Find Hub and applicable nearby-feed discovery is 23 km**. This discovery radius does not become a Secret bounty-claim radius, Place check-in radius, Validate alert radius, matching rule or individual Find Hub geofence radius; each such boundary keeps its separately approved policy.
+
+**GEO-007** Place and Trail navigation hand canonical VQgemni coordinates/ordered stops to a supported external device navigation application where appropriate; opening navigation is not itself a Place check-in, Trail completion or VQ event. In-app map viewing is separate from turn-by-turn navigation. If an offline map/tile/routing capability is not permitted or available, the product must state that limitation while still allowing legitimately cached Trail text, itinerary and permitted media.
+
+**SOC-001** D03 owns follow/unfollow/block. Orbit displays accounts followed; Echo displays followers; blocking revokes prohibited discovery/messages and affected shares. Following alone is not a confirmed Vibe match. D17 owns matching invitations and connection confirmation.
+
+**SOC-002** Ordinary one-to-one personal DMs require a confirmed D17 **Vibe** (mutually accepted connection), subject to blocks, recipient privacy and active access. Orbit, Echo, unilateral or reciprocal follows alone, Gossip participation, compatible Drift scores, pending Pulls and shared Community membership do **not** independently authorize ordinary personal DMs. D14 still supports separately authorized Guardian consultation, Community rooms, Marketplace deal threads and Event discussion under their respective scoped participation contracts. Never infer a relationship or DM authorization from Gemini's fabricated compatibility scores.
+
+## 4. HOME — living neighborhood dashboard
+
+**HOME-001** Geographic context bar shows consented/selected city and district; tapping area/search deep-links Explore with appropriate map center/query. Manual location works when GPS is denied; do not substitute an invented fixed city.
+
+**HOME-002** Horizontal Vibe Check-Ins carousel: own status/prompt, eligible network members' genuine check-ins, person photo, Place, relative time and descriptor; tapping opens a Place drawer/full detail. Enforce privacy and social changes; no fake check-ins.
+
+**HOME-003** Flash Event alert banner: title, genuine countdown and **Hunt Now** / **Spawn Flash**. Hunt opens Explore Secrets Board at selected item; create opens legitimate form. No secret bounty can be claimed through the banner without the distinct qualifying evidence.
+
+**HOME-004** Three feeds: **My Network / Local Vibes / For You**. My Network shows own/followed/permitted connections' Gossip and Share content. Local Vibes shows eligible public live/ephemeral moments within the directed **23 km** nearby-feed discovery scope using authorized coarse geographic context; it never requires public exact coordinates. For You recommends authentic Places, Trails, posts and interests informed by user preferences and Drift, without made-up scores. Initial up-to-five cards with Expand/Collapse. Same canonical post appears in permitted Home/Gossip projections; likes/comments/replies and notification effects remain consistent.
+
+**HOME-005** Live Activities panel separates Live/Upcoming, host, meeting point, participation, authentic Resonance boost, inline creation, expanded details/feedback and route navigation. Community-led activity shows linked Circle badge and room. D10 owns activity lifecycle; D19 separately owns reputation; D20 separately evaluates configured reward events. Never manufacture ratings.
+
+**HOME-006** Live Events panel separates Live Now/Upcoming, official organizer identity, flyer, venue, schedule, real RSVP and optional Ticketing. Publishing official Events follows D09/D11 organizer eligibility, not a simulated toggle. Eligible reminders link back to Event; exact lead time is an approved preference/rule, not an arbitrary historical 45-minute default. Up to three compact Activities/Events initially, with expansion.
+
+**HOME-007** Daily Streak Quest shows genuine streak and Verify Signal Presence action, eligibility, once-per-day state and progress. D20 applies active starting rule **+25 VQ daily** where qualified, not legacy +20. Expired, denied, duplicate and failed awards show truthful outcomes.
+
+**HOME-008** Explore Local Circuits opens Explore's Trails/Radar hub with area context. Heritage coordinates support **Plot** (map pin/route) and **Calibrate Coordinate** (real qualified place assertion, Passport stamp, eligible D20 reward). Local Gems expand to practical information, **Save**, **Navigate**, **Launch Interactive Signal Scanner**. Saved items and place detail remain canonical.
+
+**HOME-009** VIBE Guide opens Community Handbook and genuine quiz/progress. Approved Admin-configured rewards only. Live Feed Monitor shows recent authorized activity from canonical events, never simulated people/check-ins. Distinct desktop **F** shortcut may toggle appropriate scanner where focus/accessibility makes sense; do not intercept text typing.
+
+**HOME-010** **Find Hub** is a real product feature, not a decorative Home button. See section 5 for complete journey.
+
+## 5. FIND HUB — consented friends, proximity and geofences
+
+**HUB-001** Find Hub opens from Home/other approved navigation as a full modal with close/back, contact list and appropriate selection. Where Find Hub discovery/search is distance-scoped, the directed discovery scope is **23 km**; this does not set an individual geofence radius. A contact is an actual eligible relationship; the system must never populate it with mock people or auto-fabricated GPS positions.
+
+**HUB-002** Each selected contact card presents permitted avatar/name, current authorized sharing/availability, approximate position/distance when consented, last updated and a clear **Lock-On** location-monitoring toggle. Unavailable/stale/revoked sharing is explicit. Lock-On requires relevant consent and cannot silently start background tracking.
+
+**HUB-003** User and contact must each have relevant opt-in/location-sharing permissions where the workflow requires it. Server enforces visibility, session, following/connection, blocking, consent expiration and revocation. Denied GPS, inaccurate evidence or offline host must not be replaced with a default coordinate.
+
+**HUB-004** Per eligible contact, support **Geofence Alert Boundaries**: list existing boundary labels, radius and enabled status; **Add New Geofence**, enter a label, choose a meaningful approved target (including current map area, a designated Place, or source-visible custom coordinates where explicitly entered and valid), inspect radius, **Save Geofence Rule**, toggle enabled/disabled and delete. Historical default **200 m** is a design reference, not a global imposed threshold for all Geo functions. Validate coordinate ranges, radius, location target, owner and consent; invalid custom coordinates must not silently fall back to an invented/default location.
+
+**HUB-005** For a correctly configured and consented geofence, detect real **enter/exit** transitions and notify the subscribing member, with deduplication, freshness and boundary jitter protection. A stale or unknown contact position cannot trigger a fake arrival. Revocation, blocking, deletion, disable or permission withdrawal stops future use immediately.
+
+**HUB-006** D04 owns authentic geofence boundary enter/exit transition evidence and deduplication; D23 owns delivery to the subscribing member and inbox read/dismiss/unread state. Provide Find Hub **Alerts** history, unread counts, read/clear controls and real alerts. The historical mock-shift/test buttons that move contacts randomly must not exist as operative production features. Admin/test fixtures may exist only in isolated test environments, not as fabricated public location proof.
+
+**HUB-007** For location safety, share only the approved precision and permitted area/distance data. Do not expose permanent accurate trajectories, host-secret locations or persistent peer GPS history. Temporary live position pings are discarded within the directed **2-hour** policy; persistent user-authored geofence configuration is separate and must have user deletion controls.
+
+**HUB-008** Accept only after testing create/edit/toggle/delete boundary; contact consent and withdrawal; enter/exit using genuine permitted test events; delayed/missing/inaccurate location; multi-device state; no repeated alerts on jitter; block behavior; no seeded contacts or fake movement; Web/Telegram parity and D04/D03/D23 ownership.
+
+## 6. EXPLORE — map, radar, Places and Secrets
+
+**EXP-001** Search Places, streets, districts and cities with suggestions that identify real results; choosing an item pans/zooms the interactive map and fetches eligible nearby canonical Places plus real external discovery candidates where applicable. The current low-cost external POI discovery may use Overpass/OpenStreetMap behind the approved provider boundary; provider results never become canonical D05 Places merely by appearing in Explore. List/map filters remain synchronized. Seven categories: **All, Food, Cafés, Culture, Art, Venues, Hidden**.
+
+**EXP-002** Radar Pulse animates a genuine discovery search, with area/map result indication, appropriate activity signals and cultural rarity presentation when grounded. Historical **10-km** range, **Common/Rare/Legendary** and visual heatmap are experience references; live people, rarity and venue scores must not be fabricated. Map pins and cards reference real Places.
+
+**EXP-003** Place card/dossier includes photos, name, category, vibe descriptor, permitted real distance, address, practical details, authorized external website/contact links where available, community confidence, navigation, save, contributions and linked real Trails/Events. External links open the actual Place resource with safe browser handling rather than a fabricated destination. **Navigate** hands the canonical D05 coordinate to a supported external device-navigation application; the handoff does not mutate Place state or claim arrival. Correct and report Place facts through D05, with review/moderation where applicable; editing a Place record is distinct from submitting a report.
+
+**EXP-004** Verified venue check-in uses a server-authoritative maximum distance of **5 m** from the canonical D05 Place location. D04 must have sufficiently fresh and precise evidence to support the conclusion that the member is within that 5 m boundary. The existing device-reported accuracy requirement **better than 50 m** is a separate coarse eligibility condition and is **not sufficient proof** of the 5 m distance; if measurement uncertainty is too large to establish the 5 m condition, return a truthful insufficient-accuracy/cannot-verify state. Do not invent another exact GPS-accuracy threshold, and do not adopt the historical 200-m Validate-popup alert radius as the check-in threshold. A previous check-in is a canonical D05 record, never a browser flag.
+
+**EXP-005** Secrets Board: **Live Secrets Board**, live countdowns, Place/map context, event dossier/story, host, admission/transport guidance, audience **Interested/Going**, **Spawn Flash/Create Secret** and genuine eligible **Claim Secret Bounty**. Secret discovery/search uses the directed **23 km** scope with controlled approximate location/clue release; this does **not** define the separate bounty-claim proximity rule. Author may select lifetime (historical 30m/1h/2h/up to 8h). Accurate expiry removes from active listings; claims require authorized verification and D20 rule, not old GPS teleporter. Historical 50-m bounty radius remains only an experience reference pending its own final claim policy.
+
+## 7. WAZE-STYLE VALIDATE POPUP — full workflow
+
+**VAL-001** Approaching an eligible curated Place within a configured detection radius shows a non-blocking top banner **PROXIMITY DETECTED**, Place name and question, **Validate** and **× Dismiss**. Historical alert radius **200 m** is preserved as the expected historical UX reference, adjustable subject to final policy. Dismissal suppresses repeated nagging within the same context; denied GPS does not block Place browsing.
+
+**VAL-002** Validate or Place-detail manual entry opens the same rounded Midnight Obsidian/purple-glow **ProximityValidator** bottom sheet with drag handle, title, selected Place name, actual current vibe, **ARE YOU HERE RIGHT NOW?**, confidence gauge/status, genuine confirmation count if supported and three choices. Full keyboard/screen-reader/RTL support. The historical violet sheet and animated shield are visual references, not technical architecture.
+
+**VAL-003** D04 determines authorized proximity evidence, timestamp/freshness and accuracy; D05 decides voting eligibility. A previous canonical check-in does **not** create a Product Owner-defined cooldown, waiting period or age restriction merely because that user checked in before, and it does not automatically authorize a new validation. Current eligibility must use the applicable real evidence and D05 policy; anti-abuse, replay, idempotency and evidence-freshness protections remain engineering safeguards rather than an invented user-facing cooldown. A scannedVenues client boolean, local distance label, spoofed location or optimistic UI state never grants permission. Locked UI explicitly states **VERIFICATION LOCKED** with the applicable reason and explains why no vote is available.
+
+**VAL-004** Three distinct actions: **Yes, matching!** submits one qualifying positive Place report; **No, changed!** submits one negative/stale-Place report with appropriate review flag; **Not here** dismisses with **no vote, confidence change or VQ**. Buttons unlock only after backend eligibility. Client never directly mutates venue confidence or canonical Place facts.
+
+**VAL-005** D05 owns the eventual confidence aggregation/freshness policy over legitimate timestamped eligible reports with duplicate/fraud controls. The confidence formula/policy is Admin-configurable, versioned and auditable through the Admin Control Room, while D05 remains the canonical confidence writer. Exact active parameter values, including weighting and freshness/decay windows, are implementation/configuration under that versioned policy rather than an open Product Owner decision. Show meaningful High/Moderate/Low or insufficient-data state only when supported; historical +15% and −25% client adjustments and an exact high/medium threshold are **not authoritative**. A single No vote creates a report, not a forced business closure. D21 may review abuse or disputed facts.
+
+**VAL-006** Confirmation uses real status: accepted validation, report filed, denied, duplicate, failed or pending. Shield animation may celebrate durable acceptance, but **“+X VQ added”** appears only if D20 posts an actual credit. The old +15/+30/+10 voting bonuses are not assumed; reward catalog is Admin-controlled. Verified venue check-in default **+50 VQ max 3/day** is distinct from a vote. Validate may be rewarding only if separately configured and genuinely eligible.
+
+**VAL-007** Privacy and abuse safeguards: limit prompt frequency; require accurate consented location where needed; temporary live-location evidence expires per 2h policy; no public precise position; transaction/idempotency protects against double votes/awards; allow safe retries without ghost success; missing Place, lost connection and different devices yield honest outcomes.
+
+**VAL-008** Acceptance: approach alert, dismiss, manual sheet, locked state, positive/negative/neutral outcomes, live confidence, moderation, location denial, spoof/replay prevention, prior-check-in validity, exactly-once contribution, reward independent from check-in, cross-screen Place consistency, Web/Telegram parity, clear failure and a full non-mock test path.
+
+## 8. VIBE TRAILS — full creator/planner/consumer journey
+
+**TRAIL-001** Any authenticated member, Local Legend or Pro Guardian can make a free community Trail. Trail Studio has Overview and Stops Builder tabs, title/story, themes, categories/tags, authorized cover/waypoint photos and a creator identity. Guest may open published public Trails. D06 owns Trail facts, D05 canonical Place facts, D04 proximity and D13 assets.
+
+**TRAIL-002** Ordered multi-stop creator: search/select real Places, enter optional clearly labeled custom waypoint where supported, insider note, photograph, **time-of-day badge** (Morning/Afternoon/Sunset/Night/Flexible) and **estimated stop duration**. Add, remove and reorder with up/down. Show total estimated duration, validation of required fields and a genuine publish status. Historical two starting sample stops are editor examples, not forced fake real entries.
+
+**TRAIL-003** Published detail has creator, cover/title/story, themes, total stops/duration, an interactive in-app route map using real canonical stop coordinates with numbered pins/polyline and synchronized map/list selection, visible time-of-day/stop-duration schedule and **selectable expandable individual stops**. The creator username/avatar is actionable and opens that member's existing D02 photo-first Tinder-style profile journey (compact/expanded/full as applicable) using the canonical D01 identity; from there the viewer can discover the creator's other eligible published D06 Trails, browseable/grouped by their authoritative city/location context. The Trail's displayed city/location label is also actionable and opens a city-scoped **Trails & Tours** discovery view that preserves the selected city and reads eligible public D06 Trails plus D08 Tours without copying either record type. Expanding a stop reveals photo, named Place/category/details, creator tips and **full linked canonical Place card** without losing the user's current Trail. Selection on map and list stays synchronized.
+
+**TRAIL-004** Trail save/Passport, authorized offline caching, navigation, qualified completion, adoption and remix remain distinct actions with independent truthful UI states. User may **Maps Route / Navigate Trail**, navigate a specific stop using supported external device maps from the canonical Trail/version and real ordered stop coordinates, **Save to Cultural Passport**, **Cache/Save Offline** and explicitly remove offline cache. Navigation handoff does not mutate Trail state, claim successful turn-by-turn navigation, complete the Trail or issue VQ merely because the external app was opened. Offline state distinguishes cached Trail text/details, itinerary/stops, permitted media, map tiles and routing; if the active tile/navigation source does not permit or provide offline map/routing data, disclose that limitation instead of claiming full offline mapping. Cache only permitted Place/Trail data/media and respect expiry, invalidation and privacy.
+
+**TRAIL-005** **Adopt/Remix Trail** clones eligible content into the creator studio, preserves source attribution and original author, allows edits and publishes a distinct derivative. **Remix Tree** exposes authorized lineage and handles withdrawn/private ancestors honestly. Save vs adopt vs completion remain separate.
+
+**TRAIL-006** Trail cards/deep links appear from Home, Explore, Guardian card, posts, profiles, messages and other eligible contexts. On eligible Trail cards/details, creator identity and Trail city/location are navigation controls: creator → existing canonical profile → eligible published Trails (with city grouping/filtering); city/location → city-scoped public Trails & Tours → canonical Trail or Tour detail. These are discovery/read projections only, preserve privacy/publication/access restrictions, and never fabricate or duplicate Trails/Tours. **Hire Pro Guardian for this Trail** opens a relevant Pro-only selection modal, preserves Trail identity and passes context into actual Hire request; cannot fabricate a fallback Trail if missing. See GUA-011.
+
+**TRAIL-007** Trail visit/completion records use real qualification; D20 applies starting **+100 VQ max 2 eligible completions/day**, not simple opening, saving or navigation. Duplicate completion requests do not double-pay.
+
+**TRAIL-008** Acceptance covers create/edit/publish with real stop order and durations, reordering, linked Place expansion, route/navigation, save/offline cache/retrieval, remixes and lineage, creator-profile navigation, creator's eligible published Trails grouped/filterable by city, city-chip navigation to eligible D06 Trails and D08 Tours, canonical detail return, Pro-for-Trail Hire, privacy, removal, access-restricted/removed objects, truthful Trails-only/Tours-only/no-Trails/no-Tours/no-results states, failure/retry and real qualification for awards.
+
+## 9. VIBE TOURS — guided commercial routes
+
+**TOUR-001** **Only currently eligible Pro Guardians** may create paid Vibe Tours. During eligible Trail/Tour authoring, the **Label this as a Tour** control exposes the Tour fields; other roles create free Trails only. Pro must satisfy current onboarding/selfie/entitlement rules. Tour uses an itinerary with the same expandable photographed, linked Place stops as Trail, but commercial offer and reservation are separately owned.
+
+**TOUR-002** Tour dossier shows prominent Tour badge, long description, accurate duration, upfront price, inclusions, languages, accessibility/suitability, meeting/pickup point, requirements, transparent seller cancellation/refund/direct payment terms, capacity and available dates. Price examples in Gemini are fictional, never product defaults.
+
+**TOUR-003** **Check Availability / Reserve Tour** opens genuine calendar, date/time slot and party count. A member reviews terms and requests; Guardian accepts or declines; only actual acceptance confirms reserved capacity and qualifying in-app Handshake. Do not automatically accept reservation or infer external payment. Prevent double-booking across concurrent sessions; cancellation before the scheduled meeting frees capacity and records history.
+
+**TOUR-004** Customer/Guardian receive contextual notifications and permitted Guardian consultation thread. Guardian may configure **Show me in Hire suggestions on Trails**; disclosure and filter use real eligibility. Individual paid hire for an existing free Trail and paid published Tour reservations are distinguishable journeys.
+
+**TOUR-005** No platform escrow or service commission under the directed model. Seller discloses payment methods, price and refunds, and handles off-platform payment disputes; users may report misconduct under D21. Acceptance never claims cash paid or physical tour completed. D08 owns reservation lifecycle; D22 Handshake; D20 optional eligible credit; D27 only separately approved platform-handled fiat flows.
+
+## 10. VIBE GUARDIANS and LOCAL LEGENDS — full journey
+
+**GUA-001** Explore directory tabs **Top Vibes / Pro Guardians / Local Legends / Suggested**; Suggested can filter Pro vs Legend, interests and eligible area. Top Vibes reflects genuine relevant Guardian standing, not ordinary-user VQ holdings. Cards show legitimate photography, names, areas, languages, specialties, price/free state, Handshake count, earned badges and featured Trails.
+
+**GUA-002** Tap compact Live Guardian card → rich Guardian detail (photo, bio, city/area, languages, hobbies, service descriptions, actual reviews, featured Trails and pre-made Tours) → full **Tinder-inspired photo-first user profile**. These are views of one canonical identity, not duplicated profiles.
+
+**GUA-003** **Become a Guardian** wizard: choose **Local Legend** or **Pro Guardian**, fill bio/passions, neighborhoods, languages, eligible service area and qualifying options; take a **fresh in-app front-camera selfie**, never a gallery upload for directory freshness. **Seven-day** freshness applies, and stale listings become ineligible until renewed. Camera image is not government-ID proof.
+
+**GUA-004** Local Legend is free and eligible after **five qualifying local Place check-ins** plus fresh selfie; may offer free Meet/Vibe and free Trails, never paid Tours. Pro requires complete bio/language/area/price, current seven-day selfie and any active Pro entitlement. No mandatory government passport upload. Payment/subscription is not automatic trust verification.
+
+**GUA-005** Pro pricing is clearly either relevant **hourly** rate or offer-specific **flat** rate for the context, never contradictory price messages. Local Legend card prominently says free with no paid Hire pricing controls. Seller terms, cancellation/refunds and direct payment methods are visible.
+
+**GUA-006** Feature at most **five** real eligible Trails (authored or appropriately linked), shown as compact title pill + **Explore now** to actual Trail details. **+ Trail** offers create/link workflow; max-five enforced. Missing or withdrawn Trail never becomes a synthetic route.
+
+**GUA-007** Eligible Guardian may optionally set a positive maximum concurrent client count or leave it unset for no numeric client cap. Where eligible capacity exists, **Hire** is green/available; if the applicable capacity is full, **Hire** is red/disabled and cannot start a new accepted engagement. Capacity is re-evaluated authoritatively on Guardian acceptance for the relevant offer/time; a green button is never automatic confirmation. Pro **Hire** / Legend **Vibe/Meet** initiates a real request; Guardian/Legend reviews and **Accept** or decline. No Handshake for opening modal, tapping a request button, sending a message or unanswered invitation. Acceptance establishes exactly one in-app agreement Handshake on both applicable profiles. See HS section.
+
+**GUA-008** Guardian consultation chat opens from directory/card with authentic human participant, relevant guide/rate/Trail context and visible informational disclaimer. Real typing status only if counterpart is actually typing. Never insert canned bot replies or fabricate received messages.
+
+**GUA-009** **Guardian reviews** require one qualifying Handshake with that Guardian. Review text max **111 characters**, live counter, exactly one of **Good Vibe / Chill Vibe / Cool Vibe**, genuine sender, one applicable review policy and moderation. A review submission cannot issue another Handshake. Handshake proves *mutual in-app agreement*, not proven physical meeting.
+
+**GUA-010** Guardian status, qualification and reputation are different facts. D07 owns eligibility/offer, D19 earned standing, D22 accepted agreement, D08 calendars/reservations and D20 VQ postings. Decline/cancellation cannot cause ghost bookings/rewards.
+
+**GUA-011** **Hire Guardian for Trail**: on an existing Trail, tap dedicated Hire action; see only eligible subscribed Pro Guardians with current selfies; examine guide card, price/terms, select a guide and submit actual request carrying Trail ID/context. Guide's response follows standard request/accept/decline, availability and Handshake process. Do not auto-create a Tour merely by selecting a guide.
+
+## 11. Mutual Handshake, calendars and reviews
+
+**HS-001** A D22 Handshake records a qualifying mutual in-app agreement under an approved source journey. For Guardian services, this occurs when one distinct eligible person makes a Pro Hire or free Local Legend Meet/Vibe request and the selected Guardian/Legend accepts it, or when an eligible Tour reservation is actually accepted under the D08 reservation lifecycle. An eligible Marketplace deal may separately create its deal Handshake only under MKT-002's mutual-agreement lifecycle. Exactly one qualifying Handshake is recorded per accepted source agreement, with durable history and both participants. No continuous GPS tracking, outdoor meeting proof, payment proof or unrequested auto-acceptance.
+
+**HS-002** A confirmed D17 Vibe or accepted Pull alone does **not** create a D22 Handshake or the configured **+75 VQ** reward. A pending/declined/expired/unanswered request does not create a Handshake or VQ. Acceptance and D22 Handshake issuance are idempotent and reconciled to D08 booking state where applicable. A Handshake does not by itself certify attendance, successful payment, service delivery or physical handover.
+
+**HS-003** For scheduled Guardian/Legend/Tour service engagements, either participant may cancel before the scheduled time and release availability. Preserve truthful acceptance history. Cancellation of the underlying D08 engagement does **not** revoke, reset, delete or extend an already-issued D22 Handshake or its server-authoritative 24-hour ACTIVE→EXPIRED review-eligibility window. A qualifying accepted **Guardian/Legend service Handshake** may earn **+75 VQ each participant** subject to the active D20 Admin rule, exactly once. Marketplace deal Handshakes do not inherit that default service reward; any Marketplace VQ movement follows MKT-002/D20 settlement rules.
+
+## 12. SHARE — Good Vibes Studio and real-time expression
+
+**SHARE-001** Center tab opens **Share Good Vibes Studio** with hero mission and three selectable emotional pillars **Pure Heart / Friendly Spark / Shared Moments**, filtering eligible ephemeral stream. Pillars represent sentiment and community purpose, not separate data backends.
+
+**SHARE-002** **Live Vibe Shot** opens genuine camera permission/preview/retake/cancel. The special spontaneous mode uses fresh device capture, not gallery substitution. **Sequential rear + front dual-camera composition**, movable picture-in-picture reaction image, optional short video mode (historical up-to-10-second reference) and clear device capability fallback without synthetic face/stock photo. No unsupported 400-ms flip guarantee.
+
+**SHARE-003** Mood palette: **Warm Daylight, Golden Hour Amber, Midnight Neon, Vintage Film, Velvet Shadow, Breeze**, intensity 0–100% and press-to-compare raw view. Location labeling requires consent and exposes district/approximate area rather than exact personal GPS. Preview, caption, category and **Publish Vibe** are distinct; only successful media storage and D12 publication makes content public.
+
+**SHARE-004** **Ephemeral Nearby Stream** contains eligible genuine live Share posts within the directed **23 km** nearby-feed discovery scope, showing author/avatar/Explorer badge, media, label, time, broad area/permitted approximate distance, reaction/resonance and responses without exposing exact live coordinates. Directed expiry **24 hours**; historical Share 5-km and Home Local Vibes 10-km radii are superseded for this discovery scope rather than reused as proof thresholds elsewhere. Own-post menu supports **Edit Caption** and **Delete Vibe** with real effects and storage retention handling.
+
+**SHARE-005** **Join Vibe** opens companion studio: text and/or permitted fresh photo, meaningful preview/submit/error, link to original canonical moment and genuine author notification. Do not claim an approval workflow unless specified; respect visibility, blocking and expiry.
+
+**SHARE-006** **Aesthetic Compass / Echoes** supports **Acoustic Melody / Aroma Trail / Zen Space / Neon Electric**, expandable radial/local sensory discovery, related Places/content and **Start Echo** with genuine eligible sound/photo. The original Echo Circle participant view shows actual authorized contributions and creator actions **Add to Circle**, **Add to Community**, and **Form Community from this Circle**, preserving the originating theme/contribution context. **Add to Community** selects an existing eligible Community and starts the appropriate D16 invitation/add-context flow; **Form Community from this Circle** starts creation of a distinct new Community with eligible Echo context prefilled. Neither action may forge a member, bypass a recipient's consent or automatically move contributors into a D16 Community. D12 owns posted Echo content/participation context; D16 independently authorizes actual Community creation/invitations/membership and D13 manages captured media. This Share aesthetic Echo is not D03 Echo followers. UI does not invent live crowds or nearby audio signals.
+
+**SHARE-007** Community Circles directory/discovery with category/emotional theme, emoji, founder, membership counts, optional neighborhood anchor, privacy and **Join / Request Invite / Leave / + Create Community**, member-directory and direct authorized room entry. Creation captures name, handle, **emoji/icon**, mission, category and privacy (optional locality label is for Community discovery only, not VibeCheck/VibeFlash participation eligibility). Public/private membership, founder/operator roles, membership requests/invitations, accept/decline and leave/remove/ban moderation must have truthful states. An authorized Community room retains D14 chat, pinned founder bulletins, live polls and applicable optional soundboard controls; D15 owns separate real-time room presence/voice. Membership and roles belong to D16; D14/D15 own communication, D21 moderation. Private sanctuaries enforce membership; joining a Community does not grant ordinary personal DMs or create a Vibe. Historical automatic +10 VQ per join is **not** authorized unless Admin enables a genuine rule.
+
+**SHARE-008** **Support the Pulse** historical gratitude concept retains recipient-select, contribution-amount and confirmation UX for review, but no automatic real-money donation, invented fund, crypto shard, patron badge or unapproved VQ issuance. Any actual contribution mechanism must be governed by expressly approved internal VQ policy and/or relevant external payments policy. Do not silently erase the visible feature or falsely make money flow live.
+
+## 13. VibeCheck, VibeFlash and media truth
+
+**CH-001** **VibeCheck** is a directed one-to-one invitation to a selected eligible friend/match/confirmed Vibe, an eligible Pull participant only where its invitation stage permits that action, or an eligible member of the same Share Community. These are distinct access proofs: a pending Pull or shared Community never automatically establishes a Vibe or ordinary-DM permission. Blocking/privacy apply; **no geographical, area-match or proximity participation condition** applies. The sender chooses the recipient and a prompt of **1–60 characters** (preserving the source-visible composer bound); the recipient sees **Accept / Skip / Refuse** (historical **Prove It** / **Ignore** control mapping as applicable), with server clock **180 seconds**, genuine camera response, deadline enforcement, split-screen reveal, participant reactions (Fire/Electric/Chill/Respect), expiry **Signal Lost** history and real feedback. A qualifying completed **reciprocal** VibeCheck produces one confirmed D17 Vibe even for two previously unconnected eligible participants; one-sided participation, Skip/Refuse or expiry does not. Source service's old 33-second Check is superseded.
+
+**CH-002** **VibeFlash** is a distinct collective challenge for eligible Vibes/friend/match/Pull-related audiences where explicitly authorized and/or eligible members of the same Share Community. Audience eligibility is relationship/community based and must not be inferred from following or mere proximity; there is **no geographic, area-match or proximity participation restriction**. VibeFlash has **33 seconds**, synchronized alert/chime, eligible fresh capture, responders' Mosaic, privacy/participation controls, expiry and correct cleanup. Historical daily random timing and responders-only Mosaic are intended functional references; the exact schedule/automation policy must be defined before claiming automated scheduling, while audience eligibility is already governed by the relationship/community rules above. Different device capabilities need truthful fallback; stock images cannot become genuine responses.
+
+**CH-003** Both image sets are ephemeral for **24 hours**, have authorized D13 ownership, server expiration, idempotent submissions and valid privacy. D18 owns challenge outcome, D23 notification, D20 Admin-governed credit (**VibeCheck default +30 VQ** when qualified). VibeFlash is **not** Home's multi-hour Flash Event.
+
+## 14. VIBE — Gossip, Drift, Vibes, Orbit, Echo, Pulls
+
+**VIBE-001** Preserve six distinct sub-tabs **Gossip / Drift / Vibes / Orbit / Echo / Pulls**, not a merged service. D12 Gossip publishes public or otherwise authorized content; D17 Drift discovers candidates, D17 Pulls holds inbound mutual-connection requests, D17 Vibes holds confirmed double-opt-in connections; D03 Orbit/Echo are outbound/inbound projections of the same unilateral follow record. Gossip reactions, Drift compatibility and reciprocal follow alone do not grant D14 personal-DM privileges. Preserve six sub-tabs. **Gossip** enables inline composer, text/photo/video where appropriate, emoji, preview, **optional consented Place or coarse-area location tagging**, posts, reaction, comment/reply, permalink and sharing; source preset/fixed locations are presentation evidence only and cannot become location truth. Same canonical D12 post may appear in Home My Network or Local Vibes with correct audience. A live Share moment has its correct 24-hour expiry; ordinary Gossip lifetime follows content policy, not automatic forced ephemerality.
+
+**VIBE-002** **Drift** has twelve historical interest/mood wavelengths, eligible real-account discovery, understandable interest/compatibility explanations and explicit invite/Pull action. Do not display seeded users or fake percentage/AI confidence. Discover card → photo-first profile; privacy/follows/blocks apply.
+
+**VIBE-003** **Pulls** lists incoming connection invitations and specialized matching proposals with origin/context and **Accept / Pass / Ignore** and authentic pending/accepted/dismissed status. A valid accepted mutual-connection Pull creates exactly one confirmed **Vibe** in D17 and removes the invitation from the pending inbox. A qualifying **completed reciprocal VibeCheck** between two not-yet-connected people also establishes exactly one confirmed D17 Vibe for that pair; merely sending/accepting the invitation or submitting a unilateral response does not. A Pass/Ignore archives without confirming or notifying as an acceptance. Vibes is a double-opt-in connection squad with presence/compatibility presentation and ordinary personal-DM permission subject to privacy/blocks. **Orbit** lists profiles the member follows; **Echo** lists profiles following the member, including **Follow Back**. Both are opposite read views of a single directed D03 follow relationship. Mutual following is not a Vibe. D17 matching suggestions, acceptances and connections never become D03 follow records, and no VQ/Handshake is created just by accepting a Pull.
+
+**VIBE-004** **Polar Romance** is separate **18+ explicit opt-in** setting. Quarterly seasonal proposal generation evaluates permitted complementary relationship/lifestyle preferences with safety/goal compatibility, shows **Why You Matched** and **Accept/Pass** in Vibe → Pulls; private chat only after both consent. No romance processing/disclosure for unopted users. Avoid treating matching as scientifically verified.
+
+**VIBE-005** **Social & Activity matching** is separate approximately monthly proposal cycle grounded in common interests, activities, practical coarse-area context and eligible user consent. Explain shared reasons and actions; do not reuse romance scoring or auto-connect users. D17 owns proposals/cadences and state; D02 preference, D03 follows, D04 coarse location, D14 permitted conversation.
+
+**VIBE-006** **Six-primitives connection lifecycle:** A Gossip author-profile action may open Drift/profile, Follow (D03 Orbit; reflects in Echo) or D17 invitation. Drift displays explainable compatibility, never automatic acceptance. A Pull stays pending until the recipient Accepts or Passes; only a qualifying accepted mutual invitation creates confirmed Vibes. Confirmed Vibes alone authorize ordinary D14 personal DMs subject to blocks/privacy, while Guardian/Community/Marketplace/Event conversations retain separately scoped permissions. **Product Owner decision:** a qualifying reciprocal VibeCheck completed by both participants establishes a confirmed D17 Vibe even if neither was previously a confirmed Vibe. D18 owns invitation, each participant’s valid response, reciprocity/deadline proof and the challenge outcome; D17 idempotently records the resulting mutual connection. Sending a challenge, invitation acceptance alone, a one-sided response, a skipped/refused/expired challenge or a VibeFlash participation does not establish a Vibe. Only a confirmed D17 Vibe authorizes ordinary D14 personal DMs, subject to privacy and blocks. No new handshake or +75 VQ on Vibe formation.
+
+## 15. Direct messages, Guardian consultation, community rooms and Events
+
+**MSG-001** Preserve five distinct user experiences, not five independent data stores: (1) personal DMs, (2) Guardian consultation, (3) community chatrooms, (4) Marketplace deal negotiation, (5) Event discussion. D14 owns canonical message records and permitted conversations; D15 owns live rooms; source business domains own agreement/event/group facts.
+
+**MSG-002** DMs: sender/recipient authorized; real text, eligible image lightbox, recorded voice note/playback where supported, timestamps, pending/sent/failed and read states when genuinely observed; privacy/settings and block enforcement on backend. Failed send never creates fake success. No scripted @hack_nord or Guardian bot responses presented as humans.
+
+**MSG-003** Guardian consultation: banner describing guide/logistics chat; approved upfront rate and Trail/Tour context pinned when relevant; real typing/presence only, not timed canned animation. Only permitted participant access; messages do not create Handshakes/bookings by themselves.
+
+**MSG-004** Community rooms: membership/access, real-time chat, founder **pinned bulletins**, **live polls**, and optional **Vibe Chime / Pull Whoosh / Drop Boom** soundboard. Distinguish locally generated sound from synchronized room effects and require proper transport/permissions for claims of shared playback. Live audio via WebRTC with **no routine recording**; moderation and participant restrictions required.
+
+**MSG-005** Marketplace deal conversation is anchored to actual listing, terms, proposed public meeting and agreed consideration. Event discussion is anchored to genuine Event and authorized discussion audience; relevant moderator/host controls apply. Both show truthful messages and deal/event state rather than simulated receipts.
+
+## 16. Notifications and cross-page reactions
+
+**NOT-001** Global top bell has accurate unread badge, categorized inbox and accessible details, relevant non-intrusive haptic/chime according to permissions, **mark read**, **dismiss**, **Clear All** and preference controls. No preseeded activity, demo alerts or fake pushes are allowed to masquerade as real notifications.
+
+**NOT-002** Deep links navigate into actual matching Pull, Guardian engagement/Handshake, DM/consultation, VibeCheck, Flash/Secret, Event reminder, Place check-in, comment/reaction, community event, ticket and VQ record; inaccessible source shows honest unavailable state. D23 owns delivery, not the event itself. Duplicate deliveries do not duplicate original activity.
+
+**NOT-003** Real interactions ripple across pages: accepted Pull → confirmed Vibes/permitted DM and eligible network feed; Share moment → Home Local Vibes/My Network and linked Explore Place if authorized; Place check-in → Home network carousel/Profile Passport and separately eligible VQ; accepted Guardian request → real Handshake/badges/consultation and eligible D20 credit; Trail and Ticket actions link to actual records.
+
+## 17. PURSE — wallet, identity code, Marketplace
+
+**PURSE-001** Main Purse has two clear views: **VQ Wallet & Ledger** and **P2P Local Marketplace**. Wallet displays real VQ balance, handle/traveler identifier, **Send** and **Receive**, transaction history by actual source/status and user-friendly insufficient-balance/errors. VQ is an **internal noncrypto** reward/community credit, distinct from D19 reputation and D27 fiat funds.
+
+**PURSE-002** **Send** chooses real eligible recipient (handle/approved recipient ID), amount and confirmation; D20 checks balance/roles/blocks/limits and posts exactly-once debit+credit. **Receive** offers Copy Explorer ID and a **genuine scannable QR** for approved contact/recipient discovery, without pretending decorative 4×4 pattern is valid data or exposing credentials; scanning alone must not transfer VQ without confirmation.
+
+**PURSE-003** Ledger records incoming reward, outbound/inbound tip, eligible peer transfer, approved grant, Marketplace VQ movement and correction with truthful date/amount, counterparty/sourcing context and outcome. A completed user-side animation does not indicate durable posting. No fake SOL, foreign currency wallet, crypto key or conversion to cash.
+
+**MKT-001** Local classifieds board supports **All Offers / Buy Offers / Sell Offers / + New Offer**, listing type, goods/category, quantity, asking price in cash or VQ, seller, area, available status, agreed direct payment methods and appropriate meeting context. **Initiate Deal** opens distinct negotiation with offer anchor, public meeting proposal and permitted messaging. Marketplace is local peer-to-peer and platform charges **zero marketplace commission** under current policy.
+
+**MKT-002** Buyer/seller mutual agreement in-app may create qualifying deal Handshake and authorize VQ settlement under its explicitly approved deal lifecycle. **Mark Transaction Completed** is a real declared status action, not reliable independent evidence of physical handover or cash settlement. Do not equate mutual in-app agreement with completed physical exchange. Cancellation, dispute, duplicate/replayed release, refund/ledger reversals must have transparent status; later cancellation cannot silently erase ledger entries.
+
+**MKT-003** Physical goods/services passes can be listed where eligible. The older cash-for-cash FX swaps, selling VQ for cash, speculative crypto and unsupported regulated transactions are **not** silently launched by preserving historical Purse UI. Preserve the economic journey where authorized and show restricted/unavailable behavior where disallowed.
+
+## 18. VQ — canonical reward catalog and full Admin control
+
+**VQ-001** D20 owns **one immutable/append-only authoritative ledger**, balances/reconciliation, idempotent credit/debit/compensation, rule versions and posting outcomes. No client-side point mutator, 'success on error', shadow balance, extra Points token or automatic link between spendable VQ and earned professional trust.
+
+**VQ-002** Product Owner's initial Admin-configurable reward rules:
+
+| Source event | Starting credit | Initial limit |
+|---|---:|---|
+| Daily qualifying streak | +25 VQ | once per day |
+| Verified venue check-in | +50 VQ | max 3 awards/day |
+| Verified Trail completion | +100 VQ | max 2 awards/day |
+| Accepted eligible in-app Guardian/Legend Handshake | +75 VQ **to each** | once per accepted engagement |
+| Passed VibeCheck | +30 VQ | per genuinely eligible completed challenge; other caps Admin-configured |
+
+These are default **stored effective rule values** editable by authorized Admin; not constants in frontend or immutable amount promises. Validation votes, community joins, radar use, guide quizzes, social Pulls, Secret hunts, VibeFlash or gratitude receive VQ only if an explicit supported Admin activity rule exists and all source eligibility is satisfied; historical amounts are not silently copied.
+
+**VQ-003** Gossip creator tipping provides **10 / 20 / 50 VQ** presets with eligible recipient and amount confirmation. Member transfers and authorized Marketplace VQ movement use actual double-entry-like balanced ledger effects, account eligibility, blocking/fraud rules, available-balance checks and idempotency. Failed/partial transactions never create success receipts. No crypto/fiat conversion is implied.
+
+**ADM-VQ-001** A separate, phone-usable **Admin Control Panel → VQ Rules** presents current rule catalog with stable event key, name, description, amount, active state, eligibility, frequency cap, VQ amount cap, cooldown, effective version/time, audit actor and history. Rule catalog and editor must display **the same active authoritative values**. Only supported originating business events may become executable reward rules; typing a name does not fabricate a backend trigger.
+
+**ADM-VQ-002** Authorized Admin may create/configure **supported** rules and edit amount, enable/disable, participant eligibility, source verification, frequency limit, amount-per-period cap, cooldown and effective activation. Distinguish '**three awards/day**' from '**max 150 VQ/day**'; historical Grok contradictory cap screenshots do not set policy. Backend validates allowed combinations and persists effective versions. Draft/preview is non-effective until successful authorized save/publish. A changed value applies prospectively per version policy without retroactively editing ledger entries.
+
+**ADM-VQ-003** **Manual grant** is an authorized, auditable grant command with explicit recipient selection and independent idempotent **per-recipient ledger attribution** (never one shared balance edit). It supports one individual; **targeted grants** to eligible Pro Guardians and Local Legends; **selected-group grants**; and **all-eligible-user/bulk** distributions. Admin selects recipients/criteria, custom amount, attribution label/reason and confirms. Show recipient count, exclusions, per-user and total VQ and review of high-impact action. **Preview never posts credits.** Privileged grant execution uses canonical D20 writer, per-recipient idempotency and truthful completed/failed/pending counts, preserving safe retry without double credit. Elevated approvals where configured; never grant Admin privileges because of VQ ownership.
+
+**ADM-VQ-004** Admin dashboard exposes genuine rule status, source-event awards, grant totals, outstanding distribution outcomes, tips/transfers, corrections and ledger reconciliation. Filter/details/refresh must reflect real records, not synthetic daily-active-user charts. A failed API write does not update authoritative visual success or claim credits were issued.
+
+**ADM-VQ-005** All edits, activations, bulk grants and correction requests require permission-scoped authorization, actor/reason timestamp, rule version/old-new values and audit history. Corrections use compensating postings rather than erasing balance history. Genuine risk protections include suspicious repetitive event activity, duplicate source event/replayed request, race conditions, insufficient balance, double spending, unauthorized rule edits and accidental platform-wide grants.
+
+**ADM-VQ-006** D20 receives qualified source outcomes from D05 Place checks, D06 Trail completion, D22 Handshake, D18 VibeCheck, relevant streak/event owners and explicitly approved optional categories. VQ posting remains independent of notification delivery or UI completion. The source domain retains ownership of its underlying fact; a validation No vote cannot independently create a venue check-in award.
+
+**ADM-VQ-007** Admin VQ acceptance tests: real catalog/edit/enable/disable; new values affect future events; caps/cooldowns/daily limits verified; unauthorized role denied; invalid source key rejected; double event not double credited; user grant and Pro/Legend/group/global grant each preview and genuinely post correct recipients; safe retry of partial distribution; correction/audit intact; tips, transfers, insufficient funds, concurrent debits, Marketplace posting and reconciliation verified; cross-device Purse/Admin state consistent; no local fallback reports fabricated success.
+
+## 19. Remaining domains — complete initial scope, real lifecycles
+
+**BIZ-001 / D09:** Business/organization onboarding, authority and operator management, public profile, legitimate Place links, and verified business event eligibility. Paid entitlements do not themselves establish ownership or trust.
+
+**ACT-001 / D10:** User-created Activities support create/edit/publish, join/leave, host, date/place, authentic participation, context-specific chat and permitted resonance/reviews. D10 owns status, D23 delivery, D19 standing, D20 conditional reward.
+
+**EVT-001 / D11:** Organizer/artist/business Events with flyer, schedule, venue, admission, RSVP, participant communications, genuine reminders and optional D28 ticket link; Events and Activities remain distinct.
+
+**CONTENT-001 / D12:** Gossip and Share content create/edit/delete, visibility, comments/reactions/replies and audience projections; single canonical publication across Home/Vibe/Share where eligible.
+
+**MEDIA-001 / D13:** Durable avatars/Place and Trail photos in controlled persistent object storage; ephemerals (VibeCheck/VibeFlash, social Moments) obey **24-hour** expiry. Live room audio via WebRTC is never routinely recorded. Upload permissions, processing, deletion and attachment authorization must be enforced. Live-only requirement applies to dedicated live-capture modes, not every permitted profile or Place upload.
+
+**ROOM-001 / D15 and COM-001 / D16:** Communities/Circles create/browse/join/request/leave, public/private membership, owner/moderator roles, room chat, bulletins, polls, optional soundboard, legitimate attendance and moderation; no fake joined membership after failed insertion.
+
+**REP-001 / D19:** Cultural Passport badges, Explorer class/standing, Guardian reviews and contribution recognition depend on genuine achievements. **VQ holdings never automatically grant Guardian verification or moderation power**. Legacy New Wanderer/Senior Guide/Elite Voyager names may inform presentation, but old spendable-balance thresholds are not authority.
+
+**MOD-001 / D21:** Report Place, user, Guardian, message, event, validation, community and Marketplace abuse; support real case handling, restrictions, visibility, appeals where relevant and audit. Reports do not automatically falsify facts or reverse external seller cash payments.
+
+**ADS-001 / D24:** Clearly labeled paid placements on **Home, Explore and Share**; campaign inventory, eligibility, duration, frequency and real measured reporting; promotion does not edit canonical Places or rewards.
+
+**SUB-001 / D25:** Authoritative subscriptions/entitlements for eligible Pro Guardian and business features; actual paid status and expiry controls access without replacing identity/qualification requirements.
+
+**PAY-001 / D27:** Platform-handled fiat billing only for separately authorized paid platform services, eligible subscriptions/ads/tickets as applicable. **Guardian/Tour and local Marketplace seller payments are currently non-custodial, seller-direct, zero platform commissions/escrow**; disclose seller terms/refunds and never claim external bank/cash settlement is verified merely by acceptance.
+
+**TKT-001 / D28:** Independent ticket products (optional Event relationship), issuer/price/stock/holder terms, **unique cryptographically verifiable QR**, genuine issuance, authorized scan/redeem exactly once, repeat/offline conflict handling and organizer-controlled disclosed refund/transfer terms. RSVP, ticket payment and admitted status are separate.
+
+**NOT/SEARCH/ADMIN:** Notification delivery and discovery search are shared interfaces/projections, not extra canonical writers. Admin is permission-scoped orchestration, not a domain-ownership shortcut.
+
+## 20. The 28 locked canonical business domains
+
+| ID | Domain | Canonical fact/authority |
+|---|---|---|
+| D01 | Identity & Authentication | accounts, credentials, sessions |
+| D02 | Profiles & Personal Preferences | profile and settings |
+| D03 | Social Graph | follows and blocks |
+| D04 | Geo & Presence | consented location evidence and temporary presence/geofence assertions |
+| D05 | Places & Contributions | Places, check-ins, validation reports, confidence |
+| D06 | Vibe Trails | Trail stops, publication, remix |
+| D07 | Guardians & Local Legends | eligibility, profiles, offers |
+| D08 | Tours & Guardian Reservations | tour offers, calendar, booking lifecycle |
+| D09 | Businesses & Organizations | organization and verified operator authority |
+| D10 | Activities | user activity lifecycle |
+| D11 | Events | organizer events and RSVPs |
+| D12 | Social Content | Gossip/Share posts and engagement |
+| D13 | Global Media | media assets and retention |
+| D14 | Messaging | direct/contextual conversations/messages |
+| D15 | Live Rooms | live session/room participation |
+| D16 | Communities & Circles | community membership and roles |
+| D17 | Matching & Connections | Drift/Pulls/Vibes/proposals and acceptance |
+| D18 | Challenges & Live Vibes | VibeCheck/VibeFlash outcomes |
+| D19 | Recognition & Reputation | badges and standing |
+| D20 | VQ Rewards & Ledger | rule versions, credits/debits, grants, balances |
+| D21 | Moderation & Trust | reports, sanctions and review cases |
+| D22 | Encounter / Handshake Verification | mutually accepted in-app Handshakes |
+| D23 | Notifications | inbox, preferences and delivery |
+| D24 | Advertising & Promotions | sponsored campaigns and placements |
+| D25 | Subscriptions & Entitlements | plans/access rights |
+| D26 | Marketplace | listings and deal agreements |
+| D27 | Payments & Billing | approved platform-handled fiat payments |
+| D28 | Ticketing | independently issued/redeemed tickets |
+
+These are **logical canonical responsibility boundaries** within one complete product, **not** 28 mandated microservices, tables or database schemas. Cross-domain flows use authorized commands and controlled events, not multiple writers for one record.
+
+## 21. Nonfunctional, resilience and release acceptance
+
+**NF-001** Backend-authoritative identity, permissions, location eligibility, media, challenge deadlines, private sharing, geofences, Guardian qualification, reservations, Handshakes, reviews, VQ and ticket redemption. No feature trusts client-only role checks or browser-stored reward balances.
+
+**NF-002** PostgreSQL/PostGIS and real-time/WebSocket or appropriate equivalent adapters are intended platform capabilities, subject to approved Structure.md/Database.md. Persisted migrations, durable writes, correct indexes and real running services must be verified on target environment; source code/imports alone do not prove readiness.
+
+**NF-003** Idempotency and transactional consistency for double booking, duplicate Handshake, check-in credits, grant fan-out, transfer/double spend, ticket redemption and webhook/retry processing. Cross-domain event delivery must never cause duplicate business outcomes.
+
+**NF-004** Accessibility: RTL, readable status not color-only, focus and dialog traps, touch controls, adjustable text, alternative to haptics/sounds, reduced motion, location-denial browsing. Privacy: least privilege; no private precise GPS in public cards, appropriate encryption and data deletion; temporary position pings discarded within **2h**.
+
+**NF-005** Performance acceptance includes measurable API latency and first mobile-load objective. The latest owner-supplied numeric thresholds were blank; do not fabricate them. Test on real supported browsers and Telegram host, not only a local desktop preview.
+
+**NF-006** Operational truth: real health/migrations, API/worker release compatibility, observability, error reporting, no secrets in frontend, accessible feedback on delayed/offline operations, and cleanup of ephemeral assets. QA and release must establish actual source revision, installed schema and functioning cross-device actions.
+
+## 22. Source-recovered interaction-level requirements — mandatory parity extensions
+
+These provisions are part of this Requirements document, not a deferred implementation appendix. They make historically visible interaction details explicit in the normative contract. The legacy Gemini ZIP and supplied behavior extraction establish the **intended user-facing behavior**, whereas the newer owner decisions govern revised policy. Any historical numerical example or unreliable source mechanism is not an automatic approved business rule.
+
+### 22A. Home and Explore: interaction states and navigation
+
+**PAR-HOME-001** The area/context selector and search icon must preserve the selected district or manual area across Home → Explore. Search suggestions, map pins and place-card results must resolve to actual existing Places. Nearby suggestions must not default to a hardcoded city, fictitious visitor count or fixed location when GPS is unavailable.
+
+**PAR-HOME-002** The first check-in carousel card shall represent the current member's own verified recent check-in, or a prompt to check in when absent. Following cards represent only genuinely permitted network check-ins and shall immediately respect relationship changes, deletions, sharing revocation and expiry. Expand to Place preview → full Explore Place dossier → directions.
+
+**PAR-HOME-003** Both **Live Activities / Upcoming Activities** and **Live Now / Upcoming Events** toggles must change real filtered records. Activity **Boost Resonance**, quick **Add Activity Inline**, join/RSVP, card expansion, organizer/profile, related Circle and navigation must each perform a real authorized action or show an honest unavailable state. Activity review/rating from actual eligible participants is distinct from creating an activity; Event RSVP is distinct from purchasing/redeeming a ticket.
+
+**PAR-HOME-004** Heritage **Plot** displays the targeted heritage map coordinate; **Calibrate Coordinate** checks legitimate D04/D05 presence and then stamps the D02/D19 Cultural Passport as appropriate. An Admin VQ rule separately governs any credit. Local Gems **Save / Navigate / Launch Interactive Signal Scanner** and the Trails/Radar gateway preserve Place, filter and district context.
+
+**PAR-HOME-005** VIBE Guide's Community Handbook has actual question, answer, feedback and progress states, including retry where permitted, and separate reward eligibility. The Live Feed Monitor must show source-backed time and event provenance. The optional desktop **F** shortcut operates only in suitable contexts and never hijacks typing or accessibility shortcuts.
+
+**PAR-EXP-001** Search field typing opens a suggestion tray with distinguishable result types; selecting a real suggestion centers/zooms the map and updates nearby results. Seven category pills filter both pins and list; opening a category, toggling map/list, selecting a pin, opening a Place and returning retain navigation context.
+
+**PAR-EXP-002** Radar Pulse uses the historical pulse/ring/rarity aesthetic, but signal and rarity indications must be derived from defined Place/community metrics. The historical 10-km scan is an interaction reference and shall be parameterized through policy, not silently promoted to a security/privacy boundary. Heat/visitor indicators cannot be invented.
+
+**PAR-SEC-001** Secrets Board opens from Explore and Home Hunt Now, shows genuine live countdowns and selected Secret dossiers, and supports **Interested, Going, Create Secret/Spawn Flash, Claim Secret Bounty**. Creation includes title, description/ground rules, expiry duration (historical 30m, 1h, 2h, up to 8h options), area, privacy/reveal configuration and confirmation; publication then changes the real board/map state.
+
+**PAR-SEC-002** A Secret may expose a broad approximate zone publicly and reveal an approved finer clue only to eligible attendees under disclosed conditions. Bounty claims need independently verified eligibility; the historical 50-m example is not an approved universal geofence. Expired or removed Secrets cannot continue awarding, and notification eligibility is distinct from Secret publication.
+
+### 22B. Trails, Tours, Guardians, consultation and Handshake
+
+**PAR-TRAIL-001** Trail Studio supports draft/cancel and real author identity; title, narrative, theme, tags, city/area, cover photography, stop search, **Add Stop**, stop removal, drag/reorder, day-part categories **Morning / Afternoon / Sunset / Night / Flexible**, optional duration, insider tips and per-stop photos. Every chosen existing Place is a canonical reference; any creator-added unlisted waypoint follows a distinct validated contribution process rather than inventing random coordinates.
+
+**PAR-TRAIL-002** The Trail dossier has numbered route pins/polyline, duration and thematic summary, stop-by-stop accordion with photos, practical details, accessible expanded Place card and full Place link, **Navigate Trail**, individual stop navigation, **Save to Cultural Passport**, **Adopt / Remix Trail**, share and **Remix Tree**. Missing stops or unpublished linked Places produce honest unavailable states—not synthetic demo stops or authors.
+
+**PAR-TRAIL-003** Offline shall mean genuine consented caching of defined downloadable Trail content/map or itinerary data with clear size, availability, refresh, eviction and offline/error states. A toggle that changes text without saving durable offline content does not meet acceptance. Map routing outside downloaded coverage must disclose unavailable functionality.
+
+**PAR-TRAIL-004** Saving, adopting, remixing, publishing, navigating, completing and hiring a Guardian for a Trail are distinct actions. Remixing creates a new, attributable Trail/version and cannot overwrite the ancestor; source attribution persists even when authors change photos or reorder stops.
+
+**PAR-TRAIL-005** On eligible Trail cards/details, tapping the creator username/avatar opens the existing canonical D02 photo-first profile for the D01 member, from which eligible published D06 Trails can be browsed by real city/location context. Tapping the Trail city/location opens a city-scoped discovery surface over eligible public D06 Trails and D08 Tours. It must preserve the selected city and distinguish loading, mixed results, Trails-only, Tours-only, no-Trails, no-Tours, no-results, removed/unavailable, access-restricted and retryable-failure states; profile and discovery projections never become writers or duplicate canonical Trail/Tour records.
+
+**PAR-TOUR-001** Pro-only **Label this as a Tour** changes the creator form into an authentic commercial dossier: price mode, duration, meeting/pickup point, inclusions, language, accessibility/age guidance, expectations, seller refund/cancellation terms and scheduled capacity. Non-Pro and Local Legend creators never gain paid Tour publishing privileges through client toggles.
+
+**PAR-TOUR-002** The Tour view distinguishes its pricing and professional badge from a free Trail. **Check Availability / Reserve Tour** opens date, party size and real slot state; submitted inquiry remains pending until Guardian **Accept/Decline**. Accepted booking reserves inventory; decline/cancellation releases applicable availability. Guardian can see the original offer and proposed dates and requester receives genuine notifications.
+
+**PAR-GRD-001** Guardian directory supports **Top Vibes / Pro Guardians / Local Legends / Suggested** and applicable Pro/Legend recommendation filters. The directory replaces the ordinary-user leaderboard. Sorting/ranking uses defined genuine eligibility and feedback; selecting a Guardian moves compact preview → complete Guardian details → full photo-first user profile.
+
+**PAR-GRD-002** **Become a Guardian** opens role choice, qualifying journey and in-app live-selfie capture. Pro form supports bio, interests, districts, languages and one applicable hourly OR flat offer price mode. Local Legend shows **Free Local Hangout** with no paid offer controls. Pro listing requires active relevant entitlement and fresh captured selfie; all Guardian directory visibility and expiry are enforced by backend.
+
+**PAR-GRD-003** Guardian details show area, relevant languages, interests, badges, experience, truthful pricing where applicable, Message/Consult, Hire (Pro) or Vibe (Legend), reviews and up to five linked real Trails. Each Trail is a compact title plus **Explore now**; **+ Trail** selects an owned/eligible existing Trail or creates a real Trail. Full stop data belongs in Trail detail, not the Guardian directory card.
+
+**PAR-GRD-004** Guardian consultation is distinct from a private casual DM. Open from the Guardian card with a clear purpose disclaimer, real permitted messaging, current seller pricing terms and relevant offer/Trail context. Typing indicators reflect actual remote presence, never a timed bot reply. An inquiry or chat opening never creates a booking or Handshake.
+
+**PAR-GRD-005** **Hire Guardian for This Trail** preserves the originating real Trail identity, filters to eligible Pro Guardians that offer that service, displays availability/pricing before submission, and creates a pending request for the selected Guardian. Accepting that specific request produces the approved one-time in-app Handshake via D22. Decline/no-response never produces one. A review submission cannot re-increment a Handshake count.
+
+**PAR-GRD-006** Guardian review form remains locked without the qualifying relationship/Handshake under current applicable policy. The form enforces 111-character maximum and exactly one **Good Vibe / Chill Vibe / Cool Vibe** badge, with visible character feedback and genuine review posting/moderation. The accepted Handshake is *not* proof of completed physical travel; review copy must not imply otherwise.
+
+### 22C. Find Hub and Validate: every control must have a genuine outcome
+
+**PAR-HUB-001** Find Hub preserves real contact search/selection, permitted location mode, **Lock-On**, optional area-centering, geofence rule list, **Add New Geofence**, boundary name and target, radius configuration, **Save**, enabled toggle, delete, alert list/read/clear, empty and denied states. A geofence should not notify about another person unless that person's appropriate consent is valid at alert-evaluation time. Historical mock-shift/teleporter functions cannot appear as real users or alerts.
+
+**PAR-VAL-001** Nearby alert and Place-detail manual entry converge on one Place-specific bottom sheet. It renders selected Place/vibe, **ARE YOU HERE RIGHT NOW?**, truthful confidence/status, qualifying eligibility and live distance display only where permitted, and **Yes, matching! / No, changed! / Not here**. The locked amber/red state explicitly blocks mutation. Each vote is durable/idempotent, updates D05 contribution and appropriate moderation projections; **Not here** dismisses without vote or reward. D20's independently authorized VQ posting, if any, determines the amount shown in the shield-success animation.
+
+**PAR-VAL-002** Distinguish four boundaries in the backend and UI: alert detection radius; actual vote eligibility; canonical venue check-in evidence; VQ award eligibility. The historical popup 200m, venue check-in threshold and Secret bounty threshold are not interchangeable. Confidence uses a genuine defined aggregation; historical +15%/-25% client formulas are not source-of-truth.
+
+### 22D. Share, live-capture, challenges and community
+
+**PAR-SHARE-001** Share studio preserves **Pure Heart / Friendly Spark / Shared Moments** as selectable emotion categories and real applicable feed filters, not mere labels. The central equal-sized Share heart opens the real creator surface with clean capture/preview/edit/publish/cancel states.
+
+**PAR-SHARE-002** **Live Vibe Shot** uses explicit camera permission, rear/front sequential capture, optional front/rear switch, draggable picture-in-picture composition, photo and historical up-to-10-second microvideo modes, device-unavailable handling and preview/retake. The original anti-gallery rule applies to the spontaneous live capture mode only; it does not ban uploaded Place/Trail/profile photos in unrelated workflows. Camera access alone is not tamper-proof proof.
+
+**PAR-SHARE-003** Preserve mood presets **Warm Daylight, Golden Hour Amber, Midnight Neon, Vintage Film, Velvet Shadow, Breeze**, adjustment intensity 0–100%, and press-to-compare raw original where supported. Applied media edits must be reflected in authorized published media rather than remaining a canvas-only visual state. Do not treat legacy camera-flip milliseconds or 5m GPS calibration copy as verified performance/accuracy.
+
+**PAR-SHARE-004** Nearby ephemeral stream displays eligible creator/avatar/badge, emotion, photo/clip, timestamp, approximate district/distance, resonance and comment/Join Vibe actions. The author can **Edit Caption** or **Delete Vibe**; deletion and 24-hour expiry remove public visibility and relevant ephemeral assets according to media retention. Historical 5 km Share and 10 km Home narrative radii are superseded for applicable nearby-feed discovery by the directed **23 km** scope; they remain historical references only and do not define privacy, check-in, validation, geofence or challenge thresholds.
+
+**PAR-SHARE-005** **Join Vibe** opens an attached companion response studio allowing text and eligible live photo, then posts a canonical child/companion record with clear permission and actual delivery states. The original creator may receive a genuine notification. The old narration's word 'approved' does not authorize an invented mandatory human-approval process.
+
+**PAR-SHARE-006** **Echoes/Aesthetic Compass** provides **Acoustic Melody / Aroma Trail / Zen Space / Neon Electric** selection, meaningful radial/nearby discovery and **Start Echo** media/audio contribution, subject to real ownership, privacy, permissions and location truth.
+
+**PAR-SHARE-007** Circle browse/create includes name, emoji, unique handle, mission, emotion category, public/private membership rules, district anchor, **Join / Leave / Request Invite**, membership roster and entry to real chatroom. Joining a Circle does not automatically issue old historical +10 VQ; only a supported active D20 rule can do that.
+
+**PAR-SHARE-008** **Support the Pulse** retains the meaningful gratitude interface for eligible individuals/Circles, with recipient identification, proposed VQ tip/contribution, amount/confirm/receipt and actual result. Historical cash-looking donations, general neighborhood funds and symbolic patron rewards are not automatically enabled monetary products; restrict launch to the approved VQ recipient and transfer rules unless separately directed.
+
+**PAR-CH-001** VibeCheck shows eligible non-geographically-restricted initiator prompt/recipient selection, incoming alert, **Accept / Skip / Refuse**, 180-second server deadline, live capture, submission, side-by-side reveal, expressive reactions **Fire / Electric / Chill / Respect**, expiry **Signal Lost**, history and D20 evaluation. Deadline and outcome do not depend on foreground JavaScript timers or stock-photo fallbacks.
+
+**PAR-CH-002** VibeFlash is a distinct relationship/Community-eligible (never geographically gated) 33-second spontaneous challenge with genuine broadcast/notification, live capture, deadline, responder-only Mosaic and server-side participation permission. Historical scheduling copy says unpredictable daily triggers; schedule policy must be explicit, not inferred from a random local timer. No non-responder may bypass Mosaic access by deep link.
+
+### 22E. Vibe relationships, messages, notifications and hidden controls
+
+**PAR-VIBE-001** Preserve 12 Drift wavelength categories as actual selectable discovery contexts, category back navigation, candidate views, follow toggles, send Pull/challenge, Accept/Pass, reasons for matching, confirmed **Vibes**, **Orbit** and **Echo**. Match acceptance and following are separate D17/D03 records. Empty genuine candidates show an empty state, not seeded identities.
+
+**PAR-VIBE-002** Polar Romance remains opt-in 18+, quarterly candidate proposals with distinct reason/Accept/Pass states; Social & Activity matching remains a separate approximately monthly similarity/proximity proposal. Neither an algorithmic suggestion nor a unilateral request unlocks DM before the applicable mutual-acceptance rule.
+
+**PAR-MSG-001** Ordinary 1:1 DM supports genuine allowed recipients, send/receive, read state where supported, voice-note record/play, photo lightbox, private settings, block/report, pagination and recovery from failed sends. UI privacy controls must translate to effective backend enforcement, not local-only filtering; misleading synthetic compatibility numbers are not a permissible privacy gate.
+
+**PAR-MSG-002** Guardian consultation, Circle room, Meetup Deal chat and Event discussion are intentionally distinct conversation contexts. Circle rooms may support pinned founder bulletins, member polls and expressive **Vibe Chime / Pull Whoosh / Drop Boom** soundboard controls; a room-wide sound must truly reach eligible listeners or be clearly a local preview. Event discussion belongs to the Event context and must respect its visibility/moderation.
+
+**PAR-NOT-001** Notification bell uses exact genuine unread counts (with overflow presentation such as 9+), optional nonintrusive chime/haptic and an accessible full notification center. Alerts include Pull/match, Secrets, Handshake, DM/Guardian inquiry, reactions, challenges, check-in, Event reminder and VQ result. The center supports open/deep-link, mark read, dismiss, filter where supported, **Clear All** and user preferences. Clear All changes actual notification state and must not delete originating events. Permission- or expired-target errors are handled honestly.
+
+**PAR-HIDDEN-001** Preserve useful genuine keyboard/tactile affordances (desktop F radar toggle where appropriate; Telegram haptics; safe back and font behaviors), but do not ship historical GPS teleporter, local-source chatbot, unsanctioned local Ollama admin/debug endpoint, decorative fake QR code or simulated reward. If an on-device translation capability is subsequently approved, it needs its own privacy/offline acceptance and is not inferred from a debug control.
+
+### 22F. Purse, VQ, trades and Admin interaction detail
+
+**PAR-PURSE-001** Purse retains **VQ Wallet & Ledger / P2P Local Meetup Market** modes; true balance and user identifier; **Send** with recipient, amount, insufficiency warning, preview/confirm and posted debit/credit; **Receive** with copyable handle and a genuinely scannable, safely encoded Traveler Code for the intended approved contact/transfer use. A decorative geometric pattern is not a valid QR payload.
+
+**PAR-PURSE-002** Ledger lists real rewards, sends, receipts, transfers, grants, adjustments and marketplace movements with true status and linked source. Member transfers are distinct from platform mint/reward; tips debit sender and credit receiver rather than minting 10/20/50 VQ. No crypto/token exchange, FX, cashout or trading of VQ for fiat is silently authorized by historical source labels.
+
+**PAR-MKT-001** Marketplace modes **All / Buy / Sell**, **+ New Offer**, listing card, seller, physical good/pass description, eligible price/consideration, availability, area, terms, **Initiate Deal**, real dedicated negotiation, proposed meetup place, agreed terms, explicit applicable completion/close control and dispute/report are reconstructed. Historical cash/foreign-exchange trading illustrations are *not* new launch authorization; seller-to-seller direct payment does not imply platform escrow or verified physical delivery.
+
+**PAR-ADM-001** Privileged mobile Admin shows actually measured dashboard statistics, user/admin permissions, Places, Activities/Events, moderation, and complete VQ Rules/Grants. Rule list/edit, activation, custom amount, count-per-day versus VQ/day cap, cooldown, eligibility, effective version, simulation/preview, individual/Guardian/Legend/group/broad grant, complete recipient report, audit and compensating corrections must be real. A simulated DAU count, invented business records or UI-only administrator elevation cannot pass acceptance.
+
+**PAR-XD-001** Cross-screen evidence must validate a single action in its source and its destinations: Share publication → Home network/local and Gossip as permitted; Pull acceptance → Vibes/DM and Home contact check-in visibility where shared; accepted Guardian request → booking/Handshake/review-gate and conditional VQ award; Place verification → confidence/possible moderation/Passport and independent VQ; Trail adoption → derived Trail/attribution/profile; Marketplace deal → negotiation/status and any authorized VQ ledger movement. No duplicate domain writer or fabricated successful projection.
+
+### 22G. Audit-to-requirements traceability and fail gate
+
+**PAR-QA-001** Every legacy first-party source file and every meaningful reachable control must have traceable inventory evidence with path and source line/locator, interpreted UI action, handler and significant dependency, historical mechanism classification, target requirement/owner, testable success/failure contract and explicit disposition. Static counting of button tags or JSX event handlers does not establish semantic completeness. Controls in unreachable files must be classified as unreachable rather than assumed product behavior or silently discarded.
+
+**PAR-QA-002** A control is **COVERED** only when the normative requirements specify its observable outcome, lifecycle, necessary permissions, cross-page effects and failure behavior; **REVISED** requires a cited newer Product Owner decision; **EXCLUDED** requires an explicit authorized disposition; **UNRESOLVED** blocks unconditional parity certification. A generic screen heading and a copied script are both insufficient.
+
+**PAR-QA-003** The complete independent pass must inspect connected source handlers, hooks, repositories and data-use paths; identify demo, localStorage, seed, no-op, fallback, broken/unreachable controls; perform a second source-to-requirements pass; and reconcile the 28-domain record owners. Any future candidate revision must satisfy the applicable evidence gates before it is presented for Product Owner approval or repository publication; this already-approved governing revision remains subject to the separate authorization and live-source verification required for repository replacement or later mutation.
+
+---
+
+## 23. Complete legacy-experience preservation contract — source-recovered detail
+
+The following requirements are mandatory user-facing parity features, reconstructed from the detailed historical Explore, Share, Home, general communications and Purse descriptions and the inspected Gemini application. They preserve **intent**, not simulated success, scripted people, accidental insecure behavior or old service boundaries. All references to prices, cities, example ratings and historical VQ payouts are examples only. This contract complements, and does not weaken, requirements in sections 1–22.
+
+### 23A. Explore visual controls, Radar and Secrets
+
+**LEG-EXP-001** Search provides visible suggestions for Place, landmark, neighborhood and street queries, distinguishes available source/category, and pans/zooms to the selected real geolocation. Seven pills—All, Food, Cafés, Culture, Art, Venues, Hidden—filter both result cards and pins in sync; movement, filter cancellation, empty results, loading and permission denial are functional states. Preserve heatmap and sonar/radar visual appeal without fabricating live visits or ratings.
+
+**LEG-EXP-002** Radar Pulse animates the genuine selected/current area, identifies authentic candidate Places, and displays any trustworthy configured Common/Rare/Legendary rarity classification with its basis. The legacy 10 km scan is a historical default, not a substitute for separate privacy, geofence, check-in or validation distances. On desktop, the historical **F** quick-toggle may open/close Radar when focus is not in an input, text editor or assistive control; the ordinary visible control remains primary.
+
+**LEG-EXP-003** A Place preview shows name, authentic media, category, distance when known, availability, vibe descriptor and eligible confidence. Map pin → preview → Place dossier → Save / Navigate / Verify Spot Status / Validate; invoking one action does not fabricate the outcome of another. Place details and navigation remain available to eligible guests without validation.
+
+**LEG-EXP-004** Secrets Board opens from Explore and Home Hunt Now, showing active, expiring local Secret cards with countdown, creator identity, event story, permitted admission guidance, transport note, approximate area and **Interested / Going** states. Selecting a Secret opens its dossier; creator may **Spawn Flash / Create Secret**, set title, story, house rules, expiry duration and a privacy-preserving location clue. The historical 30m/1h/2h/8h choices can be presented as creator options; expiry and capacity remain server-authoritative. Public and invited users see only the permitted level of location detail.
+
+**LEG-EXP-005** **Claim Secret Bounty** checks actual eligible location/camera evidence, claim state and active D20 policy. The narrated 50m radius is a historical Secret-specific reference, not a universal radius. A failed claim gives no Passport stamp or award. Secret notification, map ember, countdown and board removal reflect genuine creation/expiry; there is no production GPS teleporter.
+
+### 23B. Trail and Tour parity across all entry points
+
+**LEG-TR-001** **+ Create Trail** opens a complete studio: new/draft/cancel, title, narrative, category/tags, cover photo, real Place search, add/remove/reorder stop, weekday/day-part or Morning/Afternoon/Sunset/Night/Flexible association as actually supported, per-stop estimated time, insider note and photo, preview and publish. The consumer Trail dossier shows numbered pins/polyline, distance/time where grounded, photographs, stop descriptions, directions, creator identity, public link and each stop's expandable canonical Place card. Handle missing/deleted/private Places without invented replacement stops.
+
+**LEG-TR-002** **Save to Cultural Passport** stores a real member bookmark. **Offline** explicitly downloads an authorized readable snapshot and shows availability, size/refresh and missing-map limitations honestly; saving a record alone is not offline functionality. **Navigate Trail / Navigate Stop** opens a usable route in a supported mapper, preserving stop order where supported and warning about unsupported multipoint guidance.
+
+**LEG-TR-003** **Adopt / Remix Trail** creates a new editable derived Trail, preserving source attribution, lineage and public Remix Tree. Edits never overwrite the original creator's record. Share and deep-link entry from Home, Guardian profile, conversations and social cards resolve the real Trail and the permitted view.
+
+**LEG-TR-004** **Hire a Guardian for this Trail** is a distinct Trail-context journey: user selects an eligible Pro Guardian among appropriately matched/opted-in guide suggestions; request carries immutable selected Trail and selected offer context, date/party/preferences where relevant, and visible seller terms; it remains pending until the Guardian accepts. Guardian decline/cancel/no response are meaningful outcomes; no automatic Handshake or booking confirmation.
+
+**LEG-TOUR-001** **Label this as a Tour** is shown only for an eligible Pro Guardian author and creates a distinct paid Tour offer. Require meaningful duration, flat offered price, meeting/pickup details, inclusions, language, accessibility/age considerations where relevant, and disclosed seller cancellation terms. Preserve the golden Tour identity and the richer dossier, not a generic Trail card with a payment icon.
+
+**LEG-TOUR-002** **Check Availability / Reserve Tour** opens an availability calendar with date, timeslot, party size and inquiry. Preserve request → notification → Guardian Accept/Decline → confirmed slot → cancellation/release. Prevent overbooking and conflicting Guardian commitments. Successful booking does not prove cash payment or physical meeting; D08 owns reservation, D22 owns accepted Handshake, D27 only platform-handled money flows.
+
+### 23C. Guardian identity, discovery and consultation parity
+
+**LEG-GRD-001** **Become a Guardian** is a full onboarding wizard, not a setting toggle. Select **Local Legend / Pro Guardian**; show role-specific conditions. Legend has five genuinely verified local Place check-ins plus fresh in-app selfie and free availability; Pro completes languages, bio, specialties, areas, chosen hourly **or** offer-flat pricing, eligible subscription and fresh in-app selfie. No government document is mandatory under current direction. Capture must use camera, not gallery, and expiry at seven days restricts directory visibility without destroying account, pending reservations or historic records.
+
+**LEG-GRD-002** Directory tabs **Top Vibes / Pro Guardians / Local Legends / Suggested** provide honest ranking/filter sources, optional Pro/Legend recommendation filter, location/interests when allowed and empty/blocked states. Guardian compact card → rich full card → user profile. Rich card contains permitted biography, passions, city/area, languages, past experience, private age where hidden, price/Free badge, current selfie status, allowed messages, accepted experience and qualifying reviews.
+
+**LEG-GRD-003** Attach at most **five** actual eligible Trails to a Guardian card, selecting authored or legitimately linkable existing Trails; **+ Trail** adds/creates, Remove unlinks, **Explore now** opens the full correct Trail. Missing linked Trail must show unavailable rather than invent content. A Pro Guardian may opt into Hire suggestions on public Trails.
+
+**LEG-GRD-004** Guardian Chat is a real consultation context with visible advisory banner, permitted conversation participants, genuine typing/delivery, relevant rate or free terms, meeting expectations and contact path. No seeded Guardian greeting or automated human-like reply is represented as actual Guardian speech. **Hire** / **Vibe** opens a real request lifecycle, accepted only by the other participant. One eligible mutual Handshake is recorded upon explicit acceptance, not when pressing Hire or when submitting a review.
+
+**LEG-GRD-005** Review form is locked without a qualifying accepted Handshake. When eligible, show live **111-character** counter and exactly one **Good Vibe / Chill Vibe / Cool Vibe** selection; submit creates one real review with moderation/report flow, recalculates only genuine reputation aggregates and never creates a second Handshake. Reviews do not attest to physically completed encounters merely because a request was accepted.
+
+### 23D. Home interactions and genuine source-to-destination behavior
+
+**LEG-HOME-001** The city/district header launches Explore at the contextual search result. Member-first check-in carousel then shows eligible network/confirmed connections' actual Place activity and current member invitation. Unfollow, blocking and removal of presence consent affect the carousel consistently.
+
+**LEG-HOME-002** **My Network / Local Vibes / For You** maintain distinct data selection and consistent reactions, comment threads and shares. Share's live moment appears in appropriate network/local projections and optionally an Explore camera beacon at a real Place; text Gossip appears in permitted social projections without duplicating its canonical post. Initial up-to-five feed items, then Expand/Collapse. The historical 5 km Share stream and 10 km Home local feed are distinct references, not a shared universal privacy radius.
+
+**LEG-HOME-003** **Live Activities / Upcoming**, inline **Add Activity**, **Boost Resonance**, venue/host card expand, route and Circle badge/room are genuine interactions. **Live Events / Upcoming**, official organizer card, RSVP, reminder, discussion and optional independent ticket link are separate. Historical 30/45-minute reminder examples are configurable product choices, not invisible constants.
+
+**LEG-HOME-004** **Daily Streak Verify Signal Presence**, **Discover Local Trails & Radar**, heritage **Plot / Calibrate Coordinate**, Local Gems **Save / Navigate / Launch Interactive Signal Scanner**, VIBE Guide quiz and **Open Live Feed** preserve every source-to-destination transition. Cultural passport, reputation and VQ only change after their distinct canonical eligibility decisions. Feed Monitor never displays made-up people or activity.
+
+### 23E. Share studio, challenges, social media and Circles
+
+**LEG-SHARE-001** Show **SHARE GOOD VIBES** hero and the **Pure Heart / Friendly Spark / Shared Moments** emotional-category rail; category selection filters relevant stream and applies a deliberate category to published content. **Live Vibe Shot** uses authentic camera permission, front/rear capture and re-take; sequential picture-in-picture selfie can be repositioned. Camera recording includes historical up-to-10-second micro-video mode where supported; unavailable capture is shown as an error, not replaced by generated stock content.
+
+**LEG-SHARE-002** Preserve named six atmosphere filters **Warm Daylight / Golden Hour Amber / Midnight Neon / Vintage Film / Velvet Shadow / Breeze**, 0–100% intensity adjustment and touch-and-hold unfiltered comparison. Support preview, caption, controlled audience/area labeling, cancel, actual upload and publish; consented public area is coarse and does not expose exact live device GPS. Historical 400ms lens-switch claim and 5m GPS indicator are not hard promises.
+
+**LEG-SHARE-003** Ephemeral Nearby Stream shows eligible photo/video, public name/avatar/badge, emotional category, coarse place, published age, reactions and **Join Vibe**, expiring 24h after publication. Creator **Edit Caption / Delete** updates authoritative posts and removes public delivery, with media retention cleanup. **Join Vibe** opens companion text/live-photo capture and attaches an authorized response to the original post with real author notification. The old ambiguous 'approved' wording cannot silently imply an invented moderator decision.
+
+**LEG-SHARE-004** **VibeCheck** preserves prompt selection, eligible named recipient, **Send**, incoming **Accept / Skip / Refuse**, actual 180-second deadline, live capture, side-by-side reveal, Fire/Electric/Chill/Respect reactions and Signal Lost/history states. **VibeFlash** preserves genuine relationship/Community-authorized collective spontaneous challenge with no geographic participation restriction, a 33-second authoritative window, rapid supported dual-snap, responders-only Mosaic and 24h media cleanup. Flash schedule frequency and authorized participant targeting are explicit configuration/rules, not random browser-only notifications. Neither feature has the same semantics as multi-hour Secrets.
+
+**LEG-SHARE-005** **Aesthetic Compass/Echoes** shows **Acoustic Melody / Aroma Trail / Zen Space / Neon Electric**, radial selected discovery and **Start Echo** capture/content contribution. Real sound recording requires user consent and asset handling; the UI does not claim that smell is digitally measured.
+
+**LEG-SHARE-006** **Vibe Circles** directory has public/private cards, emoji, name/handle, mission, member count and district anchor; user may Join/Leave or Request/Accept Invite according to policy; **+ Create Community** includes pillar/category, description, handle, district and visibility. Joined card chat icon opens its actual room. **Support the Pulse** preserves recipient-selection, contribution options, confirmation and gratitude acknowledgement; any VQ tip follows D20 sender debit/recipient credit, and real-money donation processing is not implied by an animation. Unsupported community/fund recipient accounts cannot receive ghost credits.
+
+### 23F. Vibe, rooms, notifications and hidden affordances
+
+**LEG-VIBE-001** **Gossip** has real text/photo composer, post, replies/comments, reactions, shares and profile deep links. **Drift** has twelve inspectable wavelength categories and genuine eligible profiles, send Pull → pending → recipient Accept/Pass → confirmed **Vibes**. **Orbit** follows and **Echo** followers are not matching state. Polar Romance is 18+ explicit opt-in, quarterly suggestions and bilateral acceptance; Social/Activity suggestions remain separate monthly mode with explainable shared interests and coarse area.
+
+**LEG-MSG-001** Distinct contexts: 1:1 DM with voice-note hold/release and media lightbox; Guardian consultation with price and advisory banner; Circle room with pinned bulletin, polls, participation and soundboard (**Vibe Chime / Pull Whoosh / Drop Boom**); Marketplace deal negotiation with public meetup anchor and agreement state; Event-attendee discussion beneath event details. A room sound broadcast must be actually transmitted to eligible participants if shown as shared; a local speaker sound is not a multiuser event.
+
+**LEG-NOT-001** Global bell shows genuine unread badge, categorized alert cards, high-priority optional/haptically appropriate notification, modal inbox, filter, mark-read, dismiss/swipe and Clear All. Tapping a card opens its canonical specific source (DM, Secret dossier, Handshake, Event, Place or challenge), preserving authorized context. No seeded notifications or fake delivery receipts. Sound/vibration respects user preferences and host support.
+
+**LEG-HIDDEN-001** Preserve valid hidden-product affordances where they serve real users: keyboard **F** radar shortcut; actual scannable Traveler Code/QR with secure recipient/account resolution; Guardian selfie renewal indicator; offline cultural translation as an optional user feature only when a real supported capability is available. Do not expose the historical localhost Ollama developer test panel as a required consumer service. Never include the **Cheat Move GPS** teleporter or scripted human-chat bots in production.
+
+### 23G. Purse, VQ, Marketplace, Admin and source-truth boundaries
+
+**LEG-PURSE-001** Preserve visible Purse **Wallet / P2P** switch, genuine balance and immutable history, **Send** with recipient/amount/confirm/insufficient funds and real debit+credit, **Receive / Copy Explorer ID / Show Traveler Code** with scannable validated payload, linked receipt and explicit failure. The historical geometric 4×4 picture is decorative only and must be replaced by a real code. Do not restore Solana, Devnet, crypto selling, currency FX or cashout.
+
+**LEG-MKT-001** Preserve P2P **All / Buy / Sell**, + New Offer, item/quantity/type, supported local consideration, method, proposed public meetup, price and seller terms, **Initiate Deal**, deal-anchored chat and explicit member-asserted **Mark Transaction Completed**. The latter is not conclusive verification of physical handover, escrow release or external cash movement. Distinguish completion self-report from genuine in-app VQ transfer. Cash/FX exchange examples in narration are not approved platform-powered currency exchange functions.
+
+**LEG-VQ-001** All demonstrated legacy reward entry points remain **feature interactions**, including Place validation, Place check-in, daily streak, Trail completion, heritage, Radar, Circles, Pulls, educational quiz, Guardian Handshake and challenges. Only owner-approved, enabled **Admin VQ activity rules** issue reward; unconfigured activities may work with no VQ. Starting values remain +25 daily, +50 verified Place up to three/day, +100 Trail up to two/day, +75 accepted eligible Guardian/Legend service Handshake per eligible participant and +30 passed VibeCheck; tips 10/20/50 transfer existing VQ. Historic sample amounts, speculative multipliers, VQ-based moderator authority and rank thresholds are not adopted.
+
+**LEG-ADM-001** Full Admin UI must include actual Dashboard, Users, VQ Rules/Rule Edit, manual grants, targeted Guardian/Legend/group/all-user grants, individual/aggregate ledger trace, Places, Events/Activities, Reports and Settings. All privilege checks, versioned rule activation, caps, eligibility, grant preview, precise recipient results, retry/idempotency and auditable corrections operate through the appropriate domain authority. No fake DAU, client-minted credit or UI-only power escalation.
+
+### 23H. Closure contract for Structure.md and Database.md
+
+**LEG-ARCH-001** All above is a **required behavior contract**, not a mandate for Gemini's source files, 28 services, 28 tables, database prefixes, React SPA, event-bus library, Cloudflare R2, migration runner or hosting topology. Structure.md must map each user-facing journey to canonical commands, read models, and separate domain record owners. Database.md must derive entities, constraints, retention and audit from the approved behavior rather than adopting the Gemini schema diagram by name.
+
+**LEG-ARCH-002** Handshake is recorded by request plus counterparty acceptance **without 10m GPS/QR co-presence**; paid Guardian bookings are non-escrow and Marketplace does not introduce held VQ escrow. Geolocation accuracy metadata or an ordinary camera timestamp is not cryptographic hardware proof. Ledger entries must have unambiguous posting/accounting invariants; real-time balances do not become correct solely because a view appears fast.
+
+**LEG-ARCH-003** Architecture acceptance includes a source-to-requirements trace matrix, current decision supersession, canonical writer table, authenticated Web/Telegram flows, failure/permission/privacy cases and deployment constraints. Exact provider choices, numerics and migrations are made in Structure.md/Database.md with evidence; no agent may treat Gemini's statement that those files 'already exist' as current GitHub proof.
+
+---
+
+## 24. Cross-feature acceptance matrix (required, not illustrative only)
+
+| Journey | Required end-to-end outcome |
+|---|---|
+| Guest → Place | Public Place accessible without login; protected validation requests authentication |
+| Nearby Place | Correct Waze alert, dismiss, manual Validate and locked state |
+| Validation Yes / No / Not here | Each produces its own real authorized outcome; no duplicate voting; neutral earns nothing |
+| Check-in → VQ | Genuine proximity/evidence; separate D05 check-in, D20 eligible rule, one Purse credit |
+| Find Hub | Real consented contact, Lock-On, geofence add/toggle/delete, actual enter/exit, privacy revoke |
+| Trail Studio | Ordered photographed Place stops, time categories/durations, validation and real publication |
+| Trail dossier | Expand each stop, linked full Place, route/navigation and accurate time/area |
+| Trail offline/remix | Genuine accessible offline content; derived publish with Remix Tree and attribution |
+| Trail → Hire | Real Pro selection, preserved source Trail, pending request then explicit Guardian response |
+| Guardian onboarding | Legend 5 visits + fresh selfie; Pro profile/entitlement/price + fresh selfie |
+| Guardian directory | Four filters, preview → rich card → profile; up to five real linked Trails |
+| Tour | Pro-only creation, expanded stops, seller terms, calendar, accept/decline, no double booking |
+| Guardian Handshake | Request + counterpart Accept creates only one mutual agreement, not GPS proof |
+| Guardian review | One qualifying accepted Handshake, <=111 characters, exactly one Good/Chill/Cool badge |
+| Home feed ripple | Genuine Gossip/Share content appears in authorized Home feeds with one source record |
+| Share capture | Camera permission, rear/front PIP, moods, video, honest upload/publication states |
+| Share interactions | Join Vibe, Echoes, Circles and 24h expiry with authentic notifications |
+| VibeCheck/VibeFlash | 180s / 33s authoritative clocks, proper actors, genuine capture, expiry/cleanup |
+| Drift/Pulls | Twelve wavelengths, real profiles, requests, mutual confirmation; blocks respected |
+| Polar/Social cycles | Separate 18+ opt-in quarterly Polar and monthly social activity proposals |
+| Messages | Real DM, Guardian context, room chat/polls/soundboard, deal chat, Event thread |
+| Wallet | Send/Receive, valid scannable recipient code, real ledger, insufficient balance |
+| Admin VQ | Active rule change, limits, disable, individual/group/global grants, preview, retry, audit |
+| Creator tip/Marketplace | 10/20/50 VQ tip, eligible deal agreement, genuine settlement and failure handling |
+| Official Event/Ticket | Verified organizer event, RSVP, independent signed ticket, authorized single scan |
+| Browser ↔ Telegram | One identity/record/permission and equivalent canonical result |
+| Mock-failure regression | Old fallback scenarios fail truthfully; never fabricate people, GPS, photos, messages, bookings or VQ |
+
+Every row needs real feature-level and security/negative testing. Mere existence of UI components or a compile/build pass is insufficient.
+
+## 25. Bounded policy and architecture decisions (do not erase product features)
+
+1. **Venue check-in radius — DIRECTED**: server-authoritative maximum **5 m** from canonical D05 Place location; reported device accuracy better than 50 m remains a separate coarse condition and does not prove the 5 m conclusion. D04 must have sufficiently fresh/precise evidence; excessive uncertainty returns cannot-verify.
+2. **D05 confidence policy — SUPERSEDED / RESOLVED**: the former open formula question is superseded by Requirements Delta D and the approved Master Plan. D05 confidence is governed by a versioned, auditable, Admin-configurable policy; historical +/-15/25% values are not hard requirements.
+   **Superseded — see Requirements Delta D above / approved Master Plan: D05 confidence policy is Admin-configurable, versioned and auditable.**
+3. **Prior check-in repeat validation — DIRECTED**: no Product Owner-defined cooldown, waiting period or age restriction exists solely because the user previously checked in. Anti-abuse/replay/idempotency/freshness protections remain engineering safeguards, not a user-facing cooldown.
+4. **Post-cancellation Handshake display/review eligibility — SUPERSEDED / RESOLVED**: the former open cancellation question is superseded by Requirements Delta A and the approved Master Plan; D22 has no cancellation state, and cancellation does not revoke, reset, delete or extend the 24-hour ACTIVE→EXPIRED Handshake window.
+   **Superseded — see Requirements Delta A above / approved Master Plan: no Handshake cancellation state; cancellation does not revoke/reset/delete/extend the 24-hour ACTIVE→EXPIRED window.**
+5. **Marketplace VQ release/cancellation/reversal — SUPERSEDED / RESOLVED**: the former open settlement question is superseded by Requirements Delta B and the approved Master Plan; Marketplace VQ is direct peer-to-peer through D20, with no default escrow, platform guarantee or automatic refund.
+   **Superseded — see Requirements Delta B above / approved Master Plan: Marketplace VQ is direct peer-to-peer through D20, with no default escrow, platform guarantee or automatic refund.**
+6. **Geo discovery radii — DIRECTED/BOUNDED**: Secrets, Find Hub and applicable nearby-feed discovery/search use **23 km**. This does not set Secret bounty-claim proximity, individual Find Hub geofence radius, Place check-in radius, Validate alert radius or D18 challenge eligibility; those remain governed separately.
+7. **VibeFlash scheduling/automation — OPEN SLICE-LOCAL PRODUCT OWNER GATE**: exact scheduling/trigger/automation policy must be decided before automated VibeFlash scheduling is accepted. The directed 33-second response window and existing audience-eligibility/Mosaic behavior remain unchanged.
+8. **API latency and initial app-load numeric goals — MEASURED ENGINEERING ACCEPTANCE, NOT A PRODUCT OWNER POLICY GATE**: numeric production thresholds are established from instrumented staging baselines before production acceptance; no arbitrary SLA is invented here.
+9. **Future stronger Admin-grant approval — NON-BLOCKING FUTURE OPTION, NOT A CURRENT PRODUCT OWNER GATE**: no two-person or amount threshold is directed now; preserve scoped authority, explicit recipients/amount/reason, preview, audit and idempotent D20 postings, with an approval-workflow seam for any future directed rule.
+
+These bounded choices do not erase established features. The only current slice-local Product Owner policy gates are: **Secret bounty-claim proximity**, **Validate approach-notification radius**, and **VibeFlash scheduling/automation**. Measured engineering acceptance targets and future/non-blocking enhancement possibilities are not additional Product Owner gates. An implementation depending on one of the three genuine gates must not fake closure or deploy the affected behavior prematurely.
+
+## 26. Source coverage, independent QA and governing status
+
+**Sources reviewed for this edition:** Supplied latest Gemini ZIP (`vibequest-fixed-v2 (2).zip`) including specific Explore/Trail/Guardian/Find Hub/Validate/Admin files; attached safe-behavior extraction of Explore, Share, Home, general communication and Purse; historical `funmarket/VibeQuest` reference; the approved VQgemni governing documents and mandatory `AGENTS.md` execution discipline. Historical UI/source observations do **not** certify real old runtime behavior. Think-tank/reference material does not govern implementation or canonical ownership. Do not import legacy schema/provider/structure choices.
+
+**Certification evidence:** The full Gemini source interaction inventory was reconstructed and semantically reconciled against this governing revision, including source-driven failure modes, deep-feature passes and cross-document ownership checks. Mechanical requirement/reference checks are part of that certification evidence. This revision is Product Owner-approved as a governing requirements source; repository publication or replacement remains a separate mutation requiring live-source verification and applicable authorization.
+
+**Current disposition:** **PRODUCT OWNER APPROVED GOVERNING PRODUCT REQUIREMENTS.** Source-level Gemini interaction parity and the three-document semantic certification apply to this approved governing revision; this is **NOT** runtime implementation acceptance and does not itself authorize repository mutation, implementation, DB migration or deployment.
+
+
+## 27. Approved account categories and professional publishing
+**DIRECTED / APPROVED PRODUCT RULE (supersedes conflicting earlier account-category assumptions):** Vibe is the default member account category; Pro is for individual professional providers including artists, event planners and eligible Pro Guardians; Business is for business owners and authorized operators of restaurants, venues, theatres, stores and certified Places. Both eligible Pro and Business principals may publish official Events. Only an appropriately verified and authorized Business operator may claim, manage and publish its certified Business Place; selecting the Business category does not self-certify ownership or Places. A single canonical D01 identity may have Pro qualifications and operate one or more Businesses without duplicate user identities. Local Legend and Pro Guardian remain D07 qualifications, not additional top-level account categories. Category labels alone must not grant sensitive capabilities: D07 owns Guardian qualification, D09 owns organization/operator verification, D05 owns canonical Place publication, D11 owns Event lifecycle, D25 owns entitlement and D01 owns identity. D28 Ticketing remains independent of Events. Existing requirements for genuine authorization, eligibility, privacy and audit remain binding.
+
+**REVISED PRODUCT OWNER CLARIFICATION:** D09 automatically certifies the eligible Business profile at onboarding, with one Business profile per Business owner and multiple branch addresses. This certification is not authorization to seize or edit an existing D05 Place. Eligible Pro and Business Events are immediately published without a manual preapproval stage, subject to scoped D21 moderation.

@@ -1,0 +1,6 @@
+{
+  "name": "VQgemini",
+  "description": "Cultural Discovery, Vibe Orbit, and Dual-Capture Sharing on Supabase",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
