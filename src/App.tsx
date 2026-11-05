@@ -13,12 +13,18 @@ import { AdminModal } from './components/AdminModal';
 import { subscribeAuthProfile, UserProfile } from './domains/d01_auth';
 import { VibePlace } from './domains/d03_vibe_orbit';
 import { CheckCircle2 } from 'lucide-react';
+import { AnimatePresence } from 'motion/react';
+import { useTheme } from './lib/theme';
+import { useProfileSettings } from './features/profile/hooks/useProfileSettings';
+import { fetchNotifications } from './domains/d08_notifications';
 
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('home');
-  const [lang, setLang] = useState<string>('en');
-  const [themeMode, setThemeMode] = useState<'midnight' | 'cream'>('midnight');
+  const { locale: lang } = useProfileSettings();
+  const { theme, toggleTheme } = useTheme();
+  const themeMode = theme === 'light' ? 'cream' : 'midnight';
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
@@ -26,6 +32,13 @@ export default function App() {
   const [appToast, setAppToast] = useState<string | null>(null);
 
   useEffect(() => subscribeAuthProfile(setUser), []);
+  useEffect(() => {
+    let active = true;
+    void fetchNotifications().then(items => {
+      if (active) setUnreadCount(items.filter(item => !item.read).length);
+    });
+    return () => { active = false; };
+  }, [user?.id]);
 
   const showToast = (msg: string) => {
     setAppToast(msg);
@@ -55,7 +68,7 @@ export default function App() {
           user={user}
           onOpenNotifications={() => setIsNotificationsOpen(true)}
           onOpenProfile={() => setIsProfileOpen(true)}
-          unreadCount={2}
+          unreadCount={unreadCount}
         />
       </div>
 
@@ -93,18 +106,21 @@ export default function App() {
         <NotificationModal onClose={() => setIsNotificationsOpen(false)} />
       )}
 
-      {isProfileOpen && (
-        <ProfileModal
-          user={user}
-          onClose={() => setIsProfileOpen(false)}
-          onUserSwitch={(newUser) => setUser(newUser)}
-          currentLang={lang}
-          onChangeLang={setLang}
-          themeMode={themeMode}
-          onToggleTheme={() => setThemeMode(themeMode === 'midnight' ? 'cream' : 'midnight')}
-          onOpenAdmin={() => setIsAdminOpen(true)}
-        />
-      )}
+      <AnimatePresence>
+        {isProfileOpen && (
+          <ProfileModal
+            key="reference-profile-sidebar"
+            user={user}
+            onClose={() => setIsProfileOpen(false)}
+            onUserSwitch={setUser}
+            themeMode={themeMode}
+            onToggleTheme={toggleTheme}
+            onOpenAdmin={() => setIsAdminOpen(true)}
+            onOpenNotifications={() => setIsNotificationsOpen(true)}
+            onNavigateHome={() => setActiveTab('home')}
+          />
+        )}
+      </AnimatePresence>
 
       {isAdminOpen && (
         <AdminModal user={user} onClose={() => setIsAdminOpen(false)} />

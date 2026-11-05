@@ -52,6 +52,7 @@ async function linkedProfile(authId: string): Promise<UserProfile | null> {
     cozyDiaryMode: Boolean(prefs?.cozy_diary_mode),
     accountType: String(row.account_type || 'vibe'),
     vq_balance: Number(row.points || 0),
+    streaks: Number(row.streaks ?? 0),
     reputation: 0,
     role: admin?.role === 'platform_admin' ? 'admin' : row.account_type === 'pro' ? 'guardian' : 'explorer',
     created_at: String(row.created_at || ''),
@@ -221,6 +222,7 @@ export async function updateExistingProfile(profile: UserProfile, edits: Profile
     !(String(fields.city ?? current.city ?? '')).trim() || !(telegram.trim() || xHandle.trim()))) {
     throw new Error('Cozy Diary Mode requires bio, city and a contact handle.');
   }
+  if (typeof edits.photoUrl === 'string') fields.photo_url = edits.photoUrl.trim();
   if (edits.avatarFile) fields.photo_url = await uploadProfileAvatar(edits.avatarFile, current.id);
   if (Object.keys(fields).length > 0) {
     const { data, error } = await supabase.from('profiles').update(fields).eq('id', current.id).select('id').maybeSingle();

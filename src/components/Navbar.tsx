@@ -56,11 +56,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           className="p-1 rounded-xl bg-gradient-to-tr from-neutral-800 to-neutral-900 border border-neutral-700 hover:border-teal-500/50 transition flex items-center space-x-1.5 shadow-lg"
           title="Profile Console & Settings"
         >
-          <img
-            src={user?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80'}
-            alt="Avatar"
-            className="w-7 h-7 rounded-lg object-cover"
-          />
+          {user?.avatar_url ? (
+            <img src={user.avatar_url} alt="Your profile photo" className="w-7 h-7 rounded-lg object-cover"
+              onError={event => { event.currentTarget.style.display = 'none'; }} />
+          ) : (
+            <span aria-hidden="true" className="w-7 h-7 rounded-lg flex items-center justify-center text-neutral-300">
+              <User className="w-4 h-4" />
+            </span>
+          )}
         </button>
       </div>
     </header>
