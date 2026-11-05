@@ -28,7 +28,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   onOpenAdmin
 }) => {
   const [authMode, setAuthMode] = useState<'menu' | 'email_login' | 'edit_profile' | 'device_ai' | 'oracle_help'>('menu');
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +51,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const loggedIn = await signInWithEmail(email, password);
+      const loggedIn = await signInWithEmail(identifier, password);
       onUserSwitch(loggedIn);
       setAuthMode('menu');
     } catch (err: any) {
@@ -93,7 +93,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           <div className="flex items-center space-x-2">
             <User className="w-5 h-5 text-teal-500" />
             <h3 className="font-bold text-base tracking-wide">
-              {authMode === 'device_ai' ? 'Local Device AI Settings' : authMode === 'oracle_help' ? 'Oracle Help & Support' : authMode === 'edit_profile' ? 'Edit Profile & Bio' : 'VQgemini Profile & Settings'}
+              {authMode === 'device_ai' ? 'Local Device AI Settings' : authMode === 'oracle_help' ? 'Oracle Help & Support' : authMode === 'edit_profile' ? 'Edit Profile & Bio' : 'VQUltimate Profile & Settings'}
             </h3>
           </div>
           <button
@@ -217,7 +217,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             </div>
 
             <div className="space-y-2">
-              <h4 className="font-black text-xl tracking-tight">Welcome to VQgemini</h4>
+              <h4 className="font-black text-xl tracking-tight">Welcome to VQUltimate</h4>
               <p className="text-xs text-neutral-400 max-w-xs mx-auto">
                 Explore real-world cultural vibes, hidden trails, and connect with verified district guardians using Supabase Auth.
               </p>
@@ -232,26 +232,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 <span>Sign In with Supabase Auth</span>
               </button>
 
-              <button
-                onClick={() => {
-                  onUserSwitch({
-                    id: 'usr_guest_demo',
-                    username: 'explorer_guest',
-                    full_name: 'Guest Voyager',
-                    avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
-                    bio: 'Exploring local heritage & vibes.',
-                    district: 'Central Node',
-                    vq_balance: 500,
-                    reputation: 85,
-                    role: 'explorer',
-                    created_at: new Date().toISOString()
-                  });
-                  onClose();
-                }}
-                className="w-full py-3.5 rounded-2xl bg-current/10 hover:bg-current/20 font-bold text-xs flex items-center justify-center space-x-2 transition cursor-pointer"
-              >
-                <span>Continue as Guest Explorer</span>
-              </button>
+
             </div>
           </div>
         )}
@@ -426,15 +407,16 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           /* Email Auth View */
           <form onSubmit={handleEmailLogin} className="space-y-4 text-white">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-neutral-300">Email Address</label>
+              <label className="text-xs font-bold text-neutral-300">Email or @username</label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-neutral-500" />
                 <input
-                  type="email"
+                  type="text"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="funmarketmn@hotmail.com"
+                  autoComplete="username"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder="Email or @username"
                   className="w-full rounded-2xl bg-neutral-950 border border-neutral-800 pl-10 pr-4 py-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
                 />
               </div>
