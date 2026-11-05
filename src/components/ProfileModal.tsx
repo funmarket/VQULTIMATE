@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { X, Coins, MessageSquare, Bell, Settings, HelpCircle, Languages, LogOut, Sparkles, User, ShieldCheck, Cpu, Sun, Moon } from 'lucide-react';
 import { ProfileLogin } from './ProfileLogin';
 import { ProfileForm } from './ProfileForm';
-import { UserProfile, signOutUser } from '../domains/d01_auth';
+import { UserProfile, signOutUser, signInWithGoogle } from '../domains/d01_auth';
 import { useProfileSettings } from '../features/profile/hooks/useProfileSettings';
 import { useLocalDeviceAiSettings } from '../features/profile/hooks/useLocalDeviceAiSettings';
 import { AppLocale } from '../features/profile/types/profileTypes';
@@ -37,6 +37,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const [verificationNotice, setVerificationNotice] = React.useState<{ email: string; avatarUploadNote?: string } | null>(null);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = React.useState(0);
   const [logoutError, setLogoutError] = React.useState<string | null>(null);
+  const [oauthLoading, setOauthLoading] = React.useState(false);
+  const [oauthError, setOauthError] = React.useState<string | null>(null);
   const { locale, changeLocale, t } = useProfileSettings();
   const [isLocaleDropdownOpen, setIsLocaleDropdownOpen] = React.useState(false);
   const { settings, aiStatus, isTesting, testResult, updateSettings, testEndpointConnection } = useLocalDeviceAiSettings();
@@ -131,6 +133,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 <button type="button" onClick={() => setAuthPanel('login')} className="flex-1 rounded-xl bg-vibe-primary text-white px-3 py-2 text-sm font-bold">Sign in</button>
                 <button type="button" onClick={() => setAuthPanel('register')} className="flex-1 rounded-xl border border-zinc-700 text-white px-3 py-2 text-sm font-bold">Create profile</button>
               </div>
+              <button type="button" disabled={oauthLoading}
+                onClick={async () => {
+                  setOauthError(null); setOauthLoading(true);
+                  try { await signInWithGoogle(); }
+                  catch (error) { setOauthError(error instanceof Error ? error.message : 'Google sign-in failed.'); }
+                  finally { setOauthLoading(false); }
+                }}
+                className="w-full rounded-xl border border-zinc-700 text-white px-3 py-2 text-sm font-bold mt-3 disabled:opacity-60">
+                {oauthLoading ? 'Connecting…' : 'Sign in with Google'}
+              </button>
+              {oauthError && <p role="alert" className="text-red-400 text-xs mt-2">{oauthError}</p>}
             </div>
           ) : (
             <>
