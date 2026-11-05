@@ -50,6 +50,7 @@ export type RegistrationResult =
 
 export type ProfileEdits = {
   displayName?: string;
+  photoUrl?: string;
   bio?: string;
   city?: string;
   interests?: string[];
