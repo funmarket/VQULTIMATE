@@ -10,7 +10,7 @@ import { NotificationModal } from './components/NotificationModal';
 import { ProfileModal } from './components/ProfileModal';
 import { PlaceDetailModal } from './components/PlaceDetailModal';
 import { AdminModal } from './components/AdminModal';
-import { getCurrentUserProfile, UserProfile } from './domains/d01_auth';
+import { subscribeAuthProfile, UserProfile } from './domains/d01_auth';
 import { VibePlace } from './domains/d03_vibe_orbit';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -25,11 +25,7 @@ export default function App() {
   const [selectedPlace, setSelectedPlace] = useState<VibePlace | null>(null);
   const [appToast, setAppToast] = useState<string | null>(null);
 
-  useEffect(() => {
-    getCurrentUserProfile().then((profile) => {
-      if (profile) setUser(profile);
-    });
-  }, []);
+  useEffect(() => subscribeAuthProfile(setUser), []);
 
   const showToast = (msg: string) => {
     setAppToast(msg);
