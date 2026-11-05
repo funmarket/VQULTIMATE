@@ -52,6 +52,7 @@ async function linkedProfile(authId: string): Promise<UserProfile | null> {
     cozyDiaryMode: Boolean(prefs?.cozy_diary_mode),
     accountType: String(row.account_type || 'vibe'),
     vq_balance: Number(row.points || 0),
+    streaks: Number(row.streaks ?? 0),
     reputation: 0,
     role: admin?.role === 'platform_admin' ? 'admin' : row.account_type === 'pro' ? 'guardian' : 'explorer',
     created_at: String(row.created_at || ''),
