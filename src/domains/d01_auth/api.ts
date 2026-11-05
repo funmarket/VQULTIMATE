@@ -70,6 +70,40 @@ export async function signInWithEmail(identifier: string, password: string): Pro
   return profile;
 }
 
+/**
+ * Keep the UI synchronized with real Supabase login/logout and token sessions.
+ * The callback receives null for signed-out users, never a manufactured guest.
+ */
+export function subscribeAuthProfile(onChange: (profile: UserProfile | null) => void): () => void {
+  let active = true;
+  let generation = 0;
+  async function refresh() {
+    const currentGeneration = ++generation;
+    try {
+      const profile = await getCurrentUserProfile();
+      if (active && currentGeneration === generation) onChange(profile);
+    } catch (error) {
+      console.warn('Authenticated profile refresh failed:', error);
+      if (active && currentGeneration === generation) onChange(null);
+    }
+  }
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    if (!session) {
+      generation++;
+      if (active) onChange(null);
+    } else {
+      // Run outside the auth state callback to avoid nested auth-client deadlocks.
+      Promise.resolve().then(() => { if (active) void refresh(); });
+    }
+  });
+  void refresh();
+  return () => {
+    active = false;
+    generation++;
+    subscription.unsubscribe();
+  };
+}
+
 export async function signInWithGoogle(): Promise<void> {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google', options: { redirectTo: window.location.origin },
