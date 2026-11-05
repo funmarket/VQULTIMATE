@@ -5,6 +5,8 @@ export interface UserProfile {
   avatar_url: string;
   bio?: string;
   district?: string;
+  interests?: string[];
+  city?: string;
   vq_balance: number;
   reputation: number;
   role: 'guardian' | 'explorer' | 'admin';

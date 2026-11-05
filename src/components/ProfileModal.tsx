@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ProfileForm } from './ProfileForm';
 import {
   X, User, Shield, Coins, LogOut, Check, Globe, Lock, Mail, Key, Sparkles,
   ArrowRight, Edit3, Award, MessageSquare, Bell, Smartphone, HelpCircle,
@@ -27,15 +28,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   onToggleTheme,
   onOpenAdmin
 }) => {
-  const [authMode, setAuthMode] = useState<'menu' | 'email_login' | 'edit_profile' | 'device_ai' | 'oracle_help'>('menu');
-  const [email, setEmail] = useState('');
+  const [authMode, setAuthMode] = useState<'menu' | 'email_login' | 'signup' | 'edit_profile' | 'device_ai' | 'oracle_help'>('menu');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [editDisplayName, setEditDisplayName] = useState(user?.full_name || '');
-  const [editBio, setEditBio] = useState(user?.bio || '');
-  const [editSaved, setEditSaved] = useState(false);
-
   const languages = [
     { code: 'en', label: 'English (EN)' },
     { code: 'fr', label: 'Français (FR)' },
@@ -51,7 +48,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     setLoading(true);
     setError(null);
     try {
-      const loggedIn = await signInWithEmail(email, password);
+      const loggedIn = await signInWithEmail(identifier, password);
       onUserSwitch(loggedIn);
       setAuthMode('menu');
     } catch (err: any) {
@@ -59,22 +56,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSaveProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    const updated: UserProfile = {
-      ...user,
-      full_name: editDisplayName,
-      bio: editBio
-    };
-    onUserSwitch(updated);
-    setEditSaved(true);
-    setTimeout(() => {
-      setEditSaved(false);
-      setAuthMode('menu');
-    }, 1200);
   };
 
   const handleLogout = async () => {
@@ -93,7 +74,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           <div className="flex items-center space-x-2">
             <User className="w-5 h-5 text-teal-500" />
             <h3 className="font-bold text-base tracking-wide">
-              {authMode === 'device_ai' ? 'Local Device AI Settings' : authMode === 'oracle_help' ? 'Oracle Help & Support' : authMode === 'edit_profile' ? 'Edit Profile & Bio' : 'VQgemini Profile & Settings'}
+              {authMode === 'device_ai' ? 'Local Device AI Settings' : authMode === 'oracle_help' ? 'Oracle Help & Support' : authMode === 'edit_profile' ? 'Edit Profile' : authMode === 'signup' ? 'Create Profile' : 'VQUltimate Profile & Settings'}
             </h3>
           </div>
           <button
@@ -158,53 +139,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           </div>
         )}
 
-        {authMode === 'edit_profile' && user && (
-          <form onSubmit={handleSaveProfile} className="space-y-4 text-white">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-neutral-300">Display Name</label>
-              <input
-                type="text"
-                value={editDisplayName}
-                onChange={(e) => setEditDisplayName(e.target.value)}
-                required
-                className="w-full rounded-2xl bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-neutral-300">Bio & Vibe Motto</label>
-              <textarea
-                value={editBio}
-                onChange={(e) => setEditBio(e.target.value)}
-                placeholder="Share your exploration vibe..."
-                rows={3}
-                className="w-full rounded-2xl bg-neutral-950 border border-neutral-800 px-4 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500 resize-none"
-              />
-            </div>
-
-            {editSaved && (
-              <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-2 text-xs text-emerald-400 font-bold flex items-center space-x-1.5 animate-fadeIn">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Profile saved successfully!</span>
-              </div>
-            )}
-
-            <div className="flex space-x-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setAuthMode('menu')}
-                className="flex-1 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs transition cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="flex-2 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 text-white font-bold text-xs shadow-lg transition hover:opacity-90 cursor-pointer"
-              >
-                Save Changes
-              </button>
-            </div>
-          </form>
+        {(authMode === 'edit_profile' || authMode === 'signup') && (
+          <ProfileForm
+            profile={authMode === 'edit_profile' ? user : null}
+            onSaved={(saved) => { onUserSwitch(saved); setAuthMode('menu'); }}
+            onCancel={() => setAuthMode('menu')}
+          />
         )}
 
         {authMode === 'menu' && !user && (
@@ -217,7 +157,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             </div>
 
             <div className="space-y-2">
-              <h4 className="font-black text-xl tracking-tight">Welcome to VQgemini</h4>
+              <h4 className="font-black text-xl tracking-tight">Welcome to VQUltimate</h4>
               <p className="text-xs text-neutral-400 max-w-xs mx-auto">
                 Explore real-world cultural vibes, hidden trails, and connect with verified district guardians using Supabase Auth.
               </p>
@@ -232,26 +172,20 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 <span>Sign In with Supabase Auth</span>
               </button>
 
-              <button
-                onClick={() => {
-                  onUserSwitch({
-                    id: 'usr_guest_demo',
-                    username: 'explorer_guest',
-                    full_name: 'Guest Voyager',
-                    avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
-                    bio: 'Exploring local heritage & vibes.',
-                    district: 'Central Node',
-                    vq_balance: 500,
-                    reputation: 85,
-                    role: 'explorer',
-                    created_at: new Date().toISOString()
-                  });
-                  onClose();
-                }}
-                className="w-full py-3.5 rounded-2xl bg-current/10 hover:bg-current/20 font-bold text-xs flex items-center justify-center space-x-2 transition cursor-pointer"
-              >
-                <span>Continue as Guest Explorer</span>
+
+              <button type="button" onClick={() => setAuthMode('signup')}
+                className="w-full py-3 rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-sm font-semibold">
+                Create Profile
               </button>
+              <button type="button" disabled={loading} onClick={async () => {
+                setLoading(true); setError(null);
+                try { await signInWithGoogle(); }
+                catch (err) { setError(err instanceof Error ? err.message : 'Google sign-in failed.'); }
+                finally { setLoading(false); }
+              }} className="w-full py-3 rounded-2xl bg-neutral-950 border border-neutral-700 text-sm font-semibold disabled:opacity-60">
+                Sign In with Google
+              </button>
+              {error && <p role="alert" className="text-red-400 text-xs">{error}</p>}
             </div>
           </div>
         )}
@@ -291,11 +225,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
             {/* Edit Profile Action */}
             <button
-              onClick={() => {
-                setEditDisplayName(user.full_name);
-                setEditBio(user.bio || '');
-                setAuthMode('edit_profile');
-              }}
+              onClick={() => setAuthMode('edit_profile')}
               className="w-full py-2.5 rounded-xl bg-neutral-950/60 hover:bg-neutral-950 border border-neutral-800 text-neutral-300 hover:text-white font-bold text-xs flex items-center justify-center space-x-2 transition cursor-pointer"
             >
               <Edit3 className="w-3.5 h-3.5 text-orange-400" />
@@ -426,15 +356,16 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           /* Email Auth View */
           <form onSubmit={handleEmailLogin} className="space-y-4 text-white">
             <div className="space-y-1">
-              <label className="text-xs font-bold text-neutral-300">Email Address</label>
+              <label className="text-xs font-bold text-neutral-300">Email or @username</label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-neutral-500" />
                 <input
-                  type="email"
+                  type="text"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="funmarketmn@hotmail.com"
+                  autoComplete="username"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder="Email or @username"
                   className="w-full rounded-2xl bg-neutral-950 border border-neutral-800 pl-10 pr-4 py-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
                 />
               </div>
