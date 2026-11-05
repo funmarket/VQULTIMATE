@@ -9,8 +9,10 @@ import { PurseTab } from './components/PurseTab';
 import { NotificationModal } from './components/NotificationModal';
 import { ProfileModal } from './components/ProfileModal';
 import { PlaceDetailModal } from './components/PlaceDetailModal';
+import { AdminModal } from './components/AdminModal';
 import { getCurrentUserProfile, UserProfile } from './domains/d01_auth';
 import { VibePlace } from './domains/d03_vibe_orbit';
+import { CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -19,13 +21,20 @@ export default function App() {
   const [themeMode, setThemeMode] = useState<'midnight' | 'cream'>('midnight');
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<VibePlace | null>(null);
+  const [appToast, setAppToast] = useState<string | null>(null);
 
   useEffect(() => {
     getCurrentUserProfile().then((profile) => {
       if (profile) setUser(profile);
     });
   }, []);
+
+  const showToast = (msg: string) => {
+    setAppToast(msg);
+    setTimeout(() => setAppToast(null), 3000);
+  };
 
   const isRtl = lang === 'ar';
 
@@ -34,8 +43,16 @@ export default function App() {
       dir={isRtl ? 'rtl' : 'ltr'}
       className={`min-h-screen ${
         themeMode === 'cream' ? 'bg-amber-100 text-neutral-900' : 'bg-neutral-950 text-white'
-      } font-sans antialiased selection:bg-orange-500 selection:text-white overflow-x-hidden max-w-md mx-auto w-full box-border pb-32 transition-colors duration-300`}
+      } font-sans antialiased selection:bg-orange-500 selection:text-white overflow-x-hidden max-w-md mx-auto w-full box-border pb-32 transition-colors duration-300 relative`}
     >
+      {/* Toast Notification Banner */}
+      {appToast && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-teal-500 text-neutral-950 font-bold text-xs shadow-2xl flex items-center space-x-2 animate-fadeIn border border-teal-300">
+          <CheckCircle2 className="w-4 h-4" />
+          <span>{appToast}</span>
+        </div>
+      )}
+
       {/* Top Navbar */}
       <div className="max-w-md mx-auto w-full box-border">
         <Navbar
@@ -64,7 +81,7 @@ export default function App() {
             onPostSuccess={() => setActiveTab('vibe')}
           />
         )}
-        {activeTab === 'vibe' && <VibeTab user={user} />}
+        {activeTab === 'vibe' && <VibeTab user={user} onNavigateShare={() => setActiveTab('share')} />}
         {activeTab === 'purse' && <PurseTab user={user} />}
       </main>
 
@@ -85,8 +102,12 @@ export default function App() {
           onChangeLang={setLang}
           themeMode={themeMode}
           onToggleTheme={() => setThemeMode(themeMode === 'midnight' ? 'cream' : 'midnight')}
-          onOpenAdmin={() => alert('Platform Admin Dashboard: Opening D01/D21 management console.')}
+          onOpenAdmin={() => setIsAdminOpen(true)}
         />
+      )}
+
+      {isAdminOpen && (
+        <AdminModal user={user} onClose={() => setIsAdminOpen(false)} />
       )}
 
       {selectedPlace && (
@@ -94,9 +115,11 @@ export default function App() {
           place={selectedPlace}
           onClose={() => setSelectedPlace(null)}
           onCheckIn={(place) => {
-            alert(`Successfully checked in at ${place.title}! Claimed +${place.vq_reward} VQ.`);
+            showToast(`Checked in at ${place.title}! Claimed +${place.vq_reward} VQ.`);
             if (user) {
-              setUser({ ...user, vq_balance: user.vq_balance + place.vq_reward });
+              const updatedUser = { ...user, vq_balance: user.vq_balance + place.vq_reward };
+              setUser(updatedUser);
+              localStorage.setItem('vq_active_user', JSON.stringify(updatedUser));
             }
           }}
         />

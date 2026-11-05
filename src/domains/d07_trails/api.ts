@@ -1,96 +1,62 @@
 import { supabase } from '../../lib/supabase';
 import { CulturalTrail, VibeGuardian } from './types';
 
-export const INITIAL_TRAILS: CulturalTrail[] = [
-  {
-    id: 'trail-1',
-    title: 'The Spice & Silk Heritage Route',
-    description: 'Trace the ancient pathways where dhow captains traded pearls for silk and cardamom.',
-    difficulty: 'Easy',
-    duration_mins: 45,
-    vq_reward: 200,
-    image_url: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80',
-    waypoints_count: 5,
-    guardian_name: 'Tariq Al-Mansoori'
-  },
-  {
-    id: 'trail-2',
-    title: 'Neon Marina Cyber Art Walk',
-    description: 'Explore augmented reality murals and underground synth-wave installations along the waterfront.',
-    difficulty: 'Moderate',
-    duration_mins: 60,
-    vq_reward: 350,
-    image_url: 'https://images.unsplash.com/photo-1561214115-f2f134cc4912?auto=format&fit=crop&w=600&q=80',
-    waypoints_count: 7,
-    guardian_name: 'Layla Chen'
-  },
-  {
-    id: 'trail-3',
-    title: 'Midnight Dunes Stargazer Circuit',
-    description: 'Venture beyond city light domes into quiet salt flats where tribal poetry echoes.',
-    difficulty: 'Legendary',
-    duration_mins: 120,
-    vq_reward: 750,
-    image_url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80',
-    waypoints_count: 4,
-    guardian_name: 'Zainab Nuru'
-  }
-];
-
-export const INITIAL_GUARDIANS: VibeGuardian[] = [
-  {
-    id: 'g-1',
-    name: 'Tariq Al-Mansoori',
-    handle: '@tariq_guardian',
-    district: 'Dubai Creek & Heritage District',
-    tier: 'Supreme Guardian',
-    avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-    bio: 'Master cartographer of ancient trade routes and maritime lore.',
-    trust_score: 99
-  },
-  {
-    id: 'g-2',
-    name: 'Layla Chen',
-    handle: '@layla_synth',
-    district: 'Marina & Neon Waterfront',
-    tier: 'Pro Guardian',
-    avatar_url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80',
-    bio: 'Curator of augmented reality synth installations and night markets.',
-    trust_score: 96
-  },
-  {
-    id: 'g-3',
-    name: 'Zainab Nuru',
-    handle: '@zainab_dunes',
-    district: 'Al Quoz Industrial Arts Quarter',
-    tier: 'Cultural Guide',
-    avatar_url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80',
-    bio: 'Sculptor, coffee connoisseur, and subterranean gallery founder.',
-    trust_score: 94
-  }
-];
-
 export async function fetchCulturalTrails(): Promise<CulturalTrail[]> {
   try {
     const { data, error } = await supabase.from('cultural_trails').select('*');
-    if (error || !data || data.length === 0) {
-      return INITIAL_TRAILS;
+    if (!error && data && data.length > 0) {
+      return data as CulturalTrail[];
     }
-    return data as CulturalTrail[];
-  } catch {
-    return INITIAL_TRAILS;
+    // Also try canonical vibe_trails table
+    const { data: vTrails, error: vErr } = await supabase.from('vibe_trails').select('*');
+    if (!vErr && vTrails && vTrails.length > 0) {
+      return (vTrails as any[]).map(t => ({
+        id: t.id,
+        title: t.title || t.name || 'Cultural Trail',
+        description: t.description || '',
+        difficulty: t.difficulty || 'Moderate',
+        duration_mins: t.duration_mins || 45,
+        vq_reward: t.vq_reward || 150,
+        image_url: t.image_url || t.cover_image || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80',
+        waypoints_count: t.waypoints_count || t.stops_count || 3,
+        guardian_name: t.author_name || t.guardian_name || 'District Guardian'
+      }));
+    }
+    return [];
+  } catch (err) {
+    console.warn('Error fetching cultural trails:', err);
+    return [];
   }
 }
 
 export async function fetchVibeGuardians(): Promise<VibeGuardian[]> {
   try {
     const { data, error } = await supabase.from('vibe_guardians').select('*');
-    if (error || !data || data.length === 0) {
-      return INITIAL_GUARDIANS;
+    if (!error && data && data.length > 0) {
+      return data as VibeGuardian[];
     }
-    return data as VibeGuardian[];
-  } catch {
-    return INITIAL_GUARDIANS;
+    // Try querying profiles with guardian role/qualification
+    const { data: profData, error: profErr } = await supabase
+      .from('profiles')
+      .select('*')
+      .or('role.eq.guardian,account_type.eq.pro');
+    if (!profErr && profData && profData.length > 0) {
+      return (profData as any[]).map(p => ({
+        id: p.id,
+        name: p.display_name || p.full_name || p.handle || 'Guardian',
+        handle: '@' + (p.handle || p.username || 'guardian'),
+        district: p.district || 'Heritage Quarter',
+        tier: p.tier || 'PRO GUARDIAN',
+        avatar_url: p.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+        bio: p.bio || 'District guardian and cultural curator.',
+        trust_score: p.trust_score || 95
+      }));
+    }
+    return [];
+  } catch (err) {
+    console.warn('Error fetching vibe guardians:', err);
+    return [];
   }
 }
+
 

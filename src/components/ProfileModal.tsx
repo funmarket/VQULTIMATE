@@ -27,11 +27,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   onToggleTheme,
   onOpenAdmin
 }) => {
-  const [authMode, setAuthMode] = useState<'menu' | 'email_login' | 'edit_profile'>('menu');
+  const [authMode, setAuthMode] = useState<'menu' | 'email_login' | 'edit_profile' | 'device_ai' | 'oracle_help'>('menu');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editDisplayName, setEditDisplayName] = useState(user?.full_name || '');
+  const [editBio, setEditBio] = useState(user?.bio || '');
+  const [editSaved, setEditSaved] = useState(false);
 
   const languages = [
     { code: 'en', label: 'English (EN)' },
@@ -58,6 +61,23 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     }
   };
 
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    const updated: UserProfile = {
+      ...user,
+      full_name: editDisplayName,
+      bio: editBio
+    };
+    onUserSwitch(updated);
+    localStorage.setItem('vq_active_user', JSON.stringify(updated));
+    setEditSaved(true);
+    setTimeout(() => {
+      setEditSaved(false);
+      setAuthMode('menu');
+    }, 1200);
+  };
+
   const handleLogout = async () => {
     await signOutUser();
     onUserSwitch(null);
@@ -73,17 +93,122 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         <div className="flex items-center justify-between border-b border-current/10 pb-3">
           <div className="flex items-center space-x-2">
             <User className="w-5 h-5 text-teal-500" />
-            <h3 className="font-bold text-base tracking-wide">VQgemini Profile & Settings</h3>
+            <h3 className="font-bold text-base tracking-wide">
+              {authMode === 'device_ai' ? 'Local Device AI Settings' : authMode === 'oracle_help' ? 'Oracle Help & Support' : authMode === 'edit_profile' ? 'Edit Profile & Bio' : 'VQgemini Profile & Settings'}
+            </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-current/10 hover:bg-current/20 transition"
+            className="p-2 rounded-xl bg-current/10 hover:bg-current/20 transition cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {authMode === 'menu' && !user ? (
+        {authMode === 'device_ai' && (
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-neutral-950/60 border border-neutral-800 p-4 space-y-3 text-white">
+              <div className="flex items-center space-x-2 text-teal-400">
+                <Smartphone className="w-5 h-5" />
+                <h4 className="font-bold text-sm">Neural Edge Engine Active</h4>
+              </div>
+              <p className="text-xs text-neutral-300 leading-relaxed">
+                Local on-device embeddings and MapLibre tile caching are operational. Your district orbit computations run locally with zero latency.
+              </p>
+              <div className="space-y-2 pt-2 text-xs">
+                <div className="flex items-center justify-between p-2 rounded-xl bg-neutral-900 border border-neutral-800">
+                  <span>Offline Waypoint Sync</span>
+                  <span className="text-emerald-400 font-bold">Enabled</span>
+                </div>
+                <div className="flex items-center justify-between p-2 rounded-xl bg-neutral-900 border border-neutral-800">
+                  <span>Edge Privacy Shroud</span>
+                  <span className="text-teal-400 font-bold">Active</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setAuthMode('menu')}
+              className="w-full py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-bold text-xs transition cursor-pointer"
+            >
+              Back to Profile Menu
+            </button>
+          </div>
+        )}
+
+        {authMode === 'oracle_help' && (
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-neutral-950/60 border border-neutral-800 p-4 space-y-3 text-white">
+              <div className="flex items-center space-x-2 text-amber-400">
+                <HelpCircle className="w-5 h-5" />
+                <h4 className="font-bold text-sm">Sentinel Support Network</h4>
+              </div>
+              <p className="text-xs text-neutral-300 leading-relaxed">
+                Connected to Supabase project <span className="font-mono text-teal-300">avdfessrhbsqwlfmbdau</span>. Guardian consensus rules are governed by Sole Administrator <span className="text-amber-300 font-mono">funmarketmn@hotmail.com</span>.
+              </p>
+              <div className="p-3 rounded-xl bg-neutral-900 border border-neutral-800 text-xs text-neutral-400 space-y-1">
+                <p className="text-white font-semibold">Need assistance?</p>
+                <p>Reach out to the Guardian council via direct Vibe chat or drop an incident ticket at sentinel@vqgemini.com.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setAuthMode('menu')}
+              className="w-full py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-bold text-xs transition cursor-pointer"
+            >
+              Back to Profile Menu
+            </button>
+          </div>
+        )}
+
+        {authMode === 'edit_profile' && user && (
+          <form onSubmit={handleSaveProfile} className="space-y-4 text-white">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-neutral-300">Display Name</label>
+              <input
+                type="text"
+                value={editDisplayName}
+                onChange={(e) => setEditDisplayName(e.target.value)}
+                required
+                className="w-full rounded-2xl bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-neutral-300">Bio & Vibe Motto</label>
+              <textarea
+                value={editBio}
+                onChange={(e) => setEditBio(e.target.value)}
+                placeholder="Share your exploration vibe..."
+                rows={3}
+                className="w-full rounded-2xl bg-neutral-950 border border-neutral-800 px-4 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500 resize-none"
+              />
+            </div>
+
+            {editSaved && (
+              <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-2 text-xs text-emerald-400 font-bold flex items-center space-x-1.5 animate-fadeIn">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Profile saved successfully!</span>
+              </div>
+            )}
+
+            <div className="flex space-x-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setAuthMode('menu')}
+                className="flex-1 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-2 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 text-white font-bold text-xs shadow-lg transition hover:opacity-90 cursor-pointer"
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
+        )}
+
+        {authMode === 'menu' && !user && (
           /* Visitor / Unauthenticated State */
           <div className="space-y-6 py-4 text-center">
             <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-orange-500 via-pink-500 to-teal-400 p-[2px] mx-auto shadow-xl">
@@ -102,7 +227,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             <div className="space-y-3 pt-2">
               <button
                 onClick={() => setAuthMode('email_login')}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 hover:opacity-90 text-white font-black text-sm shadow-xl shadow-orange-500/25 flex items-center justify-center space-x-2 transition"
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 hover:opacity-90 text-white font-black text-sm shadow-xl shadow-orange-500/25 flex items-center justify-center space-x-2 transition cursor-pointer"
               >
                 <Mail className="w-4 h-4" />
                 <span>Sign In with Supabase Auth</span>
@@ -110,13 +235,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
               <button
                 onClick={() => {
-                  // Default guest trial login
                   onUserSwitch({
                     id: 'usr_guest_demo',
                     username: 'explorer_guest',
                     full_name: 'Guest Voyager',
                     avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
                     bio: 'Exploring local heritage & vibes.',
+                    district: 'Central Node',
                     vq_balance: 500,
                     reputation: 85,
                     role: 'explorer',
@@ -124,13 +249,15 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   });
                   onClose();
                 }}
-                className="w-full py-3.5 rounded-2xl bg-current/10 hover:bg-current/20 font-bold text-xs flex items-center justify-center space-x-2 transition"
+                className="w-full py-3.5 rounded-2xl bg-current/10 hover:bg-current/20 font-bold text-xs flex items-center justify-center space-x-2 transition cursor-pointer"
               >
                 <span>Continue as Guest Explorer</span>
               </button>
             </div>
           </div>
-        ) : authMode === 'menu' && user ? (
+        )}
+
+        {authMode === 'menu' && user && (
           /* Authenticated State */
           <div className="space-y-5">
             {/* Rich User Profile Card */}
@@ -165,8 +292,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
             {/* Edit Profile Action */}
             <button
-              onClick={() => setAuthMode('edit_profile')}
-              className="w-full py-2.5 rounded-xl bg-neutral-950/60 hover:bg-neutral-950 border border-neutral-800 text-neutral-300 hover:text-white font-bold text-xs flex items-center justify-center space-x-2 transition"
+              onClick={() => {
+                setEditDisplayName(user.full_name);
+                setEditBio(user.bio || '');
+                setAuthMode('edit_profile');
+              }}
+              className="w-full py-2.5 rounded-xl bg-neutral-950/60 hover:bg-neutral-950 border border-neutral-800 text-neutral-300 hover:text-white font-bold text-xs flex items-center justify-center space-x-2 transition cursor-pointer"
             >
               <Edit3 className="w-3.5 h-3.5 text-orange-400" />
               <span>Edit Profile & Bio</span>
@@ -194,7 +325,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               </span>
               <button
                 onClick={onToggleTheme}
-                className="px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-700 text-xs font-bold text-orange-400 hover:bg-neutral-800 transition"
+                className="px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-700 text-xs font-bold text-orange-400 hover:bg-neutral-800 transition cursor-pointer"
               >
                 {themeMode === 'midnight' ? 'Midnight Neon' : 'Warm Cream'}
               </button>
@@ -207,14 +338,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               <div className="grid grid-cols-2 gap-2 text-white">
                 <button
                   onClick={() => { onClose(); }}
-                  className="p-3 rounded-2xl bg-neutral-950/60 border border-neutral-800 hover:border-teal-500/40 transition flex items-center space-x-2.5 text-xs font-semibold"
+                  className="p-3 rounded-2xl bg-neutral-950/60 border border-neutral-800 hover:border-teal-500/40 transition flex items-center space-x-2.5 text-xs font-semibold cursor-pointer"
                 >
                   <MessageSquare className="w-4 h-4 text-teal-400" />
                   <span>Messages</span>
                 </button>
                 <button
                   onClick={() => { onClose(); }}
-                  className="p-3 rounded-2xl bg-neutral-950/60 border border-neutral-800 hover:border-orange-500/40 transition flex items-center space-x-2.5 text-xs font-semibold"
+                  className="p-3 rounded-2xl bg-neutral-950/60 border border-neutral-800 hover:border-orange-500/40 transition flex items-center space-x-2.5 text-xs font-semibold cursor-pointer"
                 >
                   <Bell className="w-4 h-4 text-orange-400" />
                   <span>Notifications</span>
@@ -246,7 +377,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               {user.role === 'admin' && (
                 <button
                   onClick={() => { onOpenAdmin(); onClose(); }}
-                  className="w-full p-3 rounded-2xl bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 transition flex items-center justify-between text-xs font-bold text-orange-400"
+                  className="w-full p-3 rounded-2xl bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20 transition flex items-center justify-between text-xs font-bold text-orange-400 cursor-pointer"
                 >
                   <span className="flex items-center space-x-2">
                     <LayoutDashboard className="w-4 h-4" />
@@ -257,8 +388,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               )}
 
               <button
-                onClick={() => alert('Device AI settings: Neural edge caching & offline sync active.')}
-                className="w-full p-3 rounded-2xl bg-neutral-950/60 border border-neutral-800 hover:border-neutral-700 transition flex items-center justify-between text-xs font-semibold text-neutral-300"
+                onClick={() => setAuthMode('device_ai')}
+                className="w-full p-3 rounded-2xl bg-neutral-950/60 border border-neutral-800 hover:border-neutral-700 transition flex items-center justify-between text-xs font-semibold text-neutral-300 cursor-pointer"
               >
                 <span className="flex items-center space-x-2">
                   <Smartphone className="w-4 h-4 text-teal-400" />
@@ -268,8 +399,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               </button>
 
               <button
-                onClick={() => alert('Oracle Help & Support: Connected to VQgemini Sentinel Network.')}
-                className="w-full p-3 rounded-2xl bg-neutral-950/60 border border-neutral-800 hover:border-neutral-700 transition flex items-center justify-between text-xs font-semibold text-neutral-300"
+                onClick={() => setAuthMode('oracle_help')}
+                className="w-full p-3 rounded-2xl bg-neutral-950/60 border border-neutral-800 hover:border-neutral-700 transition flex items-center justify-between text-xs font-semibold text-neutral-300 cursor-pointer"
               >
                 <span className="flex items-center space-x-2">
                   <HelpCircle className="w-4 h-4 text-amber-400" />
@@ -283,14 +414,16 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             <div className="pt-2">
               <button
                 onClick={handleLogout}
-                className="w-full py-3.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold text-xs flex items-center justify-center space-x-2 transition border border-red-500/30 shadow-lg"
+                className="w-full py-3.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold text-xs flex items-center justify-center space-x-2 transition border border-red-500/30 shadow-lg cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Terminate Session (Sign Out)</span>
               </button>
             </div>
           </div>
-        ) : (
+        )}
+
+        {authMode === 'email_login' && (
           /* Email Auth View */
           <form onSubmit={handleEmailLogin} className="space-y-4 text-white">
             <div className="space-y-1">
@@ -302,7 +435,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="explorer@vqgemini.supabase.co"
+                  placeholder="funmarketmn@hotmail.com"
                   className="w-full rounded-2xl bg-neutral-950 border border-neutral-800 pl-10 pr-4 py-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500"
                 />
               </div>
@@ -331,14 +464,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               <button
                 type="button"
                 onClick={() => setAuthMode('menu')}
-                className="flex-1 py-3 rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs transition"
+                className="flex-1 py-3 rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs transition cursor-pointer"
               >
                 Back
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-2 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold text-xs shadow-lg shadow-orange-500/25 flex items-center justify-center space-x-1.5 transition"
+                className="flex-2 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold text-xs shadow-lg shadow-orange-500/25 flex items-center justify-center space-x-1.5 transition cursor-pointer"
               >
                 <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
                 <ArrowRight className="w-4 h-4" />

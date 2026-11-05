@@ -1,24 +1,40 @@
+import { supabase } from '../../lib/supabase';
 import { FlashEvent, ActivityFeedItem } from './types';
 
-export const INITIAL_FLASH_EVENT: FlashEvent = {
-  id: 'flash-1',
-  title: '⚡ FLASH EVENT: Midnight Neon Drift at Dubai Creek',
-  location: 'Dubai Creek Heritage Node',
-  vq_reward: 500,
-  duration_mins: 14,
-  active: true
-};
+export async function fetchFlashEvent(): Promise<FlashEvent | null> {
+  try {
+    const { data, error } = await supabase
+      .from('flash_events')
+      .select('*')
+      .eq('active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-export const INITIAL_ACTIVITIES: ActivityFeedItem[] = [
-  { id: 'act-1', user_name: 'Tariq Al-Mansoori', action: 'checked in at', target: 'Al Fahidi Spice Souk', time_ago: '2m ago', vq_earned: 150 },
-  { id: 'act-2', user_name: 'Layla Chen', action: 'completed trail', target: 'Neon Marina Cyber Art Walk', time_ago: '8m ago', vq_earned: 350 },
-  { id: 'act-3', user_name: 'Zainab Nuru', action: 'established confirmed Vibe with', target: '@tariq_guardian', time_ago: '15m ago', vq_earned: 200 }
-];
-
-export async function fetchFlashEvent(): Promise<FlashEvent> {
-  return INITIAL_FLASH_EVENT;
+    if (error || !data) {
+      return null;
+    }
+    return data as FlashEvent;
+  } catch (err) {
+    console.warn('Error querying flash_events:', err);
+    return null;
+  }
 }
 
 export async function fetchActivities(): Promise<ActivityFeedItem[]> {
-  return INITIAL_ACTIVITIES;
+  try {
+    const { data, error } = await supabase
+      .from('activities')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (error || !data || data.length === 0) {
+      return [];
+    }
+    return data as ActivityFeedItem[];
+  } catch (err) {
+    console.warn('Error querying activities:', err);
+    return [];
+  }
 }

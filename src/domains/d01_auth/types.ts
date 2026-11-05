@@ -4,6 +4,9 @@ export interface UserProfile {
   full_name: string;
   avatar_url: string;
   bio?: string;
+  district?: string;
+  tier?: string;
+  trust_score?: number;
   vq_balance: number;
   reputation: number;
   role: 'guardian' | 'explorer' | 'admin';

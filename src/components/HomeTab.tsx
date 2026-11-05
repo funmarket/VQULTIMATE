@@ -28,8 +28,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   }, []);
 
   return (
-    <div className="space-y-6 pb-24 text-white">
-      {/* Flash Event Banner */}
+    <div className="space-y-6 pb-24 text-white max-w-md mx-auto box-border overflow-x-hidden">
+      {/* Flash Event Banner (rendered only when an active flash event exists) */}
       {flashEvent && (
         <div className="rounded-2xl bg-gradient-to-r from-orange-500/20 via-amber-500/20 to-teal-500/20 border border-orange-500/40 p-4 flex items-center justify-between shadow-xl animate-pulse">
           <div className="flex items-center space-x-3">
@@ -75,14 +75,14 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
           <div className="grid grid-cols-2 gap-3 pt-2">
             <button
               onClick={() => onNavigateTab('explore')}
-              className="flex items-center justify-center space-x-2 py-3 px-4 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold text-sm shadow-lg shadow-orange-500/25 transition"
+              className="flex items-center justify-center space-x-2 py-3 px-4 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold text-sm shadow-lg shadow-orange-500/25 transition cursor-pointer"
             >
               <Compass className="w-4 h-4" />
               <span>Open Vibe Orbit</span>
             </button>
             <button
               onClick={() => onNavigateTab('share')}
-              className="flex items-center justify-center space-x-2 py-3 px-4 rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-sm border border-neutral-700 transition"
+              className="flex items-center justify-center space-x-2 py-3 px-4 rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-sm border border-neutral-700 transition cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-teal-400" />
               <span>BeReal Capture</span>
@@ -100,42 +100,52 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
           </h2>
           <button
             onClick={() => onNavigateTab('explore')}
-            className="text-xs text-teal-400 hover:underline flex items-center space-x-1"
+            className="text-xs text-teal-400 hover:underline flex items-center space-x-1 cursor-pointer"
           >
             <span>View Map</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {places.slice(0, 4).map((place) => (
-            <div
-              key={place.id}
-              onClick={() => onSelectPlace(place)}
-              className="group relative rounded-2xl overflow-hidden bg-neutral-900 border border-neutral-800 hover:border-teal-500/50 transition cursor-pointer p-3 flex space-x-3"
-            >
-              <img
-                src={place.image_url}
-                alt={place.title}
-                className="w-20 h-20 rounded-xl object-cover flex-shrink-0 group-hover:scale-105 transition duration-300"
-              />
-              <div className="flex-1 min-w-0 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider">{place.category}</span>
-                    <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-bold">+{place.vq_reward} VQ</span>
+        {places.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {places.slice(0, 4).map((place) => (
+              <div
+                key={place.id}
+                onClick={() => onSelectPlace(place)}
+                className="group relative rounded-2xl overflow-hidden bg-neutral-900 border border-neutral-800 hover:border-teal-500/50 transition cursor-pointer p-3 flex space-x-3"
+              >
+                <img
+                  src={place.image_url}
+                  alt={place.title}
+                  className="w-20 h-20 rounded-xl object-cover flex-shrink-0 group-hover:scale-105 transition duration-300"
+                />
+                <div className="flex-1 min-w-0 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider">{place.category}</span>
+                      <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-bold">+{place.vq_reward} VQ</span>
+                    </div>
+                    <h3 className="font-bold text-sm text-white truncate mt-0.5">{place.title}</h3>
+                    <p className="text-xs text-neutral-400 truncate">{place.address}</p>
                   </div>
-                  <h3 className="font-bold text-sm text-white truncate mt-0.5">{place.title}</h3>
-                  <p className="text-xs text-neutral-400 truncate">{place.address}</p>
-                </div>
-                <div className="flex items-center space-x-1 text-[11px] text-neutral-400">
-                  <Sparkles className="w-3 h-3 text-orange-400" />
-                  <span>Pulse Level: {place.pulse_intensity}/10</span>
+                  <div className="flex items-center space-x-1 text-[11px] text-neutral-400">
+                    <Sparkles className="w-3 h-3 text-orange-400" />
+                    <span>Pulse Level: {place.pulse_intensity}/10</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800/80 p-5 text-center space-y-2">
+            <Compass className="w-8 h-8 text-teal-400/60 mx-auto" />
+            <h4 className="font-bold text-xs text-white">No active pulses in this sector</h4>
+            <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
+              Scan the horizon in Vibe Orbit to detect newly verified district waypoints.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* District Guardians */}
@@ -148,21 +158,31 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
           <span className="text-xs text-neutral-400">{guardians.length} On Duty</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {guardians.map((g) => (
-            <div key={g.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center space-x-3">
-              <img src={g.avatar} alt={g.name} className="w-12 h-12 rounded-full object-cover border border-teal-500/30" />
-              <div className="min-w-0 flex-1">
-                <h4 className="font-bold text-sm text-white truncate">{g.name}</h4>
-                <p className="text-xs text-neutral-400 truncate">{g.district}</p>
-                <div className="flex items-center space-x-1 mt-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[10px] text-emerald-300 font-medium">Trust {g.trustScore}%</span>
+        {guardians.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {guardians.map((g) => (
+              <div key={g.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center space-x-3">
+                <img src={g.avatar} alt={g.name} className="w-12 h-12 rounded-full object-cover border border-teal-500/30" />
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-bold text-sm text-white truncate">{g.name}</h4>
+                  <p className="text-xs text-neutral-400 truncate">{g.district}</p>
+                  <div className="flex items-center space-x-1 mt-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[10px] text-emerald-300 font-medium">Trust {g.trustScore}%</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800/80 p-5 text-center space-y-2">
+            <Shield className="w-8 h-8 text-teal-400/60 mx-auto" />
+            <h4 className="font-bold text-xs text-white">No guardians registered on duty</h4>
+            <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
+              District guardian rotation active. New guardians sync when signed into Supabase.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Cultural Trails Preview */}
@@ -174,27 +194,37 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
           </h2>
         </div>
 
-        <div className="space-y-3">
-          {trails.map((t) => (
-            <div key={t.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex flex-col sm:flex-row gap-4 items-center">
-              <img src={t.image_url} alt={t.title} className="w-full sm:w-32 h-24 rounded-xl object-cover" />
-              <div className="flex-1 space-y-1 w-full">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">
-                    {t.difficulty} • {t.duration_mins} mins
-                  </span>
-                  <span className="text-xs font-bold text-amber-300">Reward: +{t.vq_reward} VQ</span>
-                </div>
-                <h3 className="font-bold text-white text-base">{t.title}</h3>
-                <p className="text-xs text-neutral-400 line-clamp-2">{t.description}</p>
-                <div className="flex items-center justify-between pt-2 text-xs text-neutral-400">
-                  <span>Curated by {t.guardian_name}</span>
-                  <span className="text-teal-400 font-semibold">{t.waypoints_count} Waypoints</span>
+        {trails.length > 0 ? (
+          <div className="space-y-3">
+            {trails.map((t) => (
+              <div key={t.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex flex-col sm:flex-row gap-4 items-center">
+                <img src={t.image_url} alt={t.title} className="w-full sm:w-32 h-24 rounded-xl object-cover" />
+                <div className="flex-1 space-y-1 w-full">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">
+                      {t.difficulty} • {t.duration_mins} mins
+                    </span>
+                    <span className="text-xs font-bold text-amber-300">Reward: +{t.vq_reward} VQ</span>
+                  </div>
+                  <h3 className="font-bold text-white text-base">{t.title}</h3>
+                  <p className="text-xs text-neutral-400 line-clamp-2">{t.description}</p>
+                  <div className="flex items-center justify-between pt-2 text-xs text-neutral-400">
+                    <span>Curated by {t.guardian_name}</span>
+                    <span className="text-teal-400 font-semibold">{t.waypoints_count} Waypoints</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800/80 p-5 text-center space-y-2">
+            <Award className="w-8 h-8 text-amber-400/60 mx-auto" />
+            <h4 className="font-bold text-xs text-white">No cultural trails published yet</h4>
+            <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
+              Certified pathfinders and guardians are mapping the next historical trail.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Live Activity Stream */}
@@ -203,24 +233,34 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
           <Users className="w-5 h-5 text-teal-400" />
           <span>Live District Activity Feed</span>
         </h2>
-        <div className="space-y-2">
-          {activities.map((act) => (
-            <div key={act.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-3.5 flex items-center justify-between text-xs">
-              <div className="flex items-center space-x-2.5">
-                <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
-                <div>
-                  <span className="font-bold text-white">{act.user_name}</span>{' '}
-                  <span className="text-neutral-400">{act.action}</span>{' '}
-                  <span className="text-teal-300 font-semibold">{act.target}</span>
+        {activities.length > 0 ? (
+          <div className="space-y-2">
+            {activities.map((act) => (
+              <div key={act.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-3.5 flex items-center justify-between text-xs">
+                <div className="flex items-center space-x-2.5">
+                  <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                  <div>
+                    <span className="font-bold text-white">{act.user_name}</span>{' '}
+                    <span className="text-neutral-400">{act.action}</span>{' '}
+                    <span className="text-teal-300 font-semibold">{act.target}</span>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-amber-300 font-bold">+{act.vq_earned} VQ</span>
+                  <span className="text-[10px] text-neutral-500">{act.time_ago}</span>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-amber-300 font-bold">+{act.vq_earned} VQ</span>
-                <span className="text-[10px] text-neutral-500">{act.time_ago}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800/80 p-5 text-center space-y-2">
+            <Users className="w-8 h-8 text-teal-400/60 mx-auto" />
+            <h4 className="font-bold text-xs text-white">District pulse is currently calm</h4>
+            <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
+              Check in at waypoints or broadcast your vibe to light up the live network feed.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
