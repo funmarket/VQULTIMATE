@@ -131,7 +131,10 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
     let published: CommunityTrail | undefined;
     try {
       // Fail before creating a Trail when the gallery migration is not installed.
-      if (photoFiles.length) await requireTrailGallery();
+      if (photoFiles.length) {
+        validateTrailPhotos(photoFiles, freePhotoSlots);
+        await requireTrailGallery();
+      }
       const tags = vibeTagsInput
         .split(',')
         .map(t => t.trim().toLowerCase())
