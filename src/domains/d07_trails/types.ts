@@ -32,6 +32,13 @@ export interface CommunityTrail {
   durationHours: number;
   stopsCount: number;
   flowSequence: string[]; // e.g. ['🌅', '🌆', '🌙']
+  authorId?: string;
+  savedBy?: string[];
+  savesCount?: number;
+  adoptionsCount?: number;
+  forkedFromTrailId?: string;
+  forkedFromAuthorName?: string;
+  tourDetails?: Record<string, unknown> | null;
   authorName: string;
   authorHandle: string;
   authorAvatarUrl: string;
@@ -69,16 +76,18 @@ export interface VibeGuardian {
   selfieCapturedAt: string; // 7-day freshness timestamp
   type: GuardianType;
   city: string;
-  age: number;
+  age?: number;
   bio: string;
   hourlyRate?: number;
   currency?: string;
-  trustScore: number;
-  hiresCount: number;
+  trustScore?: number;
+  hiresCount?: number;
   offeredTrailTitle?: string;
   offeredTrailId?: string;
   isLive?: boolean;
   endorsementsCount?: number;
+  flatRate?: number;
+  pricingType?: 'hourly' | 'flat';
   // Backward-compatibility fields
   district?: string;
   tier?: string;
