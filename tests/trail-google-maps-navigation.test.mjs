@@ -9,7 +9,7 @@ const makeTrail = (stops) => ({
 const stop = (index) => ({
   id: 'stop-' + index,
   name: 'Stop ' + index,
-  address: 'Verified',
+  address: 'Address ' + index + ', Tunis',
   vibeNote: '',
   timeOfDay: 'Flexible',
   durationMinutes: 20,
@@ -24,8 +24,8 @@ test('Walking route goes through all five stops without exceeding mobile waypoin
   const url = new URL(segments[0].url);
   assert.equal(url.searchParams.get('api'), '1');
   assert.equal(url.searchParams.get('travelmode'), 'walking');
-  assert.equal(url.searchParams.get('origin'), '36.01,10.01');
-  assert.equal(url.searchParams.get('destination'), '36.05,10.05');
+  assert.equal(url.searchParams.get('origin'), 'Address 1, Tunis');
+  assert.equal(url.searchParams.get('destination'), 'Address 5, Tunis');
   assert.equal(url.searchParams.get('waypoints')?.split('|').length, 3);
 });
 
@@ -49,8 +49,19 @@ test('Best leaves Google Maps travel mode unspecified', () => {
   assert.equal(new URL(segments[0].url).searchParams.get('travelmode'), null);
 });
 
-test('No fabricated coordinates or skipped stops', () => {
-  const noPosition = {...stop(2), address: '', lat: undefined};
+test('Address-only stops route without coordinates', () => {
+  const addressOnly = [stop(1), stop(2), stop(3)].map(({lat, lng, ...rest}) => rest);
+  const plan = buildTrailRoutePlan(makeTrail(addressOnly), 'walking');
+  assert.equal(plan.error, undefined);
+  assert.equal(plan.segments.length, 1);
+  const url = new URL(plan.segments[0].url);
+  assert.equal(url.searchParams.get('origin'), 'Address 1, Tunis');
+  assert.equal(url.searchParams.get('destination'), 'Address 3, Tunis');
+  assert.equal(url.searchParams.get('waypoints'), 'Address 2, Tunis');
+});
+
+test('Missing addresses block routing even when coordinates exist', () => {
+  const noPosition = {...stop(2), address: ''};
   const invalid = buildTrailRoutePlan(makeTrail([stop(1), noPosition, stop(3)]), 'walking');
   assert.equal(invalid.segments.length, 0);
   assert.match(invalid.error, /Stop 2/);
