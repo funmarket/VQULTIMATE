@@ -126,7 +126,7 @@ for each row execute function public.vq_trail_media_guard();
 -- API; enforce the same 3/6 total quota when that changes.
 create or replace function public.vq_trail_media_legacy_cover_guard()
 returns trigger language plpgsql set search_path = ''
-as $
+as $$
 declare
   v_uid uuid := auth.uid();
   v_is_admin boolean;
@@ -154,7 +154,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 create trigger vq_trail_media_legacy_cover_guard_trigger
 before update of image_url on public.vibe_trails
 for each row when (new.image_url is distinct from old.image_url)
