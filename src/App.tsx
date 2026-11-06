@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { BottomNav, TabType } from './components/BottomNav';
 import { HomeTab } from './components/HomeTab';
@@ -20,6 +20,7 @@ import { fetchNotifications } from './domains/d08_notifications';
 
 export default function App() {
   const [user, setUser] = useState<UserProfile | null>(null);
+  const mainScrollRef = useRef<HTMLElement>(null);
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const { locale: lang } = useProfileSettings();
   const { theme, toggleTheme } = useTheme();
@@ -45,14 +46,19 @@ export default function App() {
     setTimeout(() => setAppToast(null), 3000);
   };
 
+  useEffect(() => {
+    // The reference shell scrolls each tab inside the viewport, not the document.
+    if (mainScrollRef.current) mainScrollRef.current.scrollTop = 0;
+  }, [activeTab]);
+
   const isRtl = lang === 'ar';
 
   return (
     <div
       dir={isRtl ? 'rtl' : 'ltr'}
-      className={`min-h-screen ${
+      className={`h-[100dvh] flex flex-col ${
         themeMode === 'cream' ? 'bg-amber-100 text-neutral-900' : 'bg-neutral-950 text-white'
-      } font-sans antialiased selection:bg-orange-500 selection:text-white overflow-x-hidden max-w-md mx-auto w-full box-border pb-32 transition-colors duration-300 relative`}
+      } font-sans antialiased selection:bg-orange-500 selection:text-white overflow-hidden max-w-md mx-auto w-full box-border transition-colors duration-300 relative`}
     >
       {/* Toast Notification Banner */}
       {appToast && (
@@ -63,7 +69,7 @@ export default function App() {
       )}
 
       {/* Top Navbar */}
-      <div className="max-w-md mx-auto w-full box-border">
+      <div className="max-w-md mx-auto w-full box-border shrink-0">
         <Navbar
           user={user}
           onOpenNotifications={() => setIsNotificationsOpen(true)}
@@ -73,7 +79,7 @@ export default function App() {
       </div>
 
       {/* Main Content Container */}
-      <main className="max-w-md mx-auto px-4 pt-4 w-full box-border overflow-x-hidden pb-8">
+      <main ref={mainScrollRef} className="max-w-md mx-auto px-4 pt-4 w-full box-border flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain pb-24">
         {activeTab === 'home' && (
           <HomeTab
             user={user}
@@ -99,7 +105,7 @@ export default function App() {
       </main>
 
       {/* Bottom Five-Tab Navigation */}
-      <BottomNav activeTab={activeTab} onChangeTab={setActiveTab} />
+      <BottomNav activeTab={activeTab} onChangeTab={setActiveTab} scrollContainerRef={mainScrollRef} />
 
       {/* Modals */}
       {isNotificationsOpen && (
