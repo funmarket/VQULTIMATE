@@ -139,13 +139,24 @@ export async function withTrailGalleries(trails: CommunityTrail[]): Promise<Comm
     return parent ? inheritedGallery(parent, seen) : [];
   }
   return trails.map(trail => {
-    const gallery = inheritedGallery(trail);
-    const cover = gallery.find(photo => photo.isCover) || gallery[0];
+    const attached = inheritedGallery(trail);
+    const cover = attached.find(photo => photo.isCover) || attached[0];
+    const legacyCover = String(trail.imageUrl || '');
+    // A previously published URL remains visible; it still counts toward the limit.
+    const gallery = attached.length && legacyCover
+      ? [...attached, {
+          id: 'legacy-' + trail.id,
+          objectPath: '',
+          url: legacyCover,
+          sortOrder: -1,
+          isCover: !cover,
+        }]
+      : attached;
     return {
       ...trail,
       gallery,
-      imageUrl: cover?.url || trail.imageUrl,
-      image_url: cover?.url || trail.image_url,
+      imageUrl: cover?.url || legacyCover,
+      image_url: cover?.url || legacyCover,
     };
   });
 }
