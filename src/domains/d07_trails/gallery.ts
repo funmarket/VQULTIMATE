@@ -104,7 +104,12 @@ export async function withTrailGalleries(trails: CommunityTrail[]): Promise<Comm
     .select('id,trail_id,object_path,sort_order,is_cover,created_at');
   if (error) {
     // Preserve existing Trails on an environment where this migration is pending.
-    if (error.code === '42P01' || error.code === 'PGRST205') return trails;
+    if (error.code === '42P01' || error.code === 'PGRST205' ||
+        (error.code === '42703' && /column .* does not exist/i.test(error.message))) {
+      // A pending or incomplete media-gallery migration must never hide existing Trails.
+      console.warn('Trail gallery schema is not ready; displaying existing Trails without gallery media:', error.message);
+      return trails;
+    }
     throw new Error('Could not retrieve Trail galleries: ' + error.message);
   }
   const rows = (data || []) as MediaRow[];
