@@ -11,6 +11,10 @@ interface TrailDetailModalProps {
   onStartNavigation?: (trail: CommunityTrail) => void;
   onCheckInWaypoint?: (waypoint: any, trail: CommunityTrail) => void;
   onToast?: (message: string) => void;
+  onAdoptTrail?: (trail: CommunityTrail) => void;
+  onToggleSave?: (trailId: string) => Promise<void>;
+  isSaved?: boolean;
+  onReserveTour?: (tour: CommunityTrail) => void;
 }
 
 export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
@@ -18,13 +22,12 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
   onClose,
   onStartNavigation,
   onCheckInWaypoint,
-  onToast
+  onToast,
+  onAdoptTrail, onToggleSave, isSaved = false, onReserveTour
 }) => {
   const [completedStops, setCompletedStops] = useState<Set<string>>(new Set());
   const [isCached, setIsCached] = useState(false);
-  const [isAdopted, setIsAdopted] = useState(false);
-  const [likeCount, setLikeCount] = useState<number>(trail.remix_count || 0);
-  const [hasLiked, setHasLiked] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [expandedStopId, setExpandedStopId] = useState<string | null>(null);
 
   const stops: TrailStop[] = trail.stops && trail.stops.length > 0
@@ -41,31 +44,15 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
           }))
         : []);
 
-  const handleToggleLike = () => {
-    if (!hasLiked) {
-      setHasLiked(true);
-      setLikeCount((prev) => prev + 1);
-      if (onToast) onToast('Added to your favorite trail bookmarks!');
-    } else {
-      setHasLiked(false);
-      setLikeCount((prev) => Math.max(0, prev - 1));
-    }
+  const handleToggleLike = async () => {
+    if (!onToggleSave || isSaving) return;
+    setIsSaving(true);
+    try { await onToggleSave(trail.id); }
+    finally { setIsSaving(false); }
   };
-
-  const handleAdopt = () => {
-    if (!isAdopted) {
-      setIsAdopted(true);
-      if (onToast) onToast(`🌿 Adopted trail derivative attributed to ${trail.authorName || trail.guardian_name || 'Curator'}!`);
-    } else {
-      if (onToast) onToast('You already adopted this itinerary derivative.');
-    }
-  };
-
+  const handleAdopt = () => onAdoptTrail?.(trail);
   const handleCacheOffline = () => {
-    setIsCached(!isCached);
-    if (onToast) {
-      onToast(!isCached ? '💾 Trail cached offline for zero-data navigation!' : 'Trail removed from offline cache.');
-    }
+    onToast?.('Offline Trail downloads are not yet available.');
   };
 
   const handleToggleStop = (id: string) => {
@@ -73,16 +60,7 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
   };
 
   const handleCheckInStop = (stop: TrailStop) => {
-    setCompletedStops((prev) => {
-      const next = new Set(prev);
-      next.add(stop.id);
-      return next;
-    });
-    if (onCheckInWaypoint) {
-      onCheckInWaypoint(stop, trail);
-    } else if (onToast) {
-      onToast(`Checked in at "${stop.name}"! +${stop.vq_reward || 75} VQ claimed.`);
-    }
+    onToast?.(`Waypoint "${stop.name}" is available for navigation. Verified check-ins and rewards are not enabled yet.`);
   };
 
   const getTimeBadge = (timeOfDay: string) => {
@@ -157,18 +135,20 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
 
               {/* Action Buttons: Adopt, Cache, Like */}
               <div className="flex items-center space-x-2">
-                <button
+                {trail.isTour && onReserveTour && <button type="button" onClick={()=>onReserveTour(trail)}
+                  className="px-3 py-1.5 rounded-xl border text-xs font-bold bg-purple-600/30 border-purple-500/50 text-purple-200">
+                  Request Tour
+                </button>}
+                {!trail.isTour && <button
                   type="button"
                   onClick={handleAdopt}
                   className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer ${
-                    isAdopted
-                      ? 'bg-emerald-500/30 text-emerald-300 border-emerald-400'
-                      : 'bg-emerald-950/40 text-emerald-400 border-emerald-500/50 hover:bg-emerald-900/50'
+                    'bg-emerald-950/40 text-emerald-400 border-emerald-500/50 hover:bg-emerald-900/50'
                   }`}
                 >
                   <GitFork className="w-3.5 h-3.5" />
                   <span>Adopt</span>
-                </button>
+                </button>}
 
                 <button
                   type="button"
@@ -187,13 +167,13 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
                   type="button"
                   onClick={handleToggleLike}
                   className={`px-2.5 py-1.5 rounded-xl border text-xs font-bold transition flex items-center space-x-1 cursor-pointer ${
-                    hasLiked
+                    isSaved
                       ? 'bg-pink-500/20 text-pink-400 border-pink-500/50'
                       : 'bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white'
                   }`}
                 >
-                  <Heart className={`w-3.5 h-3.5 ${hasLiked ? 'fill-pink-400 text-pink-400' : ''}`} />
-                  <span>{likeCount}</span>
+                  <Heart className={`w-3.5 h-3.5 ${isSaved ? 'fill-pink-400 text-pink-400' : ''}`} />
+                  <span>{trail.savesCount ?? 0}</span>
                 </button>
               </div>
             </div>

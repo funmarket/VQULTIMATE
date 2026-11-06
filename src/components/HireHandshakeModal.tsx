@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { X, Handshake, Shield, Sparkles, CheckCircle2 } from 'lucide-react';
-import { VibeGuardian, hireGuardian } from '../domains/d07_trails';
+import { VibeGuardian, CommunityTrail, hireGuardian } from '../domains/d07_trails';
 import { UserProfile } from '../domains/d01_auth';
 
 interface HireHandshakeModalProps {
   guardian: VibeGuardian;
+  trail?: CommunityTrail | null;
   currentUser: UserProfile | null;
   onClose: () => void;
   onSuccess: (guardianId: string, newHiresCount: number) => void;
@@ -13,6 +14,7 @@ interface HireHandshakeModalProps {
 
 export const HireHandshakeModal: React.FC<HireHandshakeModalProps> = ({
   guardian,
+  trail,
   currentUser,
   onClose,
   onSuccess,
@@ -27,10 +29,10 @@ export const HireHandshakeModal: React.FC<HireHandshakeModalProps> = ({
 
     if (result.success) {
       onToast(`🤝 D22 Vibe Handshake established with ${guardian.name}! +${result.vqEarned} VQ awarded.`);
-      onSuccess(guardian.id, guardian.hiresCount + 1);
+      onSuccess(guardian.id, (guardian.hiresCount ?? 0) + 1);
       onClose();
     } else {
-      onToast('Failed to establish handshake.');
+      onToast('Handshake issuance is not available yet. No Handshake or reward was created.');
     }
   };
 
@@ -58,6 +60,7 @@ export const HireHandshakeModal: React.FC<HireHandshakeModalProps> = ({
 
         {/* Content */}
         <div className="p-6 space-y-5 text-center">
+          {trail && <p className="text-xs text-neutral-300">Selected Trail: <strong>{trail.title}</strong></p>}
           {/* Guardian Highlight */}
           <div className="flex items-center space-x-4 p-4 rounded-2xl bg-neutral-950 border border-neutral-800 text-left">
             <div className="relative">
@@ -78,7 +81,7 @@ export const HireHandshakeModal: React.FC<HireHandshakeModalProps> = ({
                 <span className="font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
                   {guardian.hourlyRate ? `$${guardian.hourlyRate} / hr` : 'Free Hangout'}
                 </span>
-                <span className="text-neutral-400">· {guardian.hiresCount} hires</span>
+                <span className="text-neutral-400">{guardian.hiresCount != null ? `· ${guardian.hiresCount} hires` : ''}</span>
               </div>
             </div>
           </div>

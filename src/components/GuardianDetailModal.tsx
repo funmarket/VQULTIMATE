@@ -46,7 +46,7 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
   // Find trails curated by this guardian
   const curatedTrails = trails.filter(
     (t) =>
-      t.guardian_name.toLowerCase() === guardian.name.toLowerCase() ||
+      (t.guardian_name || '').toLowerCase() === guardian.name.toLowerCase() ||
       (t.guardian_handle && t.guardian_handle.toLowerCase() === guardian.handle.toLowerCase()) ||
       guardian.curated_trail_ids?.includes(t.id)
   );
@@ -129,7 +129,7 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
         {/* Hero Photo & Sentinel Credentials */}
         <div className="relative aspect-[4/3] w-full bg-neutral-950 overflow-hidden">
           <img
-            src={guardian.avatar_url}
+            src={guardian.avatar_url || guardian.avatarUrl}
             alt={guardian.name}
             className="w-full h-full object-cover"
           />
@@ -139,11 +139,11 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
           <div className="absolute top-4 left-4 flex flex-col space-y-1.5 z-20">
             <span className="px-3 py-1 rounded-full bg-emerald-500/90 text-neutral-950 font-black text-[10px] uppercase tracking-wider backdrop-blur-md flex items-center space-x-1.5 shadow-lg">
               <span className="w-2 h-2 rounded-full bg-neutral-950 animate-pulse" />
-              <span>{guardian.status === 'patrolling' ? 'PATROLLING' : 'ON DUTY'}</span>
+              <span>{'REGISTERED'}</span>
             </span>
             <span className="px-3 py-1 rounded-full bg-neutral-900/80 text-amber-300 font-bold text-[10px] uppercase tracking-wider backdrop-blur-md border border-amber-500/30 flex items-center space-x-1">
               <Shield className="w-3 h-3 text-amber-400" />
-              <span>{guardian.tier || 'PRO GUARDIAN'}</span>
+              <span>{guardian.type === 'pro' ? 'PRO GUARDIAN' : 'LOCAL LEGEND'}</span>
             </span>
           </div>
 
@@ -162,7 +162,7 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center space-x-1 text-teal-300 font-bold bg-teal-500/10 px-3 py-1.5 rounded-xl border border-teal-500/30">
               <Award className="w-3.5 h-3.5 text-teal-400" />
-              <span>Trust Rating: {guardian.trust_score}%</span>
+              <span>Selfie freshness: {new Date(guardian.selfieCapturedAt).toLocaleDateString()}</span>
             </div>
             <div className="flex items-center space-x-1 text-orange-400 font-bold bg-orange-500/10 px-3 py-1.5 rounded-xl border border-orange-500/30">
               <MapPin className="w-3.5 h-3.5" />
@@ -218,7 +218,7 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-bold text-teal-400">{trail.difficulty}</span>
-                        <span className="text-xs font-bold text-amber-300">+{trail.vq_reward} VQ</span>
+                        <span className="text-xs font-bold text-amber-300">Trail itinerary</span>
                       </div>
                       <h5 className="font-bold text-xs text-white truncate group-hover:text-teal-300 transition">
                         {trail.title}

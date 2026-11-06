@@ -5,56 +5,58 @@ import { UserProfile } from '../domains/d01_auth';
 
 interface CurateTrailModalProps {
   user: UserProfile | null;
+  availableTrails: CommunityTrail[];
   onClose: () => void;
   onCreated: (trail: CommunityTrail) => void;
   onToast: (msg: string) => void;
+  onRequireSignIn: () => void;
+  initialTrail?: CommunityTrail | null;
+  initialIsTour?: boolean;
 }
 
 export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
   user,
+  availableTrails,
   onClose,
   onCreated,
-  onToast
+  onToast,
+  onRequireSignIn,
+  initialTrail = null,
+  initialIsTour = false
 }) => {
-  const [isTour, setIsTour] = useState(false);
-  const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('FULL DAY CIRCUIT');
-  const [city, setCity] = useState('Tunis, Tunisia');
-  const [story, setStory] = useState('');
-  const [vibeTagsInput, setVibeTagsInput] = useState('tunis, culture, sunset');
-  const [imageUrl, setImageUrl] = useState('https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80');
-  const [pricePerPerson, setPricePerPerson] = useState<number>(50);
-  const [durationHours, setDurationHours] = useState<number>(4.5);
-  const [flow, setFlow] = useState<string[]>(['🌅', '🌆', '🌙']);
+  const [isTour, setIsTour] = useState(initialIsTour);
+  const [sourceTrailId, setSourceTrailId] = useState(initialTrail?.id || '');
+  const [title, setTitle] = useState(initialTrail?.title ? initialTrail.title + ' (Remix)' : '');
+  const [category, setCategory] = useState(initialTrail?.category || 'FULL DAY CIRCUIT');
+  const [city, setCity] = useState(initialTrail?.city || '');
+  const [story, setStory] = useState(initialTrail?.story || '');
+  const [vibeTagsInput, setVibeTagsInput] = useState(initialTrail?.vibeTags?.join(', ') || '');
+  const [imageUrl, setImageUrl] = useState(initialTrail?.imageUrl || '');
+  const [pricePerPerson, setPricePerPerson] = useState<number>(0);
+  const [durationHours, setDurationHours] = useState<number>(initialTrail?.durationHours || 1);
+  const [flow, setFlow] = useState<string[]>(initialTrail?.flowSequence || ['🌅', '🌆', '🌙']);
 
-  const [stops, setStops] = useState<TrailStop[]>([
-    {
-      id: 'stop-1',
-      name: 'Avenue Habib Bourguiba, La Marsa, Tunis',
-      address: 'Avenue Habib Bourguiba, La Marsa, Tunis',
-      vibeNote: 'Morning mint tea with toasted pine nuts and fresh hot bambalouni pastries.',
-      timeOfDay: 'Morning',
-      durationMinutes: 60
-    },
-    {
-      id: 'stop-2',
-      name: 'Rue Hedi Zarrouk, Sidi Bou Said, Tunis',
-      address: 'Rue Hedi Zarrouk, Sidi Bou Said, Tunis',
-      vibeNote: 'Panoramic Mediterranean cliff views, cobalt blue doors, and jasmine blossoms.',
-      timeOfDay: 'Sunset',
-      durationMinutes: 90
-    },
-    {
-      id: 'stop-3',
-      name: 'Les Berges du Lac, Tunis',
-      address: 'Les Berges du Lac, Tunis',
-      vibeNote: 'Underground electronic music rhythm and evening lakeside lounge gathering.',
-      timeOfDay: 'Night',
-      durationMinutes: 90
-    }
-  ]);
+  const [stops, setStops] = useState<TrailStop[]>(
+    initialTrail?.stops?.length ? initialTrail.stops.map(stop => ({...stop})) :
+    [{ id: 'stop-1', name: '', address: '', vibeNote: '', timeOfDay: 'Morning', durationMinutes: 60 }]
+  );
 
   const [submitting, setSubmitting] = useState(false);
+
+  const applySourceTrail = (sourceId: string) => {
+    setSourceTrailId(sourceId);
+    const original = availableTrails.find(trail => trail.id === sourceId);
+    if (!original) return;
+    setTitle(original.title);
+    setCategory(original.category);
+    setCity(original.city);
+    setStory(original.story);
+    setVibeTagsInput(original.vibeTags.join(', '));
+    setImageUrl(original.imageUrl);
+    setDurationHours(original.durationHours);
+    setStops((original.stops || []).map(stop => ({...stop})));
+    setFlow(original.flowSequence);
+  };
 
   const handleAddStop = () => {
     const newStop: TrailStop = {
@@ -81,10 +83,13 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) { onRequireSignIn(); return; }
     if (!title.trim()) {
       onToast('Please provide a descriptive trail title.');
       return;
     }
+    if (isTour && (!user || !['pro','business'].includes(user.accountType || ''))) { onToast('Only Pro and Business accounts can publish Tours.'); return; }
+    if (isTour && (!Number.isFinite(pricePerPerson) || pricePerPerson <= 0)) { onToast('Enter the actual Tour price.'); return; }
     if (stops.some((s) => !s.name.trim())) {
       onToast('Please give a title/location to all itinerary stops.');
       return;
@@ -98,18 +103,19 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
 
     const result = await createCommunityTrail({
       title: title.trim(),
-      story: story.trim() || 'Community curated multi-stop cultural trail.',
+      story: story.trim(),
       category,
       city: city.trim(),
-      vibeTags: tags.length ? tags : ['culture', 'trail'],
+      vibeTags: tags,
       imageUrl,
-      durationHours: Number(durationHours) || 3.5,
+      durationHours: Number(durationHours) || 0,
       isTour,
+      forkedFromTrailId: sourceTrailId || undefined,
       pricePerPerson: isTour ? Number(pricePerPerson) : undefined,
       flowSequence: flow,
-      authorName: user?.full_name || 'Community Pathfinder',
-      authorHandle: user?.username ? `@${user.username}` : '@pathfinder',
-      authorAvatarUrl: user?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+      authorName: user.full_name,
+      authorHandle: `@${user.username}`,
+      authorAvatarUrl: user.avatar_url,
       stops
     });
 
@@ -134,7 +140,7 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
             </div>
             <div>
               <h3 className="font-black text-sm text-white">
-                {isTour ? 'Curate Pro Vibe Tour' : 'Curate Cultural Vibe Trail'}
+                {isTour ? 'Curate Vibe Tour' : 'Curate Cultural Vibe Trail'}
               </h3>
               <p className="text-[10px] text-neutral-400">D07 Local Knowledge & Curation Engine</p>
             </div>
@@ -164,14 +170,20 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setIsTour(true)}
+              onClick={() => {
+                if (!user) { onRequireSignIn(); return; }
+                if (!['pro', 'business'].includes(user.accountType || '')) {
+                  onToast('Only Pro and Business accounts can create Tours.'); return;
+                }
+                setIsTour(true);
+              }}
               className={`py-2 px-3 rounded-xl font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer ${
                 isTour
                   ? 'bg-amber-500 text-neutral-950 shadow-md shadow-amber-500/20'
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
-              <span>⬡ Pro Vibe Tour</span>
+              <span>⬡ Vibe Tour</span>
             </button>
           </div>
 
@@ -309,7 +321,19 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
             </div>
           </div>
 
-          {/* Itinerary Stops Builder */}
+          {isTour && (
+        <div className="space-y-2">
+          <label className="block text-xs font-bold text-amber-300">Reuse an Existing or Adopted Trail</label>
+          <select value={sourceTrailId} onChange={event => applySourceTrail(event.target.value)} className="w-full bg-neutral-900 text-white border border-neutral-700 rounded-xl p-2">
+            <option value="">Create a new itinerary</option>
+            {availableTrails.filter(trail => !trail.isTour).map(trail =>
+              <option key={trail.id} value={trail.id}>{trail.title} — @{trail.authorHandle.replace(/^@/, '')}</option>
+            )}
+          </select>
+        </div>
+      )}
+
+      {/* Itinerary Stops Builder */}
           <div className="space-y-2 pt-2 border-t border-neutral-800">
             <div className="flex items-center justify-between">
               <span className="font-bold text-white text-xs flex items-center space-x-1.5">

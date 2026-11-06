@@ -17,18 +17,23 @@ import {
 import {
   fetchCulturalTrails,
   fetchVibeGuardians,
+  toggleSavedTrail,
   CommunityTrail,
+  CulturalTrail,
   VibeGuardian,
   TrailWaypoint,
   isGuardianFresh,
   countExpiredGuardians
 } from '../domains/d07_trails';
 import { UserProfile } from '../domains/d01_auth';
+import { supabase } from '../lib/supabase';
 import { TrailDetailModal } from './TrailDetailModal';
 import { GuardianDetailModal } from './GuardianDetailModal';
 import { CurateTrailModal } from './CurateTrailModal';
 import { LiveSelfieModal } from './LiveSelfieModal';
 import { HireHandshakeModal } from './HireHandshakeModal';
+import { HireGuardianForTrailModal } from './HireGuardianForTrailModal';
+import { TourReservationModal } from './TourReservationModal';
 
 interface ExploreTabProps {
   user?: UserProfile | null;
@@ -71,6 +76,10 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
   const [selectedTrail, setSelectedTrail] = useState<CommunityTrail | null>(null);
   const [selectedGuardian, setSelectedGuardian] = useState<VibeGuardian | null>(null);
   const [selectedHireGuardian, setSelectedHireGuardian] = useState<VibeGuardian | null>(null);
+  const [hireTrail, setHireTrail] = useState<CommunityTrail | null>(null);
+  const [selectedHireTrailContext, setSelectedHireTrailContext] = useState<CommunityTrail | null>(null);
+  const [adoptingTrail, setAdoptingTrail] = useState<CommunityTrail | null>(null);
+  const [reservationTour, setReservationTour] = useState<CommunityTrail | null>(null);
   const [isCurateOpen, setIsCurateOpen] = useState(false);
   const [isSelfieModalOpen, setIsSelfieModalOpen] = useState(false);
   const [exploreToast, setExploreToast] = useState<string | null>(null);
@@ -111,14 +120,20 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     Promise.all([
       fetchNearbyVibePlaces(locationState.coords, selectedCategory),
       fetchCulturalTrails(),
-      fetchVibeGuardians()
-    ]).then(([placesData, trailsData, guardiansData]) => {
+      fetchVibeGuardians(),
+      supabase.auth.getUser()
+    ]).then(([placesData, trailsData, guardiansData, auth]) => {
       setPlaces(placesData);
       setTrails(trailsData);
       setGuardians(guardiansData);
+      const aliases = [user?.id, auth.data.user?.id, auth.data.user?.id ? 'usr_' + auth.data.user.id : null];
+      setSavedTrailIds(new Set(trailsData.filter(t => t.savedBy?.some(id => aliases.includes(id))).map(t => t.id)));
       setLoading(false);
+    }).catch(error => {
+      setLoading(false);
+      showToast(error instanceof Error ? error.message : 'Unable to load Explore data.');
     });
-  }, [locationState.coords?.lat, locationState.coords?.lng, selectedCategory]);
+  }, [locationState.coords?.lat, locationState.coords?.lng, selectedCategory, user?.id]);
 
   // 3. Initialize MapLibre GL dark-matter map (Neutral world center until device location arrives)
   useEffect(() => {
@@ -273,6 +288,30 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     };
   }, [places, locationState.coords]);
 
+  const handleSaveTrail = async (trailId: string) => {
+    if (!user) { onRequireAuth?.(); return; }
+    try {
+      const saved = await toggleSavedTrail(trailId);
+      setTrails(prev => prev.map(t => t.id === trailId ? saved : t));
+      setSelectedTrail(prev => prev?.id === trailId ? saved : prev);
+      setSavedTrailIds(prev => {
+        const next = new Set(prev);
+        if (saved.savedBy?.includes(user.id)) next.add(trailId);
+        else next.delete(trailId);
+        return next;
+      });
+      showToast(saved.savedBy?.includes(user.id) ? 'Trail saved to your account.' : 'Trail removed from bookmarks.');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Could not update Trail save.');
+    }
+  };
+  const openAdoptEditor = (source: CommunityTrail) => {
+    if (!user) { onRequireAuth?.(); return; }
+    setSelectedTrail(null);
+    setAdoptingTrail(source);
+    setIsCurateOpen(true);
+  };
+
   const handleManualCalibrate = () => {
     setLocationState({ status: 'requesting', coords: null });
     getDeviceLocation().then((res) => {
@@ -303,8 +342,8 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
   const handleStartTrailNav = (trail: CulturalTrail) => {
     setSelectedTrail(null);
-    if (trail.waypoints && trail.waypoints.length > 0 && mapInstance.current) {
-      const wp = trail.waypoints[0];
+    const wp = trail.waypoints?.find(point => Number.isFinite(point.lat) && Number.isFinite(point.lng));
+    if (wp && mapInstance.current) {
       try {
         mapInstance.current.flyTo({
           center: [wp.lng, wp.lat],
@@ -317,7 +356,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         console.warn('Map fly error:', err);
       }
     }
-    showToast(`Radar navigation initiated for "${trail.title}"! Approaching Stop 1.`);
+    showToast(wp ? `Focused map on "${wp.title || wp.name}" for Trail "${trail.title}".` : 'This Trail has no verified waypoint coordinates for map navigation.');
   };
 
   const handleLocateGuardian = (g: VibeGuardian) => {
@@ -334,11 +373,11 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         console.warn('Map fly error:', err);
       }
     }
-    showToast(`Radar locked onto ${g.name}'s jurisdiction (${g.district}).`);
+    showToast(g.lng !== undefined && g.lat !== undefined ? `Located registered Guardian ${g.name} on the map.` : 'This Guardian has not shared a mapped location.');
   };
 
   const handleWaypointCheckIn = (wp: TrailWaypoint, trail: CulturalTrail) => {
-    showToast(`Waypoint Verified: "${wp.title}" (+${wp.vq_reward} VQ awarded to your purse)!`);
+    showToast(`Opened waypoint "${wp.title || wp.name}" in Trail "${trail.title}". Reward verification is not yet available.`);
   };
 
   return (
@@ -656,7 +695,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                   <div
                     key={trail.id}
                     onClick={() => setSelectedTrail(trail)}
-                    className="w-[300px] sm:w-[330px] flex-shrink-0 snap-start rounded-3xl bg-neutral-950 border border-neutral-800/90 hover:border-[#00e599]/60 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col justify-between group shadow-2xl relative"
+                    className="w-[min(300px,calc(100vw-2rem))] sm:w-[330px] flex-shrink-0 snap-start rounded-3xl bg-neutral-950 border border-neutral-800/90 hover:border-[#00e599]/60 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col justify-between group shadow-2xl relative"
                   >
                     {/* Media Banner Section with Top Header Overlays */}
                     <div className="relative h-44 w-full overflow-hidden bg-neutral-900">
@@ -682,13 +721,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSavedTrailIds((prev) => {
-                              const next = new Set(prev);
-                              if (next.has(trail.id)) next.delete(trail.id);
-                              else next.add(trail.id);
-                              return next;
-                            });
-                            showToast(isBookmarked ? 'Removed from saved trails.' : 'Saved to your Vibe trails bookmark!');
+                            void handleSaveTrail(trail.id);
                           }}
                           className={`p-1.5 rounded-full backdrop-blur-md border transition cursor-pointer ${
                             isBookmarked
@@ -751,12 +784,12 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                       <div className="pt-3 border-t border-neutral-800/80 flex items-center justify-between gap-2">
                         <div className="flex items-center space-x-2 min-w-0 flex-1">
                           <img
-                            src={trail.authorAvatarUrl || trail.guardian_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'}
+                            src={trail.authorAvatarUrl || trail.guardian_avatar}
                             alt={trail.authorName || trail.guardian_name || 'Curator'}
                             className="w-6 h-6 rounded-full object-cover border border-[#00e599]/40 flex-shrink-0"
                           />
                           <span className="text-xs font-bold text-white truncate">
-                            {trail.authorName || trail.guardian_name || 'MR B'}
+                            {trail.authorName || trail.guardian_name}
                           </span>
                         </div>
 
@@ -766,11 +799,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              const matchedGuardian = guardians.find(
-                                (g) => g.name.toLowerCase() === (trail.authorName || trail.guardian_name || '').toLowerCase()
-                              ) || guardians[0];
-                              if (matchedGuardian) setSelectedHireGuardian(matchedGuardian);
-                              else showToast('Initiating handshake reservation for trail curator.');
+                              setHireTrail(trail);
                             }}
                             className="px-2.5 py-1.5 rounded-xl border border-purple-500/50 hover:border-purple-400 bg-purple-950/40 text-purple-300 text-[11px] font-bold transition flex items-center space-x-1 cursor-pointer"
                           >
@@ -811,22 +840,25 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           {/* Top Avatars Preview: "3 online +12" */}
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center -space-x-2">
-              {guardians.slice(0, 3).map((g, i) => (
-                <img
-                  key={g.id || i}
-                  src={g.avatarUrl || g.avatar_url}
-                  alt={g.name}
-                  className="w-8 h-8 rounded-full object-cover border-2 border-neutral-950 ring-1 ring-purple-500/40"
-                />
-              ))}
+              {guardians.filter(isGuardianFresh).slice(0, 3).map((g, i) =>
+                g.avatarUrl || g.avatar_url ? (
+                  <img key={g.id || i} src={g.avatarUrl || g.avatar_url} alt={g.name}
+                    className="w-8 h-8 rounded-full object-cover border-2 border-neutral-950 ring-1 ring-purple-500/40" />
+                ) : (
+                  <span key={g.id || i} aria-label={g.name}
+                    className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-800 border-2 border-neutral-950">
+                    <Shield className="w-4 h-4 text-neutral-400" />
+                  </span>
+                )
+              )}
               <div className="w-8 h-8 rounded-full bg-purple-900 border-2 border-neutral-950 flex items-center justify-center text-[10px] font-bold text-purple-200">
-                +{guardians.length > 3 ? guardians.length - 3 : 12}
+                +{Math.max(0, guardians.filter(isGuardianFresh).length - 3)}
               </div>
             </div>
 
             <div className="flex items-center space-x-1.5 text-[11px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>3 Online in Sector</span>
+              <span>{guardians.filter(isGuardianFresh).length} Fresh Selfies</span>
             </div>
           </div>
 
@@ -838,11 +870,11 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
             </span>
             <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-950/60 text-emerald-300 px-2.5 py-1 rounded-xl border border-emerald-500/30 flex items-center space-x-1">
               <Clock className="w-3 h-3 text-emerald-400" />
-              <span>7-Day Live Selfie Verified</span>
+              <span>Seven-Day Selfie Freshness</span>
             </span>
             <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-950/60 text-amber-300 px-2.5 py-1 rounded-xl border border-amber-500/30 flex items-center space-x-1">
               <Handshake className="w-3 h-3 text-amber-400" />
-              <span>Handshake Proof System</span>
+              <span>Handshake Integration Pending</span>
             </span>
           </div>
 
@@ -852,14 +884,14 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
               Vibe Guardians
             </h2>
             <p className="text-xs text-neutral-300 leading-relaxed font-light">
-              Connect with verified tour guides and friendly locals. Pro Guardians show advance upfront rates; Local Legends offer free hangouts. Tap <span className="font-bold text-amber-300">Hire</span> or <span className="font-bold text-teal-300">Vibe</span> to establish official 🤝 Handshake proof.
+              Connect with verified tour guides and friendly locals. Pro Guardians show advance upfront rates; Local Legends offer free hangouts. Registration and selfie renewal are available now. Handshake and rewards integration comes later.
             </p>
           </div>
 
           {/* Primary Action Buttons: BECOME A GUARDIAN / IN-APP SELFIE & 7D Hidden Badge */}
           <div className="relative z-10 flex items-center space-x-2 pt-1 flex-wrap gap-y-2">
             <button
-              onClick={() => setIsSelfieModalOpen(true)}
+              onClick={() => { if (!user) onRequireAuth?.(); else setIsSelfieModalOpen(true); }}
               className="px-4 py-3 rounded-2xl bg-[#8b2cf5] hover:bg-[#7823d6] text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-600/30 transition flex items-center space-x-2 cursor-pointer active:scale-98"
             >
               <Camera className="w-4 h-4" />
@@ -913,12 +945,11 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
         {/* Guardian Profile Cards (matching image_a6756c21.png and image_52948d57.png) */}
         {(() => {
-          const filtered = guardians.filter((g) => {
-            if (guardianFilter === 'pro') return g.type === 'pro';
-            if (guardianFilter === 'local') return g.type === 'local';
-            // 'top': return active/fresh verified guardians
-            return isGuardianFresh(g) && g.isLive !== false;
-          });
+          const filtered = guardians.filter(isGuardianFresh).filter(g =>
+            guardianFilter === 'pro' ? g.type === 'pro'
+              : guardianFilter === 'local' ? g.type === 'local'
+                : true
+          );
 
           if (filtered.length === 0) {
             return (
@@ -939,20 +970,26 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                 return (
                   <div
                     key={g.id}
-                    className="rounded-3xl bg-neutral-950 border border-neutral-800/90 p-5 shadow-2xl space-y-4 hover:border-purple-500/40 transition duration-300"
+                    onClick={() => setSelectedGuardian(g)}
+                    onKeyDown={event => { if (event.key === 'Enter') setSelectedGuardian(g); }}
+                    role="button" tabIndex={0}
+                    className="rounded-3xl bg-neutral-950 border border-neutral-800/90 p-5 shadow-2xl space-y-4 hover:border-purple-500/40 transition duration-300 cursor-pointer"
                   >
                     {/* Top Identity Row */}
                     <div className="flex items-start space-x-3.5">
                       {/* Avatar with Live Indicator */}
                       <div className="relative flex-shrink-0">
-                        <img
-                          src={g.avatarUrl || g.avatar_url}
-                          alt={g.name}
-                          className="w-16 h-16 rounded-2xl object-cover border-2 border-neutral-800"
-                        />
+                        {g.avatarUrl || g.avatar_url ? (
+                          <img src={g.avatarUrl || g.avatar_url} alt={g.name}
+                            className="w-16 h-16 rounded-2xl object-cover border-2 border-neutral-800" />
+                        ) : (
+                          <span aria-label={g.name} className="w-16 h-16 rounded-2xl bg-neutral-900 border-2 border-neutral-800 flex items-center justify-center">
+                            <Shield className="w-7 h-7 text-neutral-500" />
+                          </span>
+                        )}
                         <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/90 border border-emerald-500/50 text-[9px] font-black text-emerald-400 flex items-center space-x-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          <span>LIVE</span>
+                          <span>SELFIE</span>
                         </div>
                       </div>
 
@@ -972,20 +1009,17 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
                         <p className="text-xs text-neutral-400 truncate flex items-center space-x-1">
                           <MapPin className="w-3 h-3 text-neutral-500 flex-shrink-0" />
-                          <span>{g.city || g.district} · {g.age || 32} yrs</span>
+                          <span>{g.city || g.district}</span>
                         </p>
 
                         {/* Pricing & Endorsement Pills */}
                         <div className="flex items-center space-x-2 pt-0.5 flex-wrap gap-y-1">
                           <span className="px-2.5 py-0.5 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-bold flex items-center space-x-1">
                             <span>💰</span>
-                            <span>{g.hourlyRate ? `$${g.hourlyRate} / hr` : 'Free Hangout'}</span>
+                            <span>{g.type === 'local' ? 'Free Hangout' : g.pricingType === 'flat' ? `${g.flatRate} flat tour` : `${g.hourlyRate} / hr`}</span>
                           </span>
 
-                          <span className="px-2.5 py-0.5 rounded-lg bg-orange-500/10 text-orange-300 border border-orange-500/20 text-xs font-bold flex items-center space-x-1">
-                            <span>⚡</span>
-                            <span>Good Vibe ({g.endorsementsCount || 1})</span>
-                          </span>
+
                         </div>
                       </div>
                     </div>
@@ -996,19 +1030,19 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                     </p>
 
                     {/* Offered Vibe Trails Sub-card */}
-                    {g.offeredTrailTitle && (
+                    {g.offeredTrailId && trails.some(trail => trail.id === g.offeredTrailId) && (
                       <div className="p-3 rounded-2xl bg-neutral-900 border border-neutral-800 space-y-1.5">
                         <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 font-mono">
                           OFFERED VIBE TRAILS (1/5):
                         </span>
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold text-white truncate max-w-[200px]">
-                            {g.offeredTrailTitle}
+                            {trails.find(trail => trail.id === g.offeredTrailId)?.title}
                           </span>
                           <button
                             type="button"
                             onClick={() => {
-                              const found = trails.find((t) => t.id === g.offeredTrailId) || trails[0];
+                              const found = trails.find((t) => t.id === g.offeredTrailId);
                               if (found) setSelectedTrail(found);
                             }}
                             className="px-3 py-1 rounded-xl bg-[#00e599] hover:bg-[#00c985] text-neutral-950 font-black text-[10px] uppercase tracking-wider cursor-pointer"
@@ -1024,22 +1058,20 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                       <div className="flex items-center space-x-3">
                         <button
                           type="button"
-                          onClick={() => setSelectedHireGuardian(g)}
+                          disabled title="Hiring will be enabled in the deferred D22 Handshake checkpoint"
                           className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-xs uppercase tracking-wider flex items-center space-x-1.5 cursor-pointer shadow-md shadow-amber-500/20 active:scale-95"
                         >
                           <Handshake className="w-3.5 h-3.5" />
                           <span>HIRE</span>
                         </button>
                         <span className="text-xs font-bold text-neutral-400 font-mono">
-                          {g.hiresCount} hires
+                          Hiring pending
                         </span>
                       </div>
 
                       <button
                         type="button"
-                        onClick={() => {
-                          showToast(`Direct message thread opened with ${g.name}.`);
-                        }}
+                        disabled title="Messaging is not wired in this Explore checkpoint"
                         className="px-4 py-2 rounded-xl bg-[#8b2cf5] hover:bg-[#7823d6] text-white font-black text-xs uppercase tracking-wider flex items-center space-x-1.5 cursor-pointer shadow-md shadow-purple-600/20 active:scale-95"
                       >
                         <MessageCircle className="w-3.5 h-3.5" />
@@ -1062,6 +1094,10 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           onStartNavigation={handleStartTrailNav}
           onCheckInWaypoint={handleWaypointCheckIn}
           onToast={showToast}
+          onAdoptTrail={openAdoptEditor}
+          onReserveTour={tour => {setSelectedTrail(null);setReservationTour(tour);}}
+          onToggleSave={handleSaveTrail}
+          isSaved={savedTrailIds.has(selectedTrail.id)}
         />
       )}
 
@@ -1086,12 +1122,17 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
       {isCurateOpen && (
         <CurateTrailModal
           user={user}
-          onClose={() => setIsCurateOpen(false)}
+          availableTrails={trails}
+          initialTrail={adoptingTrail}
+          initialIsTour={trailSubTab === 'tours' && !adoptingTrail}
+          onClose={() => { setIsCurateOpen(false); setAdoptingTrail(null); }}
           onCreated={(newTrail) => {
             setTrails((prev) => [newTrail, ...prev]);
+            setAdoptingTrail(null);
             showToast(`Curated trail "${newTrail.title}" is now active in directory!`);
           }}
           onToast={showToast}
+          onRequireSignIn={() => onRequireAuth?.()}
         />
       )}
 
@@ -1100,26 +1141,46 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         <LiveSelfieModal
           user={user}
           onClose={() => setIsSelfieModalOpen(false)}
-          onVerified={(timestamp) => {
-            setGuardians((prev) =>
-              prev.map((g) => ({
-                ...g,
-                selfieCapturedAt: timestamp,
-                status: 'on_duty',
-                isLive: true
-              }))
+          onVerified={() => {
+            void fetchVibeGuardians().then(setGuardians).catch(error =>
+              showToast(error instanceof Error ? error.message : 'Guardian directory refresh failed.')
             );
+          }}
+          availableTrails={trails.filter(trail => !trail.isTour).map(trail => ({id:trail.id,title:trail.title}))}
+          onGuardianSaved={guardian => {
+            setGuardians(prev => [guardian, ...prev.filter(g => g.id !== guardian.id)]);
           }}
           onToast={showToast}
         />
       )}
 
+      {reservationTour && <TourReservationModal
+        tour={reservationTour}
+        onClose={()=>setReservationTour(null)}
+        onRequireAuth={()=>onRequireAuth?.()}
+        onToast={showToast}
+      />}
+
+      {/* Selected Trail -> real fresh Pro Guardian directory, without arbitrary selection */}
+      <HireGuardianForTrailModal
+        trail={hireTrail}
+        guardians={guardians}
+        isOpen={Boolean(hireTrail)}
+        onClose={() => setHireTrail(null)}
+        onSelectGuardian={(guardian) => {
+          setSelectedHireTrailContext(hireTrail);
+          setHireTrail(null);
+          setSelectedHireGuardian(guardian);
+        }}
+      />
+
       {/* Hire & Vibe Handshake Proof Modal */}
       {selectedHireGuardian && (
         <HireHandshakeModal
           guardian={selectedHireGuardian}
+          trail={selectedHireTrailContext}
           currentUser={user}
-          onClose={() => setSelectedHireGuardian(null)}
+          onClose={() => { setSelectedHireGuardian(null); setSelectedHireTrailContext(null); }}
           onSuccess={(gId, newCount) => {
             setGuardians((prev) =>
               prev.map((g) => (g.id === gId ? { ...g, hiresCount: newCount } : g))
