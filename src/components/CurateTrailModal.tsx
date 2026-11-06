@@ -395,8 +395,10 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
                     required
                     value={stop.name}
                     onChange={(e) => {
-                      handleUpdateStop(idx, 'name', e.target.value);
-                      handleUpdateStop(idx, 'address', e.target.value);
+                      const location = e.currentTarget.value;
+                      setStops(current => current.map((item, i) =>
+                        i === idx ? { ...item, name: location, address: location } : item
+                      ));
                     }}
                     placeholder="Stop location / landmark name"
                     className="w-full px-2.5 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-500 text-xs focus:outline-none focus:border-emerald-500"
