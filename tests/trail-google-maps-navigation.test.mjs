@@ -50,12 +50,12 @@ test('Best leaves Google Maps travel mode unspecified', () => {
 });
 
 test('No fabricated coordinates or skipped stops', () => {
-  const noPosition = {...stop(2), lat: undefined};
+  const noPosition = {...stop(2), address: '', lat: undefined};
   const invalid = buildTrailRoutePlan(makeTrail([stop(1), noPosition, stop(3)]), 'walking');
   assert.equal(invalid.segments.length, 0);
   assert.match(invalid.error, /Stop 2/);
   assert.equal(buildTrailRoutePlan(makeTrail([stop(1)]), 'driving').segments.length, 0);
-  assert.equal(buildTrailRoutePlan(makeTrail([stop(1), {...stop(2), lng: 190}]), 'driving').segments.length, 0);
+  assert.equal(buildTrailRoutePlan(makeTrail([stop(1), {...stop(2), address: '', lng: 190}]), 'driving').segments.length, 0);
 });
 
 test('Four exact approved button labels and per-stop navigation appear in detail UI', () => {
