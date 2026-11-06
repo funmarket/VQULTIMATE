@@ -10,11 +10,16 @@ test('the stop location is an enabled controlled text input', () => {
   assert.doesNotMatch(match[1], /disabled=|readOnly=/);
 });
 
-test('stop name and address update atomically in one state transaction', () => {
-  assert.match(source, /const location = e\.currentTarget\.value/);
-  assert.match(source, /setStops\(current => current\.map\(\(item, i\) =>/);
-  assert.match(source, /i === idx \? \{ \.\.\.item, name: location, address: location \} : item/);
-  assert.doesNotMatch(source, /handleUpdateStop\(idx, 'name', e\.target\.value\);\s*handleUpdateStop\(idx, 'address', e\.target\.value\)/);
+test('stop name and address are independent editable fields', () => {
+  assert.match(source, /handleUpdateStop\(idx, 'name', e\.target\.value\)/);
+  assert.match(source, /handleUpdateStop\(idx, 'address', e\.target\.value\)/);
+  assert.doesNotMatch(source, /name: location, address: location/);
+});
+
+test('the address field is optional for stops with valid coordinates', () => {
+  assert.match(source, /required=\{!\(typeof stop\.lat === 'number'/);
+  assert.match(source, /Math\.abs\(stop\.lat\) <= 90/);
+  assert.match(source, /Math\.abs\(stop\.lng\) <= 180/);
 });
 
 test('publishing continues to validate that every stop has a location', () => {
