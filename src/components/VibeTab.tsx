@@ -4,7 +4,7 @@ import {
   User, ChevronLeft, ChevronRight, Check, X, Compass, Radio, Users, CheckCircle2,
   Lock, AlertCircle
 } from 'lucide-react';
-import { fetchVibePosts, VibePostItem, fetchCommentsForPost, addCommentToPost, VibeComment } from '../domains/d05_vibe';
+import { fetchVibePosts, createSocialPost, fetchCommentsForPost, addCommentToPost, addReactionToPost, removeReactionFromPost, type SocialPost, type SocialComment } from '../domains/d12_social_content';
 import { fetchDemoProfiles, fetchPublicProfileByHandle, UserProfile } from '../domains/d02_users';
 import { fetchOrbitProfiles, fetchEchoProfiles, unfollowUser, followUser } from '../domains/d03_social_graph';
 import { fetchPendingPulls, fetchConfirmedVibes, acceptConnectionPull, passConnectionPull, ConnectionPull, ConfirmedVibe } from '../domains/d17_matching';
@@ -18,7 +18,7 @@ interface VibeTabProps {
 
 export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
   const [activeSubTab, setActiveSubTab] = useState<'gossip' | 'drift' | 'vibes' | 'orbit' | 'echo' | 'pulls'>('gossip');
-  const [posts, setPosts] = useState<VibePostItem[]>([]);
+  const [posts, setPosts] = useState<SocialPost[]>([]);
   const [demoProfiles, setDemoProfiles] = useState<UserProfile[]>([]);
   const [orbitProfiles, setOrbitProfiles] = useState<UserProfile[]>([]);
   const [echoProfiles, setEchoProfiles] = useState<UserProfile[]>([]);
@@ -26,9 +26,11 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
   const [confirmedVibes, setConfirmedVibes] = useState<ConfirmedVibe[]>([]);
   
   const [activePostId, setActivePostId] = useState<string | null>(null);
-  const [comments, setComments] = useState<VibeComment[]>([]);
+  const [comments, setComments] = useState<SocialComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [newPostCaption, setNewPostCaption] = useState('');
+  const [postSubmitting, setPostSubmitting] = useState(false);
+  const [postsError, setPostsError] = useState<string | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   
   // 1:1 D14 Chat State
@@ -44,7 +46,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchVibePosts().then(setPosts);
+    fetchVibePosts().then(setPosts).catch(error => setPostsError(error instanceof Error ? error.message : 'Could not load Gossip.'));
     fetchDemoProfiles().then(setDemoProfiles);
   }, []);
 
@@ -79,68 +81,72 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
 
   const handleOpenComments = async (postId: string) => {
     setActivePostId(postId);
-    const comms = await fetchCommentsForPost(postId);
-    setComments(comms);
+    setComments([]);
+    try {
+      setComments(await fetchCommentsForPost(postId));
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Comments could not be loaded.');
+    }
   };
 
   const handleSendComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activePostId || !newComment.trim() || !user) return;
-    const added = await addCommentToPost(activePostId, newComment, {
-      username: user.username,
-      avatar_url: user.avatar_url
-    });
-    if (added) {
-      setComments([...comments, added]);
+    try {
+      const added = await addCommentToPost(activePostId, newComment, user.id);
+      setComments(previous => [...previous, added]);
+      setPosts(previous => previous.map(post => post.id === activePostId
+        ? { ...post, comments_count: post.comments_count + 1 }
+        : post));
       setNewComment('');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Comment was not saved.');
     }
   };
 
-  const handleToggleLike = (postId: string) => {
-    setLikedPosts((prev) => {
-      const next = new Set(prev);
-      if (next.has(postId)) {
-        next.delete(postId);
-      } else {
-        next.add(postId);
-      }
-      return next;
-    });
-    setPosts((prevPosts) =>
-      prevPosts.map((p) => {
-        if (p.id === postId) {
-          const isLiked = likedPosts.has(postId);
-          return {
-            ...p,
-            reactions_count: Math.max(0, p.reactions_count + (isLiked ? -1 : 1))
-          };
-        }
-        return p;
-      })
-    );
-  };
-
-  const handleCreatePost = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newPostCaption.trim() || !user) {
-      showToast('Please sign in to publish a vibe post.');
+  const handleToggleLike = async (postId: string) => {
+    if (!user) {
+      showToast('Sign in to react to a post.');
       return;
     }
-    const newPost: VibePostItem = {
-      id: 'post_' + Date.now(),
-      user_id: user.id,
-      username: user.username,
-      avatar_url: user.avatar_url,
-      caption: newPostCaption,
-      image_url: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80',
-      selfie_url: user.avatar_url,
-      created_at: new Date().toISOString(),
-      reactions_count: 1,
-      comments_count: 0
-    };
-    setPosts([newPost, ...posts]);
-    setNewPostCaption('');
-    showToast('Vibe broadcast published to district live feed!');
+    const wasLiked = likedPosts.has(postId);
+    try {
+      if (wasLiked) await removeReactionFromPost(postId, user.id);
+      else await addReactionToPost(postId, user.id);
+      setLikedPosts(previous => {
+        const next = new Set(previous);
+        if (wasLiked) next.delete(postId);
+        else next.add(postId);
+        return next;
+      });
+      setPosts(previous => previous.map(post => post.id === postId
+        ? { ...post, reactions_count: Math.max(0, post.reactions_count + (wasLiked ? -1 : 1)) }
+        : post));
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Reaction was not saved.');
+    }
+  };
+
+  const handleCreatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (postSubmitting) return;
+    if (!newPostCaption.trim() || !user) {
+      showToast('Please sign in and write a post.');
+      return;
+    }
+    setPostSubmitting(true);
+    try {
+      const result = await createSocialPost(newPostCaption, user.id);
+      if (result.success && result.post) {
+        setPosts(previous => [result.post!, ...previous]);
+        setNewPostCaption('');
+        showToast('Post published.');
+      } else {
+        showToast(result.error || 'Post could not be saved.');
+      }
+    } finally {
+      setPostSubmitting(false);
+    }
   };
 
   // D14 Direct Message Flow with strict invariant: ECHO never grants DMs
