@@ -32,7 +32,8 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
   const [activePhoto, setActivePhoto] = useState(0);
   const gallery = trail.gallery || [];
   const visibleImages = gallery.length > 0
-    ? gallery.map(photo => photo.url).filter(Boolean)
+    ? [...gallery].sort((a, b) => Number(b.isCover) - Number(a.isCover))
+        .map(photo => photo.url).filter(Boolean)
     : [trail.imageUrl || trail.image_url || ''].filter(Boolean);
 
   const stops: TrailStop[] = trail.stops && trail.stops.length > 0
