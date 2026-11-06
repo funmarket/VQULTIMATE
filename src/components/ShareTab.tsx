@@ -2,13 +2,16 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Camera, Zap, Clock3, Video, X, RefreshCw, Share2, SwitchCamera, Circle, Square, AlertCircle, ArrowLeft } from 'lucide-react';
 import type { UserProfile } from '../domains/d01_auth';
 
-type Mode = 'shot' | 'check' | 'flash' | 'snap';
-type Stage = 'camera' | 'preview';
+type Mode = 'shot' | 'check' | 'flash' | 'snap' | 'dual';
+type Stage = 'camera' | 'selfie' | 'preview';
 type Mood = 'heart' | 'spark' | 'moments';
 
 interface ShareTabProps {
   user: UserProfile | null;
   onPostSuccess: () => void;
+  initialMode?: 'dual';
+  cameraOnly?: boolean;
+  onClose?: () => void;
 }
 
 const categories: { id: Mood; emoji: string; label: string; description: string }[] = [
@@ -16,11 +19,11 @@ const categories: { id: Mood; emoji: string; label: string; description: string 
   { id: 'spark', emoji: '🤗', label: 'FRIENDLY SPARK', description: 'Kindness and connection' },
   { id: 'moments', emoji: '🧘', label: 'SHARED MOMENTS', description: 'Help and shared experiences' },
 ];
-const names: Record<Mode, string> = { shot: 'Live Vibe Shot', check: 'VibeCheck', flash: 'Vibe Flash', snap: 'Vibe Snap' };
+const names: Record<Mode, string> = { shot: 'Live Vibe Shot', check: 'VibeCheck', flash: 'VibeFlash', snap: 'Vibe Snap', dual: 'Vibe Share · Dual Cam' };
 
 /** Share capture shell. Does not impersonate a D18 challenge or claim D12 publication. */
-export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: _onPostSuccess }) => {
-  const [mode, setMode] = useState<Mode | null>(null);
+export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: _onPostSuccess, initialMode, cameraOnly = false, onClose }) => {
+  const [mode, setMode] = useState<Mode | null>(initialMode ?? null);
   const [stage, setStage] = useState<Stage>('camera');
   const [facing, setFacing] = useState<'environment' | 'user'>('environment');
   const [ready, setReady] = useState(false);
@@ -35,6 +38,7 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
   const liveStream = useRef<MediaStream | null>(null);
   const recorder = useRef<MediaRecorder | null>(null);
   const recordedChunks = useRef<Blob[]>([]);
+  const dualScene = useRef<Blob | null>(null);
   const currentUrl = useRef<string | null>(null);
   const recordingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recordingInterval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -70,6 +74,7 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
     cancelRecording();
     stopStream();
     discardCapture();
+    dualScene.current = null;
     setError(null);
     setStage('camera');
     setCaption('');
@@ -77,6 +82,7 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
   const closeCamera = () => {
     resetCamera();
     setMode(null);
+    onClose?.();
   };
   const openCamera = (next: Mode) => {
     resetCamera();
@@ -86,7 +92,7 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
   };
 
   useEffect(() => {
-    if (!mode || stage !== 'camera') return;
+    if (!mode || stage === 'preview') return;
     let cancelled = false;
     const ticket = session.current;
     setReady(false);
@@ -146,7 +152,7 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
     stopStream();
   };
 
-  const takePhoto = () => {
+  const takePhoto = async () => {
     const video = liveVideo.current;
     if (!ready || !video?.videoWidth || !video.videoHeight) {
       setError('Wait for the live camera image before taking a photo.');
@@ -157,17 +163,48 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext('2d');
     if (!ctx) { setError('Photo capture is unavailable.'); return; }
-    if (facing === 'user') {
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-    }
+    if (facing === 'user') { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     const ticket = session.current;
-    canvas.toBlob(file => {
-      if (ticket !== session.current) return;
-      if (file) showCapture(file);
-      else setError('Camera could not capture the photo.');
-    }, 'image/jpeg', 0.9);
+    const file = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+    if (ticket !== session.current) return;
+    if (!file?.size) { setError('Camera could not capture the photo.'); return; }
+    if (mode === 'dual' && stage === 'camera') {
+      dualScene.current = file;
+      setReady(false);
+      setFacing('user');
+      setStage('selfie');
+      return;
+    }
+    if (mode === 'dual' && stage === 'selfie') {
+      if (!dualScene.current) { setError('Scene photo missing; please retake.'); return; }
+      try {
+        const [scene, selfie] = await Promise.all([createImageBitmap(dualScene.current), createImageBitmap(file)]);
+        if (ticket !== session.current) { scene.close(); selfie.close(); return; }
+        const combined = document.createElement('canvas');
+        combined.width = scene.width;
+        combined.height = scene.height;
+        const ctx2 = combined.getContext('2d');
+        if (!ctx2) throw new Error('Cannot combine photos.');
+        ctx2.drawImage(scene, 0, 0, combined.width, combined.height);
+        const width = Math.round(combined.width * 0.27);
+        const height = Math.round(width * 4 / 3);
+        const x = Math.round(combined.width * 0.04), y = Math.round(combined.height * 0.04);
+        ctx2.fillStyle = '#f97316';
+        ctx2.fillRect(x - 4, y - 4, width + 8, height + 8);
+        ctx2.drawImage(selfie, x, y, width, height);
+        scene.close();
+        selfie.close();
+        const composite = await new Promise<Blob | null>(resolve => combined.toBlob(resolve, 'image/jpeg', 0.9));
+        if (ticket !== session.current) return;
+        if (!composite?.size) throw new Error('Cannot encode dual-camera image.');
+        showCapture(composite);
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : 'Dual-camera capture failed.');
+      }
+      return;
+    }
+    showCapture(file);
   };
 
   const stopRecording = () => {
@@ -218,6 +255,8 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
   const retake = () => {
     session.current += 1;
     discardCapture();
+    dualScene.current = null;
+    setFacing('environment');
     setError(null);
     setSeconds(0);
     setStage('camera');
@@ -248,39 +287,39 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
 
   return (
     <div className="pb-24 text-white" data-testid="share-good-vibes">
-      <section className="rounded-[28px] border border-neutral-700/70 bg-[#101011] px-3 py-7 sm:px-6 shadow-[0_18px_65px_rgba(0,0,0,.45)]">
+      {!cameraOnly && <section className="rounded-[24px] border border-neutral-700/70 bg-[#101011] px-3 py-5 sm:px-5 shadow-[0_18px_65px_rgba(0,0,0,.45)]">
         <header className="text-center">
-          <h1 className="relative inline-block whitespace-nowrap text-[clamp(2.05rem,9.2vw,3.2rem)] font-black italic leading-tight tracking-[-.055em]">
+          <h1 className="relative inline-block whitespace-nowrap text-[clamp(1.3rem,6.5vw,2.2rem)] font-black italic leading-tight tracking-[-.055em]">
             <span className="text-white">Share Good </span>
             <span className="relative text-orange-400">Vibes<span aria-hidden="true" className="absolute -bottom-1 left-1 right-0 h-[4px] -rotate-3 rounded-full bg-orange-400" /></span>
           </h1>
-          <p className="mx-auto mt-5 max-w-[34rem] text-[15px] leading-relaxed text-neutral-300">
+          <p className="mx-auto mt-3 max-w-[34rem] text-[13px] leading-relaxed text-neutral-300">
             Share the moment. Feel the city together. Right now.
             <span className="block">Warm, authentic human presence recorded in physical proximity.</span>
           </p>
         </header>
-        <div className="mt-7 grid grid-cols-3 gap-2 sm:gap-3">
-          <button type="button" onClick={() => openCamera('shot')} className="min-h-40 min-w-0 rounded-[22px] border border-neutral-700 bg-gradient-to-b from-[#19191a] to-[#131314] p-3 text-left hover:border-pink-500/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-pink-400">
-            <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-pink-500/20 text-pink-400"><Camera size={26} /></span>
-            <span className="block text-[clamp(.85rem,3.6vw,1.15rem)] font-extrabold leading-tight">Live Vibe Shot</span>
-            <span className="mt-2 block text-[11px] leading-snug text-neutral-300">Camera only — no uploads</span>
+        <div className="mt-5 grid grid-cols-3 gap-2">
+          <button type="button" onClick={() => openCamera('shot')} className="min-h-[128px] min-w-0 rounded-[18px] border border-neutral-700 bg-gradient-to-b from-[#19191a] to-[#131314] p-2 text-left hover:border-pink-500/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-pink-400">
+            <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-2xl bg-pink-500/20 text-pink-400"><Camera size={19} /></span>
+            <span className="block text-[clamp(.66rem,2.85vw,.9rem)] font-extrabold leading-tight">Live Vibe Shot</span>
+            <span className="mt-2 block text-[10px] leading-snug text-neutral-300">Camera only — no uploads</span>
           </button>
-          <button type="button" onClick={() => openCamera('check')} className="min-h-40 min-w-0 rounded-[22px] border border-neutral-700 bg-gradient-to-b from-[#19191a] to-[#131314] p-3 text-left hover:border-violet-500/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400">
-            <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/20 text-purple-400"><Zap size={27} /></span>
-            <span className="block text-[clamp(.85rem,3.6vw,1.15rem)] font-extrabold leading-tight">VibeCheck</span>
-            <span className="mt-2 block text-[11px] leading-snug text-neutral-300">5-min live response</span>
+          <button type="button" onClick={() => openCamera('check')} className="min-h-[128px] min-w-0 rounded-[18px] border border-neutral-700 bg-gradient-to-b from-[#19191a] to-[#131314] p-2 text-left hover:border-violet-500/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400">
+            <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-2xl bg-purple-500/20 text-purple-400"><Zap size={19} /></span>
+            <span className="block text-[clamp(.66rem,2.85vw,.9rem)] font-extrabold leading-tight">VibeCheck</span>
+            <span className="mt-2 block text-[10px] leading-snug text-neutral-300">5-min live response</span>
           </button>
-          <button type="button" onClick={() => openCamera('flash')} className="min-h-40 min-w-0 rounded-[22px] border border-neutral-700 bg-gradient-to-b from-[#19191a] to-[#131314] p-3 text-left hover:border-amber-500/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400">
-            <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-400"><Clock3 size={27} /></span>
-            <span className="block text-[clamp(.85rem,3.6vw,1.15rem)] font-extrabold leading-tight">Vibe Flash</span>
-            <span className="mt-2 block text-[11px] leading-snug text-orange-400">3-min window</span>
+          <button type="button" onClick={() => openCamera('flash')} className="min-h-[128px] min-w-0 rounded-[18px] border border-neutral-700 bg-gradient-to-b from-[#19191a] to-[#131314] p-2 text-left hover:border-amber-500/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400">
+            <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-400"><Clock3 size={19} /></span>
+            <span className="block text-[clamp(.66rem,2.85vw,.9rem)] font-extrabold leading-tight">VibeFlash</span>
+            <span className="mt-2 block text-[10px] leading-snug text-orange-400">3-min window</span>
           </button>
         </div>
-        <button type="button" onClick={() => openCamera('snap')} className="mt-6 flex w-full items-center justify-center gap-3 rounded-full border-2 border-lime-400 bg-lime-400/[.045] px-4 py-4 text-lime-300 hover:bg-lime-400/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
-          <Video className="h-8 w-8 shrink-0" />
-          <span className="text-center"><strong className="block text-2xl font-black leading-none tracking-tight">VIBE SNAP</strong><span className="mt-1 block text-sm text-white">a 10-second video moment</span></span>
+        <button type="button" onClick={() => openCamera('snap')} className="mt-5 flex w-full items-center justify-center gap-2 rounded-full border-2 border-lime-400 bg-lime-400/[.045] px-3 py-3 text-lime-300 hover:bg-lime-400/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
+          <Video className="h-6 w-6 shrink-0" />
+          <span className="text-center"><strong className="block text-lg font-black leading-none tracking-tight">VIBE SNAP</strong><span className="mt-1 block text-sm text-white">a 10-second video moment</span></span>
         </button>
-        <div className="mt-6 border-t border-neutral-700 pt-5">
+        <div className="mt-5 border-t border-neutral-700 pt-4">
           <div className="grid grid-cols-3 gap-2">
             {categories.map(item => (
               <button key={item.id} type="button" aria-pressed={category === item.id} onClick={() => setCategory(previous => previous === item.id ? null : item.id)} title={item.description}
@@ -293,35 +332,36 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
           </div>
           {category && <p className="mt-3 text-center text-xs text-lime-200" role="status">{categories.find(item => item.id === category)?.description} selected for your next captured moment.</p>}
         </div>
-      </section>
+      </section>}
 
       {mode && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95 p-3" role="dialog" aria-modal="true" aria-label={names[mode]}>
+        <div data-testid={mode === 'dual' ? 'vibe-dual-camera' : 'share-camera-dialog'} className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95 p-3" role="dialog" aria-modal="true" aria-label={names[mode]}>
           <div className="flex max-h-[96dvh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-3xl border border-neutral-700 bg-neutral-950 p-4 shadow-2xl">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2"><Camera className="text-orange-400" size={20} /><h2 className="text-lg font-black">{names[mode]}</h2></div>
               <button type="button" onClick={closeCamera} className="rounded-xl bg-neutral-800 p-2" aria-label="Close camera"><X size={21} /></button>
             </div>
             {(mode === 'check' || mode === 'flash') && <p className="rounded-xl border border-amber-800 bg-amber-950/40 p-3 text-xs text-amber-200">Live camera capture only. Timed challenge invitations and submissions are not connected yet; no challenge is sent or claimed.</p>}
+            {mode === 'dual' && <p className="text-xs text-neutral-300">{stage === 'selfie' ? 'Step 2 of 2: capture your front-camera selfie.' : stage === 'camera' ? 'Step 1 of 2: capture the scene with the back camera.' : 'Review the combined scene and selfie image.'}</p>}
             {mode === 'snap' && <p className="text-xs text-neutral-300">Record up to 10 seconds. Review before sharing or saving; nothing is uploaded automatically.</p>}
             <div className="relative flex min-h-[260px] flex-1 items-center justify-center overflow-hidden rounded-2xl border border-neutral-700 bg-black aspect-[4/5] max-h-[58dvh]">
-              {stage === 'camera'
+              {stage !== 'preview'
                 ? <video ref={liveVideo} muted playsInline autoPlay className={facing === 'user' ? 'h-full w-full scale-x-[-1] object-cover' : 'h-full w-full object-cover'} aria-label="Live camera preview" />
                 : preview && (mode === 'snap'
                   ? <video src={preview} controls playsInline className="h-full w-full object-contain" aria-label="Recorded Vibe Snap preview" />
                   : <img src={preview} alt="Captured photo preview" className="h-full w-full object-contain" />)}
-              {stage === 'camera' && !ready && !error && <span className="absolute inset-0 flex items-center justify-center bg-black/65 text-sm text-neutral-300">Opening camera…</span>}
+              {stage !== 'preview' && !ready && !error && <span className="absolute inset-0 flex items-center justify-center bg-black/65 text-sm text-neutral-300">Opening camera…</span>}
               {mode === 'snap' && recording && <span className="absolute left-3 top-3 rounded-full bg-red-600 px-3 py-1 text-xs font-bold">● REC {seconds}/10s</span>}
             </div>
             {error && <p role="alert" className="flex items-start gap-2 rounded-xl border border-red-800 bg-red-950/70 p-3 text-sm text-red-200"><AlertCircle className="shrink-0" size={18} />{error}</p>}
-            {stage === 'camera' ? (
+            {stage !== 'preview' ? (
               <div className="flex gap-2">
                 <button type="button" onClick={() => setFacing(previous => previous === 'environment' ? 'user' : 'environment')} disabled={recording} className="rounded-xl bg-neutral-800 px-4 py-3" aria-label="Switch camera"><SwitchCamera size={21} /></button>
                 {mode === 'snap'
                   ? (recording
                     ? <button type="button" onClick={stopRecording} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 font-bold"><Square size={18} /> Stop recording</button>
                     : <button type="button" onClick={startRecording} disabled={!ready} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-lime-400 px-4 py-3 font-black text-neutral-950 disabled:opacity-40"><Circle size={18} /> Record 10 seconds</button>)
-                  : <button type="button" onClick={takePhoto} disabled={!ready} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-black disabled:opacity-40"><Camera size={20} /> Capture photo</button>}
+                  : <button type="button" onClick={takePhoto} disabled={!ready} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-black disabled:opacity-40"><Camera size={20} /> {mode === 'dual' ? (stage === 'selfie' ? 'Capture selfie' : 'Capture scene') : 'Capture photo'}</button>}
               </div>
             ) : (
               <div className="space-y-3">
