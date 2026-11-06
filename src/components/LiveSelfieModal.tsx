@@ -13,12 +13,13 @@ interface LiveSelfieModalProps {
   onVerified: (timestamp: string) => void;
   onGuardianSaved?: (guardian: VibeGuardian) => void;
   availableTrails?: Array<{id:string;title:string}>;
+  initialGuardianType?: 'local' | 'pro';
   onToast: (message: string) => void;
 }
 type GuardianTrailItem = { id: string; title: string; link?: string; flatPrice?: number };
 
 export const LiveSelfieModal: React.FC<LiveSelfieModalProps> = ({
-  user, onClose, onVerified, onGuardianSaved, onToast, availableTrails = []
+  user, onClose, onVerified, onGuardianSaved, onToast, availableTrails = [], initialGuardianType
 }) => {
   const [step, setStep] = useState<'camera' | 'details'>('camera');
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -29,7 +30,7 @@ export const LiveSelfieModal: React.FC<LiveSelfieModalProps> = ({
   const [countdown, setCountdown] = useState<number | null>(null);
   const [capturedPhotoUrl, setCapturedPhotoUrl] = useState<string | null>(null);
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
-  const [guardianType, setGuardianType] = useState<'local' | 'pro'>(user?.accountType === 'pro' ? 'pro' : 'local');
+  const [guardianType, setGuardianType] = useState<'local' | 'pro'>(initialGuardianType ?? (user?.accountType === 'pro' ? 'pro' : 'local'));
   const [name, setName] = useState(user?.full_name || '');
   const [city, setCity] = useState(user?.city || '');
   const [bio, setBio] = useState(user?.bio || '');
