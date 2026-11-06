@@ -1,15 +1,43 @@
 -- VQUltimate D07 Trail/Tour media gallery. Review and apply after testing.
 -- No existing Trail, Tour, profile, or Storage objects are rewritten.
+-- Compatible with both clean installations and an existing initially two-column table.
+-- The current production primary key is bigint identity; preserve it and any existing rows.
 create table if not exists public.trail_media (
-  id uuid primary key default gen_random_uuid(),
-  trail_id text not null references public.vibe_trails(id) on delete restrict,
-  owner_auth_user_id uuid not null default auth.uid(),
-  object_path text not null unique,
-  sort_order integer not null default 0 check (sort_order >= 0),
-  is_cover boolean not null default false,
-  created_at timestamptz not null default now(),
-  constraint trail_media_path_type check (object_path ~* '\.(jpg|jpeg|png|webp)$')
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now()
 );
+alter table public.trail_media
+  add column if not exists trail_id text,
+  add column if not exists owner_auth_user_id uuid default auth.uid(),
+  add column if not exists object_path text,
+  add column if not exists sort_order integer default 0,
+  add column if not exists is_cover boolean default false;
+alter table public.trail_media
+  alter column trail_id set not null,
+  alter column owner_auth_user_id set default auth.uid(),
+  alter column owner_auth_user_id set not null,
+  alter column object_path set not null,
+  alter column sort_order set default 0,
+  alter column sort_order set not null,
+  alter column is_cover set default false,
+  alter column is_cover set not null;
+do $constraints$
+begin
+  if not exists (select 1 from pg_constraint where conrelid='public.trail_media'::regclass and conname='trail_media_trail_id_fkey') then
+    alter table public.trail_media add constraint trail_media_trail_id_fkey
+      foreign key(trail_id) references public.vibe_trails(id) on delete restrict;
+  end if;
+  if not exists (select 1 from pg_constraint where conrelid='public.trail_media'::regclass and conname='trail_media_object_path_key') then
+    alter table public.trail_media add constraint trail_media_object_path_key unique(object_path);
+  end if;
+  if not exists (select 1 from pg_constraint where conrelid='public.trail_media'::regclass and conname='trail_media_sort_order_check') then
+    alter table public.trail_media add constraint trail_media_sort_order_check check(sort_order >= 0);
+  end if;
+  if not exists (select 1 from pg_constraint where conrelid='public.trail_media'::regclass and conname='trail_media_path_type') then
+    alter table public.trail_media add constraint trail_media_path_type check(object_path ~* '\.(jpg|jpeg|png|webp)$');
+  end if;
+end;
+$constraints$;
 
 create index if not exists trail_media_trail_order_idx
   on public.trail_media(trail_id, sort_order, created_at);
@@ -26,15 +54,19 @@ grant update(sort_order, is_cover)
   on public.trail_media to authenticated;
 grant delete on public.trail_media to authenticated;
 
+drop policy if exists trail_media_public_read on public.trail_media;
 create policy trail_media_public_read on public.trail_media
   for select to anon, authenticated using (true);
+drop policy if exists trail_media_owner_insert on public.trail_media;
 create policy trail_media_owner_insert on public.trail_media
   for insert to authenticated
   with check (owner_auth_user_id = (select auth.uid()));
+drop policy if exists trail_media_owner_update on public.trail_media;
 create policy trail_media_owner_update on public.trail_media
   for update to authenticated
   using (owner_auth_user_id = (select auth.uid()))
   with check (owner_auth_user_id = (select auth.uid()));
+drop policy if exists trail_media_owner_delete on public.trail_media;
 create policy trail_media_owner_delete on public.trail_media
   for delete to authenticated
   using (owner_auth_user_id = (select auth.uid()));
@@ -86,7 +118,7 @@ begin
   select o.metadata->>'mimetype', (o.metadata->>'size')::bigint
     into v_mime, v_size
     from storage.objects o
-    where o.bucket_id = 'media' and o.name = new.object_path;
+    where o.bucket_id = 'media' and o.name = new.object_path and o.owner_id = v_uid::text;
   if not found then
     raise exception 'Uploaded media object was not found' using errcode = '22023';
   end if;
@@ -108,8 +140,8 @@ begin
     if v_limit is null then
       raise exception 'Verified Trail author profile not found' using errcode = '42501';
     end if;
-    if (select count(*) from public.trail_media m where m.trail_id = new.trail_id)
-      + case when nullif(btrim(coalesce(v_legacy_cover, '')), '') is null then 0 else 1 end
+    if ((select count(*) from public.trail_media m where m.trail_id = new.trail_id)
+      + (case when nullif(btrim(coalesce(v_legacy_cover, '')), '') is null then 0 else 1 end))
       >= v_limit then
       raise exception 'Trail photo limit reached' using errcode = '22023';
     end if;
@@ -118,6 +150,7 @@ begin
 end;
 $$;
 
+drop trigger if exists vq_trail_media_guard_trigger on public.trail_media;
 create trigger vq_trail_media_guard_trigger
 before insert or update on public.trail_media
 for each row execute function public.vq_trail_media_guard();
@@ -126,7 +159,7 @@ for each row execute function public.vq_trail_media_guard();
 -- API; enforce the same 3/6 total quota when that changes.
 create or replace function public.vq_trail_media_legacy_cover_guard()
 returns trigger language plpgsql set search_path = ''
-as $
+as $$
 declare
   v_uid uuid := auth.uid();
   v_is_admin boolean;
@@ -148,13 +181,14 @@ begin
     raise exception 'Verified Trail author profile not found' using errcode = '42501';
   end if;
   select count(*) into v_count from public.trail_media m where m.trail_id = new.id;
-  if v_count + case when nullif(btrim(coalesce(new.image_url, '')), '') is null
-    then 0 else 1 end > v_limit then
+  if v_count + (case when nullif(btrim(coalesce(new.image_url, '')), '') is null
+    then 0 else 1 end) > v_limit then
     raise exception 'Trail photo limit reached' using errcode = '22023';
   end if;
   return new;
 end;
-$;
+$$;
+drop trigger if exists vq_trail_media_legacy_cover_guard_trigger on public.vibe_trails;
 create trigger vq_trail_media_legacy_cover_guard_trigger
 before update of image_url on public.vibe_trails
 for each row when (new.image_url is distinct from old.image_url)
@@ -162,6 +196,7 @@ execute function public.vq_trail_media_legacy_cover_guard();
 
 -- A private Storage bucket stays private. Only objects explicitly attached
 -- to public Trails can be read by visitors using signed URLs.
+drop policy if exists vq_trail_attached_media_read on storage.objects;
 create policy vq_trail_attached_media_read on storage.objects
   for select to anon, authenticated
   using (
@@ -172,6 +207,7 @@ create policy vq_trail_attached_media_read on storage.objects
   );
 -- Remove an abandoned or intentionally detached object only from its owner
 -- and only after its Trail association has been removed.
+drop policy if exists vq_trail_unattached_media_owner_delete on storage.objects;
 create policy vq_trail_unattached_media_owner_delete on storage.objects
   for delete to authenticated
   using (
