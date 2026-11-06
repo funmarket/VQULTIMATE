@@ -3,7 +3,7 @@ import { Camera, Zap, Clock3, Video, X, RefreshCw, Share2, SwitchCamera, Circle,
 import type { UserProfile } from '../domains/d01_auth';
 
 type Mode = 'shot' | 'check' | 'flash' | 'snap' | 'dual';
-type Stage = 'camera' | 'selfie' | 'preview';
+type Stage = 'camera' | 'selfie' | 'review' | 'details';
 type Mood = 'heart' | 'spark' | 'moments';
 
 interface ShareTabProps {
@@ -19,13 +19,15 @@ const categories: { id: Mood; emoji: string; label: string; description: string 
   { id: 'spark', emoji: '🤗', label: 'FRIENDLY SPARK', description: 'Kindness and connection' },
   { id: 'moments', emoji: '🧘', label: 'SHARED MOMENTS', description: 'Help and shared experiences' },
 ];
-const names: Record<Mode, string> = { shot: 'Live Vibe Shot', check: 'VibeCheck', flash: 'VibeFlash', snap: 'Vibe Snap', dual: 'Vibe Share · Dual Cam' };
+const names: Record<Mode, string> = { shot: 'Live Vibe Shot', check: 'VibeCheck', flash: 'VibeFlash', snap: 'Vibe Snap', dual: 'Vibe Share' };
 
 /** Share capture shell. Does not impersonate a D18 challenge or claim D12 publication. */
 export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: _onPostSuccess, initialMode, cameraOnly = false, onClose }) => {
   const [mode, setMode] = useState<Mode | null>(initialMode ?? null);
   const [stage, setStage] = useState<Stage>('camera');
   const [facing, setFacing] = useState<'environment' | 'user'>('environment');
+  const [dualEnabled, setDualEnabled] = useState(initialMode === 'dual');
+  const dualCapture = mode === 'flash' || ((mode === 'dual' || mode === 'shot' || mode === 'check') && dualEnabled);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -87,12 +89,13 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
   const openCamera = (next: Mode) => {
     resetCamera();
     setFacing('environment');
+    setDualEnabled(next === 'flash' || next === 'dual');
     setSeconds(0);
     setMode(next);
   };
 
   useEffect(() => {
-    if (!mode || stage === 'preview') return;
+    if (!mode || stage === 'review' || stage === 'details') return;
     let cancelled = false;
     const ticket = session.current;
     setReady(false);
@@ -104,7 +107,7 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
       }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: facing } },
+          video: { facingMode: dualCapture ? { exact: facing } : { ideal: facing } },
           audio: false,
         });
         if (cancelled || ticket !== session.current) {
@@ -112,13 +115,50 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
           return;
         }
         liveStream.current = stream;
-        if (liveVideo.current) {
-          liveVideo.current.srcObject = stream;
-          await liveVideo.current.play().catch(() => undefined);
+        const video = liveVideo.current;
+        const track = stream.getVideoTracks()[0];
+        if (!video || !track || track.readyState !== 'live') {
+          throw new Error('The camera did not provide a live video track.');
         }
-        if (!cancelled) setReady(true);
+        const actualFacing = track.getSettings().facingMode;
+        if (dualCapture && actualFacing && actualFacing !== facing) {
+          throw new Error('The requested ' + (facing === 'user' ? 'front' : 'back') + ' camera is not active.');
+        }
+        video.srcObject = stream;
+        await video.play();
+        if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || !video.videoWidth || !video.videoHeight) {
+          await new Promise<void>((resolve, reject) => {
+            const cleanup = () => {
+              video.removeEventListener('loadeddata', checkFrame);
+              video.removeEventListener('error', failed);
+              clearTimeout(timeout);
+            };
+            const checkFrame = () => {
+              if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && video.videoWidth && video.videoHeight) {
+                cleanup();
+                resolve();
+              }
+            };
+            const failed = () => { cleanup(); reject(new Error('Camera preview failed to load.')); };
+            const timeout = setTimeout(() => { cleanup(); reject(new Error('Camera preview did not become ready.')); }, 8000);
+            video.addEventListener('loadeddata', checkFrame);
+            video.addEventListener('error', failed);
+            checkFrame();
+          });
+        }
+        if (cancelled || ticket !== session.current) {
+          stream.getTracks().forEach(activeTrack => activeTrack.stop());
+          return;
+        }
+        if (track.readyState !== 'live') throw new Error('Camera disconnected before capture.');
+        setReady(true);
       } catch (cause) {
-        if (!cancelled) setError(cause instanceof Error ? 'Camera unavailable: ' + cause.message : 'Camera permission denied or no camera available.');
+        if (cancelled || ticket !== session.current) return;
+        liveStream.current?.getTracks().forEach(track => track.stop());
+        liveStream.current = null;
+        if (liveVideo.current) liveVideo.current.srcObject = null;
+        setReady(false);
+        setError(cause instanceof Error ? 'Camera unavailable: ' + cause.message : 'Camera permission denied or no camera available.');
       }
     }
     void start();
@@ -127,7 +167,7 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
       liveStream.current?.getTracks().forEach(track => track.stop());
       liveStream.current = null;
     };
-  }, [mode, stage, facing]);
+  }, [mode, stage, facing, dualCapture]);
 
   useEffect(() => () => {
     session.current += 1;
@@ -148,14 +188,19 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
     currentUrl.current = url;
     setPreview(url);
     setCapture(file);
-    setStage('preview');
+    setStage('review');
     stopStream();
   };
 
   const takePhoto = async () => {
     const video = liveVideo.current;
-    if (!ready || !video?.videoWidth || !video.videoHeight) {
-      setError('Wait for the live camera image before taking a photo.');
+    const track = liveStream.current?.getVideoTracks()[0];
+    const actualFacing = track?.getSettings().facingMode;
+    if (!ready || !video?.videoWidth || !video.videoHeight ||
+        video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+        !track || track.readyState !== 'live' ||
+        (dualCapture && actualFacing && actualFacing !== facing)) {
+      setError('Wait for the correct live camera image before taking a photo.');
       return;
     }
     const canvas = document.createElement('canvas');
@@ -169,14 +214,14 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
     const file = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
     if (ticket !== session.current) return;
     if (!file?.size) { setError('Camera could not capture the photo.'); return; }
-    if (mode === 'dual' && stage === 'camera') {
+    if (dualCapture && stage === 'camera') {
       dualScene.current = file;
       setReady(false);
       setFacing('user');
       setStage('selfie');
       return;
     }
-    if (mode === 'dual' && stage === 'selfie') {
+    if (dualCapture && stage === 'selfie') {
       if (!dualScene.current) { setError('Scene photo missing; please retake.'); return; }
       try {
         const [scene, selfie] = await Promise.all([createImageBitmap(dualScene.current), createImageBitmap(file)]);
@@ -342,35 +387,54 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
               <button type="button" onClick={closeCamera} className="rounded-xl bg-neutral-800 p-2" aria-label="Close camera"><X size={21} /></button>
             </div>
             {(mode === 'check' || mode === 'flash') && <p className="rounded-xl border border-amber-800 bg-amber-950/40 p-3 text-xs text-amber-200">Live camera capture only. Timed challenge invitations and submissions are not connected yet; no challenge is sent or claimed.</p>}
-            {mode === 'dual' && <p className="text-xs text-neutral-300">{stage === 'selfie' ? 'Step 2 of 2: capture your front-camera selfie.' : stage === 'camera' ? 'Step 1 of 2: capture the scene with the back camera.' : 'Review the combined scene and selfie image.'}</p>}
-            {mode === 'snap' && <p className="text-xs text-neutral-300">Record up to 10 seconds. Review before sharing or saving; nothing is uploaded automatically.</p>}
+            {dualCapture && <p className="text-xs text-neutral-300">{stage === 'selfie' ? 'Step 2 of 2: capture your front-camera selfie.' : stage === 'camera' ? 'Step 1 of 2: capture the scene with the back camera.' : stage === 'review' ? 'Review the real scene and selfie composite.' : 'Add optional details before sharing.'}</p>}
+            {(mode === 'shot' || mode === 'check' || mode === 'dual') && stage === 'camera' && (
+              <fieldset className="flex gap-2 rounded-xl border border-neutral-700 p-2" aria-label="Capture type">
+                <legend className="px-1 text-xs text-neutral-300">Capture type</legend>
+                <button type="button" aria-pressed={!dualEnabled} onClick={() => setDualEnabled(false)} className={!dualEnabled ? 'flex-1 rounded-lg bg-lime-400 px-3 py-2 text-xs font-bold text-neutral-950' : 'flex-1 rounded-lg bg-neutral-800 px-3 py-2 text-xs text-white'}>Single camera</button>
+                <button type="button" aria-pressed={dualEnabled} onClick={() => { setFacing('environment'); setDualEnabled(true); }} className={dualEnabled ? 'flex-1 rounded-lg bg-lime-400 px-3 py-2 text-xs font-bold text-neutral-950' : 'flex-1 rounded-lg bg-neutral-800 px-3 py-2 text-xs text-white'}>Dual: scene + selfie</button>
+              </fieldset>
+            )}
+            {mode === 'flash' && <p className="text-xs text-amber-300">Dual capture required: rear-camera scene and front-camera selfie. This preview does not submit a VibeFlash response.</p>}
+            {mode === 'snap' && <p className="text-xs text-neutral-300">Record up to 10 seconds using a single camera (front/rear switch before recording). Dual video recording is not enabled in this trial. Nothing is uploaded automatically.</p>}
             <div className="relative flex min-h-[260px] flex-1 items-center justify-center overflow-hidden rounded-2xl border border-neutral-700 bg-black aspect-[4/5] max-h-[58dvh]">
-              {stage !== 'preview'
+              {(stage === 'camera' || stage === 'selfie')
                 ? <video ref={liveVideo} muted playsInline autoPlay className={facing === 'user' ? 'h-full w-full scale-x-[-1] object-cover' : 'h-full w-full object-cover'} aria-label="Live camera preview" />
                 : preview && (mode === 'snap'
                   ? <video src={preview} controls playsInline className="h-full w-full object-contain" aria-label="Recorded Vibe Snap preview" />
                   : <img src={preview} alt="Captured photo preview" className="h-full w-full object-contain" />)}
-              {stage !== 'preview' && !ready && !error && <span className="absolute inset-0 flex items-center justify-center bg-black/65 text-sm text-neutral-300">Opening camera…</span>}
+              {(stage === 'camera' || stage === 'selfie') && !ready && !error && <span className="absolute inset-0 flex items-center justify-center bg-black/65 text-sm text-neutral-300">Opening camera…</span>}
               {mode === 'snap' && recording && <span className="absolute left-3 top-3 rounded-full bg-red-600 px-3 py-1 text-xs font-bold">● REC {seconds}/10s</span>}
             </div>
             {error && <p role="alert" className="flex items-start gap-2 rounded-xl border border-red-800 bg-red-950/70 p-3 text-sm text-red-200"><AlertCircle className="shrink-0" size={18} />{error}</p>}
-            {stage !== 'preview' ? (
+            {(stage === 'camera' || stage === 'selfie') ? (
               <div className="flex gap-2">
-                <button type="button" onClick={() => setFacing(previous => previous === 'environment' ? 'user' : 'environment')} disabled={recording} className="rounded-xl bg-neutral-800 px-4 py-3" aria-label="Switch camera"><SwitchCamera size={21} /></button>
+                <button type="button" onClick={() => { setReady(false); setFacing(previous => previous === 'environment' ? 'user' : 'environment'); }} disabled={recording || !ready || dualCapture} className="rounded-xl bg-neutral-800 px-4 py-3" aria-label="Switch camera"><SwitchCamera size={21} /></button>
                 {mode === 'snap'
                   ? (recording
                     ? <button type="button" onClick={stopRecording} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 font-bold"><Square size={18} /> Stop recording</button>
                     : <button type="button" onClick={startRecording} disabled={!ready} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-lime-400 px-4 py-3 font-black text-neutral-950 disabled:opacity-40"><Circle size={18} /> Record 10 seconds</button>)
-                  : <button type="button" onClick={takePhoto} disabled={!ready} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-black disabled:opacity-40"><Camera size={20} /> {mode === 'dual' ? (stage === 'selfie' ? 'Capture selfie' : 'Capture scene') : 'Capture photo'}</button>}
+                  : <button type="button" onClick={takePhoto} disabled={!ready} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-black disabled:opacity-40"><Camera size={20} /> {dualCapture ? (stage === 'selfie' ? 'Capture selfie' : 'Capture scene') : 'Capture photo'}</button>}
               </div>
-            ) : (
-              <div className="space-y-3">
-                <label className="block text-xs font-semibold text-neutral-300" htmlFor="share-capture-caption">Caption (optional)</label>
-                <textarea id="share-capture-caption" value={caption} maxLength={280} onChange={event => setCaption(event.target.value)} placeholder="What made this moment special?" className="w-full resize-none rounded-xl border border-neutral-700 bg-neutral-900 p-3 text-sm text-white" rows={2} />
-                <p className="text-xs text-neutral-400">Camera capture is local. Share opens your device's share sheet when supported; otherwise Save downloads the file. This does not publish to Gossip.</p>
+            ) : stage === 'review' ? (
+              <div className="space-y-3" data-testid="share-capture-review">
+                <p className="text-sm font-bold text-lime-300">Capture ready for review</p>
+                <p className="text-xs text-neutral-400">This preview is from your live camera. Nothing has been uploaded or published.</p>
                 <div className="flex gap-2">
                   <button type="button" onClick={retake} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-neutral-800 p-3 font-bold"><RefreshCw size={17} /> Retake</button>
-                  <button type="button" onClick={() => void shareOrSave()} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-lime-400 p-3 font-black text-neutral-950"><Share2 size={17} /> Share / Save</button>
+                  <button type="button" onClick={() => setStage('details')} className="flex flex-1 items-center justify-center rounded-xl bg-lime-400 p-3 font-black text-neutral-950">Use this capture</button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3" data-testid="share-capture-details">
+                <h3 className="text-sm font-bold text-white">Broadcast details</h3>
+                <label className="block text-xs font-semibold text-neutral-300" htmlFor="share-capture-caption">Caption (optional)</label>
+                <textarea id="share-capture-caption" value={caption} maxLength={280} onChange={event => setCaption(event.target.value)} placeholder="What made this moment special?" className="w-full resize-none rounded-xl border border-neutral-700 bg-neutral-900 p-3 text-sm text-white" rows={2} />
+                <p className="text-right text-xs text-neutral-400">{caption.length} / 280</p>
+                <p className="text-xs text-neutral-400">Share Outside opens your device's share sheet, or downloads the captured file. In-app publication, private messaging and challenge submissions are not connected yet; nothing will be posted to Gossip.</p>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setStage('review')} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-neutral-800 p-3 font-bold"><ArrowLeft size={17} /> Review</button>
+                  <button type="button" onClick={() => void shareOrSave()} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-lime-400 p-3 font-black text-neutral-950"><Share2 size={17} /> Share Outside / Save</button>
                 </div>
               </div>
             )}
