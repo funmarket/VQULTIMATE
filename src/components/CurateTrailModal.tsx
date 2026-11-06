@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Trash2, Route, Clock, Sparkles, MapPin, Compass } from 'lucide-react';
+import { X, Plus, Trash2, Route, Clock, Sparkles, MapPin, Compass, ArrowUp, ArrowDown } from 'lucide-react';
 import { CommunityTrail, TrailStop, TimeOfDay, createCommunityTrail } from '../domains/d07_trails';
 import { UserProfile } from '../domains/d01_auth';
 
@@ -25,8 +25,9 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
   initialIsTour = false
 }) => {
   const [isTour, setIsTour] = useState(initialIsTour);
+  const [activeTab, setActiveTab] = useState<'overview' | 'stops' | 'tour'>(initialIsTour ? 'tour' : 'overview');
   const [sourceTrailId, setSourceTrailId] = useState(initialTrail?.id || '');
-  const [title, setTitle] = useState(initialTrail?.title ? initialTrail.title + ' (Remix)' : '');
+  const [title, setTitle] = useState(initialTrail?.title ? `${initialTrail.title.replace(/\s*\(Remix\)$/i, '')} (Remix)` : '');
   const [category, setCategory] = useState(initialTrail?.category || 'FULL DAY CIRCUIT');
   const [city, setCity] = useState(initialTrail?.city || '');
   const [story, setStory] = useState(initialTrail?.story || '');
@@ -58,6 +59,16 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
     setFlow(original.flowSequence);
   };
 
+  const handleMoveStop = (index: number, direction: -1 | 1) => {
+    setStops(current => {
+      const nextIndex = index + direction;
+      if (nextIndex < 0 || nextIndex >= current.length) return current;
+      const reordered = [...current];
+      [reordered[index], reordered[nextIndex]] = [reordered[nextIndex], reordered[index]];
+      return reordered;
+    });
+  };
+
   const handleAddStop = () => {
     const newStop: TrailStop = {
       id: `stop-${Date.now()}`,
@@ -67,31 +78,31 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
       timeOfDay: 'Afternoon',
       durationMinutes: 45
     };
-    setStops([...stops, newStop]);
+    setStops(current => [...current, newStop]);
   };
 
   const handleRemoveStop = (idx: number) => {
     if (stops.length <= 1) return;
-    setStops(stops.filter((_, i) => i !== idx));
+    setStops(current => current.filter((_, i) => i !== idx));
   };
 
-  const handleUpdateStop = (idx: number, field: keyof TrailStop, val: any) => {
-    const updated = [...stops];
-    updated[idx] = { ...updated[idx], [field]: val };
-    setStops(updated);
+  const handleUpdateStop = (idx: number, field: keyof TrailStop, val: TrailStop[keyof TrailStop]) => {
+    setStops(current => current.map((stop, i) => i === idx ? { ...stop, [field]: val } : stop));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) { onRequireSignIn(); return; }
-    if (!title.trim()) {
-      onToast('Please provide a descriptive trail title.');
+    if (!title.trim() || !city.trim()) {
+      onToast('Please provide a Trail title and city.');
+      setActiveTab('overview');
       return;
     }
-    if (isTour && (!user || !['pro','business'].includes(user.accountType || ''))) { onToast('Only Pro and Business accounts can publish Tours.'); return; }
-    if (isTour && (!Number.isFinite(pricePerPerson) || pricePerPerson <= 0)) { onToast('Enter the actual Tour price.'); return; }
+    if (isTour && (!user || !['pro','business'].includes(user.accountType || ''))) { onToast('Only Pro and Business accounts can publish Tours.'); setActiveTab('tour'); return; }
+    if (isTour && (!Number.isFinite(pricePerPerson) || pricePerPerson <= 0)) { onToast('Enter the actual Tour price.'); setActiveTab('tour'); return; }
     if (stops.some((s) => !s.name.trim())) {
       onToast('Please give a title/location to all itinerary stops.');
+      setActiveTab('stops');
       return;
     }
 
@@ -154,7 +165,17 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
         </div>
 
         {/* Scrollable Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
+        <form onSubmit={handleSubmit} noValidate className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
+          <div role="tablist" aria-label="Trail and Tour creator sections" className="grid grid-cols-3 gap-1 rounded-xl border border-neutral-800 bg-neutral-950 p-1">
+            {([['overview', '1. Overview'], ['stops', '2. Stops'], ['tour', '3. Tour']] as const).map(([tab, label]) => (
+              <button key={tab} type="button" role="tab" id={`studio-tab-${tab}`} aria-controls={`studio-panel-${tab}`}
+                aria-selected={activeTab === tab} onClick={() => setActiveTab(tab)}
+                className={`min-w-0 rounded-lg px-1.5 py-2 text-[11px] font-bold transition sm:text-xs ${activeTab === tab ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'text-neutral-400 hover:text-white border border-transparent'}`}>
+                {label}{tab === 'stops' ? ` (${stops.length})` : ''}
+              </button>
+            ))}
+          </div>
+          <div role="tabpanel" id="studio-panel-overview" aria-labelledby="studio-tab-overview" hidden={activeTab !== 'overview'} className="space-y-4">
           {/* Curation Type Selector */}
           <div className="grid grid-cols-2 gap-2 p-1 bg-neutral-950 rounded-2xl border border-neutral-800">
             <button
@@ -229,28 +250,6 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
               />
             </div>
           </div>
-
-          {/* If Tour: Price */}
-          {isTour && (
-            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-amber-300 text-xs">Commercial Tour Pricing</span>
-                <span className="text-[10px] text-neutral-400">Guaranteed D22 Handshake</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-bold text-neutral-300">$</span>
-                <input
-                  type="number"
-                  min="5"
-                  max="500"
-                  value={pricePerPerson}
-                  onChange={(e) => setPricePerPerson(Number(e.target.value))}
-                  className="w-28 px-3 py-1.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white focus:outline-none focus:border-amber-400"
-                />
-                <span className="text-xs text-neutral-400">per person (USD)</span>
-              </div>
-            </div>
-          )}
 
           {/* Story Narrative */}
           <div className="space-y-1">
@@ -333,6 +332,8 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
         </div>
       )}
 
+          </div>
+          <div role="tabpanel" id="studio-panel-stops" aria-labelledby="studio-tab-stops" hidden={activeTab !== 'stops'} className="space-y-3">
       {/* Itinerary Stops Builder */}
           <div className="space-y-2 pt-2 border-t border-neutral-800">
             <div className="flex items-center justify-between">
@@ -358,6 +359,14 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
                       {idx + 1}
                     </span>
                     <div className="flex items-center space-x-2">
+                      <button type="button" onClick={() => handleMoveStop(idx, -1)} disabled={idx === 0}
+                        aria-label={`Move stop ${idx + 1} up`} className="p-1 rounded-lg text-neutral-400 hover:text-white disabled:opacity-30">
+                        <ArrowUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button type="button" onClick={() => handleMoveStop(idx, 1)} disabled={idx === stops.length - 1}
+                        aria-label={`Move stop ${idx + 1} down`} className="p-1 rounded-lg text-neutral-400 hover:text-white disabled:opacity-30">
+                        <ArrowDown className="w-3.5 h-3.5" />
+                      </button>
                       <select
                         value={stop.timeOfDay}
                         onChange={(e) => handleUpdateStop(idx, 'timeOfDay', e.target.value as TimeOfDay)}
@@ -405,6 +414,34 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
             </div>
           </div>
 
+          </div>
+          <div role="tabpanel" id="studio-panel-tour" aria-labelledby="studio-tab-tour" hidden={activeTab !== 'tour'} className="space-y-4">
+            <p className="text-[11px] text-neutral-400">
+              Paid guided Tours are available to eligible Pro and Business creators.
+              Free Trails remain available to all signed-in creators.
+            </p>
+          {/* If Tour: Price */}
+          {isTour && (
+            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-amber-300 text-xs">Commercial Tour Pricing</span>
+                <span className="text-[10px] text-neutral-400">Guaranteed D22 Handshake</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-bold text-neutral-300">$</span>
+                <input
+                  type="number"
+                  min="5"
+                  max="500"
+                  value={pricePerPerson}
+                  onChange={(e) => setPricePerPerson(Number(e.target.value))}
+                  className="w-28 px-3 py-1.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white focus:outline-none focus:border-amber-400"
+                />
+                <span className="text-xs text-neutral-400">per person (USD)</span>
+              </div>
+            </div>
+          )}
+          </div>
           {/* Submit */}
           <div className="pt-3">
             <button
