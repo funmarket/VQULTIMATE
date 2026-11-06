@@ -127,7 +127,7 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
       setActiveTab('stops');
       return;
     }
-    if (stops.some((s) => !s.address.trim() && !(typeof s.lat === 'number' && typeof s.lng === 'number' && Number.isFinite(s.lat) && Number.isFinite(s.lng) && Math.abs(s.lat) <= 90 && Math.abs(s.lng) <= 180))) {
+    if (stops.some((s) => !s.address.trim())) {
       onToast('Enter a Google Maps address for each stop so visitors can navigate the route.');
       setActiveTab('stops');
       return;
@@ -496,7 +496,7 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
                   <input
                     id={`trail-stop-address-${idx}`}
                     type="text"
-                    required={!(typeof stop.lat === 'number' && typeof stop.lng === 'number' && Number.isFinite(stop.lat) && Number.isFinite(stop.lng) && Math.abs(stop.lat) <= 90 && Math.abs(stop.lng) <= 180)}
+                    required
                     value={stop.address}
                     onChange={(e) => handleUpdateStop(idx, 'address', e.target.value)}
                     placeholder="Street address or exact Google Maps place name, city"
