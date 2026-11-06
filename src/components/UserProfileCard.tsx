@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Award, Shield, Coins, MapPin, Check, Radio, Zap, AlertCircle } from 'lucide-react';
+import { X, Award, Shield, Coins, MapPin, Check, AlertCircle } from 'lucide-react';
 import { UserProfile } from '../domains/d02_users';
 import { followUser, unfollowUser, checkIsFollowing } from '../domains/d03_social_graph';
 import { sendConnectionPull } from '../domains/d17_matching';
@@ -188,28 +188,25 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
               This is your public explorer profile.
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2 pt-1">
+            <div className="flex items-center justify-between gap-3 pt-1">
               {/* ECHO Button (Left) = D03 one-way follow */}
               <button
                 onClick={handleEcho}
                 disabled={loading}
-                className={`py-3 rounded-2xl font-black text-xs transition cursor-pointer flex items-center justify-center space-x-1.5 ${
+                className={`flex-1 font-mono text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
                   isFollowing
-                    ? 'bg-teal-500/20 text-teal-300 border border-teal-500/50'
-                    : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                    : 'border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10'
                 }`}
                 title="ECHO: One-way follow into your Orbit. Does not grant DMs."
               >
                 {isFollowing ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-teal-400" />
-                    <span>ECHOED (Orbit)</span>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>ECHOED</span>
                   </>
                 ) : (
-                  <>
-                    <Radio className="w-3.5 h-3.5 text-teal-400" />
-                    <span>ECHO (Follow)</span>
-                  </>
+                  <span>ECHO</span>
                 )}
               </button>
 
@@ -217,23 +214,20 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
               <button
                 onClick={handlePull}
                 disabled={loading || pullPending}
-                className={`py-3 rounded-2xl font-black text-xs shadow-lg transition flex items-center justify-center space-x-1.5 cursor-pointer ${
+                className={`flex-1 font-mono text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
                   pullPending
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50'
-                    : 'bg-gradient-to-r from-orange-500 to-teal-500 text-white hover:opacity-90 shadow-orange-500/20'
+                    ? 'bg-rose-500/20 text-rose-200 border-rose-500/60 shadow-[0_0_15px_rgba(244,63,94,0.2)] cursor-default'
+                    : 'border-rose-500/40 text-rose-300 hover:bg-rose-500/10'
                 }`}
                 title="PULL: Mutual Vibe connection request. When accepted, unlocks D14 1:1 DMs."
               >
                 {pullPending ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-amber-400" />
-                    <span>PULL Sent</span>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>PULLED</span>
                   </>
                 ) : (
-                  <>
-                    <Zap className="w-3.5 h-3.5" />
-                    <span>PULL (Vibe)</span>
-                  </>
+                  <span>PULL</span>
                 )}
               </button>
             </div>
