@@ -65,7 +65,9 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
         ? trail.waypoints.map((wp, idx) => ({
             id: wp.id || `stop-${idx}`,
             name: wp.title || `Stop #${idx + 1}`,
-            address: wp.title || 'Itinerary Stop',
+            address: wp.address?.trim() || '',
+            lat: wp.lat,
+            lng: wp.lng,
             vibeNote: wp.description || wp.hint || 'Cultural checkpoint on trail route.',
             timeOfDay: (idx === 0 ? 'Morning' : idx === 1 ? 'Sunset' : 'Night'),
             durationMinutes: 60,
