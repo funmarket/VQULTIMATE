@@ -85,6 +85,11 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
   const [guardianRegistrationType, setGuardianRegistrationType] = useState<'local' | 'pro' | undefined>();
   const openGuardianRegistration = (type?: 'local' | 'pro') => {
     if (!user) { onRequireAuth?.(); return; }
+    const existing = guardians.find(guardian => guardian.id === user.id);
+    if (type === 'local' && existing?.type === 'pro') {
+      showToast('This account is already a Pro Guardian. Creating a Local Legend would replace that role.');
+      return;
+    }
     setGuardianRegistrationType(type);
     setIsSelfieModalOpen(true);
   };
@@ -956,7 +961,8 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
             className="w-full rounded-2xl border border-amber-500/50 bg-amber-500/15 px-4 py-3 text-xs font-black text-amber-200 transition hover:bg-amber-500/25 flex items-center justify-center gap-2"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
-            <span>Create Local Legend</span>
+            <span>{guardians.some(guardian => guardian.id === user?.id && guardian.type === 'local')
+              ? 'Renew Local Legend' : 'Create Local Legend'}</span>
           </button>
         )}
 
