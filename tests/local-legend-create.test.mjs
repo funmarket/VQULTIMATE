@@ -20,3 +20,9 @@ test('Local action opens existing verified selfie form with an explicit local ro
   assert.match(selfie, /await registerGuardian\(/);
   assert.match(guardians, /supabase\.rpc\('vq_register_guardian'/);
 });
+
+test('Local shortcut cannot silently replace an existing Pro Guide', () => {
+  assert.match(explore, /type === 'local' && existing\?\.type === 'pro'/);
+  assert.match(explore, /Creating a Local Legend would replace that role/);
+  assert.match(explore, /Renew Local Legend/);
+});
