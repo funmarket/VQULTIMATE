@@ -28,7 +28,7 @@ export function buildTrailRoutePlan(trail: CommunityTrail, mode: TrailTravelMode
   }
   const destination = (stop: TrailStop): string | null => {
     const address = stop.address?.trim();
-    return address ? [address, trail.city].filter(Boolean).join(', ') : null;
+    return address || null;
   };
   for (const [index, stop] of stops.entries()) {
     if (!destination(stop)) {
