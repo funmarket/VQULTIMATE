@@ -29,6 +29,12 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
   const [isCached, setIsCached] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [expandedStopId, setExpandedStopId] = useState<string | null>(null);
+  const [activePhoto, setActivePhoto] = useState(0);
+  const gallery = trail.gallery || [];
+  const visibleImages = gallery.length > 0
+    ? [...gallery].sort((a, b) => Number(b.isCover) - Number(a.isCover))
+        .map(photo => photo.url).filter(Boolean)
+    : [trail.imageUrl || trail.image_url || ''].filter(Boolean);
 
   const stops: TrailStop[] = trail.stops && trail.stops.length > 0
     ? trail.stops
@@ -84,7 +90,7 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
         {/* Edge-to-Edge Hero Image matching reference image_86e0ae07.png */}
         <div className="relative h-64 sm:h-72 w-full bg-neutral-900 flex-shrink-0">
           <img
-            src={trail.imageUrl || trail.image_url}
+            src={visibleImages[activePhoto] || visibleImages[0] || ''}
             alt={trail.title}
             className="w-full h-full object-cover"
           />
@@ -178,6 +184,25 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
               </div>
             </div>
           </div>
+
+          {visibleImages.length > 1 && (
+            <section aria-label="Trail photo gallery" className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+                Gallery · {visibleImages.length} photos
+              </p>
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {visibleImages.map((url, index) => (
+                  <button key={url} type="button" onClick={() => setActivePhoto(index)}
+                    aria-label={`View photo ${index + 1}`}
+                    aria-pressed={activePhoto === index}
+                    className={`w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 ${activePhoto === index ? 'border-emerald-400' : 'border-neutral-800'}`}>
+                    <img src={url} alt={`Trail photo ${index + 1}`}
+                      className="aspect-video w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Narrative Story Snippet */}
           <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed font-light">
