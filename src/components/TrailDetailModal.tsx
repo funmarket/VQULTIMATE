@@ -38,15 +38,10 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
     setRoutePlan({ mode, legs: plan.segments });
   };
   const navigateToStop = (stop: TrailStop) => {
-    const hasCoordinates = typeof stop.lat === 'number' && typeof stop.lng === 'number'
-      && Number.isFinite(stop.lat) && Number.isFinite(stop.lng)
-      && Math.abs(stop.lat) <= 90 && Math.abs(stop.lng) <= 180;
     const address = stop.address?.trim();
-    const destination = hasCoordinates
-      ? `${stop.lat},${stop.lng}`
-      : address ? [address, trail.city].filter(Boolean).join(', ') : null;
+    const destination = address ? [address, trail.city].filter(Boolean).join(', ') : null;
     if (!destination) {
-      onToast?.('This stop needs a Google Maps address or map coordinates.');
+      onToast?.('This stop needs a Google Maps address.');
       return;
     }
     const params = new URLSearchParams({ api: '1', destination });
