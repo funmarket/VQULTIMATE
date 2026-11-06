@@ -113,16 +113,21 @@ export async function withTrailGalleries(trails: CommunityTrail[]): Promise<Comm
   await Promise.all(paths.map(async path => {
     const { data: url, error: signError } = await supabase.storage.from('media')
       .createSignedUrl(path, SIGNED_URL_SECONDS);
-    if (signError || !url?.signedUrl) throw new Error('Unable to display a published Trail photo.');
+    if (signError || !url?.signedUrl) {
+      console.warn('An attached Trail photo could not be signed:', signError?.message || path);
+      return;
+    }
     signed.set(path, url.signedUrl);
   }));
   const galleries = new Map<string, TrailGalleryPhoto[]>();
   for (const row of rows) {
     const gallery = galleries.get(row.trail_id) || [];
+    const url = signed.get(row.object_path);
+    if (!url) continue;
     gallery.push({
       id: row.id,
       objectPath: row.object_path,
-      url: signed.get(row.object_path) || '',
+      url,
       sortOrder: row.sort_order,
       isCover: row.is_cover,
     });
