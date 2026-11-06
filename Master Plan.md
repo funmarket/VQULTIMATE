@@ -13,3 +13,66 @@
 **Live-source rule:** Current repository HEAD and governing-document identities are intentionally verified at execution time rather than frozen into this living plan. Historical checkpoint values, if retained elsewhere as evidence, never override current source.
 
 **Plan status:** `PRODUCT OWNER APPROVED — CONTRIBUTING IMPLEMENTATION / PRODUCTION-EXECUTION PLAN`.
+
+---
+
+## Proposed Share camera, VibeCheck, VibeFlash and social-feed correction — 2026-11-06
+
+**Status: Product Owner-requested scope, documentation amendment pending review.** This section records the Share repair and its dependency gates. It does **not** certify a feature as implemented, approve a schema migration or override an unresolved Product Owner decision. The prior plan and scope remain intact. This document is for **funmarket/VQULTIMATE**; references to **funmarket/VQgemini** in the inherited source paragraphs are legacy identifiers to reconcile, not permission to switch repositories.
+
+### A. Why the Share slice is needed and where it fits
+
+The Share page must offer a professionally designed, mobile-first, genuinely working camera/publishing experience while preserving the five-tab shell and the concept of Share Good Vibes. It is a source of canonical posts and engagement visible in Vibe/Gossip and, when authorized by visibility and audience rules, in the later Home social feeds. The Share camera fix is an explicit bounded slice following D12's minimal canonical publishing contract; coordinate its D13 media and D18 timed-challenge dependencies before enabling individual features. This **does not** authorize skipping D12 tests, the existing PR acceptance gates, or moving the Home feed ahead of the last Social System Mechanics task. The Share UI design/camera slice may be prepared and independently verified before D03/D17/D14 completion; any feature depending on their authorization remains gated until verified.
+
+### B. Fresh reference/implementation reconciliation and authority
+
+- Current UI source observed: `src/components/ShareTab.tsx`, `src/domains/d04_share/api.ts`, `src/components/CreateFlashModal.tsx`; draft D12 interface on PR #7. Reference: `funmarket/VQgemini@fe96aa780cfe35c88329e4456c9ab2b2c685fefa` — `src/components/share/LiveCameraFeatures.tsx`, `LiveCameraModule.tsx`, `VibePhotoCapture.tsx`, `src/native/vibeCheckService.ts`, `vibeFlashService.ts`, and its fuller `structure.md`/`Database.md`. Reference source remains interaction/failure evidence, not code, schema or operational authority.
+- Verified present defects: ShareTab currently synthesizes fallback canvas capture on camera failure, initializes a stock photo as media fallback, ignores a Boolean publication result and can show success after an error. `d04_share/api.ts` writes `vibe_posts` rather than canonical `social_posts`, and derives a public URL for the currently private Supabase `media` bucket. Camera/text Share, Gossip and Home are not yet one verified publication flow.
+- The reference's UI labels advertise **5-minute VibeCheck / 3-minute Vibe Flash**, and legacy internal implementations contain other conflicting countdowns. Its longer, Product Owner-approved `structure.md` and `Database.md` describe **D18 VibeCheck 180 seconds** and **VibeFlash 33 seconds**. Resolve document precedence explicitly during requirements restoration; never select an arbitrary timer from old component code, and never silently change an approved limit.
+- `vibe_checks`, `vibe_flashes` and `social_posts` exist in the examined Supabase schema, but existence does not establish active security, runtime integration, expiration enforcement or usable camera proof.
+
+### C. Canonical domain and component ownership (no new business domain)
+
+| Boundary | Owns | Does not own |
+|---|---|---|
+| D01/D02 | authenticated account and profile identity | camera proof, media or posts |
+| D03 | directed ECHO follows; Orbit outbound / Echo inbound audience relationships | publication, challenges or DMs |
+| D04 geo-presence | optional consented location evidence, accuracy/freshness, proximity | camera upload or published post |
+| D12 social-content | canonical Gossip/Share publication, text/media references, comments/reactions and visibility | hardware capture, storage bytes, challenge deadlines |
+| D13 global-media | real captured bytes, ownership, private delivery, attachment authorization, variants, retention/retirement | independent social posts or matches |
+| D17 matching | Pull invitations, confirmed Vibes and Drift proposals | ECHO follow state or challenge response |
+| D18 challenges | VibeCheck recipient/invite/response/reveal, VibeFlash collective timing and eligibility, deadlines/expiry | final D12 publication, D03 follows or unilateral D17 confirmation |
+| D14/D23/D20 | authorized conversations; notification delivery; verified eligible VQ ledger award respectively | fabricated message delivery, alerts or rewards |
+
+The current `src/domains/d04_share` is a **legacy adapter, not authorization to reassign D04's canonical geo-presence ownership**. Share page feature/presentation modules compose calls to the public APIs of the above owners. Cross-owner orchestration is an application use case, never direct writes into a foreign canonical table. Vibe Flash is **not** automatically equivalent to D11 Flash Events or a confirmed D17 Vibe. A Share-specific aesthetic Echo is **not** a D03 follow or permission to DM.
+
+### D. Separate user journeys and truth requirements
+
+1. **Share composer / caption / photos:** clear message entry, optional genuine image, draft persistence only as nonauthoritative UI state, submit once with authenticated actor, selected audience, optional coarse area and explicit publish feedback. A genuine D12 record must be read back; same ID and content appear in Gossip and only eligible Home queries after refresh. No fake posts, usernames, location or engagement; no fake localStorage authority.
+2. **Live Vibe Shot:** camera-only acquisition (no gallery-import substitute for live proof), explicit permission, real video track readiness, rear/front capture when both supported, PIP or two-photo preview, retake, optional caption and explicit publication. Device with one camera or denied permission gets truthful capabilities/errors and a supported fallback workflow **without generating simulated proof**. No unseen or unconsented capture; stop tracks on close, unmount, logout, lens switch and error. A capture is not a publication until D13 upload and D12 commit succeed.
+3. **VibeCheck:** real named eligible recipient, bounded prompt, invitation, accept/refuse, genuine photo response, authoritative server deadline, targeted alert via D23 and visibility-restricted reveal/reactions. Only two valid reciprocal responses under D18 can invoke D17's idempotent mutual confirmation. A unilateral response, follower, expired/declined invite or Flash does not unlock D14 DMs. Do not show reward success without D20 ledger acceptance.
+4. **Vibe Flash:** distinct spontaneous, time-limited collective camera response and participant-visible Mosaic, based on server time and D18 audience rules. Expiry/deny/retry and post-publication consent are explicit. No client-only timer authority or automatically generated social post/match.
+5. **Feeds and social engagement:** D12 remains one writer for published social content. My Network uses D03 follow projections; Local Vibes uses approved D04 coarse-area location rules; For You uses genuine D02 preferences. Private challenge/media records must never leak into public feeds or reuse a broader audience without explicit authorized publication. Feed integration remains the **final** Social System Mechanics task after its dependencies pass.
+
+### E. Share UI redesign brief (superior to the old screenshot, not a copied screen)
+
+Retain the app's Midnight Obsidian visual identity and mobile navigation, but replace the large passive handwritten `SHARE GOOD VIBES` hero and three tiny low-contrast tiles with a **camera-first creation surface**: a compact friendly heading and one-line purpose; an obvious primary **Open Camera / Live Vibe Shot** action with a meaningful lens preview/illustration only when truthful; two equally legible secondary **VibeCheck** and **Vibe Flash** cards showing purpose, recipient/participation status and the verified countdown; accessible labels, larger tap targets, consistent icon/typography hierarchy and responsive vertical spacing. Follow with a composer/caption and relevant audience/context controls where authorized. The camera uses a full-height distraction-free viewfinder with actual hardware state, capture/flip/close, readable timer, retake and confirmation; typed progress/error/retry states. Distinguish actual uploads from preview-only state. Do not render fake camera feeds, fabricated nearby participants or demo challenges as live availability. Produce comparative mobile screenshots and keyboard/screen-reader/RTL checks before approval; do not change the five-tab app shell or other pages opportunistically.
+
+### F. Execution packets and acceptance gates (separate authorization per mutation)
+
+**Share-0 — documentation/domain reconciliation first:** recover and compare the complete approved reference `Master Plan.md`, `Requirements.md`, `structure.md` and `Database.md` against the currently abbreviated VQULTIMATE copies, the latest PO decisions and installed schema. The current VQULTIMATE files are much shorter; their old VQgemini headers/paths are stale. Reconstruct missing D01–D28 matrix, explicit ownership, actual feature contracts and sequencing as **reviewable diffs**, without copying historical wrong topology, fake persistence or migrations. If source or current approval cannot be proven, mark UNKNOWN/BLOCKED rather than silently promote reference prose to authority. No bulk replacement by default.
+
+**Share-1 — camera/capture truth:** reproduce permission-denied, no-camera, failed capture, camera switch and unmount cleanup with failing tests. Implement real browser/Telegram host capabilities and fail-closed media capture; remove simulated fallback and stock photo as "capture." Verify genuine front/back proofs and preview/retake on representative mobile devices.
+
+**Share-2 — media and publishing:** verify D13 Storage security and signed/authorized read access for private media, unique immutable object keys, upload errors and cleanup for failed multi-object transactions. Wire the Share composer to D12 canonical create/read/visibility; preserve draft on failed media or post write; prevent duplicate publish. Assert persisted image/text from two authenticated principals with RLS denials for unauthorized access, and refresh to prove publication survives reload.
+
+**Share-3 — timed VibeCheck and Vibe Flash:** only after D18 owner, deadlines, eligibility, idempotency, response, privacy and notification contracts are reconciled. Write failing tests first; implement independent countdown/expiry handling and no false D17 confirmations/VQ rewards. Verify two users and rejected/expired/replayed requests; validate capture provenance rather than a client-provided "verified" flag.
+
+**Share-4 — design/parity and integration:** visual diff against existing Share and reference flow at mobile sizes; check camera/compass navigation, Vibe/Gossip display, authorized audience visibility, no duplicate social writes, EN/FR/AR/RTL, accessibility and no regressions in Orbit/ECHO/PULL or other tabs. Keep Home social feed last. CI must validate exact candidate SHA; browser/live database behavior is separate evidence from static checks.
+
+**STOP CONDITIONS:** unapproved schema/RLS/Storage changes, unresolved duration/visibility/retention semantics, no real-camera/browser proof, missing signed media access, missing runtime tests, branch movement, unexpected file changes, false publish/credit/match/notification, or competing domain writers. No merging, deployment or production-schema mutation follows merely from this amendment.
+
+### G. Documentation recovery issue recorded
+
+The VQULTIMATE root `Master Plan.md`, `Requirements.md`, `structure.md` and `Database.md` are abbreviated and still use VQgemini document identity. They must be reconciled against **full** reference-approved behavior, domain ownership and the **newer** VQULTIMATE decisions, not replaced wholesale. Especially important: the reference architecture calls D04 **geo-presence**, D13 **global media**, D18 **challenges**, D12 **social content**. Preserve the approved current backend/schema as installed-state evidence and distinguish conceptual requirements from implemented records.
+
