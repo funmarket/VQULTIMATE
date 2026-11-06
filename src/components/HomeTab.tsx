@@ -162,50 +162,6 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
       )}
 
 
-      {/* Hero Welcome Card */}
-      <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-900/90 to-neutral-950 border border-neutral-800 p-6 shadow-2xl">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="relative z-10 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse" />
-              <span className="text-xs uppercase tracking-widest text-teal-300 font-bold">Active District Orbit</span>
-            </div>
-            <span className="text-xs px-2.5 py-1 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 font-medium">
-              {user?.role ? user.role.toUpperCase() : 'EXPLORER'}
-            </span>
-          </div>
-
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-neutral-200 to-orange-200">
-              Welcome back, {user?.full_name || 'Explorer'}
-            </h1>
-            <p className="text-sm text-neutral-400 mt-1">
-              Your Vibe Orbit pulse is synchronized with Supabase PostgreSQL. Explore local legends and capture authentic moments.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 pt-2">
-            <button
-              onClick={() => onNavigateTab('explore')}
-              className="flex items-center justify-center space-x-2 py-3 px-4 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold text-sm shadow-lg shadow-orange-500/25 transition cursor-pointer"
-            >
-              <Compass className="w-4 h-4" />
-              <span>Open Vibe Orbit</span>
-            </button>
-            <button
-              onClick={() => onNavigateTab('share')}
-              className="flex items-center justify-center space-x-2 py-3 px-4 rounded-2xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-sm border border-neutral-700 transition cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4 text-teal-400" />
-              <span>BeReal Capture</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Featured Vibe Orbit Pulse Places */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
