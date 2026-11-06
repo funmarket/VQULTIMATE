@@ -19,7 +19,7 @@ const categories: { id: Mood; emoji: string; label: string; description: string 
   { id: 'spark', emoji: '🤗', label: 'FRIENDLY SPARK', description: 'Kindness and connection' },
   { id: 'moments', emoji: '🧘', label: 'SHARED MOMENTS', description: 'Help and shared experiences' },
 ];
-const names: Record<Mode, string> = { shot: 'Live Vibe Shot', check: 'VibeCheck', flash: 'VibeFlash', snap: 'Vibe Snap', dual: 'Vibe Share · Dual Cam' };
+const names: Record<Mode, string> = { shot: 'Live Vibe Shot', check: 'VibeCheck', flash: 'VibeFlash', snap: 'Vibe Snap', dual: 'Vibe Share' };
 
 /** Share capture shell. Does not impersonate a D18 challenge or claim D12 publication. */
 export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: _onPostSuccess, initialMode, cameraOnly = false, onClose }) => {
@@ -27,7 +27,7 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
   const [stage, setStage] = useState<Stage>('camera');
   const [facing, setFacing] = useState<'environment' | 'user'>('environment');
   const [dualEnabled, setDualEnabled] = useState(initialMode === 'dual');
-  const dualCapture = mode === 'flash' || mode === 'dual' || ((mode === 'shot' || mode === 'check') && dualEnabled);
+  const dualCapture = mode === 'flash' || ((mode === 'dual' || mode === 'shot' || mode === 'check') && dualEnabled);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -388,7 +388,7 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
             </div>
             {(mode === 'check' || mode === 'flash') && <p className="rounded-xl border border-amber-800 bg-amber-950/40 p-3 text-xs text-amber-200">Live camera capture only. Timed challenge invitations and submissions are not connected yet; no challenge is sent or claimed.</p>}
             {dualCapture && <p className="text-xs text-neutral-300">{stage === 'selfie' ? 'Step 2 of 2: capture your front-camera selfie.' : stage === 'camera' ? 'Step 1 of 2: capture the scene with the back camera.' : 'Review the combined scene and selfie image.'}</p>}
-            {(mode === 'shot' || mode === 'check') && stage === 'camera' && (
+            {(mode === 'shot' || mode === 'check' || mode === 'dual') && stage === 'camera' && (
               <fieldset className="flex gap-2 rounded-xl border border-neutral-700 p-2" aria-label="Capture type">
                 <legend className="px-1 text-xs text-neutral-300">Capture type</legend>
                 <button type="button" aria-pressed={!dualEnabled} onClick={() => setDualEnabled(false)} className={!dualEnabled ? 'flex-1 rounded-lg bg-lime-400 px-3 py-2 text-xs font-bold text-neutral-950' : 'flex-1 rounded-lg bg-neutral-800 px-3 py-2 text-xs text-white'}>Single camera</button>
