@@ -39,7 +39,7 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
   };
   const navigateToStop = (stop: TrailStop) => {
     const address = stop.address?.trim();
-    const destination = address ? [address, trail.city].filter(Boolean).join(', ') : null;
+    const destination = address || null;
     if (!destination) {
       onToast?.('This stop needs a Google Maps address.');
       return;
