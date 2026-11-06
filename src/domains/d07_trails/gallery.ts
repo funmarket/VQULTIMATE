@@ -41,7 +41,8 @@ export function validateTrailPhotos(files: File[], availableSlots: number): void
 
 /** Query the real gallery contract before a content-creating action with photos. */
 export async function requireTrailGallery(): Promise<void> {
-  const { error } = await supabase.from('trail_media').select('id').limit(1);
+  const { error } = await supabase.from('trail_media')
+    .select('id,trail_id,object_path,sort_order,is_cover,created_at').limit(1);
   if (error) throw new Error('Trail photo publishing is not installed yet: ' + error.message);
 }
 
