@@ -38,15 +38,18 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
     setRoutePlan({ mode, legs: plan.segments });
   };
   const navigateToStop = (stop: TrailStop) => {
-    if (typeof stop.lat !== 'number' || typeof stop.lng !== 'number' ||
-      !Number.isFinite(stop.lat) || !Number.isFinite(stop.lng) ||
-      Math.abs(stop.lat) > 90 || Math.abs(stop.lng) > 180) {
-      onToast?.('This stop has no verified map coordinates.');
+    const hasCoordinates = typeof stop.lat === 'number' && typeof stop.lng === 'number'
+      && Number.isFinite(stop.lat) && Number.isFinite(stop.lng)
+      && Math.abs(stop.lat) <= 90 && Math.abs(stop.lng) <= 180;
+    const address = stop.address?.trim();
+    const destination = hasCoordinates
+      ? `${stop.lat},${stop.lng}`
+      : address ? [address, trail.city].filter(Boolean).join(', ') : null;
+    if (!destination) {
+      onToast?.('This stop needs a Google Maps address or map coordinates.');
       return;
     }
-    const params = new URLSearchParams({
-      api: '1', destination: `${stop.lat},${stop.lng}`,
-    });
+    const params = new URLSearchParams({ api: '1', destination });
     window.open('https://www.google.com/maps/dir/?' + params.toString(), '_blank', 'noopener,noreferrer');
   };
   const [activePhoto, setActivePhoto] = useState(0);
