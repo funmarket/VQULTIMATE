@@ -1,6 +1,7 @@
 import { supabase } from '../../lib/supabase';
 import { getCurrentUserProfile } from '../d01_auth';
 import { CommunityTrail, VibeGuardian, TrailStop, TimeOfDay } from './types';
+import { withTrailGalleries } from './gallery';
 
 export const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 export function isGuardianFresh(guardian: VibeGuardian): boolean {
@@ -78,7 +79,7 @@ export async function fetchCulturalTrails(): Promise<CommunityTrail[]> {
     publicProfiles()
   ]);
   if (error) throw new Error('Could not load real Trails: ' + error.message);
-  return (data || []).map(row => toTrail(row, authors));
+  return withTrailGalleries((data || []).map(row => toTrail(row, authors)));
 }
 export async function createCommunityTrail(
   payload: Partial<CommunityTrail>
@@ -100,9 +101,15 @@ export async function createCommunityTrail(
       }
     }
     let original: CommunityTrail | undefined;
+    let inheritedLegacyCover = payload.imageUrl || payload.image_url || '';
     if (payload.forkedFromTrailId) {
       original = (await fetchCulturalTrails()).find(t => t.id === payload.forkedFromTrailId);
       if (!original) throw new Error('Original Trail was not found.');
+      // Never persist an expiring signed photo URL inherited from a gallery.
+      const { data: source, error: sourceError } = await supabase
+        .from('vibe_trails').select('image_url').eq('id', original.id).single();
+      if (sourceError || !source) throw new Error('Could not read original Trail cover.');
+      inheritedLegacyCover = String(source.image_url || '');
     }
     const normalized = stops.map(normalizeStop);
     const durationMinutes = Math.round(normalized.reduce((n, stop) => n + stop.durationMinutes, 0));
@@ -110,7 +117,7 @@ export async function createCommunityTrail(
     const body = {
       id, name: title, story: payload.story || '',
       address: normalized[0]?.address || '', category: payload.category || 'General',
-      vibe_tags: payload.vibeTags || [], image_url: payload.imageUrl || payload.image_url || '',
+      vibe_tags: payload.vibeTags || [], image_url: inheritedLegacyCover,
       latitude: normalized[0]?.lat ?? null, longitude: normalized[0]?.lng ?? null,
       author_id: profile.id, author_name: profile.full_name,
       city: payload.city || '', stops: normalized, total_stops: normalized.length,
