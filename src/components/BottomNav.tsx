@@ -6,15 +6,16 @@ export type TabType = 'home' | 'explore' | 'share' | 'vibe' | 'purse';
 interface BottomNavProps {
   activeTab: TabType;
   onChangeTab: (tab: TabType) => void;
+  scrollContainerRef?: React.RefObject<HTMLElement | null>;
 }
 
-export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onChangeTab }) => {
+export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onChangeTab, scrollContainerRef }) => {
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
 
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+      const currentScrollY = scrollContainerRef?.current?.scrollTop ?? window.scrollY;
       if (currentScrollY > lastScrollY.current + 15) {
         setIsVisible(false); // scrolling down past 15px threshold
       } else if (currentScrollY < lastScrollY.current - 10 || currentScrollY < 10) {
@@ -23,9 +24,15 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onChangeTab }) 
       lastScrollY.current = currentScrollY;
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    const target = scrollContainerRef?.current ?? window;
+    target.addEventListener('scroll', handleScroll, { passive: true });
+    return () => target.removeEventListener('scroll', handleScroll);
+  }, [scrollContainerRef]);
+
+  useEffect(() => {
+    lastScrollY.current = 0;
+    setIsVisible(true);
+  }, [activeTab]);
 
   const tabs = [
     { id: 'home' as TabType, label: 'Home', icon: HomeIcon },
