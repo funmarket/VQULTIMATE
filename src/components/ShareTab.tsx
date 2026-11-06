@@ -307,12 +307,12 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
           <button type="button" onClick={() => openCamera('check')} className="min-h-[128px] min-w-0 rounded-[18px] border border-neutral-700 bg-gradient-to-b from-[#19191a] to-[#131314] p-2 text-left hover:border-violet-500/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400">
             <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-2xl bg-purple-500/20 text-purple-400"><Zap size={19} /></span>
             <span className="block text-[clamp(.66rem,2.85vw,.9rem)] font-extrabold leading-tight">VibeCheck</span>
-            <span className="mt-2 block text-[10px] leading-snug text-neutral-300">5-min live response</span>
+            <span className="mt-2 block text-[10px] leading-snug text-neutral-300">3-min live response</span>
           </button>
           <button type="button" onClick={() => openCamera('flash')} className="min-h-[128px] min-w-0 rounded-[18px] border border-neutral-700 bg-gradient-to-b from-[#19191a] to-[#131314] p-2 text-left hover:border-amber-500/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400">
             <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-400"><Clock3 size={19} /></span>
             <span className="block text-[clamp(.66rem,2.85vw,.9rem)] font-extrabold leading-tight">VibeFlash</span>
-            <span className="mt-2 block text-[10px] leading-snug text-orange-400">3-min window</span>
+            <span className="mt-2 block text-[10px] leading-snug text-orange-400">60-second window</span>
           </button>
         </div>
         <button type="button" onClick={() => openCamera('snap')} className="mt-5 flex w-full items-center justify-center gap-2 rounded-full border-2 border-lime-400 bg-lime-400/[.045] px-3 py-3 text-lime-300 hover:bg-lime-400/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
