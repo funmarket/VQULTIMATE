@@ -1,0 +1,140 @@
+-- VQUltimate D07 Trail/Tour media gallery. Review and apply after testing.
+-- No existing Trail, Tour, profile, or Storage objects are rewritten.
+create table if not exists public.trail_media (
+  id uuid primary key default gen_random_uuid(),
+  trail_id text not null references public.vibe_trails(id) on delete restrict,
+  owner_auth_user_id uuid not null default auth.uid(),
+  object_path text not null unique,
+  sort_order integer not null default 0 check (sort_order >= 0),
+  is_cover boolean not null default false,
+  created_at timestamptz not null default now(),
+  constraint trail_media_path_type check (object_path ~* '\.(jpg|jpeg|png|webp)$')
+);
+
+create index if not exists trail_media_trail_order_idx
+  on public.trail_media(trail_id, sort_order, created_at);
+create unique index if not exists trail_media_one_cover_per_trail
+  on public.trail_media(trail_id) where is_cover = true;
+
+alter table public.trail_media enable row level security;
+revoke all on table public.trail_media from anon, authenticated;
+grant select(id, trail_id, object_path, sort_order, is_cover, created_at)
+  on public.trail_media to anon, authenticated;
+grant insert(trail_id, object_path, sort_order, is_cover)
+  on public.trail_media to authenticated;
+grant update(sort_order, is_cover)
+  on public.trail_media to authenticated;
+grant delete on public.trail_media to authenticated;
+
+create policy trail_media_public_read on public.trail_media
+  for select to anon, authenticated using (true);
+create policy trail_media_owner_insert on public.trail_media
+  for insert to authenticated
+  with check (owner_auth_user_id = (select auth.uid()));
+create policy trail_media_owner_update on public.trail_media
+  for update to authenticated
+  using (owner_auth_user_id = (select auth.uid()))
+  with check (owner_auth_user_id = (select auth.uid()));
+create policy trail_media_owner_delete on public.trail_media
+  for delete to authenticated
+  using (owner_auth_user_id = (select auth.uid()));
+
+-- Reuse the existing author-identity aliases and do not grant all users
+-- permission to alter each other's content.
+create or replace function public.vq_trail_media_guard()
+returns trigger language plpgsql set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_author text;
+  v_legacy_cover text;
+  v_limit integer;
+  v_is_admin boolean;
+  v_prefix text;
+begin
+  if v_uid is null then
+    raise exception 'Authentication required for Trail media' using errcode = '42501';
+  end if;
+  if tg_op = 'UPDATE' then
+    if new.trail_id is distinct from old.trail_id
+      or new.object_path is distinct from old.object_path
+      or new.owner_auth_user_id is distinct from old.owner_auth_user_id then
+      raise exception 'Trail media ownership is immutable' using errcode = '42501';
+    end if;
+  end if;
+  select t.author_id, t.image_url into v_author, v_legacy_cover
+    from public.vibe_trails t where t.id = new.trail_id for update;
+  if not found then raise exception 'Trail not found' using errcode = '23503'; end if;
+  if not (
+    v_author = v_uid::text or v_author = 'usr_' || v_uid::text
+    or exists (
+      select 1 from public.s00_test_identity_links l
+      where l.auth_user_id = v_uid and l.legacy_profile_id = v_author
+    )
+  ) then
+    raise exception 'Only the Trail creator may edit its gallery' using errcode = '42501';
+  end if;
+  if new.owner_auth_user_id is distinct from v_uid then
+    raise exception 'Media owner must match the authenticated user' using errcode = '42501';
+  end if;
+  v_prefix := v_uid::text || '/trails/' || new.trail_id || '/';
+  if left(new.object_path, length(v_prefix)) <> v_prefix then
+    raise exception 'Trail media must use the creator-owned Trail path' using errcode = '42501';
+  end if;
+  select exists (
+    select 1 from storage.objects o
+    where o.bucket_id = 'media' and o.name = new.object_path
+  ) into v_is_admin;
+  if not v_is_admin then
+    raise exception 'Uploaded media object was not found' using errcode = '22023';
+  end if;
+
+  if tg_op = 'INSERT' then
+    select exists(
+      select 1 from public.vq_admin_assignments a
+      where a.auth_user_id = v_uid and a.active and a.role = 'platform_admin'
+    ) into v_is_admin;
+    select case
+      when v_is_admin or coalesce(p.account_type, 'vibe') in ('pro', 'business') then 6
+      else 3
+    end into v_limit
+    from public.profiles p where p.id = v_author;
+    if v_limit is null then
+      raise exception 'Verified Trail author profile not found' using errcode = '42501';
+    end if;
+    if (select count(*) from public.trail_media m where m.trail_id = new.trail_id)
+      + case when nullif(btrim(coalesce(v_legacy_cover, '')), '') is null then 0 else 1 end
+      >= v_limit then
+      raise exception 'Trail photo limit reached' using errcode = '22023';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger vq_trail_media_guard_trigger
+before insert or update on public.trail_media
+for each row execute function public.vq_trail_media_guard();
+
+-- A private Storage bucket stays private. Only objects explicitly attached
+-- to public Trails can be read by visitors using signed URLs.
+create policy vq_trail_attached_media_read on storage.objects
+  for select to anon, authenticated
+  using (
+    bucket_id = 'media'
+    and exists (
+      select 1 from public.trail_media tm where tm.object_path = name
+    )
+  );
+-- Remove an abandoned or intentionally detached object only from its owner
+-- and only after its Trail association has been removed.
+create policy vq_trail_unattached_media_owner_delete on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'media'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+    and (storage.foldername(name))[2] = 'trails'
+    and not exists (
+      select 1 from public.trail_media tm where tm.object_path = name
+    )
+  );
