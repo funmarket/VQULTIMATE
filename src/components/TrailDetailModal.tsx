@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import {
-  X, Clock, Route, GitFork, Download, Heart, Navigation,
+  X, Clock, Route, GitFork, Download, Heart, Footprints, Car, Bus, Map,
   ChevronDown, ChevronRight, CheckCircle2, Sparkles, MapPin, Compass
 } from 'lucide-react';
-import { CommunityTrail, TrailStop } from '../domains/d07_trails';
+import { CommunityTrail, TrailStop, buildTrailRoutePlan, TrailTravelMode, TrailRouteSegment } from '../domains/d07_trails';
 
 interface TrailDetailModalProps {
   trail: CommunityTrail;
   onClose: () => void;
-  onStartNavigation?: (trail: CommunityTrail) => void;
   onCheckInWaypoint?: (waypoint: any, trail: CommunityTrail) => void;
   onToast?: (message: string) => void;
   onAdoptTrail?: (trail: CommunityTrail) => void;
@@ -20,7 +19,6 @@ interface TrailDetailModalProps {
 export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
   trail,
   onClose,
-  onStartNavigation,
   onCheckInWaypoint,
   onToast,
   onAdoptTrail, onToggleSave, isSaved = false, onReserveTour
@@ -29,6 +27,28 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
   const [isCached, setIsCached] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [expandedStopId, setExpandedStopId] = useState<string | null>(null);
+  const [routePlan, setRoutePlan] = useState<{mode: TrailTravelMode; legs: TrailRouteSegment[]} | null>(null);
+  const showDirections = (mode: TrailTravelMode) => {
+    const plan = buildTrailRoutePlan(trail, mode);
+    if (plan.error) { onToast?.(plan.error); return; }
+    if (plan.segments.length === 1) {
+      window.open(plan.segments[0].url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    setRoutePlan({ mode, legs: plan.segments });
+  };
+  const navigateToStop = (stop: TrailStop) => {
+    if (typeof stop.lat !== 'number' || typeof stop.lng !== 'number' ||
+      !Number.isFinite(stop.lat) || !Number.isFinite(stop.lng) ||
+      Math.abs(stop.lat) > 90 || Math.abs(stop.lng) > 180) {
+      onToast?.('This stop has no verified map coordinates.');
+      return;
+    }
+    const params = new URLSearchParams({
+      api: '1', destination: `${stop.lat},${stop.lng}`,
+    });
+    window.open('https://www.google.com/maps/dir/?' + params.toString(), '_blank', 'noopener,noreferrer');
+  };
   const [activePhoto, setActivePhoto] = useState(0);
   const gallery = trail.gallery || [];
   const visibleImages = gallery.length > 0
@@ -302,6 +322,13 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
                             )}
                           </button>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => navigateToStop(stop)}
+                          className="w-full rounded-xl border border-emerald-500/40 bg-emerald-900/30 px-3 py-2 text-[11px] font-bold text-emerald-300 hover:bg-emerald-900/50"
+                        >
+                          Navigate to this stop in Google Maps
+                        </button>
                       </div>
                     )}
                   </div>
@@ -311,19 +338,42 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Sticky Full Trail Walking Route Button (Solid Neon Green #00e599) */}
-        <div className="p-4 bg-neutral-950 border-t border-neutral-800">
-          <button
-            type="button"
-            onClick={() => {
-              if (onStartNavigation) onStartNavigation(trail);
-              onClose();
-            }}
-            className="w-full py-4 rounded-2xl bg-[#00e599] hover:bg-[#00c985] text-neutral-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl shadow-emerald-500/20 transition flex items-center justify-center space-x-2 cursor-pointer active:scale-98"
-          >
-            <Navigation className="w-4 h-4 fill-neutral-950" />
-            <span>FULL TRAIL WALKING ROUTE</span>
-          </button>
+        {/* Google Maps route modes: compact equal-width buttons, no simulated route. */}
+        <div className="space-y-2 border-t border-neutral-800 bg-neutral-950 p-3">
+          <div aria-label="Google Maps directions" className="grid grid-cols-4 gap-1.5">
+            {([
+              { mode: 'walking', label: 'Chill Walk', Icon: Footprints },
+              { mode: 'driving', label: 'Cruise To It', Icon: Car },
+              { mode: 'transit', label: 'Hop On', Icon: Bus },
+              { mode: 'best', label: 'Best', Icon: Map },
+            ] as const).map(({mode, label, Icon}) => (
+              <button key={mode} type="button" onClick={() => showDirections(mode)}
+                title={`Open ${label} directions in Google Maps`}
+                className="flex min-w-0 items-center justify-center gap-0.5 rounded-xl bg-[#00e599] px-0.5 py-3 text-[8px] font-extrabold text-neutral-950 transition hover:bg-[#00c985] min-[390px]:text-[10px]">
+                <Icon className="h-3 w-3 shrink-0" aria-hidden="true" />
+                <span className="whitespace-nowrap">{label}</span>
+              </button>
+            ))}
+          </div>
+          {routePlan && (
+            <section aria-label="Google Maps route legs" className="space-y-2 rounded-xl border border-emerald-500/30 p-3">
+              <p className="text-xs font-bold text-emerald-300">
+                Your itinerary needs {routePlan.legs.length} Google Maps legs.
+              </p>
+              <p className="text-[11px] text-neutral-400">
+                Open each leg in order to visit every stop. Maps has mobile waypoint limits;
+                transit is routed one stop at a time.
+              </p>
+              <div className="grid gap-2">
+                {routePlan.legs.map((leg, index) => (
+                  <a key={leg.url} href={leg.url} target="_blank" rel="noopener noreferrer"
+                    className="rounded-lg border border-neutral-700 px-3 py-2 text-xs text-emerald-200 hover:bg-neutral-900">
+                    Part {index + 1}: {leg.from} → {leg.to} ({leg.stopCount} stops)
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       </div>
     </div>

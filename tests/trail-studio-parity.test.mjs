@@ -20,7 +20,7 @@ test('adopted Trails preserve remix lineage through the real create API', () => 
   assert.match(studio, /initialTrail\.title\.replace/);
   assert.match(studio, /forkedFromTrailId: sourceTrailId \|\| undefined/);
   assert.match(studio, /await createCommunityTrail\(/);
-  assert.match(studio, /onCreated\(result\.trail\)/);
+  assert.match(studio, /onCreated\(published\)/);
 });
 
 test('stop controls edit the ordered itinerary and reject unnamed stops', () => {

@@ -82,6 +82,17 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
   const [reservationTour, setReservationTour] = useState<CommunityTrail | null>(null);
   const [isCurateOpen, setIsCurateOpen] = useState(false);
   const [isSelfieModalOpen, setIsSelfieModalOpen] = useState(false);
+  const [guardianRegistrationType, setGuardianRegistrationType] = useState<'local' | 'pro' | undefined>();
+  const openGuardianRegistration = (type?: 'local' | 'pro') => {
+    if (!user) { onRequireAuth?.(); return; }
+    const existing = guardians.find(guardian => guardian.id === user.id);
+    if (type === 'local' && existing?.type === 'pro') {
+      showToast('This account is already a Pro Guardian. Creating a Local Legend would replace that role.');
+      return;
+    }
+    setGuardianRegistrationType(type);
+    setIsSelfieModalOpen(true);
+  };
   const [exploreToast, setExploreToast] = useState<string | null>(null);
 
   const categories: (VibeCategory | 'All')[] = ['All', 'Food', 'Art', 'Spots', 'Culture', 'Night Owl'];
@@ -338,25 +349,6 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
       const scrollAmount = direction === 'left' ? -280 : 280;
       guardiansScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
-  };
-
-  const handleStartTrailNav = (trail: CulturalTrail) => {
-    setSelectedTrail(null);
-    const wp = trail.waypoints?.find(point => Number.isFinite(point.lat) && Number.isFinite(point.lng));
-    if (wp && mapInstance.current) {
-      try {
-        mapInstance.current.flyTo({
-          center: [wp.lng, wp.lat],
-          zoom: 16,
-          pitch: 55,
-          bearing: -20,
-          essential: true
-        });
-      } catch (err) {
-        console.warn('Map fly error:', err);
-      }
-    }
-    showToast(wp ? `Focused map on "${wp.title || wp.name}" for Trail "${trail.title}".` : 'This Trail has no verified waypoint coordinates for map navigation.');
   };
 
   const handleLocateGuardian = (g: VibeGuardian) => {
@@ -891,7 +883,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           {/* Primary Action Buttons: BECOME A GUARDIAN / IN-APP SELFIE & 7D Hidden Badge */}
           <div className="relative z-10 flex items-center space-x-2 pt-1 flex-wrap gap-y-2">
             <button
-              onClick={() => { if (!user) onRequireAuth?.(); else setIsSelfieModalOpen(true); }}
+              onClick={() => openGuardianRegistration()}
               className="px-4 py-3 rounded-2xl bg-[#8b2cf5] hover:bg-[#7823d6] text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-600/30 transition flex items-center space-x-2 cursor-pointer active:scale-98"
             >
               <Camera className="w-4 h-4" />
@@ -942,6 +934,18 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
             <span>LOCAL LEGENDS</span>
           </button>
         </div>
+
+        {guardianFilter === 'local' && (
+          <button
+            type="button"
+            onClick={() => openGuardianRegistration('local')}
+            className="w-full rounded-2xl border border-amber-500/50 bg-amber-500/15 px-4 py-3 text-xs font-black text-amber-200 transition hover:bg-amber-500/25 flex items-center justify-center gap-2"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            <span>{guardians.some(guardian => guardian.id === user?.id && guardian.type === 'local')
+              ? 'Renew Local Legend' : 'Create Local Legend'}</span>
+          </button>
+        )}
 
         {/* Guardian Profile Cards (matching image_a6756c21.png and image_52948d57.png) */}
         {(() => {
@@ -1091,7 +1095,6 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         <TrailDetailModal
           trail={selectedTrail}
           onClose={() => setSelectedTrail(null)}
-          onStartNavigation={handleStartTrailNav}
           onCheckInWaypoint={handleWaypointCheckIn}
           onToast={showToast}
           onAdoptTrail={openAdoptEditor}
@@ -1139,6 +1142,8 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
       {/* Live 7-Day In-App Selfie Verification Modal */}
       {isSelfieModalOpen && (
         <LiveSelfieModal
+          key={guardianRegistrationType || 'guardian-default'}
+          initialGuardianType={guardianRegistrationType}
           user={user}
           onClose={() => setIsSelfieModalOpen(false)}
           onVerified={() => {
