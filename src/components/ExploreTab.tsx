@@ -113,26 +113,37 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     };
   }, []);
 
-  // 2. Query real places within 23 km based on acquired device coordinates
+  // 2. Query each real directory independently. A failing gallery must not hide Guardians.
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
 
-    Promise.all([
+    Promise.allSettled([
       fetchNearbyVibePlaces(locationState.coords, selectedCategory),
       fetchCulturalTrails(),
       fetchVibeGuardians(),
       supabase.auth.getUser()
-    ]).then(([placesData, trailsData, guardiansData, auth]) => {
-      setPlaces(placesData);
-      setTrails(trailsData);
-      setGuardians(guardiansData);
-      const aliases = [user?.id, auth.data.user?.id, auth.data.user?.id ? 'usr_' + auth.data.user.id : null];
-      setSavedTrailIds(new Set(trailsData.filter(t => t.savedBy?.some(id => aliases.includes(id))).map(t => t.id)));
+    ]).then(([placesResult, trailsResult, guardiansResult, authResult]) => {
+      if (cancelled) return;
+      if (placesResult.status === 'fulfilled') setPlaces(placesResult.value);
+      if (trailsResult.status === 'fulfilled') {
+        const trailsData = trailsResult.value;
+        setTrails(trailsData);
+        const authId = authResult.status === 'fulfilled' ? authResult.value.data.user?.id : undefined;
+        const aliases = [user?.id, authId, authId ? 'usr_' + authId : null];
+        setSavedTrailIds(new Set(trailsData.filter(t => t.savedBy?.some(id => aliases.includes(id))).map(t => t.id)));
+      }
+      if (guardiansResult.status === 'fulfilled') setGuardians(guardiansResult.value);
+
+      const failures = [placesResult, trailsResult, guardiansResult, authResult]
+        .filter((result): result is PromiseRejectedResult => result.status === 'rejected');
+      if (failures.length > 0) {
+        const first = failures[0].reason;
+        showToast(first instanceof Error ? first.message : 'Some Explore data could not be loaded.');
+      }
       setLoading(false);
-    }).catch(error => {
-      setLoading(false);
-      showToast(error instanceof Error ? error.message : 'Unable to load Explore data.');
     });
+    return () => { cancelled = true; };
   }, [locationState.coords?.lat, locationState.coords?.lng, selectedCategory, user?.id]);
 
   // 3. Initialize MapLibre GL dark-matter map (Neutral world center until device location arrives)
