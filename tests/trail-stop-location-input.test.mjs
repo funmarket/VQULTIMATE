@@ -16,10 +16,9 @@ test('stop name and address are independent editable fields', () => {
   assert.doesNotMatch(source, /name: location, address: location/);
 });
 
-test('the address field is optional for stops with valid coordinates', () => {
-  assert.match(source, /required=\{!\(typeof stop\.lat === 'number'/);
-  assert.match(source, /Math\.abs\(stop\.lat\) <= 90/);
-  assert.match(source, /Math\.abs\(stop\.lng\) <= 180/);
+test('a separate Google Maps address is required regardless of optional coordinates', () => {
+  assert.match(source, /id=\{`trail-stop-address-\$\{idx\}`\}[\s\S]*?type="text"\s+required\s+value=\{stop\.address\}/);
+  assert.match(source, /stops\.some\(\(s\) => !s\.address\.trim\(\)\)/);
 });
 
 test('publishing continues to validate that every stop has a location', () => {
