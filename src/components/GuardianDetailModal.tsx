@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  X, Shield, Award, MapPin, Compass, Radio, Zap, Check, AlertCircle,
+  X, Shield, Award, MapPin, Compass, Check, AlertCircle,
   Route, Clock, Sparkles, Navigation, ChevronRight, ExternalLink
 } from 'lucide-react';
 import { VibeGuardian, CulturalTrail } from '../domains/d07_trails';
@@ -248,28 +248,25 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
 
           {/* Primary Action Buttons */}
           <div className="space-y-2 pt-2">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center justify-between gap-3">
               {/* ECHO Button: D03 One-Way Follow */}
               <button
                 onClick={handleEcho}
                 disabled={loading}
-                className={`py-3 rounded-2xl font-black text-xs transition cursor-pointer flex items-center justify-center space-x-1.5 ${
+                className={`flex-1 font-mono text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
                   isFollowing
-                    ? 'bg-teal-500/20 text-teal-300 border border-teal-500/50'
-                    : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                    : 'border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10'
                 }`}
                 title="ECHO: One-way follow into your Orbit"
               >
                 {isFollowing ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-teal-400" />
-                    <span>ECHOED (Orbit)</span>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>ECHOED</span>
                   </>
                 ) : (
-                  <>
-                    <Radio className="w-3.5 h-3.5 text-teal-400" />
-                    <span>ECHO (Follow)</span>
-                  </>
+                  <span>ECHO</span>
                 )}
               </button>
 
@@ -277,23 +274,20 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
               <button
                 onClick={handlePull}
                 disabled={loading || pullPending}
-                className={`py-3 rounded-2xl font-black text-xs shadow-lg transition flex items-center justify-center space-x-1.5 cursor-pointer ${
+                className={`flex-1 font-mono text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
                   pullPending
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50'
-                    : 'bg-gradient-to-r from-orange-500 to-teal-500 text-white hover:opacity-90 shadow-orange-500/20'
+                    ? 'bg-rose-500/20 text-rose-200 border-rose-500/60 shadow-[0_0_15px_rgba(244,63,94,0.2)] cursor-default'
+                    : 'border-rose-500/40 text-rose-300 hover:bg-rose-500/10'
                 }`}
                 title="PULL: Mutual Vibe connection request. When accepted, unlocks D14 1:1 DMs."
               >
                 {pullPending ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-amber-400" />
-                    <span>PULL Sent</span>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>PULLED</span>
                   </>
                 ) : (
-                  <>
-                    <Zap className="w-3.5 h-3.5" />
-                    <span>PULL (Vibe)</span>
-                  </>
+                  <span>PULL</span>
                 )}
               </button>
             </div>
