@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { X, Plus, Trash2, Route, Clock, Sparkles, MapPin, Compass, ArrowUp, ArrowDown } from 'lucide-react';
-import { CommunityTrail, TrailStop, TimeOfDay, createCommunityTrail } from '../domains/d07_trails';
+import { CommunityTrail, TrailStop, TimeOfDay, createCommunityTrail, fetchCulturalTrails, photoLimit, requireTrailGallery, uploadTrailPhotos, validateTrailPhotos } from '../domains/d07_trails';
 import { UserProfile } from '../domains/d01_auth';
 
 interface CurateTrailModalProps {
@@ -43,6 +43,27 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
   );
 
   const [submitting, setSubmitting] = useState(false);
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  const [coverPhotoIndex, setCoverPhotoIndex] = useState(0);
+  const previews = useMemo(() => photoFiles.map(file => URL.createObjectURL(file)), [photoFiles]);
+  useEffect(() => () => previews.forEach(url => URL.revokeObjectURL(url)), [previews]);
+  const maxPhotos = photoLimit(user?.accountType, user?.role === 'admin');
+  const freePhotoSlots = Math.max(0, maxPhotos - (imageUrl ? 1 : 0));
+
+  const selectPhotos = (incoming: FileList | null) => {
+    if (!incoming?.length) return;
+    const next = [...photoFiles, ...Array.from(incoming)];
+    try {
+      validateTrailPhotos(next, freePhotoSlots);
+      setPhotoFiles(next);
+    } catch (error) {
+      onToast(error instanceof Error ? error.message : 'Invalid Trail photos.');
+    }
+  };
+  const removePhoto = (index: number) => {
+    setPhotoFiles(current => current.filter((_, i) => i !== index));
+    setCoverPhotoIndex(0);
+  };
 
   const applySourceTrail = (sourceId: string) => {
     setSourceTrailId(sourceId);
@@ -107,36 +128,56 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
     }
 
     setSubmitting(true);
-    const tags = vibeTagsInput
-      .split(',')
-      .map((t) => t.trim().toLowerCase())
-      .filter(Boolean);
-
-    const result = await createCommunityTrail({
-      title: title.trim(),
-      story: story.trim(),
-      category,
-      city: city.trim(),
-      vibeTags: tags,
-      imageUrl,
-      durationHours: Number(durationHours) || 0,
-      isTour,
-      forkedFromTrailId: sourceTrailId || undefined,
-      pricePerPerson: isTour ? Number(pricePerPerson) : undefined,
-      flowSequence: flow,
-      authorName: user.full_name,
-      authorHandle: `@${user.username}`,
-      authorAvatarUrl: user.avatar_url,
-      stops
-    });
-
-    setSubmitting(false);
-    if (result.success && result.trail) {
-      onToast(isTour ? '✨ Commercial Vibe Tour published!' : '🗺️ Cultural Vibe Trail curated & published!');
-      onCreated(result.trail);
+    let published: CommunityTrail | undefined;
+    try {
+      // Fail before creating a Trail when the gallery migration is not installed.
+      if (photoFiles.length) await requireTrailGallery();
+      const tags = vibeTagsInput
+        .split(',')
+        .map(t => t.trim().toLowerCase())
+        .filter(Boolean);
+      const result = await createCommunityTrail({
+        title: title.trim(),
+        story: story.trim(),
+        category,
+        city: city.trim(),
+        vibeTags: tags,
+        imageUrl,
+        durationHours: Number(durationHours) || 0,
+        isTour,
+        forkedFromTrailId: sourceTrailId || undefined,
+        pricePerPerson: isTour ? Number(pricePerPerson) : undefined,
+        flowSequence: flow,
+        authorName: user.full_name,
+        authorHandle: `@${user.username}`,
+        authorAvatarUrl: user.avatar_url,
+        stops
+      });
+      if (!result.success || !result.trail) throw new Error(result.error || 'Failed to publish Trail.');
+      published = result.trail;
+      if (photoFiles.length) {
+        await uploadTrailPhotos(published.id, photoFiles, coverPhotoIndex);
+        published = (await fetchCulturalTrails()).find(t => t.id === published?.id) || published;
+      }
+      onCreated(published);
+      onToast(isTour ? 'Commercial Vibe Tour published!' : 'Cultural Vibe Trail published!');
       onClose();
-    } else {
-      onToast(result.error || 'Failed to publish trail.');
+    } catch (error) {
+      if (published) {
+        // Never silently erase an already-published Trail because a photo failed.
+        const refreshed = await fetchCulturalTrails().then(
+          trails => trails.find(t => t.id === published?.id) || published,
+          () => published,
+        );
+        onCreated(refreshed);
+        onToast('Trail was published, but one or more photos failed: ' +
+          (error instanceof Error ? error.message : String(error)));
+        onClose();
+      } else {
+        onToast(error instanceof Error ? error.message : 'Failed to publish Trail.');
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -207,6 +248,44 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
               <span>⬡ Vibe Tour</span>
             </button>
           </div>
+
+          <section className="space-y-2 rounded-xl border border-neutral-800 bg-neutral-950/60 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <label htmlFor="trail-gallery-input" className="text-[11px] font-bold text-white">
+                Add Trail Photos
+              </label>
+              <span className="text-[10px] text-neutral-400">
+                {photoFiles.length + (imageUrl ? 1 : 0)} / {maxPhotos} photos
+              </span>
+            </div>
+            <p className="text-[10px] text-neutral-400">
+              Add real JPG, PNG or WebP images (up to 5 MB each). The existing cover counts toward your limit.
+              Select a cover for your uploaded gallery.
+            </p>
+            <input id="trail-gallery-input" type="file" accept="image/jpeg,image/png,image/webp"
+              multiple disabled={submitting || photoFiles.length >= freePhotoSlots}
+              onChange={event => { selectPhotos(event.target.files); event.currentTarget.value = ''; }}
+              className="block w-full text-xs text-neutral-300 file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-500/20 file:px-3 file:py-2 file:font-bold file:text-emerald-300 disabled:opacity-50"
+            />
+            {photoFiles.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {photoFiles.map((file, index) => (
+                  <div key={previews[index]} className="min-w-0 space-y-1 rounded-lg border border-neutral-800 p-1.5">
+                    <img src={previews[index]} alt={`Selected Trail photo ${index + 1}`}
+                      className="aspect-video w-full rounded-md object-cover" />
+                    <label className="flex items-center gap-1 text-[10px] text-neutral-300">
+                      <input type="radio" checked={coverPhotoIndex === index}
+                        onChange={() => setCoverPhotoIndex(index)}
+                        name="trail-gallery-cover" /> Cover
+                    </label>
+                    <button type="button" onClick={() => removePhoto(index)}
+                      className="text-[10px] text-red-300 hover:text-red-200">Remove</button>
+                    <p className="truncate text-[9px] text-neutral-500" title={file.name}>{file.name}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
 
           {/* Title */}
           <div className="space-y-1">
