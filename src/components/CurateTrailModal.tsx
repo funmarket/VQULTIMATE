@@ -127,6 +127,11 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
       setActiveTab('stops');
       return;
     }
+    if (stops.some((s) => !s.address.trim() && !(typeof s.lat === 'number' && typeof s.lng === 'number' && Number.isFinite(s.lat) && Number.isFinite(s.lng)))) {
+      onToast('Enter a Google Maps address for each stop so visitors can navigate the route.');
+      setActiveTab('stops');
+      return;
+    }
 
     setPublishError(null);
     setSubmitting(true);
@@ -480,13 +485,21 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
                     type="text"
                     required
                     value={stop.name}
-                    onChange={(e) => {
-                      const location = e.currentTarget.value;
-                      setStops(current => current.map((item, i) =>
-                        i === idx ? { ...item, name: location, address: location } : item
-                      ));
-                    }}
+                    onChange={(e) => handleUpdateStop(idx, 'name', e.target.value)}
                     placeholder="Stop location / landmark name"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-500 text-xs focus:outline-none focus:border-emerald-500"
+                  />
+
+                  <label htmlFor={`trail-stop-address-${idx}`} className="block text-[11px] font-bold text-neutral-300">
+                    Stop address / Google Maps location
+                  </label>
+                  <input
+                    id={`trail-stop-address-${idx}`}
+                    type="text"
+                    required
+                    value={stop.address}
+                    onChange={(e) => handleUpdateStop(idx, 'address', e.target.value)}
+                    placeholder="Street address or exact Google Maps place name, city"
                     className="w-full px-2.5 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-500 text-xs focus:outline-none focus:border-emerald-500"
                   />
 
