@@ -10,6 +10,7 @@ import { fetchOrbitProfiles, fetchEchoProfiles, unfollowUser, followUser } from 
 import { fetchPendingPulls, fetchConfirmedVibes, acceptConnectionPull, passConnectionPull, ConnectionPull, ConfirmedVibe } from '../domains/d17_matching';
 import { checkDmAuthorization, fetchDirectMessages, sendDirectMessage, DirectMessage } from '../domains/d14_messaging';
 import { UserProfileCard } from './UserProfileCard';
+import { ShareTab } from './ShareTab';
 
 interface VibeTabProps {
   user: UserProfile | null;
@@ -29,6 +30,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
   const [comments, setComments] = useState<VibeComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [newPostCaption, setNewPostCaption] = useState('');
+  const [dualCameraOpen, setDualCameraOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
   
   // 1:1 D14 Chat State
@@ -253,7 +255,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
       {/* Top Header Navigation Pill (Vibe Share) */}
       <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-3 flex items-center justify-between shadow-xl">
         <button
-          onClick={onNavigateShare}
+          onClick={() => setDualCameraOpen(true)}
           className="p-2.5 rounded-full bg-neutral-950 border border-amber-500/40 text-amber-300 hover:bg-neutral-900 transition flex items-center justify-center shadow cursor-pointer"
           title="Open Dual-Camera Share"
         >
@@ -415,7 +417,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
               <div className="flex items-center space-x-3 text-neutral-400">
                 <button
                   type="button"
-                  onClick={onNavigateShare}
+                  onClick={() => setDualCameraOpen(true)}
                   className="flex items-center space-x-1 hover:text-teal-400 transition cursor-pointer"
                   title="Capture dual photo"
                 >
@@ -571,7 +573,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                 Be the first explorer to drop an authentic dual-camera moment or gossip signal into your district!
               </p>
               <button
-                onClick={onNavigateShare}
+                onClick={() => setDualCameraOpen(true)}
                 className="mt-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-teal-500 text-white font-bold text-xs shadow-lg transition hover:opacity-90 cursor-pointer"
               >
                 Launch BeReal Camera
@@ -1031,6 +1033,16 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
             </form>
           </div>
         </div>
+      )}
+
+      {dualCameraOpen && (
+        <ShareTab
+          user={user}
+          onPostSuccess={() => undefined}
+          cameraOnly
+          initialMode="dual"
+          onClose={() => setDualCameraOpen(false)}
+        />
       )}
 
       {/* User Profile Card Modal */}
