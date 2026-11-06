@@ -1,0 +1,36 @@
+name: D12 canonical social content
+
+on:
+  push:
+    branches:
+      - feature/d12-canonical-social-content
+  pull_request:
+    paths:
+      - 'src/domains/d12_social_content/**'
+      - 'src/components/VibeTab.tsx'
+      - 'src/domains/d05_vibe/**'
+      - 'tests/d12-canonical-social-content.test.mjs'
+      - '.github/workflows/d12-social-content.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  d12-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify D12 RED/GREEN regression
+        run: node --test tests/d12-canonical-social-content.test.mjs
+
+  typecheck-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+      - name: TypeScript
+        run: bun run lint
+      - name: Vite build
+        run: bun run build
