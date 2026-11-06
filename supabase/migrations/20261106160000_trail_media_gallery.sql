@@ -116,6 +116,44 @@ create trigger vq_trail_media_guard_trigger
 before insert or update on public.trail_media
 for each row execute function public.vq_trail_media_guard();
 
+-- A legacy cover can be changed separately through the existing Trail UPDATE
+-- API; enforce the same 3/6 total quota when that changes.
+create or replace function public.vq_trail_media_legacy_cover_guard()
+returns trigger language plpgsql set search_path = ''
+as $
+declare
+  v_uid uuid := auth.uid();
+  v_is_admin boolean;
+  v_limit integer;
+  v_count integer;
+begin
+  if v_uid is null then
+    raise exception 'Authentication required' using errcode = '42501';
+  end if;
+  select exists(
+    select 1 from public.vq_admin_assignments a
+    where a.auth_user_id = v_uid and a.active and a.role = 'platform_admin'
+  ) into v_is_admin;
+  select case
+    when v_is_admin or coalesce(p.account_type, 'vibe') in ('pro', 'business') then 6
+    else 3 end into v_limit
+  from public.profiles p where p.id = new.author_id;
+  if v_limit is null then
+    raise exception 'Verified Trail author profile not found' using errcode = '42501';
+  end if;
+  select count(*) into v_count from public.trail_media m where m.trail_id = new.id;
+  if v_count + case when nullif(btrim(coalesce(new.image_url, '')), '') is null
+    then 0 else 1 end > v_limit then
+    raise exception 'Trail photo limit reached' using errcode = '22023';
+  end if;
+  return new;
+end;
+$;
+create trigger vq_trail_media_legacy_cover_guard_trigger
+before update of image_url on public.vibe_trails
+for each row when (new.image_url is distinct from old.image_url)
+execute function public.vq_trail_media_legacy_cover_guard();
+
 -- A private Storage bucket stays private. Only objects explicitly attached
 -- to public Trails can be read by visitors using signed URLs.
 create policy vq_trail_attached_media_read on storage.objects
