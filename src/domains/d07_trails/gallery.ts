@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import type { CommunityTrail } from './types';
+import { getCurrentUserProfile } from '../d01_auth';
 
 export type TrailGalleryPhoto = {
   id: string;
@@ -63,14 +64,13 @@ export async function uploadTrailPhotos(
   const { data: trail, error: trailError } = await supabase
     .from('vibe_trails').select('image_url').eq('id', trailId).single();
   if (trailError || !trail) throw new Error('Trail not available for photo upload.');
-  const { data: account, error: profileError } = await supabase
-    .from('profiles').select('account_type').eq('id', 'usr_' + auth.user.id).maybeSingle();
-  if (profileError) throw new Error(profileError.message);
+  const profile = await getCurrentUserProfile();
+  if (!profile) throw new Error('Authenticated Trail profile not found.');
   const { data: admin, error: adminError } = await supabase
     .from('vq_admin_assignments').select('role')
     .eq('auth_user_id', auth.user.id).eq('active', true).maybeSingle();
   if (adminError) throw new Error(adminError.message);
-  const limit = photoLimit(account?.account_type, admin?.role === 'platform_admin');
+  const limit = photoLimit(profile.accountType, admin?.role === 'platform_admin');
   validateTrailPhotos(files, limit - (existing?.length || 0) - (trail.image_url ? 1 : 0));
 
   let completed = 0;
