@@ -36,7 +36,7 @@ test('stop controls edit the ordered itinerary and reject unnamed stops', () => 
 
 test('regular creators retain free Trails while Pro and Business retain paid Tours', () => {
   assert.match(studio, /setIsTour\(false\)/);
-  assert.match(studio, /\['pro', 'business'\]/);
+  assert.match(studio, /\['pro',\s*'business'\]/);
   assert.match(studio, /setIsTour\(true\)/);
   assert.match(studio, /pricePerPerson: isTour \? Number\(pricePerPerson\) : undefined/);
 });
