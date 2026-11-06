@@ -104,7 +104,7 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
       }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: facing } },
+          video: { facingMode: mode === 'dual' ? { exact: facing } : { ideal: facing } },
           audio: false,
         });
         if (cancelled || ticket !== session.current) {
@@ -112,13 +112,50 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
           return;
         }
         liveStream.current = stream;
-        if (liveVideo.current) {
-          liveVideo.current.srcObject = stream;
-          await liveVideo.current.play().catch(() => undefined);
+        const video = liveVideo.current;
+        const track = stream.getVideoTracks()[0];
+        if (!video || !track || track.readyState !== 'live') {
+          throw new Error('The camera did not provide a live video track.');
         }
-        if (!cancelled) setReady(true);
+        const actualFacing = track.getSettings().facingMode;
+        if (mode === 'dual' && actualFacing && actualFacing !== facing) {
+          throw new Error('The requested ' + (facing === 'user' ? 'front' : 'back') + ' camera is not active.');
+        }
+        video.srcObject = stream;
+        await video.play();
+        if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || !video.videoWidth || !video.videoHeight) {
+          await new Promise<void>((resolve, reject) => {
+            const cleanup = () => {
+              video.removeEventListener('loadeddata', checkFrame);
+              video.removeEventListener('error', failed);
+              clearTimeout(timeout);
+            };
+            const checkFrame = () => {
+              if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && video.videoWidth && video.videoHeight) {
+                cleanup();
+                resolve();
+              }
+            };
+            const failed = () => { cleanup(); reject(new Error('Camera preview failed to load.')); };
+            const timeout = setTimeout(() => { cleanup(); reject(new Error('Camera preview did not become ready.')); }, 8000);
+            video.addEventListener('loadeddata', checkFrame);
+            video.addEventListener('error', failed);
+            checkFrame();
+          });
+        }
+        if (cancelled || ticket !== session.current) {
+          stream.getTracks().forEach(activeTrack => activeTrack.stop());
+          return;
+        }
+        if (track.readyState !== 'live') throw new Error('Camera disconnected before capture.');
+        setReady(true);
       } catch (cause) {
-        if (!cancelled) setError(cause instanceof Error ? 'Camera unavailable: ' + cause.message : 'Camera permission denied or no camera available.');
+        if (cancelled || ticket !== session.current) return;
+        liveStream.current?.getTracks().forEach(track => track.stop());
+        liveStream.current = null;
+        if (liveVideo.current) liveVideo.current.srcObject = null;
+        setReady(false);
+        setError(cause instanceof Error ? 'Camera unavailable: ' + cause.message : 'Camera permission denied or no camera available.');
       }
     }
     void start();
@@ -154,8 +191,13 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
 
   const takePhoto = async () => {
     const video = liveVideo.current;
-    if (!ready || !video?.videoWidth || !video.videoHeight) {
-      setError('Wait for the live camera image before taking a photo.');
+    const track = liveStream.current?.getVideoTracks()[0];
+    const actualFacing = track?.getSettings().facingMode;
+    if (!ready || !video?.videoWidth || !video.videoHeight ||
+        video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+        !track || track.readyState !== 'live' ||
+        (mode === 'dual' && actualFacing && actualFacing !== facing)) {
+      setError('Wait for the correct live camera image before taking a photo.');
       return;
     }
     const canvas = document.createElement('canvas');
@@ -356,7 +398,7 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
             {error && <p role="alert" className="flex items-start gap-2 rounded-xl border border-red-800 bg-red-950/70 p-3 text-sm text-red-200"><AlertCircle className="shrink-0" size={18} />{error}</p>}
             {stage !== 'preview' ? (
               <div className="flex gap-2">
-                <button type="button" onClick={() => setFacing(previous => previous === 'environment' ? 'user' : 'environment')} disabled={recording} className="rounded-xl bg-neutral-800 px-4 py-3" aria-label="Switch camera"><SwitchCamera size={21} /></button>
+                <button type="button" onClick={() => { setReady(false); setFacing(previous => previous === 'environment' ? 'user' : 'environment'); }} disabled={recording || !ready || mode === 'dual'} className="rounded-xl bg-neutral-800 px-4 py-3" aria-label="Switch camera"><SwitchCamera size={21} /></button>
                 {mode === 'snap'
                   ? (recording
                     ? <button type="button" onClick={stopRecording} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 font-bold"><Square size={18} /> Stop recording</button>
