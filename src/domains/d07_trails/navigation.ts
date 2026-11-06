@@ -16,8 +16,8 @@ export type TrailRoutePlan = {
  * Google Maps URLs can carry up to three intermediate waypoints in a mobile
  * browser; split longer itineraries into contiguous, user-selectable legs.
  * Transit has no intermediate waypoints, so each pair is a separate leg.
- * Stops use verified coordinates when supplied, or a creator-entered Google Maps
- * address when coordinates are absent. Missing locations block the entire route.
+ * Every stop requires a creator-entered Google Maps address. Coordinates are
+ * optional metadata; Google Maps resolves each entered address when opened.
  */
 export function buildTrailRoutePlan(trail: CommunityTrail, mode: TrailTravelMode): TrailRoutePlan {
   const stops: TrailStop[] = trail.stops?.length
@@ -27,10 +27,6 @@ export function buildTrailRoutePlan(trail: CommunityTrail, mode: TrailTravelMode
     return { segments: [], error: 'Add at least two located stops to open Google Maps directions.' };
   }
   const destination = (stop: TrailStop): string | null => {
-    const hasCoordinates = typeof stop.lat === 'number' && typeof stop.lng === 'number'
-      && Number.isFinite(stop.lat) && Number.isFinite(stop.lng)
-      && Math.abs(stop.lat) <= 90 && Math.abs(stop.lng) <= 180;
-    if (hasCoordinates) return `${stop.lat},${stop.lng}`;
     const address = stop.address?.trim();
     return address ? [address, trail.city].filter(Boolean).join(', ') : null;
   };
@@ -38,7 +34,7 @@ export function buildTrailRoutePlan(trail: CommunityTrail, mode: TrailTravelMode
     if (!destination(stop)) {
       return {
         segments: [],
-        error: `Stop ${index + 1} (${stop.name || 'unnamed'}) needs a Google Maps address or map coordinates.`,
+        error: `Stop ${index + 1} (${stop.name || 'unnamed'}) needs a Google Maps address.`,
       };
     }
   }
