@@ -340,25 +340,6 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     }
   };
 
-  const handleStartTrailNav = (trail: CulturalTrail) => {
-    setSelectedTrail(null);
-    const wp = trail.waypoints?.find(point => Number.isFinite(point.lat) && Number.isFinite(point.lng));
-    if (wp && mapInstance.current) {
-      try {
-        mapInstance.current.flyTo({
-          center: [wp.lng, wp.lat],
-          zoom: 16,
-          pitch: 55,
-          bearing: -20,
-          essential: true
-        });
-      } catch (err) {
-        console.warn('Map fly error:', err);
-      }
-    }
-    showToast(wp ? `Focused map on "${wp.title || wp.name}" for Trail "${trail.title}".` : 'This Trail has no verified waypoint coordinates for map navigation.');
-  };
-
   const handleLocateGuardian = (g: VibeGuardian) => {
     setSelectedGuardian(null);
     if (g.lng && g.lat && mapInstance.current) {
@@ -1091,7 +1072,6 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         <TrailDetailModal
           trail={selectedTrail}
           onClose={() => setSelectedTrail(null)}
-          onStartNavigation={handleStartTrailNav}
           onCheckInWaypoint={handleWaypointCheckIn}
           onToast={showToast}
           onAdoptTrail={openAdoptEditor}
