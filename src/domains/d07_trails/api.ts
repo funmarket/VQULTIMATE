@@ -23,7 +23,7 @@ function normalizeStop(raw: Record<string, any>, position: number): TrailStop {
   return {
     id: String(raw.id || 'stop-' + (position + 1)),
     name: String(raw.name || raw.title || ''),
-    address: String(raw.address || ''),
+    address: String(raw.address || '').trim(),
     vibeNote: String(raw.vibeNote || raw.description || ''),
     timeOfDay: supported[time] || 'Flexible',
     durationMinutes: Number(raw.durationMinutes ?? raw.suggestedDurationMin ?? 0),
@@ -91,6 +91,9 @@ export async function createCommunityTrail(
     const stops = payload.stops || [];
     if (!title || !stops.length || stops.some(stop => !stop.name.trim())) {
       throw new Error('Provide a Trail title and named itinerary stops.');
+    }
+    if (stops.some(stop => !stop.address?.trim())) {
+      throw new Error('Provide a Google Maps address for every Trail stop.');
     }
     if (payload.isTour) {
       if (!['pro', 'business'].includes(profile.accountType || '')) {
