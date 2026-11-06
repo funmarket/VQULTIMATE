@@ -82,6 +82,12 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
   const [reservationTour, setReservationTour] = useState<CommunityTrail | null>(null);
   const [isCurateOpen, setIsCurateOpen] = useState(false);
   const [isSelfieModalOpen, setIsSelfieModalOpen] = useState(false);
+  const [guardianRegistrationType, setGuardianRegistrationType] = useState<'local' | 'pro' | undefined>();
+  const openGuardianRegistration = (type?: 'local' | 'pro') => {
+    if (!user) { onRequireAuth?.(); return; }
+    setGuardianRegistrationType(type);
+    setIsSelfieModalOpen(true);
+  };
   const [exploreToast, setExploreToast] = useState<string | null>(null);
 
   const categories: (VibeCategory | 'All')[] = ['All', 'Food', 'Art', 'Spots', 'Culture', 'Night Owl'];
@@ -891,7 +897,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           {/* Primary Action Buttons: BECOME A GUARDIAN / IN-APP SELFIE & 7D Hidden Badge */}
           <div className="relative z-10 flex items-center space-x-2 pt-1 flex-wrap gap-y-2">
             <button
-              onClick={() => { if (!user) onRequireAuth?.(); else setIsSelfieModalOpen(true); }}
+              onClick={() => openGuardianRegistration()}
               className="px-4 py-3 rounded-2xl bg-[#8b2cf5] hover:bg-[#7823d6] text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-600/30 transition flex items-center space-x-2 cursor-pointer active:scale-98"
             >
               <Camera className="w-4 h-4" />
@@ -942,6 +948,17 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
             <span>LOCAL LEGENDS</span>
           </button>
         </div>
+
+        {guardianFilter === 'local' && (
+          <button
+            type="button"
+            onClick={() => openGuardianRegistration('local')}
+            className="w-full rounded-2xl border border-amber-500/50 bg-amber-500/15 px-4 py-3 text-xs font-black text-amber-200 transition hover:bg-amber-500/25 flex items-center justify-center gap-2"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            <span>Create Local Legend</span>
+          </button>
+        )}
 
         {/* Guardian Profile Cards (matching image_a6756c21.png and image_52948d57.png) */}
         {(() => {
@@ -1139,6 +1156,8 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
       {/* Live 7-Day In-App Selfie Verification Modal */}
       {isSelfieModalOpen && (
         <LiveSelfieModal
+          key={guardianRegistrationType || 'guardian-default'}
+          initialGuardianType={guardianRegistrationType}
           user={user}
           onClose={() => setIsSelfieModalOpen(false)}
           onVerified={() => {
