@@ -1,3 +1,5 @@
+import type { TrailGalleryPhoto } from './gallery';
+
 export type TimeOfDay = 'Morning' | 'Afternoon' | 'Sunset' | 'Night' | 'Flexible';
 
 export interface TrailStop {
@@ -22,6 +24,7 @@ export type TrailWaypoint = TrailStop & {
 };
 
 export interface CommunityTrail {
+  gallery?: TrailGalleryPhoto[];
   id: string;
   title: string;
   story: string;
