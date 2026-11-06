@@ -43,6 +43,7 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
   );
 
   const [submitting, setSubmitting] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [coverPhotoIndex, setCoverPhotoIndex] = useState(0);
   const previews = useMemo(() => photoFiles.map(file => URL.createObjectURL(file)), [photoFiles]);
@@ -127,6 +128,7 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
       return;
     }
 
+    setPublishError(null);
     setSubmitting(true);
     let published: CommunityTrail | undefined;
     try {
@@ -177,7 +179,9 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
           (error instanceof Error ? error.message : String(error)));
         onClose();
       } else {
-        onToast(error instanceof Error ? error.message : 'Failed to publish Trail.');
+        const message = error instanceof Error ? error.message : 'Failed to publish Trail.';
+        setPublishError(message);
+        onToast(message);
       }
     } finally {
       setSubmitting(false);
@@ -527,6 +531,11 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
           )}
           </div>
           {/* Submit */}
+          {publishError && (
+            <div role="alert" className="rounded-xl border border-red-500/40 bg-red-950/40 px-3 py-2 text-xs text-red-200">
+              Trail was not published. {publishError}
+            </div>
+          )}
           <div className="pt-3">
             <button
               type="submit"

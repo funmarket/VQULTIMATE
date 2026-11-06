@@ -152,7 +152,8 @@ export async function toggleSavedTrail(trailId: string): Promise<CommunityTrail>
     .update({ saved_by: savedBy, saves_count: Math.max(0, Number(row.saves_count ?? 0) + (hasSaved ? -1 : 1)) })
     .eq('id', trailId).select('*').single();
   if (writeError || !data) throw new Error(writeError?.message || 'Unable to save this Trail.');
-  return toTrail(data, await publicProfiles());
+  const hydrated = await withTrailGalleries([toTrail(data, await publicProfiles())]);
+  return hydrated[0];
 }
 export async function adoptTrail(trail: CommunityTrail): Promise<CommunityTrail> {
   const profile = await getCurrentUserProfile();
