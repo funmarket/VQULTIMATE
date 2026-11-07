@@ -1,7 +1,8 @@
 -- VQUltimate D07 Trail/Tour media gallery. Review and apply after testing.
 -- No existing Trail, Tour, profile, or Storage objects are rewritten.
--- Compatible with both clean installations and an existing initially two-column table.
--- The current production primary key is bigint identity; preserve it and any existing rows.
+-- Compatible with clean installations and existing bigint-identity tables.
+-- Preserve existing rows; incomplete legacy rows cannot be assigned fabricated
+-- authors, Trail links, or storage paths, so reject them explicitly.
 create table if not exists public.trail_media (
   id bigint generated always as identity primary key,
   created_at timestamptz not null default now()
@@ -12,6 +13,23 @@ alter table public.trail_media
   add column if not exists object_path text,
   add column if not exists sort_order integer default 0,
   add column if not exists is_cover boolean default false;
+-- Stop before adding NOT NULL constraints if an older two-column installation
+-- still holds rows with no verifiable Trail, owner, or storage association.
+-- Existing records must be reconciled from real evidence, never auto-filled.
+do $legacy_gallery_guard$
+begin
+  if exists (
+    select 1 from public.trail_media
+    where trail_id is null
+       or owner_auth_user_id is null
+       or nullif(btrim(object_path), '') is null
+  ) then
+    raise exception 'Cannot migrate incomplete trail_media records: reconcile real Trail, owner and object_path values first.'
+      using errcode = '23502';
+  end if;
+end;
+$legacy_gallery_guard$;
+
 alter table public.trail_media
   alter column trail_id set not null,
   alter column owner_auth_user_id set default auth.uid(),
