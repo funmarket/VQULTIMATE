@@ -8,6 +8,7 @@ import { VibeTab } from './components/VibeTab';
 import { PurseTab } from './components/PurseTab';
 import { NotificationModal } from './components/NotificationModal';
 import { ProfileModal } from './components/ProfileModal';
+import { PulseDmModal } from './components/PulseDmModal';
 import { PlaceDetailModal } from './components/PlaceDetailModal';
 import { AdminModal } from './components/AdminModal';
 import { subscribeAuthProfile, UserProfile } from './domains/d01_auth';
@@ -28,6 +29,7 @@ export default function App() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isMessagesOpen, setIsMessagesOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<VibePlace | null>(null);
   const [appToast, setAppToast] = useState<string | null>(null);
@@ -123,10 +125,15 @@ export default function App() {
             onToggleTheme={toggleTheme}
             onOpenAdmin={() => setIsAdminOpen(true)}
             onOpenNotifications={() => setIsNotificationsOpen(true)}
+            onOpenMessages={() => setIsMessagesOpen(true)}
             onNavigateHome={() => setActiveTab('home')}
           />
         )}
       </AnimatePresence>
+
+      {isMessagesOpen && (
+        <PulseDmModal user={user} onClose={() => setIsMessagesOpen(false)} />
+      )}
 
       {isAdminOpen && (
         <AdminModal user={user} onClose={() => setIsAdminOpen(false)} />

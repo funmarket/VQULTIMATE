@@ -18,12 +18,13 @@ interface ProfileModalProps {
   onToggleTheme: () => void;
   onOpenAdmin: () => void;
   onOpenNotifications: () => void;
+  onOpenMessages: () => void;
   onNavigateHome: () => void;
 }
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({
   user, onClose, onUserSwitch, themeMode, onToggleTheme,
-  onOpenAdmin, onOpenNotifications, onNavigateHome
+  onOpenAdmin, onOpenNotifications, onOpenMessages, onNavigateHome
 }) => {
   const profile = user ? {
     photoUrl: user.avatar_url, displayName: user.full_name, handle: user.username,
@@ -282,8 +283,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             
             {/* Messages / DMs */}
             <button 
-              disabled
-              title="Direct messaging is not available until its real D14 backend is implemented"
+              onClick={() => {
+                triggerHaptic('light');
+                onOpenMessages();
+                onClose();
+              }}
               className="w-full hover:bg-zinc-900 rounded-xl p-3 flex items-center justify-between transition-colors text-left cursor-pointer border border-transparent hover:border-white/5"
             >
               <div className="flex items-center gap-3">
