@@ -1,0 +1,944 @@
+# VQULTIMATE — STRICT GUARDIAN, LOCAL LEGEND & BUSINESS PROFILE RESTORATION
+
+## MISSION: EXACT REFERENCE UI/UX RESTORATION + REAL DOMAIN-OWNED BACKEND INTEGRATION
+
+**CURRENT APPLICATION:** `funmarket/VQULTIMATE`
+
+**UI/UX REFERENCE — SOURCE OF TRUTH:**  
+https://github.com/funmarket/VQgemini
+
+**VISUAL REFERENCES:**
+- Attached Screenshot 1: Current defective profile display.
+- Attached Screenshot 2: Reference Guardian Profile — lower section.
+- Attached Screenshot 3: Reference Guardian Profile — upper section.
+
+**TASK TYPE:** Existing implementation correction, professional replacement, complete application wiring, database dependency inspection and end-to-end verification.
+
+**DO NOT REDESIGN. DO NOT IMPROVISE. DO NOT FAKE FUNCTIONALITY. DO NOT TOUCH UNRELATED APPLICATION FEATURES.**
+
+---
+
+## 1. PRIMARY OBJECTIVE
+
+The current VQULTIMATE application incorrectly mixes ordinary user-profile cards with Pro Guardian, Local Legend and business/service-provider profiles.
+
+This results in the defective display shown in Screenshot 1.
+
+You must inspect, correct, edit or completely replace the **existing affected profile/card implementation** so that the correct professional profile experience matches the supplied VQgemini reference.
+
+### Non-negotiable results
+
+1. Ordinary users retain their existing ordinary user-profile presentation.
+2. Pro Guardians receive the dedicated Pro Guardian card and profile experience.
+3. Local Legends receive the appropriate Local Legend card and profile experience.
+4. Business/service-provider accounts receive the professional presentation appropriate to their existing approved business category.
+5. All entry points route to the correct presentation.
+6. The defective old Guardian/business presentation is fully replaced or correctly refactored.
+7. No competing duplicate cards, modals, services or profile systems remain active.
+8. All supported functionality is genuinely connected to the current application architecture.
+9. Guardian/business data is persisted through its correct domain-owned backend.
+10. No unrelated features are changed.
+
+**This is not a request to add another UI alongside the existing defective UI.**
+
+It is a request to professionally correct and replace the existing implementation.
+
+---
+
+## 2. SOURCE-OF-TRUTH HIERARCHY
+
+Apply the following distinction strictly.
+
+### UI/UX authority
+
+**The supplied screenshots and `funmarket/VQgemini` reference are the source of truth for the exact Guardian/Local Legend presentation and intended user interactions.**
+
+Reproduce the reference's design rather than creating your own interpretation.
+
+### Architecture and backend authority
+
+The current VQULTIMATE repository, approved Master Plan, Requirements, structure, Database documentation and verified live Supabase schema determine the implementation.
+
+### Product Owner decisions
+
+The latest explicit Product Owner instructions control the requested behavior.
+
+**Do not allow historical reference code to override current domain ownership or backend contracts.**
+
+The reference is authoritative for the requested visual experience, not permission to reproduce outdated persistence, simulated operations, fake accounts or incompatible architecture.
+
+If the reference behavior conflicts with an approved current contract, identify the conflict explicitly and stop that affected implementation rather than silently choosing a behavior.
+
+---
+
+## 3. MANDATORY INSPECTION BEFORE EDITING
+
+Inspect both repositories:
+
+**Reference:**  
+https://github.com/funmarket/VQgemini
+
+**Current:**  
+https://github.com/funmarket/VQULTIMATE
+
+Read the current governing documents:
+
+- `AGENTS.md`
+- `Master Plan.md`
+- `Requirements.md`
+- `structure.md`
+- `Database.md`
+
+Inspect the actual current branch, HEAD, working tree and ongoing changes from other agents.
+
+### Reference components
+
+Study the existing reference implementations, including:
+
+- `src/features/explore/components/VibeGuardians/GuardianCard.tsx`
+- `src/features/explore/components/VibeGuardians/GuardianDetailModal.tsx`
+- `src/features/explore/components/VibeGuardians/VibeGuardiansSection.tsx`
+- `src/features/explore/components/VibeGuardians/ReservationCalendarModal.tsx`
+- `src/features/explore/components/VibeGuardians/GuardianChatModal.tsx`
+- `src/features/explore/components/VibeGuardians/InAppSelfieModal.tsx`
+- Existing Guardian review components.
+- Existing Guardian tour components.
+- Existing Guardian storage adapters.
+- Reference D22 Handshake behavior.
+
+Inspect the actual dependencies and related modules rather than assuming this list is complete.
+
+### Existing current implementation
+
+Inspect existing VQULTIMATE profile/card components, including:
+
+- `src/components/UserProfileCard.tsx`
+- `src/components/GuardianDetailModal.tsx`
+- Current Guardian and Local Legend directory components.
+- Existing business/service-provider profile components.
+- All actual entry points and relevant routing.
+- Current Guardian, reservation, Handshake, media, review and messaging domain APIs.
+
+Identify which files are canonical and which are legacy or duplicated.
+
+**Do not begin implementation by copying files from the reference repository.**
+
+First establish the exact required differences between the reference presentation and the current application.
+
+---
+
+## 4. EXACT VISUAL FIDELITY — NO DESIGN CHANGES
+
+The resulting Guardian profile must match screenshots 2 and 3 and the reference implementation as closely as technically possible.
+
+**You are not authorized to redesign, simplify, restyle or reinterpret the interface.**
+
+Preserve the reference's:
+
+- Overall dark styling.
+- Purple and gold color palette.
+- Typography and font weights.
+- Exact button labels.
+- Button colors, gradients, borders and dimensions.
+- Icons.
+- Badges.
+- Header hierarchy.
+- Card backgrounds.
+- Border radii.
+- Modal widths and spacing.
+- Profile image treatment.
+- Section ordering.
+- Field labels.
+- Information arrangement.
+- Scroll behavior.
+- Responsive presentation.
+- Hover/press states and animations.
+- Empty states.
+- Fixed or sticky elements.
+- All existing reference controls and their intended interactions.
+
+### Required Guardian profile sections
+
+**A. Header**
+
+Preserve:
+
+- `GUARDIAN PROFILE`
+- Gold `PRO GUIDE` badge for eligible Pro Guardians.
+- Correct `LOCAL LEGEND` badge for eligible Local Legends.
+- Existing reference close button.
+- Reference colors, spacing and positioning.
+
+**B. Identity block**
+
+Preserve:
+
+- Reference-sized Guardian selfie.
+- `APP SELFIE` visual indicator.
+- Display name and handle.
+- Correct credential badge.
+- Location.
+- Existing permitted age display.
+- Hourly/approved pricing.
+- `HANDSHAKE` button.
+- `In-App Selfie Fresh` status.
+- Existing verified information presentation.
+
+**C. About section**
+
+Preserve:
+
+- `ABOUT THE GUARDIAN`
+- Biography container.
+- Reference typography, background and padding.
+
+**D. Bookable tours**
+
+Preserve:
+
+- `PRE-MADE BOOKABLE TOURS`
+- `Direct Reservation`
+- Tour title and description.
+- Duration.
+- Price.
+- Meeting location.
+- `BOOK TOUR SLOT` button.
+- Correct reference card layout.
+
+**E. Reviews**
+
+Preserve:
+
+- `HANDSHAKE-GATED REVIEWS`
+- Review count.
+- Existing approved character-limit display.
+- Empty-review state.
+- Handshake eligibility message.
+- Actual review submission interface where eligible.
+
+**F. Messaging**
+
+Preserve the prominent:
+
+`MESSAGE GUARDIAN`
+
+button and its exact visual appearance.
+
+Do not replace this button with ECHO, PULL, Follow or another unrelated action.
+
+### Mobile and desktop requirements
+
+The reference UI must remain responsive.
+
+Ensure:
+
+- Correct top alignment.
+- Correct modal height.
+- Smooth vertical scrolling.
+- No oversized empty areas.
+- No hidden buttons.
+- No overlapping headers.
+- No clipped content.
+- No broken bottom action.
+- No horizontal overflow.
+- Correct safe-area handling.
+
+**Visual acceptance requires actual before/after screenshots, not merely successful compilation.**
+
+---
+
+## 5. PRESERVE THE DIFFERENT ACCOUNT AND QUALIFICATION TYPES
+
+Do not merge ordinary user data with Guardian/business-specific information.
+
+The existing approved account categories must remain authoritative.
+
+A member has one canonical account identity.
+
+Guardian eligibility, Local Legend qualifications and professional capabilities are separate domain-owned records linked to that identity.
+
+### Ordinary users
+
+Continue using the ordinary profile experience.
+
+### Pro Guardians
+
+Use the dedicated professional presentation, with genuine eligible Pro status, offerings, pricing, selfie status and approved professional functionality.
+
+### Local Legends
+
+Use the reference Local Legend variant, including its correct labels, visual presentation and available features.
+
+Do not automatically assign Pro subscription status or paid professional capabilities to a Local Legend.
+
+### Business/service-provider accounts
+
+Preserve actual business account status and business-specific capabilities under the correct domain owner.
+
+Do not assume every business is a Guardian, tour guide or Local Legend.
+
+Use only approved category-specific fields and actions.
+
+**Account classification must come from genuine canonical records, not guessed display names, hardcoded handles or frontend-only flags.**
+
+---
+
+## 6. GUARDIAN STORAGE MUST BE DOMAIN-OWNED AND DATABASE-BACKED
+
+This requirement is mandatory.
+
+**Guardian information must not be stored as an improvised extension of ordinary user-profile presentation state.**
+
+Use the existing approved Guardian domain architecture.
+
+### Required ownership
+
+- **D01/D02:** Canonical account identity and ordinary profile data.
+- **D07:** Guardian/Local Legend professional qualifications, eligibility, professional profile, selfie freshness and related Guardian information according to approved ownership.
+- **D08:** Tour/reservation lifecycle.
+- **D13:** Media storage and delivery.
+- **D14:** Authorized messaging.
+- **D19:** Guardian/provider review and reputation content.
+- **D22:** Handshake agreement and proof lifecycle.
+- Other domains only where explicitly established by the current governing documents.
+
+Inspect the actual current ownership contracts before implementing writes.
+
+### Database requirements
+
+Guardian profiles must persist in Supabase as real professional records connected to the canonical member identity.
+
+Inspect the existing `guardian_profiles` table and all other relevant live structures first.
+
+Determine whether the existing schema supports the required features.
+
+Do not automatically create new tables merely because the reference application uses separate browser-local objects.
+
+Do not duplicate information already correctly owned by another domain.
+
+Do not create a second Guardian database.
+
+Do not store persistent Guardian business data in React component state or localStorage.
+
+Local React state may manage temporary interface state only.
+
+Every persistent read/write must use the authorized owning domain's public API.
+
+---
+
+## 7. HANDSHAKE — KEEP THE EXACT REFERENCE UI, IMPLEMENT SIMPLE MUTUAL ACCEPTANCE NOW
+
+**Important Product Owner decision:**
+
+Keep the Handshake button, labels, badges, visual behavior and placement matching the reference.
+
+Do not remove, replace or redesign Handshake.
+
+For this phase, implement the **simple mutual-acceptance workflow** described by the reference's intended protocol.
+
+The more advanced full Handshake contract will be implemented separately later.
+
+### Required simple workflow
+
+**Step 1 — Initiation**
+
+An authenticated user presses the appropriate Handshake/Hire/Meet action on a Guardian or Local Legend profile.
+
+The application creates a genuine Handshake request for the correct recipient.
+
+The request is pending.
+
+**Step 2 — Provider decision**
+
+The actual intended Guardian/Local Legend can view the pending request and choose to accept or decline.
+
+Only the intended recipient may act on that request.
+
+**Step 3 — Acceptance**
+
+On acceptance, the backend verifies both participants and the pending request.
+
+Mutual acceptance is persisted.
+
+The UI updates to show genuine accepted Handshake status.
+
+**Step 4 — Decline**
+
+If declined, the request does not produce a completed Handshake proof.
+
+The user receives truthful status feedback.
+
+**Step 5 — Approved effects**
+
+Only an actual completed Handshake may enable the corresponding supported Handshake-gated interactions, such as eligible Guardian reviews.
+
+### Strict rules
+
+- A button click alone is not a completed Handshake.
+- Do not create active proof before provider acceptance.
+- Do not create a fake Handshake badge.
+- Do not fabricate the provider's consent.
+- Do not duplicate the same active agreement.
+- Do not store the agreement solely in browser memory.
+- Do not create a second writer outside D22.
+- Do not automatically unlock D17 Confirmed Vibes.
+- Do not automatically unlock permanent D14 direct messaging.
+- Do not implement speculative reward logic.
+
+### Reference implementation warning
+
+The historical reference contains localStorage-based Handshake state and operations that can mark or display proof before genuine mutual backend confirmation.
+
+**Do not copy those implementation defects.**
+
+Preserve the interface and intended mutual acceptance behavior while using real backend persistence and proper domain ownership.
+
+### Future contract boundary
+
+Do not implement the complete future Handshake protocol prematurely.
+
+Respect any current governing lifecycle rules that already apply, but do not invent additional expiry states, payment logic, reward rules, geolocation requirements or verification mechanics.
+
+If the current D22 database contract cannot represent initiation and mutual acceptance correctly, document the exact missing capability and provide SQL for review.
+
+Do not silently change the contract.
+
+---
+
+## 8. COMPLETE FUNCTIONAL WIRING
+
+Every visible control must connect to a real authorized application operation.
+
+### Guardian discovery
+
+Load actual eligible Guardian/Local Legend records from the correct domain.
+
+The card must open the correct professional detail modal.
+
+### Selfie status
+
+Use actual selfie proof records and authoritative timestamps.
+
+Do not manufacture a verified selfie, remaining days or renewal.
+
+Preserve the reference's seven-day freshness display where consistent with approved requirements.
+
+### Tours
+
+Load genuine Guardian offerings.
+
+Connect tour cards to their actual tour IDs.
+
+Preserve title, description, pricing, duration and meeting location.
+
+Do not hardcode example tours as live inventory.
+
+### Booking
+
+Connect `BOOK TOUR SLOT` to the existing authorized reservation mechanism.
+
+Persist a real reservation request.
+
+Do not represent a pending reservation as provider-confirmed.
+
+Do not create fake availability or payment confirmation.
+
+### Reviews
+
+Use genuine D19 review data and applicable Handshake proof.
+
+Respect the reference UI and approved eligibility rules.
+
+Reviews must persist and remain available after refresh.
+
+### Messaging
+
+Connect `MESSAGE GUARDIAN` to the correct approved messaging/service-inquiry workflow.
+
+Respect D14 authorization.
+
+Do not grant permanent private messaging solely because someone viewed a Guardian profile or pressed Handshake.
+
+If a required messaging dependency is incomplete, report it rather than creating a simulated chat.
+
+### Professional information
+
+Rates, qualifications, Pro status, Local Legend eligibility and related labels must reflect real authoritative data.
+
+No hardcoded credentials or subscription status.
+
+---
+
+## 9. CLEAN ARCHITECTURE — NO MONOLITHIC SCRIPTS
+
+Create or update code professionally.
+
+Keep responsibilities separate and clearly owned.
+
+Components should focus on presentation and user interaction.
+
+Domain modules should own business rules and canonical persistence.
+
+Use existing domain public APIs.
+
+Do not create:
+
+- Giant all-in-one Guardian components.
+- A second Guardian storage layer.
+- Duplicate modal systems.
+- Multiple competing Supabase clients.
+- Duplicate Handshake services.
+- Shadow profile models.
+- Duplicate tour booking logic.
+- Browser-local versions of backend workflows.
+- Unused hooks and adapters.
+- Circular imports.
+- Unnecessary abstraction frameworks.
+
+Do not split files solely to achieve an arbitrary line count.
+
+Use cohesive modules and existing conventions.
+
+**The goal is clean ownership and maintainable structure, not simply more files.**
+
+---
+
+## 10. EDIT OR REPLACE THE EXISTING CODE — DO NOT BUILD ALONGSIDE IT
+
+This requirement is extremely important.
+
+Trace all current uses of the affected Guardian/business cards and detail modals.
+
+Determine which existing implementation should be:
+
+- Updated in place.
+- Reused.
+- Replaced.
+- Retired after successful migration.
+
+Modify the existing canonical implementation wherever possible.
+
+Where replacement is justified, update all relevant call sites.
+
+Remove only proven obsolete code belonging exclusively to the replaced path.
+
+Do not leave:
+
+- The previous defective card still reachable.
+- A second hidden Guardian modal.
+- Duplicate business-profile routes.
+- Unused old imports.
+- Unused adapters.
+- Duplicate event handlers.
+- Broken navigation.
+- Competing backend operations.
+
+Do not remove unrelated files or data.
+
+Do not overwrite another agent's work.
+
+**There must be one authoritative active implementation of each professional profile interaction.**
+
+---
+
+## 11. SUPABASE INSPECTION — MANDATORY BEFORE DATABASE DESIGN
+
+Inspect the actual connected Supabase project and current database state.
+
+Do not rely on historical migration files as proof of deployed structures.
+
+### Inspect relevant existing resources
+
+Include, where applicable:
+
+- `profiles`
+- `guardian_profiles`
+- `guardian_selfie_proofs`
+- `handshakes`
+- Existing tour and reservation tables.
+- Existing review tables.
+- Existing media assets and Storage resources.
+- Existing notification and messaging persistence.
+
+Verify actual:
+
+- Tables.
+- Columns.
+- Column types.
+- Primary keys.
+- Foreign keys.
+- Unique constraints.
+- Indexes.
+- Existing RLS policies.
+- Required privileges.
+- Functions/RPCs.
+- Existing records and ownership relationships.
+- Applicable domain contracts.
+
+Do not modify the live database during this inspection.
+
+### Reuse before creating
+
+If the existing schema supports a feature, reuse it through its canonical domain.
+
+If an essential field, relationship, constraint, function or table is missing, identify the exact gap.
+
+Never guess that a database resource exists.
+
+Never invent a column name.
+
+Never continue a backend integration against a nonexistent schema.
+
+---
+
+## 12. IF SUPABASE CHANGES ARE REQUIRED — PROVIDE MANUAL SQL
+
+**The Product Owner will execute approved database SQL manually through the Supabase SQL Editor.**
+
+You must not execute SQL mutations yourself.
+
+You must not automatically apply migrations.
+
+You must not alter production database tables, policies, functions, Storage or records.
+
+### Required SQL deliverable
+
+If database changes are necessary, provide a complete, organized SQL proposal.
+
+Include:
+
+**A. Existing-schema inventory**
+
+List the relevant tables and structures actually found.
+
+**B. Missing database requirements**
+
+For each missing item, identify:
+
+- Owning domain.
+- Required feature.
+- Existing dependency.
+- Exact missing table, column, constraint, index, policy or function.
+- Why the current schema cannot support the required behavior.
+
+**C. SQL Editor scripts**
+
+Provide the exact PostgreSQL/Supabase SQL required for each approved-scope change.
+
+Organize scripts in dependency order.
+
+Only include necessary changes.
+
+Use actual inspected identifiers and current schema contracts.
+
+Provide any required:
+
+- Table definitions.
+- Missing columns.
+- Foreign keys.
+- Unique constraints.
+- Indexes.
+- Authorized functions.
+- RLS policies.
+- Required privileges.
+- Appropriate data-integrity safeguards.
+
+Avoid destructive operations and unnecessary schema changes.
+
+**D. Execution order**
+
+Explain exactly which SQL block must run first and why.
+
+**E. Verification SQL**
+
+Provide read-only SQL statements to verify that each intended structure was created correctly.
+
+**F. Failure and rollback considerations**
+
+State dependencies, migration risks, existing-data compatibility and safe recovery requirements.
+
+**G. App dependency list**
+
+Identify which code paths cannot be considered operational until the required SQL has been executed and verified.
+
+### Mandatory stop condition
+
+If a feature requires missing database infrastructure:
+
+1. Prepare the corresponding application integration cleanly.
+2. Identify the dependency explicitly.
+3. Provide the SQL proposal.
+4. Mark the feature **BLOCKED — SQL PENDING**.
+5. Do not claim the feature is working.
+6. Do not simulate successful backend operations.
+7. Do not deploy or apply the SQL automatically.
+
+**SQL preparation is authorized. SQL execution is NOT authorized.**
+
+The Product Owner will review and execute the SQL separately.
+
+Do not silently modify the database.
+
+---
+
+## 13. STRICT CHANGE SCOPE
+
+Only modify verified files directly involved in the Guardian, Local Legend and approved business profile presentation and its necessary domain-owned integrations.
+
+Read-only inspection of dependencies is permitted.
+
+Do not change unrelated features.
+
+Specifically protect:
+
+- Drift.
+- ECHO/ORBIT.
+- PULLS/Confirmed Vibes.
+- Ordinary user social profiles.
+- Camera Share.
+- Gossip.
+- Vibe Trails implementation.
+- Global navigation.
+- Unrelated admin features.
+- Other agents' active work.
+- Shared infrastructure unrelated to this scope.
+
+Do not modify other domains simply because their code could be improved.
+
+If a required dependency falls outside the authorized scope, report it and obtain separate authorization before changing that owner.
+
+No broad refactoring.
+
+No unrelated bug fixes.
+
+No unnecessary dependencies.
+
+No commits, pushes, PRs, merges or deployments.
+
+---
+
+## 14. NO FAKE IMPLEMENTATIONS — ABSOLUTE RULE
+
+Reject all historical mock behavior that is not backed by authoritative current data.
+
+Prohibited:
+
+- Fake Guardian records.
+- Hardcoded professional status.
+- Fake Pro subscriptions.
+- Invented rates.
+- Placeholder business records presented as real.
+- localStorage-based authoritative Guardian data.
+- localStorage Handshake proof.
+- Automatic Handshake approval without recipient consent.
+- Fake selfie verification.
+- Artificial review eligibility.
+- Simulated bookings.
+- Fake reservation confirmations.
+- Fake messaging.
+- Client-side-only persistence.
+- Fake Supabase writes.
+- Silent database errors.
+- Success notifications before backend confirmation.
+- Browser-only identity classification.
+- Duplicate canonical records.
+- Unsupported backend claims.
+
+Temporary UI state is allowed only for legitimate transient interface behavior.
+
+**A working button animation is not proof of working functionality.**
+
+**A successful build is not proof of operational backend integration.**
+
+**A database table's existence is not proof that the user journey works.**
+
+Never mark a feature as implemented or verified without corresponding evidence.
+
+---
+
+## 15. MANDATORY VERIFICATION AND ACCEPTANCE
+
+Verify the result against the current application and the reference UI.
+
+### Visual acceptance
+
+Confirm:
+
+1. Ordinary users retain the ordinary user card.
+2. Pro Guardians display the dedicated professional card.
+3. Local Legends display the correct variant.
+4. Business profiles use their approved presentation.
+5. The reference Guardian modal looks the same as screenshots 2 and 3.
+6. Colors, fonts, badges, buttons and fields match.
+7. Header and close button match.
+8. Selfie, rate and Handshake presentation match.
+9. Tour cards and booking actions match.
+10. Handshake-gated reviews match.
+11. Message Guardian action matches.
+12. Mobile and desktop presentation remain functional.
+13. No duplicate or obsolete profile interface remains active.
+
+Provide visual comparison screenshots.
+
+### Backend acceptance
+
+Verify with authorized test accounts and a safe test environment:
+
+1. Guardian data loads from the canonical backend.
+2. Professional identity remains linked to the correct user.
+3. Professional data persists after refresh.
+4. Genuine selfie freshness is displayed.
+5. A user can create a pending Handshake.
+6. The correct Guardian can accept it.
+7. Another user cannot accept it.
+8. Completed Handshake proof appears only after acceptance.
+9. Declined requests do not create proof.
+10. Eligible reviews use real Handshake state.
+11. Review content persists.
+12. Tours belong to the correct Guardian.
+13. Reservation requests persist correctly.
+14. Messaging respects its actual authorization.
+15. No duplicate records are created.
+16. The database rejects unauthorized operations.
+
+Where missing SQL prevents testing, mark the case blocked. Do not use fabricated results.
+
+### Engineering acceptance
+
+Run:
+
+- TypeScript validation.
+- Production build.
+- Relevant automated tests.
+- Domain-boundary checks.
+- Changed-file scope verification.
+- UI regression checks.
+- Applicable authorized end-to-end tests.
+
+Report actual results.
+
+Never report tests as passed without execution.
+
+---
+
+## 16. REQUIRED FINAL REPORT
+
+Your final report must contain:
+
+### A. Current defect analysis
+
+Explain exactly why the current application is mixing user cards with Guardian/business presentation.
+
+### B. Reference inspection
+
+List the actual reference components, styles and interactions inspected.
+
+### C. Visual implementation
+
+Explain how the final presentation matches the supplied screenshots and reference.
+
+### D. Component replacement map
+
+Show:
+
+- Existing component.
+- New or updated component.
+- Whether it was reused, edited, replaced or retired.
+- All updated call sites.
+
+### E. Domain ownership map
+
+Identify the sole owning domain for every persisted entity and operation.
+
+### F. Backend integration inventory
+
+For every visible action, provide:
+
+- UI entry point.
+- Domain API.
+- Backend table/function/service.
+- Authorization rule.
+- Verified result or blocker.
+
+### G. Handshake implementation evidence
+
+Show the actual pending request, provider decision and mutual-acceptance lifecycle.
+
+### H. Supabase schema report
+
+List inspected structures and all identified missing requirements.
+
+### I. SQL Editor deliverable
+
+If required, provide the complete proposed SQL, ordered execution instructions and verification queries.
+
+**Do not execute the SQL.**
+
+### J. Cleanup and architecture proof
+
+Demonstrate that no competing old Guardian/business card, duplicate service or dead replacement path remains.
+
+### K. Git scope proof
+
+Provide:
+
+- Starting branch and HEAD.
+- Initial working-tree status.
+- Exact files changed.
+- New files.
+- Removed files.
+- `git diff --name-status`.
+- `git diff --stat`.
+- Final working-tree status.
+
+Clearly distinguish preexisting changes from your own changes.
+
+### L. Test evidence
+
+Provide actual commands, exit codes, logs and visual/end-to-end observations.
+
+### M. Feature status table
+
+Use only:
+
+- **VERIFIED**
+- **IMPLEMENTED — NOT VERIFIED**
+- **BLOCKED — SQL PENDING**
+- **BLOCKED — DEPENDENCY**
+- **NOT IMPLEMENTED**
+
+Do not claim overall completion while mandatory behavior remains blocked or unverified.
+
+---
+
+# FINAL NON-NEGOTIABLE DIRECTIVE
+
+Restore and correctly integrate the existing **Pro Guardian, Local Legend and approved business profile UI/UX**, using `funmarket/VQgemini` and screenshots 2 and 3 as the exact visual and interaction reference.
+
+Do not redesign any part of the reference experience.
+
+Correct the existing implementation instead of creating a parallel system.
+
+Preserve ordinary user-profile behavior.
+
+Implement the currently approved simple mutual-acceptance Handshake while preserving the reference button and visual experience.
+
+Keep Guardian storage separate and properly owned by D07, linked to canonical member identities.
+
+Use the existing domain architecture for tours, reviews, Handshake, media and messaging.
+
+Inspect the live Supabase schema before planning persistence.
+
+**If database changes are missing, provide exact SQL scripts for the Product Owner to review and execute manually through the SQL Editor. Never execute them yourself.**
+
+Keep scripts modular and professionally structured.
+
+Remove only proven obsolete code from the replaced implementation.
+
+Do not create duplicates, fake backend implementations, dead code, invented user data or simulated functionality.
+
+Do not touch unrelated application features or another agent's work.
+
+Do not commit, push, merge or deploy.
+
+**EXACT REFERENCE UI/UX. REAL DOMAIN OWNERSHIP. REAL BACKEND WIRING. CLEAN EXISTING-CODE REPLACEMENT. MANUAL SQL APPROVAL GATE. ZERO SCOPE DRIFT.**

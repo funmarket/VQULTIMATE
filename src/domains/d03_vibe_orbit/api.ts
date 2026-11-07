@@ -62,7 +62,7 @@ export function getDeviceLocation(): Promise<DeviceLocationState> {
 
         if (error.code === error.PERMISSION_DENIED) {
           status = 'denied';
-          errorMsg = 'Location permission was denied. Please allow location access in your browser settings to enable the 23 km Vibe Orbit radar.';
+          errorMsg = 'Location permission was denied. Please allow location access in your browser settings to enable proximity discovery.';
         } else if (error.code === error.POSITION_UNAVAILABLE) {
           status = 'unavailable';
           errorMsg = 'GPS sensor or location provider is unavailable.';
@@ -88,7 +88,6 @@ export function getDeviceLocation(): Promise<DeviceLocationState> {
 
 /**
  * Continuously watches device location changes and informs subscriber.
- * Returns an unwatch cleanup function.
  */
 export function watchDeviceLocation(
   onUpdate: (state: DeviceLocationState) => void
@@ -119,7 +118,7 @@ export function watchDeviceLocation(
 
       if (error.code === error.PERMISSION_DENIED) {
         status = 'denied';
-        errorMsg = 'Location access denied by user. Enable GPS in browser settings to scan your 23 km orbit.';
+        errorMsg = 'Location access denied by user.';
       } else if (error.code === error.POSITION_UNAVAILABLE) {
         status = 'unavailable';
         errorMsg = 'Location signal currently unavailable.';
@@ -147,141 +146,77 @@ export function watchDeviceLocation(
 }
 
 /**
- * Queries real places within 23 km (23,000 meters) of the user's coordinates.
- * Zero-mock discipline: If no device location or no places in range, returns empty array.
+ * Public domain API: Fetches real nearby places from the Supabase Edge Function 'nearby-places'
+ * which queries the Google Places API server-side using GOOGLE_PLACES_API_KEY.
+ *
+ * Rules:
+ * - Real data only. No mocks. No hardcoded place arrays.
+ * - If Google returns nothing or fails, returns an empty array [].
+ * - Sorts places ascending by distance (closest first).
  */
-export async function fetchNearbyVibePlaces(
+export async function fetchNearbyPlaces(
   coords: UserCoordinates | null,
   category?: VibeCategory | 'All'
 ): Promise<VibePlace[]> {
-  if (!coords) {
+  let targetCoords = coords;
+
+  // If coordinates are not provided, attempt to acquire real device GPS once
+  if (!targetCoords || isNaN(targetCoords.lat) || isNaN(targetCoords.lng)) {
+    const locState = await getDeviceLocation();
+    if (locState.status === 'granted' && locState.coords) {
+      targetCoords = locState.coords;
+    }
+  }
+
+  // Without coordinates, do not fabricate locations: return empty array
+  if (!targetCoords || isNaN(targetCoords.lat) || isNaN(targetCoords.lng)) {
     return [];
   }
 
   try {
-    // 1. Attempt PostGIS / Supabase RPC query if provisioned
-    const { data: rpcData, error: rpcErr } = await supabase.rpc('get_nearby_places', {
-      user_lat: coords.lat,
-      user_lng: coords.lng,
-      radius_meters: DISCOVERY_RADIUS_METERS
+    const { data, error } = await supabase.functions.invoke('nearby-places', {
+      body: {
+        lat: targetCoords.lat,
+        lng: targetCoords.lng,
+        radius: DISCOVERY_RADIUS_METERS,
+        category: category && category !== 'All' ? category : undefined
+      }
     });
 
-    if (!rpcErr && rpcData && Array.isArray(rpcData)) {
-      let mapped = (rpcData as any[]).map((p) => {
-        const placeLat = Number(p.lat ?? p.latitude);
-        const placeLng = Number(p.lng ?? p.longitude);
-        const dist = calculateDistanceMeters(coords.lat, coords.lng, placeLat, placeLng);
-        return {
-          id: p.id,
-          title: p.title || p.name || 'Vibe Waypoint',
-          category: (p.category || 'Spots') as VibeCategory,
-          description: p.description || '',
-          image_url: p.image_url || p.cover_image || '',
-          lat: placeLat,
-          lng: placeLng,
-          pulse_intensity: p.pulse_intensity || 8,
-          vq_reward: p.vq_reward || 50,
-          created_by: p.created_by || 'explorer',
-          address: p.address || `${(dist / 1000).toFixed(1)} km away`,
-          distance_meters: dist,
-          distance_km: Number((dist / 1000).toFixed(1))
-        };
-      });
-
-      if (category && category !== 'All') {
-        mapped = mapped.filter((p) => p.category === category);
+    if (error || !data || !Array.isArray(data.places)) {
+      if (error) {
+        console.warn('Error invoking nearby-places Edge Function:', error);
       }
-
-      return mapped.filter((p) => p.distance_meters <= DISCOVERY_RADIUS_METERS);
+      return [];
     }
 
-    // 2. Fallback query on canonical 'places' table with client-side Haversine filtering
-    let query = supabase.from('places').select('*');
-    if (category && category !== 'All') {
-      query = query.eq('category', category);
-    }
+    const places: VibePlace[] = data.places.map((p: any) => {
+      const dist = calculateDistanceMeters(targetCoords!.lat, targetCoords!.lng, p.lat, p.lng);
+      return {
+        ...p,
+        distance_meters: dist,
+        distance_km: Number((dist / 1000).toFixed(2))
+      };
+    });
 
-    const { data, error } = await query;
-    if (!error && data && data.length > 0) {
-      const withinRadius: VibePlace[] = [];
+    // Sort ascending: closest first
+    places.sort((a, b) => (a.distance_meters ?? 999999) - (b.distance_meters ?? 999999));
 
-      for (const row of data as any[]) {
-        const placeLat = Number(row.lat ?? row.latitude);
-        const placeLng = Number(row.lng ?? row.longitude);
-
-        if (isNaN(placeLat) || isNaN(placeLng)) continue;
-
-        const dist = calculateDistanceMeters(coords.lat, coords.lng, placeLat, placeLng);
-        if (dist <= DISCOVERY_RADIUS_METERS) {
-          withinRadius.push({
-            id: row.id,
-            title: row.title || row.name || 'Vibe Waypoint',
-            category: (row.category || 'Spots') as VibeCategory,
-            description: row.description || '',
-            image_url: row.image_url || row.cover_image || '',
-            lat: placeLat,
-            lng: placeLng,
-            pulse_intensity: row.pulse_intensity || 8,
-            vq_reward: row.vq_reward || 50,
-            created_by: row.created_by || 'explorer',
-            address: row.address || `${(dist / 1000).toFixed(1)} km away`,
-            distance_meters: dist,
-            distance_km: Number((dist / 1000).toFixed(1))
-          });
-        }
-      }
-
-      withinRadius.sort((a, b) => (a.distance_meters || 0) - (b.distance_meters || 0));
-      return withinRadius;
-    }
-
-    // Also check 'vibe_places' if places returned empty
-    const { data: vpData, error: vpErr } = await supabase.from('vibe_places').select('*');
-    if (!vpErr && vpData && vpData.length > 0) {
-      const withinRadius: VibePlace[] = [];
-
-      for (const row of vpData as any[]) {
-        const placeLat = Number(row.lat ?? row.latitude);
-        const placeLng = Number(row.lng ?? row.longitude);
-
-        if (isNaN(placeLat) || isNaN(placeLng)) continue;
-
-        const dist = calculateDistanceMeters(coords.lat, coords.lng, placeLat, placeLng);
-        if (dist <= DISCOVERY_RADIUS_METERS) {
-          withinRadius.push({
-            id: row.id,
-            title: row.title || row.name || 'Vibe Waypoint',
-            category: (row.category || 'Spots') as VibeCategory,
-            description: row.description || '',
-            image_url: row.image_url || row.cover_image || '',
-            lat: placeLat,
-            lng: placeLng,
-            pulse_intensity: row.pulse_intensity || 8,
-            vq_reward: row.vq_reward || 50,
-            created_by: row.created_by || 'explorer',
-            address: row.address || `${(dist / 1000).toFixed(1)} km away`,
-            distance_meters: dist,
-            distance_km: Number((dist / 1000).toFixed(1))
-          });
-        }
-      }
-
-      if (category && category !== 'All') {
-        return withinRadius.filter((p) => p.category === category);
-      }
-      return withinRadius;
-    }
-
-    return [];
+    return places;
   } catch (err) {
-    console.warn('Error querying nearby vibe places:', err);
+    console.warn('fetchNearbyPlaces failure:', err);
     return [];
   }
 }
 
 /**
- * Backward-compatible export. If coords cannot be resolved, returns empty.
+ * Backward-compatible alias for fetchNearbyPlaces.
+ */
+export const fetchNearbyVibePlaces = fetchNearbyPlaces;
+
+/**
+ * Backward-compatible function querying real nearby places.
  */
 export async function fetchVibePlaces(category?: VibeCategory): Promise<VibePlace[]> {
-  return fetchNearbyVibePlaces(null, category);
+  return fetchNearbyPlaces(null, category);
 }

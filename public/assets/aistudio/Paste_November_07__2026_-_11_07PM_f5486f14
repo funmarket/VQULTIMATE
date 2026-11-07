@@ -1,0 +1,845 @@
+# VQULTIMATE — MANDATORY VIBE PULSES CORRECTION
+
+## REMOVE FAKE CONTENT — USE REAL PLACES — RESTORE EXACT EXPLORE PLACE DETAILS
+
+**Current application:** `funmarket/VQULTIMATE`
+
+**Reference application:** https://github.com/funmarket/VQgemini
+
+**Supabase project:** `avdfessrhbsqwlfmbdau`
+
+**Visual references:**
+1. Previously approved Vibe Pulses Home carousel design.
+2. Attached Explore Place Details screenshots showing the café profile and its Info, Mayor & Badges, Meetups, rating, Vibe Confidence, AI Match Score, Check-in and Vibe Validate sections.
+
+### MISSION
+
+Inspect and correct Gemini's existing Vibe Pulses implementation.
+
+The current implementation may contain fabricated cities, mock activity counts, invented Live Vibes, sample cards, simulated popularity or disconnected Place Details.
+
+**Do not assume these defects exist. Prove which ones exist by inspecting the actual source, runtime and database.**
+
+Correct every proven defect within this feature's ownership scope.
+
+The required operational behavior is:
+
+**REAL LIVE VIBES WHEN GENUINELY AVAILABLE → OTHERWISE REAL NEARBY PLACES → CLOSEST FIRST → EXISTING REAL PLACE DETAILS.**
+
+Preserve the approved Vibe Pulses carousel design and automatic scrolling.
+
+Do not redesign the Home page.
+
+---
+
+## 1. STRICT INSPECTION BEFORE EDITING
+
+Read the current:
+
+- `AGENTS.md`
+- `Master Plan.md`
+- `Requirements.md`
+- `structure.md`
+- `Database.md`
+
+Inspect the current repository HEAD, working tree and other agents' changes.
+
+Inspect:
+
+- Existing Home Vibe Pulses component.
+- Existing carousel controller.
+- Existing Pulse data-fetching code.
+- Existing city and user-count calculations.
+- Existing location handling.
+- Existing Place discovery service.
+- Existing Explore Place Details implementation.
+- Existing Supabase schema and data.
+- Existing map navigation and Place selection.
+
+Identify all hardcoded, invented, simulated or browser-local content used to populate Vibe Pulses.
+
+Do not change anything until the relevant code and domain ownership are established.
+
+---
+
+## 2. REMOVE ALL FAKE PULSE CONTENT
+
+Audit the current implementation for:
+
+- Hardcoded Live Vibes counts.
+- Random activity values.
+- Fake online-user status.
+- Fabricated city statistics.
+- Hardcoded location rankings.
+- Invented event records.
+- Stock/sample Places treated as real.
+- Mock feed posts.
+- Fake timestamps.
+- Artificial popularity values.
+- Fabricated proximity measurements.
+- Fake AI Match Scores.
+- Fake confirmation counts.
+- Simulated engagement.
+- Unverified check-ins.
+
+Remove or replace these only where they are proven to belong to this Vibe Pulses implementation.
+
+Do not remove genuine existing backend data.
+
+Do not rewrite unrelated functionality.
+
+**A city with 128 registered users does not automatically have 128 Live Vibes.**
+
+Live Vibes must be derived from genuinely eligible, consented and qualifying activity under the approved domain contract.
+
+If that data does not exist, do not display an invented count.
+
+---
+
+## 3. MANDATORY REAL-PLACE FALLBACK
+
+Vibe Pulses must continue to display useful content when no genuine Live Vibes are available.
+
+### Required hierarchy
+
+**Mode A — Genuine Live Vibes available**
+
+Use authorized real Live Vibes data where the approved qualification and privacy rules can be enforced.
+
+Do not infer live status from merely registered or recently created accounts.
+
+**Mode B — No qualifying Live Vibes**
+
+Automatically display real discoverable Places from the app's existing canonical Places database.
+
+**Mode C — Some Live Vibes but insufficient content**
+
+Use only the approved genuine Live Vibes entries and eligible real Places as supplemental cards, with clearly differentiated card types and truthful labels.
+
+No fake or placeholder cards.
+
+### Critical behavior
+
+The fallback must not look like simulated live-user activity.
+
+Place cards must identify themselves as **Places**, not as active users.
+
+Do not label a restaurant as having Live Vibes without genuine qualifying evidence.
+
+Do not fabricate events, attendee counts or Pulse activity.
+
+### No scheduled fake posts
+
+The fallback must retrieve canonical Place records through the owning Places domain.
+
+It must not create recurring synthetic posts or copy Places into a second feed table merely to keep the carousel populated.
+
+The carousel is a presentation of existing records, not a reason to duplicate records.
+
+---
+
+## 4. REAL PLACE RANKING — CLOSEST FIRST
+
+The Product Owner requires proximity-based discovery.
+
+### Required ranking behavior
+
+1. Determine the user's location through the application's existing authorized D04 location mechanism.
+2. Retrieve eligible real Places from the canonical D05 Places domain.
+3. Use verified coordinates for the selected Places.
+4. Calculate genuine proximity relative to the available authorized user location.
+5. Sort results by ascending distance.
+6. Use trustworthy existing ranking signals as secondary criteria where appropriate.
+7. Display the closest eligible Place first.
+8. Continue through nearby Places in distance order.
+9. Retain the existing automatic carousel navigation.
+
+### Important distinction
+
+**Distance is the primary ordering factor. Ranking is secondary.**
+
+A highly rated distant restaurant must not displace a closer eligible Place unless an approved user-selected ranking mode specifically allows that behavior.
+
+Never invent Place coordinates.
+
+Never calculate distances from incomplete or guessed addresses.
+
+Never substitute a static city-center distance and claim it is the user's distance.
+
+If the user's location permission is unavailable, preserve the existing approved location fallback or selection mechanism.
+
+If genuine location data is unavailable, clearly label distance as unavailable and use an approved non-proximity ordering rather than fabricating proximity.
+
+### Duplicate prevention
+
+One canonical Place must appear only once in a given carousel result set.
+
+Deduplicate by the verified canonical Place ID and established external-source identifiers when appropriate.
+
+Do not rely only on Place names for identity.
+
+---
+
+## 5. PRODUCT OWNER'S PROVIDED REAL PLACE CANDIDATES
+
+The following Places were explicitly supplied by the Product Owner as candidates for real Place discovery.
+
+They must be inspected, verified, reconciled and used where suitable.
+
+**Do not invent additional Places to replace them.**
+
+**Do not assume every listed Place is already in Supabase.**
+
+**Do not blindly import them as verified current facts.**
+
+Check the canonical D05 Places database and existing external identity mappings before proposing additions.
+
+### A. Restaurants and eateries
+
+**1. Teto's Restaurant**
+
+- Address: Batiment Du Jardin - El Agba, Tunis
+- Phone: +216 22 015 629
+- Supplied rating: 4.9/5 from 9 reviews
+- Supplied price band: TND 1–40
+- Category: Restaurant
+- Supplied specialties: Wood-fired pizza, makloub and casual family dining
+- Reference: https://www.google.com/search?kgmid=%2Fg%2F11m6s0xyd0&q=Teto%27s+Restaurant
+
+**2. Restaurant El Gharnouk**
+
+- Address: Av. Palmier, Tunis, near Zahrouni / El Agba
+- Phone: +216 98 538 205
+- Supplied rating: 3.8/5 from 196 reviews
+- Supplied price band: TND 10–20
+- Category: Tunisian restaurant
+- Supplied specialties: Tunisian dishes, seafood ojja and grilled chicken
+- Reference: https://www.google.com/search?kgmid=%2Fg%2F1hhw392vq&q=Restaurant+El+Gharnouk
+
+**3. Weld El Haj**
+
+- Address: Rue Amilcar, Tunis
+- Supplied rating: 4.6/5 from 130 reviews
+- Supplied price band: TND 1–10
+- Category: Tunisian eatery
+- Supplied specialties: Local street food and grilled dishes
+- Reference: https://www.google.com/search?kgmid=%2Fg%2F11bz0dd71_&q=Weld+El+Haj
+
+### B. Le Bardo area
+
+**4. Green Light Coffee House**
+
+- Address: Near Topnet, 20 Mars, Tunis 2000
+- Supplied rating: 4.0/5 from 109 reviews
+- Supplied price band: TND 10–20
+- Category: Café
+- Description: Calm coffee house used for studying, relaxing and social visits
+
+**5. Bonzai Coffee Lounge**
+
+- Address: 24 Av. Habib Bourguiba, Tunis
+- Supplied rating: 3.5/5 from 322 reviews
+- Supplied price band: TND 10–40
+- Category: Café
+- Description: Nature-inspired interior, plants, Wi-Fi and laptop-friendly atmosphere
+
+**6. J'OY COFFEE SHOP**
+
+- Address: 30 Av. Habib Bourguiba, Le Bardo 2000
+- Supplied rating: 4.1/5 from 36 reviews
+- Supplied price band: TND 1–10
+- Category: Café
+- Description: Coffee, smoothies, snacks and casual social visits
+
+**7. DOWNTOWN Bardo**
+
+- Address: Av. Habib Bourguiba, Le Bardo
+- Supplied rating: 3.1/5 from 364 reviews
+- Supplied price band: TND 20–30
+- Category: Café
+- Description: Indoor/outdoor seating, breakfast and light bites
+
+**8. Salon de thé Meraki**
+
+- Address: 21 Av. Habib Bourguiba, Tunis 2000
+- Supplied rating: 3.7/5 from 117 reviews
+- Category: Tea house
+- Description: Vintage-inspired café with pastries and coffee
+
+**9. Hifive Coffee Shop**
+
+- Address: 19 Av. 2 Mars 1934, Le Bardo 2000
+- Supplied rating: 3.9/5 from 11 reviews
+- Category: Tea house / café
+- Description: Drinks and gourmet breakfast
+
+### C. Greater Tunis / Medina
+
+**10. Cafe Lounge Ksar Ayed**
+
+- Address: 16 Rue Sidi Boukhrissan, Tunis 1008
+- Supplied rating: 4.8/5 from 450 reviews
+- Category: Tea house / rooftop café
+- Description: Medina rooftop lounge with city views, tea and shisha
+
+**11. Hillside Resto-Lounge**
+
+- Address: Rue Habib Chatti, Tunis
+- Supplied rating: 3.8/5 from 368 reviews
+- Supplied price band: TND 10–50
+- Category: Restaurant / lounge
+- Description: Restaurant and lounge with indoor dining and a decorated interior
+
+### Data integrity requirements
+
+These details are Product Owner-supplied source leads, not authorization to fabricate current venue status.
+
+Before importing or updating:
+
+- Verify the real-world identity of each Place.
+- Check for an existing canonical record.
+- Check name and address variants.
+- Check external identifiers where available.
+- Confirm the correct location.
+- Confirm actual coordinates from a trustworthy geospatial source.
+- Preserve source provenance.
+- Distinguish externally supplied ratings from VQULTIMATE community ratings.
+- Do not copy Google review counts into app-native check-in counts.
+- Do not fabricate opening hours, prices or live availability.
+- Do not overwrite newer verified app data with older supplied values.
+- Do not add duplicate Places.
+
+If a Place cannot be verified, mark it **UNVERIFIED** and report what is missing.
+
+Do not make up details simply to complete the catalog.
+
+Do not silently ignore any of the eleven supplied Places.
+
+Provide an individual reconciliation result for all eleven.
+
+---
+
+## 6. SUPABASE — USE REAL EXISTING DATA
+
+Inspect the current project:
+
+https://supabase.com/dashboard/project/avdfessrhbsqwlfmbdau/editor/17619?schema=public
+
+Relevant existing resources may include:
+
+- `profiles`
+- `places`
+- Existing Place validation/check-in tables.
+- Existing community/rating records.
+- Existing location data.
+- Existing media/storage records.
+- Other approved activity and presence sources.
+
+Use actual table names and fields confirmed by inspection.
+
+### Real test users
+
+The Product Owner authorizes use of existing genuine application test profiles for development and authorized tests.
+
+However:
+
+**Existing test profiles are not automatically live users.**
+
+You may use real test profiles to test:
+
+- Authentication.
+- Authorized check-ins.
+- Existing account eligibility.
+- Real permissions.
+- User-specific Place matching where genuinely supported.
+
+Do not falsely mark a test account online.
+
+Do not insert fabricated user activity simply to increase Pulse counts.
+
+Do not manufacture user locations or consent.
+
+Do not create duplicate test accounts.
+
+Do not expose private profile information to the Pulse feed.
+
+Use isolated, authorized test operations only; do not modify shared live records without approval.
+
+---
+
+## 7. CARD TAP MUST OPEN THE ACTUAL PLACE DETAILS
+
+This requirement is mandatory.
+
+**When the user taps a real Place card inside Vibe Pulses, it must open that exact Place's detailed profile.**
+
+Do not open a generic city modal.
+
+Do not open an unrelated user profile.
+
+Do not navigate to a random Place.
+
+Do not create a blank placeholder detail view.
+
+The selected canonical Place ID must travel through the existing application navigation and selection contract.
+
+### Exact reference UI/UX
+
+Use the Explore Local Discovery Place Details experience from:
+
+https://github.com/funmarket/VQgemini
+
+Inspect the reference implementations, including:
+
+- `src/features/explore/components/VenueCard.tsx`
+- `src/features/explore/components/VenueDetailSheet.tsx`
+- Related Explore utilities and dependent components.
+
+These paths identify relevant reference source, not permission to copy its backend.
+
+### Match the attached screenshots
+
+The Place Details interface must reproduce the reference's:
+
+**Visual presentation**
+
+- Large Place hero image.
+- Gold/yellow upper border treatment.
+- Dark navy/black modal background.
+- Rounded modal edges.
+- Category badge on image.
+- Close button.
+- Correct Place name.
+- Legendary Spot badge only when genuinely eligible.
+- Reference typography and spacing.
+- Internal vertical scrolling.
+
+**Tabs**
+
+- `Info`
+- `Mayor & Badges`
+- `Meetups`
+
+Preserve tab styling, order and interactions.
+
+**Place information**
+
+- Genuine rating and review count.
+- Genuine Vibe Confidence when available.
+- Real confirmation count where supported.
+- Actual Place address.
+- Approved location description.
+- Map-related information.
+
+**AI Vibe Match section**
+
+- `AI VIBE MATCH SCORE`
+- Percentage when genuinely computable.
+- Match relevance breakdown.
+- Explanation of the score.
+
+No fabricated 73% Match or artificial breakdown.
+
+**Actions**
+
+- `Check-in`
+- `Vibe Validate`
+- `View Map & Directions`
+- `Close Spot Details`
+
+Preserve the reference labels and design.
+
+### Backend integrity
+
+The reference screenshots contain example values such as:
+
+- 4.6/5 rating.
+- 31 check-ins.
+- 92% Vibe Confidence.
+- 8 confirmations.
+- 73% AI Match.
+- +500 PTS check-in reward.
+
+**These are not authorized database values for every Place.**
+
+Use only genuine, authorized records and calculations.
+
+If a value is unavailable, display an accurate unavailable/empty state without fabricating it.
+
+Do not show an AI Match percentage unless there is an actual implemented, verified scoring contract.
+
+Do not credit VQ/points merely because the reference displays a reward label.
+
+Do not unlock Vibe Validate unless the actual D05 validation and D04 proximity requirements are satisfied.
+
+Do not fake a 200m eligibility result.
+
+### Existing implementation first
+
+Before creating any new Place modal, inspect the current VQULTIMATE Explore Place Details implementation.
+
+If a current canonical component already exists, use or cleanly adapt it.
+
+Preserve the current application's backend improvements.
+
+Do not create competing Place Details systems for Home and Explore.
+
+**Home Vibe Pulses and Explore must ultimately open the same authoritative Place identity and compatible detail experience.**
+
+---
+
+## 8. REAL RANKINGS AND EXTERNAL REVIEWS
+
+Keep external venue ratings, native community reviews and validation confidence separate.
+
+For every Place, distinguish:
+
+1. Externally sourced rating.
+2. External review count.
+3. VQULTIMATE community review information.
+4. Actual app check-ins.
+5. Actual validation confirmations.
+6. Genuine Vibe Confidence.
+7. Actual match relevance when supported.
+
+Do not merge these into one invented popularity score.
+
+A restaurant with 450 external reviews does not have 450 VQULTIMATE check-ins.
+
+A Google rating of 4.8 does not automatically qualify a Place as Legendary.
+
+Do not derive fake badge eligibility.
+
+If ranking metadata is missing, order by genuine distance where available, then follow an approved deterministic secondary order.
+
+Never invent ranking signals.
+
+---
+
+## 9. KEEP THE VIBE PULSES CAROUSEL WORKING
+
+Preserve the previously approved Home UI:
+
+- Vibe Pulses title.
+- Premium dark style.
+- Image-based cards.
+- Purple/pink accents.
+- Automatic horizontal scrolling.
+- Manual swiping.
+- Active-card emphasis.
+- Navigation indicators.
+- Mobile responsiveness.
+- Existing View Map navigation.
+- Future compatibility with advertising cards.
+
+### Auto-scroll requirements
+
+- Use genuine Place records to populate fallback cards.
+- React correctly to actual database changes.
+- Handle one, many or zero eligible records.
+- Prevent duplicate cards.
+- Avoid duplicated animation timers.
+- Pause when users are interacting.
+- Respect reduced-motion settings.
+- Clean up timers and listeners.
+- Avoid unintentional scroll jumps.
+
+The feed must remain useful with no Live Vibes, provided eligible real Places exist.
+
+Do not maintain carousel appearance by inserting fake entries.
+
+Do not implement a separate advertising system now.
+
+---
+
+## 10. DOMAIN OWNERSHIP — ZERO CROSS-DOMAIN WRITES
+
+Respect the approved 28-domain architecture.
+
+Relevant owners include:
+
+- **D01/D02:** Canonical identity and member profiles.
+- **D04:** Authorized location and proximity.
+- **D05:** Places, discovery, check-ins and validation under their approved contracts.
+- **D13:** Media storage and delivery.
+- **D20:** Actual VQ/points ledger, where approved.
+- Existing approved owners for rating, reputation and social interactions.
+
+Verify exact ownership from current governing documents.
+
+The Home carousel must not become a new Place database.
+
+The Home presentation must not write directly into D05-owned tables.
+
+Do not mix externally sourced ratings with canonical validation records.
+
+Use domain public APIs and verified persistence paths.
+
+---
+
+## 11. DATABASE INSPECTION AND MANUAL SQL GATE
+
+Inspect the live Supabase schema first.
+
+Determine whether the existing Places database already supports:
+
+- All eleven supplied Places.
+- Canonical identity.
+- External-source identifiers.
+- Verified coordinates.
+- Categories.
+- Ratings with provenance.
+- Address data.
+- Place imagery.
+- Ranking and discovery queries.
+- Authorized distance calculations.
+- Place Details retrieval.
+- Check-in and validation integration.
+
+### If existing infrastructure is sufficient
+
+Reuse it.
+
+Do not create anything unnecessary.
+
+### If infrastructure is missing
+
+Provide an exact SQL proposal for Product Owner review.
+
+Include:
+
+- Existing table inventory.
+- Missing resources.
+- Canonical owning domain.
+- Exact required SQL.
+- Existing-data compatibility.
+- Safe execution order.
+- Verification queries.
+- RLS and authorization requirements.
+- Duplicate-prevention constraints.
+- Data provenance requirements.
+
+### Real-place import plan
+
+For the eleven supplied Places, provide:
+
+- Existing canonical Place ID if found.
+- External identifier if verified.
+- Record match status.
+- Missing metadata.
+- Verified location status.
+- Whether insertion or update is needed.
+- Source provenance.
+- Exact proposed insertion/update SQL if approved data is complete.
+
+**Never insert duplicates.**
+
+**Never update an existing record blindly.**
+
+**Never invent missing coordinates.**
+
+**Never execute database mutations yourself.**
+
+The Product Owner will execute approved SQL manually using the Supabase SQL Editor.
+
+### SQL syntax requirement
+
+Provide SQL scripts as executable SQL only.
+
+Do not put Markdown headings, `#` headings or non-SQL instructions inside executable SQL.
+
+Use SQL comments (`--`) where explanations inside scripts are necessary.
+
+Generate idempotent SQL only where the actual inspected schema allows it safely.
+
+Do not treat `CREATE TABLE IF NOT EXISTS` as sufficient validation of existing table compatibility.
+
+Do not use destructive `DROP`, `TRUNCATE`, or broad data updates.
+
+If data must be reconciled before safe SQL execution, stop and report the blocker.
+
+---
+
+## 12. CLEAN EXISTING-CODE REPLACEMENT
+
+This is a repair of Gemini's existing implementation.
+
+Do not create a second implementation.
+
+Identify exactly:
+
+- Which current Pulse files contain bad data.
+- Which existing components can be reused.
+- Which wrong data adapters must be replaced.
+- Which obsolete mocks should be removed.
+- Which current services must be preserved.
+- Which Place Details component is canonical.
+- Which affected imports and navigation paths need correction.
+
+Perform only proven necessary changes.
+
+Do not create monolithic files.
+
+Do not introduce unnecessary dependencies.
+
+Do not leave dead code.
+
+Do not create duplicate Places or duplicate rendering systems.
+
+Do not touch unrelated application features or another agent's work.
+
+---
+
+## 13. MANDATORY END-TO-END VERIFICATION
+
+Test the actual behavior.
+
+### Data tests
+
+- Confirm no fabricated Pulse counts.
+- Confirm no fake user activity.
+- Confirm the eleven supplied Places have been individually reconciled.
+- Confirm no duplicate Place records.
+- Confirm real distance ordering.
+- Confirm honest behavior when location is unavailable.
+- Confirm actual Place rankings use valid provenance.
+
+### Navigation tests
+
+- Tap the first Place.
+- Confirm it opens the exact corresponding Place Details.
+- Close the modal.
+- Tap another Place.
+- Confirm the correct different Place opens.
+- Open the same Place through Explore.
+- Confirm both entry points resolve to the same canonical record.
+
+### Reference UI tests
+
+Compare the final Place Details against the supplied screenshots.
+
+Verify:
+
+- Hero image.
+- Category badge.
+- Name and credentials.
+- Tabs.
+- Rating.
+- Vibe Confidence.
+- Address.
+- AI Match section.
+- Check-in.
+- Vibe Validate.
+- Directions.
+- Close controls.
+- Scrolling and responsive behavior.
+
+### Backend tests
+
+Verify real authorized data reads and writes.
+
+Do not credit rewards during tests without an explicitly authorized isolated test arrangement.
+
+Do not modify genuine user data simply to demonstrate success.
+
+### Engineering tests
+
+Run TypeScript, production build, focused tests, domain-boundary checks and scope-diff verification.
+
+Report exact results, not unsupported success claims.
+
+---
+
+## 14. FINAL REPORT — REQUIRED EVIDENCE
+
+Provide:
+
+**A. What Gemini originally built**
+
+List each Pulse data source and identify any confirmed mock or fabricated behavior.
+
+**B. Root cause**
+
+Explain exactly why fake data appeared, if confirmed.
+
+**C. Corrected data pipeline**
+
+Show the canonical data path:
+
+`D05 Places → approved discovery/ranking → Home Vibe Pulses → selected Place → canonical Place Details`
+
+Include D04 proximity and genuine Live Vibes sources only where their contracts apply.
+
+**D. All eleven Place reconciliation results**
+
+For each supplied Place, report its existence, identity, coordinates, rating provenance and whether SQL is required.
+
+**E. Place Details integration**
+
+Show the exact current and reference components inspected and explain how visual fidelity was achieved.
+
+**F. Backend verification**
+
+Provide actual query and authorized runtime evidence.
+
+**G. SQL handoff**
+
+Provide complete SQL proposals only where required.
+
+Do not execute them.
+
+**H. Changed files**
+
+List all modified, created and retired files.
+
+**I. Dead-code and duplicate audit**
+
+Prove no competing old Pulse or Place Details implementation remains.
+
+**J. Test logs**
+
+Provide actual test commands, outputs and screenshots.
+
+**K. Remaining blockers**
+
+Use the exact statuses:
+
+- VERIFIED
+- IMPLEMENTED — NOT VERIFIED
+- BLOCKED — SQL PENDING
+- BLOCKED — DEPENDENCY
+- NOT IMPLEMENTED
+
+**L. Git scope verification**
+
+Provide starting HEAD, working-tree state, `git diff --name-status`, `git diff --stat`, and final changed-file inventory.
+
+---
+
+# FINAL NON-NEGOTIABLE DIRECTIVE
+
+Correct the existing Home Vibe Pulses feature.
+
+Use genuine Live Vibes only when backed by real qualifying user activity.
+
+If genuine Live Vibes are unavailable, automatically keep the feed populated using real discoverable Places.
+
+Rank real Places by authorized verified proximity, closest first, then approved ranking signals.
+
+Use the eleven Product Owner-provided Places as the explicitly authorized catalog candidates, subject to identity, coordinate and database reconciliation.
+
+Use existing genuine test profiles only for valid authorized testing, never to fabricate live-user counts.
+
+Every Place card must open the corresponding real Place Details experience.
+
+Match the supplied Explore Place Details screenshots and VQgemini reference UI/UX exactly, while respecting the current app's canonical architecture and real backend.
+
+Preserve automatic scrolling and future ad-card compatibility.
+
+Do not create duplicates, fake backend implementations, dead code, invented user data or simulated functionality.
+
+Do not touch unrelated application features or another agent's work.
+
+Do not commit, push, merge or deploy.
+
+**EXACT REFERENCE UI/UX. REAL DOMAIN OWNERSHIP. REAL BACKEND WIRING. CLEAN EXISTING-CODE REPLACEMENT. MANUAL SQL APPROVAL GATE. ZERO SCOPE DRIFT.**

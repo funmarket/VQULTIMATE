@@ -55,10 +55,14 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
   };
   const [activePhoto, setActivePhoto] = useState(0);
   const gallery = trail.gallery || [];
-  const visibleImages = gallery.length > 0
+  const rawImages = gallery.length > 0
     ? [...gallery].sort((a, b) => Number(b.isCover) - Number(a.isCover))
         .map(photo => photo.url).filter((u): u is string => Boolean(u && u.trim()))
-    : [trail.imageUrl, trail.image_url, 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1200&q=80'].filter((u): u is string => Boolean(u && u.trim()));
+    : [trail.imageUrl, trail.image_url].filter((u): u is string => Boolean(u && u.trim()));
+  const visibleImages = Array.from(new Set(rawImages));
+  if (visibleImages.length === 0) {
+    visibleImages.push('https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1200&q=80');
+  }
 
   const stops: TrailStop[] = trail.stops && trail.stops.length > 0
     ? trail.stops
@@ -218,7 +222,7 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
               </p>
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {visibleImages.map((url, index) => (
-                  <button key={url} type="button" onClick={() => setActivePhoto(index)}
+                  <button key={`${url}-${index}`} type="button" onClick={() => setActivePhoto(index)}
                     aria-label={`View photo ${index + 1}`}
                     aria-pressed={activePhoto === index}
                     className={`w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 ${activePhoto === index ? 'border-emerald-400' : 'border-neutral-800'}`}>
@@ -373,7 +377,7 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
               </p>
               <div className="grid gap-2">
                 {routePlan.legs.map((leg, index) => (
-                  <a key={leg.url} href={leg.url} target="_blank" rel="noopener noreferrer"
+                  <a key={`${leg.url}-${index}`} href={leg.url} target="_blank" rel="noopener noreferrer"
                     className="rounded-lg border border-neutral-700 px-3 py-2 text-xs text-emerald-200 hover:bg-neutral-900">
                     Part {index + 1}: {leg.from} → {leg.to} ({leg.stopCount} stops)
                   </a>

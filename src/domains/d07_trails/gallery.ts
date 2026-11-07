@@ -11,7 +11,7 @@ export type TrailGalleryPhoto = {
 };
 
 type MediaRow = {
-  id: string;
+  id: string | number;
   trail_id: string;
   object_path: string;
   sort_order: number;
@@ -131,7 +131,7 @@ export async function withTrailGalleries(trails: CommunityTrail[]): Promise<Comm
     const url = signed.get(row.object_path);
     if (!url) continue;
     gallery.push({
-      id: row.id,
+      id: String(row.id),
       objectPath: row.object_path,
       url,
       sortOrder: row.sort_order,

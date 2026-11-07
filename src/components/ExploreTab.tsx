@@ -6,7 +6,7 @@ import {
   MessageCircle, CheckCircle2, Bookmark, Check
 } from 'lucide-react';
 import {
-  fetchNearbyVibePlaces,
+  fetchNearbyPlaces,
   getDeviceLocation,
   watchDeviceLocation,
   VibePlace,
@@ -50,6 +50,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
   const mapInstance = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const userMarkerRef = useRef<any>(null);
+  const hasInitiallyCenteredRef = useRef<boolean>(false);
 
   const trailsScrollRef = useRef<HTMLDivElement>(null);
   const guardiansScrollRef = useRef<HTMLDivElement>(null);
@@ -130,7 +131,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     setLoading(true);
 
     Promise.allSettled([
-      fetchNearbyVibePlaces(locationState.coords, selectedCategory),
+      fetchNearbyPlaces(locationState.coords, selectedCategory),
       fetchCulturalTrails(),
       fetchVibeGuardians(),
       supabase.auth.getUser()
@@ -170,10 +171,14 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
     try {
       // Use real coordinates if already available; otherwise neutral view (NO hardcoded Dubai)
+      const hasCoords = !!locationState.coords;
+      if (hasCoords) {
+        hasInitiallyCenteredRef.current = true;
+      }
       const initialCenter: [number, number] = locationState.coords
         ? [locationState.coords.lng, locationState.coords.lat]
         : [0, 20];
-      const initialZoom = locationState.coords ? 13 : 2;
+      const initialZoom = locationState.coords ? 13.5 : 2;
 
       const map = new maplibregl.Map({
         container: mapContainer.current,
@@ -198,10 +203,16 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     };
   }, []);
 
-  // 4. Recenter MapLibre on real device coordinates once received
+  // 4. Center MapLibre ONCE on initial real device coordinates, then preserve user pan/zoom freedom
   useEffect(() => {
-    if (locationState.status === 'granted' && locationState.coords && mapInstance.current) {
+    if (
+      !hasInitiallyCenteredRef.current &&
+      locationState.status === 'granted' &&
+      locationState.coords &&
+      mapInstance.current
+    ) {
       try {
+        hasInitiallyCenteredRef.current = true;
         mapInstance.current.flyTo({
           center: [locationState.coords.lng, locationState.coords.lat],
           zoom: 13.5,
@@ -210,10 +221,10 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           essential: true
         });
       } catch (err) {
-        console.warn('Error recentering map on user location:', err);
+        console.warn('Error initially centering map on user location:', err);
       }
     }
-  }, [locationState.status, locationState.coords?.lat, locationState.coords?.lng]);
+  }, [locationState.status, locationState.coords]);
 
   // 5. Update MapLibre markers: User location beacon + Cultural orbs colored by category
   useEffect(() => {
@@ -334,11 +345,43 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     setIsCurateOpen(true);
   };
 
+  const handleRecenterUser = () => {
+    if (locationState.coords && mapInstance.current) {
+      try {
+        mapInstance.current.flyTo({
+          center: [locationState.coords.lng, locationState.coords.lat],
+          zoom: 14,
+          pitch: 45,
+          bearing: -17,
+          essential: true
+        });
+        showToast('Map centered on your current location.');
+      } catch (err) {
+        console.warn('Recenter error:', err);
+      }
+    } else {
+      handleManualCalibrate();
+    }
+  };
+
   const handleManualCalibrate = () => {
     setLocationState({ status: 'requesting', coords: null });
     getDeviceLocation().then((res) => {
       setLocationState(res);
       if (res.status === 'granted' && res.coords) {
+        if (mapInstance.current) {
+          try {
+            mapInstance.current.flyTo({
+              center: [res.coords.lng, res.coords.lat],
+              zoom: 14,
+              pitch: 45,
+              bearing: -17,
+              essential: true
+            });
+          } catch (err) {
+            console.warn('Map flyTo error:', err);
+          }
+        }
         showToast(`GPS Calibrated! Lat: ${res.coords.lat.toFixed(4)}, Lng: ${res.coords.lng.toFixed(4)}`);
       } else if (res.status === 'denied') {
         showToast('Location permission denied. Please allow GPS in browser settings.');
@@ -405,6 +448,14 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           <p className="text-xs text-neutral-400">23 km real device location radar & organic concentric rings</p>
         </div>
         <div className="flex items-center space-x-2">
+          <button
+            onClick={handleRecenterUser}
+            className="p-2.5 rounded-xl bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 transition text-cyan-400 flex items-center space-x-1.5 text-xs font-semibold cursor-pointer"
+            title="Recenter on My Location"
+          >
+            <Navigation className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">My Location</span>
+          </button>
           <button
             onClick={handleManualCalibrate}
             className="p-2.5 rounded-xl bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 transition text-orange-400 flex items-center space-x-1 text-xs font-semibold cursor-pointer"
@@ -1129,6 +1180,14 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           onLocateMap={handleLocateGuardian}
           onRequireAuth={onRequireAuth}
           onToast={showToast}
+          onReserveTour={(tour) => {
+            setSelectedGuardian(null);
+            setReservationTour(tour);
+          }}
+          onOpenMessage={(g) => {
+            setSelectedGuardian(null);
+            setSelectedHireGuardian(g);
+          }}
         />
       )}
 

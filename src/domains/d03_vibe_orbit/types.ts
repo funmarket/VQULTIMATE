@@ -33,4 +33,14 @@ export interface VibePlace {
   address: string;
   distance_meters?: number;
   distance_km?: number;
+  // Extended reference fields from PO Place catalog & VenueDetailSheet
+  rating?: number;
+  reviews_count?: number;
+  checkins_count?: number;
+  vibe_confidence?: number;
+  confirmations_count?: number;
+  is_legendary?: boolean;
+  phone?: string;
+  price_band?: string;
+  ai_match_score?: number;
 }

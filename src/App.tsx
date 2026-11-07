@@ -150,6 +150,10 @@ export default function App() {
               setUser(updatedUser);
             }
           }}
+          onViewMap={() => {
+            setSelectedPlace(null);
+            setActiveTab('explore');
+          }}
         />
       )}
     </div>

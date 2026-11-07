@@ -283,7 +283,7 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
             {photoFiles.length > 0 && (
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {photoFiles.map((file, index) => (
-                  <div key={previews[index]} className="min-w-0 space-y-1 rounded-lg border border-neutral-800 p-1.5">
+                  <div key={`${previews[index] || file.name}-${index}`} className="min-w-0 space-y-1 rounded-lg border border-neutral-800 p-1.5">
                     <img src={previews[index]} alt={`Selected Trail photo ${index + 1}`}
                       className="aspect-video w-full rounded-md object-cover" />
                     <label className="flex items-center gap-1 text-[10px] text-neutral-300">

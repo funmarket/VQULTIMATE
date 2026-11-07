@@ -3,16 +3,17 @@ import {
   Sparkles, MapPin, Shield, Compass, ChevronRight, ChevronLeft, Flame, Award,
   Users, Zap, Clock, Route, GitFork, CheckCircle2, Send, X
 } from 'lucide-react';
-import { fetchVibePlaces, VibePlace } from '../domains/d03_vibe_orbit';
+import { fetchNearbyPlaces, VibePlace, getDeviceLocation } from '../domains/d03_vibe_orbit';
 import { fetchCulturalTrails, fetchVibeGuardians, CulturalTrail, VibeGuardian, TrailWaypoint } from '../domains/d07_trails';
 import { fetchActiveFlashEvent, FlashEvent } from '../domains/d11_events';
-import { fetchActivities, ActivityFeedItem } from '../domains/d10_activities';
 import { fetchCommentsForPost, addCommentToPost, VibeComment } from '../domains/d05_vibe';
+import { fetchCityPulses, VibePulsesSummary, CityPulse } from '../domains/d04_geo_presence';
 import { UserProfile } from '../domains/d01_auth';
 import { TrailDetailModal } from './TrailDetailModal';
 import { GuardianDetailModal } from './GuardianDetailModal';
 import { CreateFlashModal } from './CreateFlashModal';
 import { HomeSocialFeed } from './HomeSocialFeed';
+import { VibePulsesCarousel } from './VibePulsesCarousel';
 
 interface HomeTabProps {
   user: UserProfile | null;
@@ -24,9 +25,14 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const [guardians, setGuardians] = useState<VibeGuardian[]>([]);
   const [places, setPlaces] = useState<VibePlace[]>([]);
   const [trails, setTrails] = useState<CulturalTrail[]>([]);
+  const [pulsesSummary, setPulsesSummary] = useState<VibePulsesSummary>({
+    cities: [],
+    totalCities: 0,
+    totalLiveVibes: 0,
+    source: 'calculated_baseline'
+  });
   const [flashEvent, setFlashEvent] = useState<FlashEvent | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number>(0);
-  const [activities, setActivities] = useState<ActivityFeedItem[]>([]);
   const [selectedTrail, setSelectedTrail] = useState<CulturalTrail | null>(null);
   const [selectedGuardian, setSelectedGuardian] = useState<VibeGuardian | null>(null);
   const [isCreateFlashOpen, setIsCreateFlashOpen] = useState(false);
@@ -48,12 +54,15 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
 
   useEffect(() => {
     fetchVibeGuardians().then(setGuardians);
-    fetchVibePlaces().then(setPlaces);
     fetchCulturalTrails().then(setTrails);
     loadFlash();
     const flashPoll = setInterval(loadFlash, 30000);
 
-    fetchActivities().then(setActivities);
+    getDeviceLocation().then((locState) => {
+      fetchNearbyPlaces(locState.coords).then(setPlaces);
+      fetchCityPulses(locState.coords).then(setPulsesSummary);
+    });
+
     return () => clearInterval(flashPoll);
   }, []);
 
@@ -68,6 +77,13 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const showToast = (msg: string) => {
     setHomeToast(msg);
     setTimeout(() => setHomeToast(null), 3000);
+  };
+
+  const handleViewCityMap = (city?: CityPulse) => {
+    if (city) {
+      showToast(`Exploring map for ${city.city}...`);
+    }
+    onNavigateTab('explore');
   };
 
   const handleScrollTrails = (direction: 'left' | 'right') => {
@@ -186,62 +202,13 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         </div>
       )}
 
-      {/* Featured Vibe Orbit Pulse Places */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold flex items-center space-x-2">
-            <Flame className="w-5 h-5 text-orange-400" />
-            <span>High-Intensity Vibe Pulses</span>
-          </h2>
-          <button
-            onClick={() => onNavigateTab('explore')}
-            className="text-xs text-teal-400 hover:underline flex items-center space-x-1 cursor-pointer"
-          >
-            <span>View Map</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {places.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {places.slice(0, 4).map((place) => (
-              <div
-                key={place.id}
-                onClick={() => onSelectPlace(place)}
-                className="group relative rounded-2xl overflow-hidden bg-neutral-900 border border-neutral-800 hover:border-teal-500/50 transition cursor-pointer p-3 flex space-x-3"
-              >
-                <img
-                  src={place.image_url}
-                  alt={place.title}
-                  className="w-20 h-20 rounded-xl object-cover flex-shrink-0 group-hover:scale-105 transition duration-300"
-                />
-                <div className="flex-1 min-w-0 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider">{place.category}</span>
-                      <span className="text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded font-bold">+{place.vq_reward} VQ</span>
-                    </div>
-                    <h3 className="font-bold text-sm text-white truncate mt-0.5">{place.title}</h3>
-                    <p className="text-xs text-neutral-400 truncate">{place.address}</p>
-                  </div>
-                  <div className="flex items-center space-x-1 text-[11px] text-neutral-400">
-                    <Sparkles className="w-3 h-3 text-orange-400" />
-                    <span>Pulse Level: {place.pulse_intensity}/10</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800/80 p-5 text-center space-y-2">
-            <Compass className="w-8 h-8 text-teal-400/60 mx-auto" />
-            <h4 className="font-bold text-xs text-white">No active pulses in this sector</h4>
-            <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
-              Scan the horizon in Vibe Orbit to detect newly verified district waypoints.
-            </p>
-          </div>
-        )}
-      </div>
+      {/* Vibe Pulses — Exact Visual Reference & Genuine City Aggregation */}
+      <VibePulsesCarousel
+        summary={pulsesSummary}
+        onViewMap={handleViewCityMap}
+        onSelectPlace={onSelectPlace}
+        onToast={showToast}
+      />
 
       {/* Curated Cultural Trails & Vibe Tours */}
       <div className="space-y-3">
@@ -471,45 +438,9 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
 
       {/* ========================================================
           SOCIAL FEED: MY NETWORK | LOCAL VIBES | FOR YOU
-          Placed right after Active Guardians and above Live Activity Feed
+          Placed right after Active Guardians
          ======================================================== */}
       <HomeSocialFeed user={user} onOpenComments={handleOpenComments} onToast={showToast} />
-
-      {/* Live Activity Stream */}
-      <div className="space-y-3 pt-2">
-        <h2 className="text-lg font-bold flex items-center space-x-2">
-          <Users className="w-5 h-5 text-teal-400" />
-          <span>Live District Activity Feed</span>
-        </h2>
-        {activities.length > 0 ? (
-          <div className="space-y-2">
-            {activities.map((act) => (
-              <div key={act.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-3.5 flex items-center justify-between text-xs">
-                <div className="flex items-center space-x-2.5">
-                  <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
-                  <div>
-                    <span className="font-bold text-white">{act.user_name}</span>{' '}
-                    <span className="text-neutral-400">{act.action}</span>{' '}
-                    <span className="text-teal-300 font-semibold">{act.target}</span>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-amber-300 font-bold">+{act.vq_earned} VQ</span>
-                  <span className="text-[10px] text-neutral-500">{act.time_ago}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800/80 p-5 text-center space-y-2">
-            <Users className="w-8 h-8 text-teal-400/60 mx-auto" />
-            <h4 className="font-bold text-xs text-white">District pulse is currently calm</h4>
-            <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
-              Check in at waypoints or broadcast your vibe to light up the live network feed.
-            </p>
-          </div>
-        )}
-      </div>
 
       {/* Comments Modal for Social Feed */}
       {activePostId && (
