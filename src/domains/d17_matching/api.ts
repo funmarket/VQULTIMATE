@@ -14,6 +14,17 @@ export async function sendConnectionPull(
   }
 
   try {
+    // Check if pending pull already exists between users
+    const { data: existing } = await supabase
+      .from('connection_pulls')
+      .select('id, status')
+      .or(`and(sender_id.eq.${senderId},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${senderId})`)
+      .maybeSingle();
+
+    if (existing) {
+      return { success: false, error: 'A connection pull is already pending or established with this explorer.' };
+    }
+
     const { data, error } = await supabase
       .from('connection_pulls')
       .insert([
@@ -30,11 +41,18 @@ export async function sendConnectionPull(
 
     if (error) {
       console.warn('Supabase sendConnectionPull error:', error);
+      if (error.code === '23505' || error.message?.includes('unique') || error.message?.includes('duplicate')) {
+        return { success: false, error: 'A connection pull is already pending with this explorer.' };
+      }
       return { success: false, error: error.message };
     }
     return { success: true, pull: data as ConnectionPull };
   } catch (err: any) {
-    return { success: false, error: err?.message || 'Failed to send Connection Pull' };
+    const msg = err?.message || '';
+    if (msg.includes('unique') || msg.includes('duplicate')) {
+      return { success: false, error: 'A connection pull is already pending with this explorer.' };
+    }
+    return { success: false, error: msg || 'Failed to send Connection Pull' };
   }
 }
 
