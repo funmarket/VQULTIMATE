@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Camera, Zap, Clock3, Video, X, RefreshCw, Share2, SwitchCamera, Circle, Square, AlertCircle, ArrowLeft } from 'lucide-react';
 import type { UserProfile } from '../domains/d01_auth';
+import { createVibePost, VibePostItem } from '../domains/d05_vibe';
+import { uploadDriftMedia } from '../domains/d15_drift';
 
 type Mode = 'shot' | 'check' | 'flash' | 'snap' | 'dual';
 type Stage = 'camera' | 'selfie' | 'review' | 'details';
@@ -22,7 +24,48 @@ const categories: { id: Mood; emoji: string; label: string; description: string 
 const names: Record<Mode, string> = { shot: 'Live Vibe Shot', check: 'VibeCheck', flash: 'VibeFlash', snap: 'Vibe Snap', dual: 'Vibe Share' };
 
 /** Share capture shell. Does not impersonate a D18 challenge or claim D12 publication. */
-export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: _onPostSuccess, initialMode, cameraOnly = false, onClose }) => {
+export const ShareTab: React.FC<ShareTabProps> = ({ user, onPostSuccess, initialMode, cameraOnly = false, onClose }) => {
+  const [publishing, setPublishing] = useState(false);
+
+  const handleShareInApp = async () => {
+    if (!capture || !mode) return;
+    setPublishing(true);
+    setError(null);
+    try {
+      const extension = mode === 'snap' ? (capture.type.includes('mp4') ? 'mp4' : 'webm') : 'jpg';
+      const file = new File([capture], 'vibequest-' + mode + '-' + Date.now() + '.' + extension, { type: capture.type });
+      
+      const uploadRes = await uploadDriftMedia(file, mode === 'snap' ? 'voice' : 'photo');
+      const mediaUrl = uploadRes.success && uploadRes.url ? uploadRes.url : URL.createObjectURL(file);
+
+      const moodText = categories.find(item => item.id === category)?.label;
+      const finalCaption = [caption.trim(), moodText].filter(Boolean).join(' · ') || 'Captured moment via VibeShare.';
+
+      const newPost: VibePostItem = {
+        id: 'post_' + Date.now(),
+        user_id: user?.id || 'anon_explorer',
+        username: user?.username || 'explorer',
+        avatar_url: user?.avatar_url || '',
+        caption: finalCaption,
+        image_url: mediaUrl,
+        selfie_url: user?.avatar_url || undefined,
+        created_at: new Date().toISOString(),
+        reactions_count: 0,
+        comments_count: 0
+      };
+
+      const success = await createVibePost(newPost);
+      if (!success) {
+        throw new Error('Backend confirmation failed for vibe post publication.');
+      }
+
+      setPublishing(false);
+      onPostSuccess();
+    } catch (cause: any) {
+      setPublishing(false);
+      setError(cause?.message || 'Failed to publish to Gossip in-app feed.');
+    }
+  };
   const [mode, setMode] = useState<Mode | null>(initialMode ?? null);
   const [stage, setStage] = useState<Stage>('camera');
   const [facing, setFacing] = useState<'environment' | 'user'>('environment');
@@ -432,9 +475,20 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user: _user, onPostSuccess: 
                 <textarea id="share-capture-caption" value={caption} maxLength={280} onChange={event => setCaption(event.target.value)} placeholder="What made this moment special?" className="w-full resize-none rounded-xl border border-neutral-700 bg-neutral-900 p-3 text-sm text-white" rows={2} />
                 <p className="text-right text-xs text-neutral-400">{caption.length} / 280</p>
                 <p className="text-xs text-neutral-400">Share Outside opens your device's share sheet, or downloads the captured file. In-app publication, private messaging and challenge submissions are not connected yet; nothing will be posted to Gossip.</p>
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => setStage('review')} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-neutral-800 p-3 font-bold"><ArrowLeft size={17} /> Review</button>
-                  <button type="button" onClick={() => void shareOrSave()} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-lime-400 p-3 font-black text-neutral-950"><Share2 size={17} /> Share Outside / Save</button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleShareInApp()}
+                    disabled={publishing}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-teal-500 p-3.5 font-black text-white shadow-lg hover:opacity-95 disabled:opacity-40 cursor-pointer"
+                  >
+                    <Share2 size={18} />
+                    <span>{publishing ? 'Publishing to Gossip...' : 'Share in App (Publish to Gossip)'}</span>
+                  </button>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => setStage('review')} disabled={publishing} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-neutral-800 p-3 font-bold"><ArrowLeft size={17} /> Review</button>
+                    <button type="button" onClick={() => void shareOrSave()} disabled={publishing} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-neutral-800 p-3 font-bold text-neutral-300"><Share2 size={17} /> Save / Outside</button>
+                  </div>
                 </div>
               </div>
             )}

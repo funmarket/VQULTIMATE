@@ -1,16 +1,18 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   Sparkles, MapPin, Shield, Compass, ChevronRight, ChevronLeft, Flame, Award,
-  Users, Zap, Clock, Route, GitFork, CheckCircle2
+  Users, Zap, Clock, Route, GitFork, CheckCircle2, Send, X
 } from 'lucide-react';
 import { fetchVibePlaces, VibePlace } from '../domains/d03_vibe_orbit';
 import { fetchCulturalTrails, fetchVibeGuardians, CulturalTrail, VibeGuardian, TrailWaypoint } from '../domains/d07_trails';
 import { fetchActiveFlashEvent, FlashEvent } from '../domains/d11_events';
 import { fetchActivities, ActivityFeedItem } from '../domains/d10_activities';
+import { fetchCommentsForPost, addCommentToPost, VibeComment } from '../domains/d05_vibe';
 import { UserProfile } from '../domains/d01_auth';
 import { TrailDetailModal } from './TrailDetailModal';
 import { GuardianDetailModal } from './GuardianDetailModal';
 import { CreateFlashModal } from './CreateFlashModal';
+import { HomeSocialFeed } from './HomeSocialFeed';
 
 interface HomeTabProps {
   user: UserProfile | null;
@@ -29,6 +31,11 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const [selectedGuardian, setSelectedGuardian] = useState<VibeGuardian | null>(null);
   const [isCreateFlashOpen, setIsCreateFlashOpen] = useState(false);
   const [homeToast, setHomeToast] = useState<string | null>(null);
+
+  // Social feed comments modal state
+  const [activePostId, setActivePostId] = useState<string | null>(null);
+  const [comments, setComments] = useState<VibeComment[]>([]);
+  const [newComment, setNewComment] = useState('');
 
   const trailsScrollRef = useRef<HTMLDivElement>(null);
   const guardiansScrollRef = useRef<HTMLDivElement>(null);
@@ -87,6 +94,28 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
     showToast(`Checked in at "${wp.title}" on ${tr.title}! Claimed +${wp.vq_reward} VQ.`);
   };
 
+  const handleOpenComments = async (postId: string) => {
+    setActivePostId(postId);
+    const comms = await fetchCommentsForPost(postId);
+    setComments(comms);
+  };
+
+  const handleSendComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activePostId || !newComment.trim() || !user) {
+      showToast('Please sign in to comment.');
+      return;
+    }
+    const added = await addCommentToPost(activePostId, newComment, {
+      username: user.username,
+      avatar_url: user.avatar_url
+    });
+    if (added) {
+      setComments([...comments, added]);
+      setNewComment('');
+    }
+  };
+
   const minutesLeft = Math.floor(secondsLeft / 60);
 
   return (
@@ -99,10 +128,9 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         </div>
       )}
 
-      {/* Flash Alert | Happening Now Card (Matching exact user screenshot design) */}
+      {/* Flash Alert | Happening Now Card */}
       {flashEvent && secondsLeft > 0 && (
         <div className="rounded-3xl bg-neutral-900 border border-purple-500/30 p-5 shadow-2xl space-y-4 animate-fadeIn relative overflow-hidden">
-          {/* Top Actions Row: + CREATE FLASH (outlined) & HUNT NOW! 🏃 (solid white) */}
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
@@ -129,7 +157,6 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
             </button>
           </div>
 
-          {/* Title Header */}
           <div className="flex items-center space-x-2 text-sm">
             <span className="text-orange-400">🎭</span>
             <span className="font-bold text-white tracking-tight">Flash Alert</span>
@@ -137,7 +164,6 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
             <span className="font-bold text-pink-500 tracking-tight">Happening Now</span>
           </div>
 
-          {/* Title & Description */}
           <div className="space-y-1.5">
             <h3 className="font-bold text-base text-white tracking-tight">
               {flashEvent.title}
@@ -147,7 +173,6 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
             </p>
           </div>
 
-          {/* Footer Stats: Reward 500 VIBE Points & Countdown */}
           <div className="flex items-center justify-between pt-2 border-t border-neutral-800 text-xs">
             <div>
               <span className="text-pink-500 font-bold">Reward: 500</span>
@@ -160,7 +185,6 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
           </div>
         </div>
       )}
-
 
       {/* Featured Vibe Orbit Pulse Places */}
       <div className="space-y-3">
@@ -219,7 +243,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         )}
       </div>
 
-      {/* Curated Cultural Trails & Vibe Tours (Horizontally Scrollable & Clickable) */}
+      {/* Curated Cultural Trails & Vibe Tours */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
@@ -261,7 +285,6 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
                 onClick={() => setSelectedTrail(t)}
                 className="w-72 sm:w-80 flex-shrink-0 rounded-3xl overflow-hidden bg-neutral-900 border border-neutral-800 hover:border-amber-500/60 transition duration-300 cursor-pointer group flex flex-col shadow-xl"
               >
-                {/* Hero Image Section */}
                 <div className="relative h-40 w-full overflow-hidden bg-neutral-950">
                   <img
                     src={t.imageUrl || t.image_url || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80'}
@@ -270,7 +293,6 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/30 to-transparent" />
 
-                  {/* Top Badges */}
                   <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
                     <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border backdrop-blur-md ${
                       t.isTour
@@ -284,7 +306,6 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
                     </span>
                   </div>
 
-                  {/* Bottom Stats Overlay */}
                   <div className="absolute bottom-2.5 left-3 right-3 flex items-center space-x-2 text-[11px] text-neutral-300">
                     <span className="flex items-center space-x-1 bg-neutral-950/70 px-2 py-0.5 rounded-lg backdrop-blur-md">
                       <Clock className="w-3 h-3 text-teal-400" />
@@ -300,7 +321,6 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
                   </div>
                 </div>
 
-                {/* Card Content Body */}
                 <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
                   <div className="space-y-1">
                     <h3 className="font-bold text-white text-base group-hover:text-amber-300 transition line-clamp-1">
@@ -342,7 +362,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         )}
       </div>
 
-      {/* Active Guardians & Local Legends (Horizontally Scrollable) */}
+      {/* Active Guardians & Local Legends */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
@@ -449,6 +469,12 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         )}
       </div>
 
+      {/* ========================================================
+          SOCIAL FEED: MY NETWORK | LOCAL VIBES | FOR YOU
+          Placed right after Active Guardians and above Live Activity Feed
+         ======================================================== */}
+      <HomeSocialFeed user={user} onOpenComments={handleOpenComments} onToast={showToast} />
+
       {/* Live Activity Stream */}
       <div className="space-y-3 pt-2">
         <h2 className="text-lg font-bold flex items-center space-x-2">
@@ -484,6 +510,62 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
           </div>
         )}
       </div>
+
+      {/* Comments Modal for Social Feed */}
+      {activePostId && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
+          <div className="w-full sm:max-w-lg bg-neutral-900 border border-neutral-800 rounded-t-3xl sm:rounded-3xl p-6 space-y-4 max-h-[80vh] flex flex-col shadow-2xl text-white">
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+              <h3 className="font-bold text-base">District Comments</h3>
+              <button
+                onClick={() => setActivePostId(null)}
+                className="text-xs text-neutral-400 hover:text-white px-2.5 py-1 rounded-xl bg-neutral-800 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-3 min-h-[160px]">
+              {comments.length > 0 ? (
+                comments.map((comm) => (
+                  <div key={comm.id} className="flex space-x-3 items-start bg-neutral-950/60 p-3 rounded-2xl border border-neutral-800">
+                    <img src={comm.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'} alt={comm.username} className="w-8 h-8 rounded-full object-cover" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-xs text-white">@{comm.username}</span>
+                        <span className="text-[10px] text-neutral-500">
+                          {new Date(comm.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <p className="text-xs text-neutral-300 mt-1">{comm.content}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="py-6 text-center text-xs text-neutral-500 italic">
+                  No comments yet. Start the conversation!
+                </div>
+              )}
+            </div>
+
+            <form onSubmit={handleSendComment} className="flex items-center space-x-2 pt-2 border-t border-neutral-800">
+              <input
+                type="text"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Write a comment..."
+                className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
+              />
+              <button
+                type="submit"
+                className="p-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-teal-500 text-white hover:opacity-90 transition cursor-pointer"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Trail Detail Modal */}
       {selectedTrail && (
