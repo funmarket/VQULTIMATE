@@ -264,7 +264,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
                 {/* Hero Image Section */}
                 <div className="relative h-40 w-full overflow-hidden bg-neutral-950">
                   <img
-                    src={t.imageUrl || t.image_url}
+                    src={t.imageUrl || t.image_url || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80'}
                     alt={t.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                   />
@@ -389,7 +389,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
                   <div className="flex items-center space-x-3">
                     <div className="relative flex-shrink-0">
                       <img
-                        src={g.avatarUrl || g.avatar_url}
+                        src={g.avatarUrl || g.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
                         alt={g.name}
                         className="w-12 h-12 rounded-full object-cover border border-teal-500/40 group-hover:scale-105 transition duration-300"
                       />

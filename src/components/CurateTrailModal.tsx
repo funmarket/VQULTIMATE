@@ -175,9 +175,10 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
     } catch (error) {
       if (published) {
         // Never silently erase an already-published Trail because a photo failed.
+        const safePublished = published;
         const refreshed = await fetchCulturalTrails().then(
-          trails => trails.find(t => t.id === published?.id) || published,
-          () => published,
+          trails => trails.find(t => t.id === safePublished.id) || safePublished,
+          () => safePublished,
         );
         onCreated(refreshed);
         onToast('Trail was published, but one or more photos failed: ' +

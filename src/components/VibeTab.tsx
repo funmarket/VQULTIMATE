@@ -2,13 +2,24 @@ import React, { useEffect, useState, useRef } from 'react';
 import {
   Flame, Heart, MessageCircle, Share2, Sparkles, Send, Camera, Shield,
   User, ChevronLeft, ChevronRight, Check, X, Compass, Radio, Users, CheckCircle2,
-  Lock, AlertCircle
+  Lock, AlertCircle, Smile
 } from 'lucide-react';
 import { fetchVibePosts, VibePostItem, fetchCommentsForPost, addCommentToPost, VibeComment } from '../domains/d05_vibe';
 import { fetchDemoProfiles, fetchPublicProfileByHandle, UserProfile } from '../domains/d02_users';
 import { fetchOrbitProfiles, fetchEchoProfiles, unfollowUser, followUser } from '../domains/d03_social_graph';
 import { fetchPendingPulls, fetchConfirmedVibes, acceptConnectionPull, passConnectionPull, ConnectionPull, ConfirmedVibe } from '../domains/d17_matching';
 import { checkDmAuthorization, fetchDirectMessages, sendDirectMessage, DirectMessage } from '../domains/d14_messaging';
+import {
+  fetchDriftRooms,
+  fetchRoomPresenceSouls,
+  getOrCreateDriftAlias,
+  DriftRoom,
+  DriftAlias,
+  CANONICAL_WAVELENGTH_ROOMS
+} from '../domains/d15_drift';
+import { DriftIdentityModal } from './drift/DriftIdentityModal';
+import { DriftRoomView } from './drift/DriftRoomView';
+import { DriftEmojiPicker } from './drift/DriftEmojiPicker';
 import { UserProfileCard } from './UserProfileCard';
 import { ShareTab } from './ShareTab';
 
@@ -42,13 +53,76 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
   const [tunedWavelength, setTunedWavelength] = useState<string | null>('chill');
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [notificationToast, setNotificationToast] = useState<string | null>(null);
+  const [gossipEmojiPickerOpen, setGossipEmojiPickerOpen] = useState(false);
+  const [commentEmojiPickerOpen, setCommentEmojiPickerOpen] = useState(false);
+
+  // Drift Subsystem State
+  const [driftRooms, setDriftRooms] = useState<DriftRoom[]>(CANONICAL_WAVELENGTH_ROOMS);
+  const [activeDriftRoom, setActiveDriftRoom] = useState<DriftRoom | null>(null);
+  const [pendingIdentityRoom, setPendingIdentityRoom] = useState<DriftRoom | null>(null);
+  const [currentDriftAlias, setCurrentDriftAlias] = useState<DriftAlias | null>(null);
+  const [roomSoulCounts, setRoomSoulCounts] = useState<Record<string, number>>({});
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchVibePosts().then(setPosts);
     fetchDemoProfiles().then(setDemoProfiles);
+    fetchDriftRooms().then(setDriftRooms);
+
+    // Initial soul counts for each room
+    const loadSoulCounts = async () => {
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        CANONICAL_WAVELENGTH_ROOMS.map(async (r) => {
+          const souls = await fetchRoomPresenceSouls(r.id);
+          counts[r.id] = souls.length;
+        })
+      );
+      setRoomSoulCounts(counts);
+    };
+
+    loadSoulCounts();
+    const interval = setInterval(loadSoulCounts, 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  const effectiveUserId = user?.id || 'anon_voyager_' + (typeof window !== 'undefined' ? (window.localStorage.getItem('vq_anon_id') || (() => {
+    const id = 'anon_' + Math.random().toString(36).substring(2, 9);
+    window.localStorage.setItem('vq_anon_id', id);
+    return id;
+  })()) : 'anon');
+
+  const isPlatformAdmin = Boolean(
+    user && (
+      user.role === 'admin' ||
+      user.username === 'funmarketmn' ||
+      user.username === 'admin' ||
+      (user as any).email === 'funmarketmn@hotmail.com' ||
+      (user as any).email === 'funmarketmn@gmail.com'
+    )
+  );
+
+  const handleEnterDriftRoom = async (room: DriftRoom) => {
+    setTunedWavelength(room.id);
+    // Check if alias exists
+    const alias = await getOrCreateDriftAlias(room.id, effectiveUserId);
+    if (alias) {
+      setCurrentDriftAlias(alias);
+      setActiveDriftRoom(room);
+    } else {
+      setPendingIdentityRoom(room);
+    }
+  };
+
+  const handleConfirmAliasAndEnter = async (handle: string, color: string) => {
+    if (!pendingIdentityRoom) return;
+    const room = pendingIdentityRoom;
+    const alias = await getOrCreateDriftAlias(room.id, effectiveUserId, handle, color);
+    setCurrentDriftAlias(alias);
+    setPendingIdentityRoom(null);
+    setActiveDriftRoom(room);
+  };
 
   useEffect(() => {
     if (user?.id) {
@@ -398,7 +472,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
       {activeSubTab === 'gossip' && (
         <div className="space-y-4">
           {/* Composer */}
-          <form onSubmit={handleCreatePost} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 space-y-3 shadow-xl">
+          <form onSubmit={handleCreatePost} className="relative rounded-2xl bg-neutral-900 border border-neutral-800 p-4 space-y-3 shadow-xl">
             <div className="flex space-x-3 items-start">
               <img
                 src={user?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'}
@@ -425,6 +499,15 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setGossipEmojiPickerOpen(!gossipEmojiPickerOpen)}
+                  className={`flex items-center space-x-1 hover:text-amber-300 transition cursor-pointer ${gossipEmojiPickerOpen ? 'text-amber-400 font-bold' : ''}`}
+                  title="Telegram & Animated Emojis"
+                >
+                  <Smile className="w-4 h-4 text-amber-400" />
+                  <span className="text-[11px]">Emoji</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => setNewPostCaption(prev => prev ? `${prev} #MissionAccepted` : 'Completed District Heritage Mission! #MissionAccepted')}
                   className="flex items-center space-x-1 text-orange-400 font-bold hover:underline cursor-pointer"
                 >
@@ -447,6 +530,18 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                 <Send className="w-3 h-3" />
               </button>
             </div>
+
+            {gossipEmojiPickerOpen && (
+              <div className="absolute top-28 left-4 z-50">
+                <DriftEmojiPicker
+                  onSelectEmoji={(char) => {
+                    setNewPostCaption(prev => prev + char);
+                    setGossipEmojiPickerOpen(false);
+                  }}
+                  onClose={() => setGossipEmojiPickerOpen(false)}
+                />
+              </div>
+            )}
           </form>
 
           {/* Vibe Signals & Gossip Feed (D12) Header */}
@@ -596,10 +691,19 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {wavelengths.map((w) => {
               const isTuned = tunedWavelength === w.id;
+              const soulCount = roomSoulCounts[w.id] ?? (isTuned ? 1 : 0);
+              const matchingRoom = driftRooms.find((r) => r.id === w.id) || {
+                id: w.id,
+                name: w.name,
+                description: w.desc,
+                color: w.color
+              };
+
               return (
                 <div
                   key={w.id}
-                  className={`rounded-2xl bg-neutral-900 border p-4 space-y-2 transition flex flex-col justify-between ${
+                  onClick={() => handleEnterDriftRoom(matchingRoom)}
+                  className={`rounded-2xl bg-neutral-900 border p-4 space-y-2 transition flex flex-col justify-between cursor-pointer ${
                     isTuned ? 'border-teal-400/80 shadow-lg shadow-teal-500/10' : 'border-neutral-800 hover:border-teal-500/50'
                   }`}
                 >
@@ -611,9 +715,9 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                     <p className="text-xs text-neutral-400 mt-1 leading-relaxed">{w.desc}</p>
                   </div>
                   <button
-                    onClick={() => {
-                      setTunedWavelength(w.id);
-                      showToast(`Tuned into ${w.name} wavelength! Matching local explorers...`);
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEnterDriftRoom(matchingRoom);
                     }}
                     className={`w-full mt-2 py-2 rounded-xl text-[11px] font-bold transition cursor-pointer flex items-center justify-center space-x-1.5 ${
                       isTuned
@@ -622,10 +726,10 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                     }`}
                   >
                     {isTuned ? (
-                      <>
-                        <Radio className="w-3.5 h-3.5 text-teal-400 animate-spin" />
-                        <span>Tuned In Frequency</span>
-                      </>
+                      <span className="flex items-center space-x-1.5 text-emerald-300 font-bold">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>Active Souls: {soulCount}</span>
+                      </span>
                     ) : (
                       <span>Tune In Wavelength</span>
                     )}
@@ -1016,7 +1120,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
               )}
             </div>
 
-            <form onSubmit={handleSendComment} className="flex items-center space-x-2 pt-2 border-t border-neutral-800">
+            <form onSubmit={handleSendComment} className="relative flex items-center space-x-2 pt-2 border-t border-neutral-800">
               <input
                 type="text"
                 value={newComment}
@@ -1025,11 +1129,31 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                 className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
               />
               <button
+                type="button"
+                onClick={() => setCommentEmojiPickerOpen(!commentEmojiPickerOpen)}
+                className={`p-2 transition cursor-pointer ${commentEmojiPickerOpen ? 'text-amber-400' : 'text-neutral-400 hover:text-amber-300'}`}
+                title="Telegram & Animated Emojis"
+              >
+                <Smile className="w-5 h-5" />
+              </button>
+              <button
                 type="submit"
                 className="p-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-teal-500 text-white hover:opacity-90 transition cursor-pointer"
               >
                 <Send className="w-4 h-4" />
               </button>
+
+              {commentEmojiPickerOpen && (
+                <div className="absolute bottom-14 right-0 z-50">
+                  <DriftEmojiPicker
+                    onSelectEmoji={(char) => {
+                      setNewComment(prev => prev + char);
+                      setCommentEmojiPickerOpen(false);
+                    }}
+                    onClose={() => setCommentEmojiPickerOpen(false)}
+                  />
+                </div>
+              )}
             </form>
           </div>
         </div>
@@ -1052,6 +1176,30 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
           currentUser={user}
           onClose={() => setSelectedProfile(null)}
           onToast={showToast}
+        />
+      )}
+
+      {/* Full-Screen Drift Room Modal View */}
+      {activeDriftRoom && currentDriftAlias && (
+        <DriftRoomView
+          room={activeDriftRoom}
+          currentUserId={effectiveUserId}
+          alias={currentDriftAlias}
+          isPlatformAdmin={isPlatformAdmin}
+          onLeave={() => setActiveDriftRoom(null)}
+          onConfirmedVibeEstablished={() => {
+            if (user?.id) fetchConfirmedVibes(user.id).then(setConfirmedVibes);
+            showToast('✨ Double-match Confirmed! Unlocked in VIBES squad.');
+          }}
+        />
+      )}
+
+      {/* Drift Temporary Identity Picker Modal */}
+      {pendingIdentityRoom && (
+        <DriftIdentityModal
+          room={pendingIdentityRoom}
+          onConfirm={handleConfirmAliasAndEnter}
+          onClose={() => setPendingIdentityRoom(null)}
         />
       )}
     </div>

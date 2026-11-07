@@ -8,6 +8,7 @@ import { CommunityTrail, TrailStop, buildTrailRoutePlan, TrailTravelMode, TrailR
 interface TrailDetailModalProps {
   trail: CommunityTrail;
   onClose: () => void;
+  onStartNavigation?: () => void;
   onCheckInWaypoint?: (waypoint: any, trail: CommunityTrail) => void;
   onToast?: (message: string) => void;
   onAdoptTrail?: (trail: CommunityTrail) => void;
@@ -56,8 +57,8 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
   const gallery = trail.gallery || [];
   const visibleImages = gallery.length > 0
     ? [...gallery].sort((a, b) => Number(b.isCover) - Number(a.isCover))
-        .map(photo => photo.url).filter(Boolean)
-    : [trail.imageUrl || trail.image_url || ''].filter(Boolean);
+        .map(photo => photo.url).filter((u): u is string => Boolean(u && u.trim()))
+    : [trail.imageUrl, trail.image_url, 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1200&q=80'].filter((u): u is string => Boolean(u && u.trim()));
 
   const stops: TrailStop[] = trail.stops && trail.stops.length > 0
     ? trail.stops
@@ -115,7 +116,7 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
         {/* Edge-to-Edge Hero Image matching reference image_86e0ae07.png */}
         <div className="relative h-64 sm:h-72 w-full bg-neutral-900 flex-shrink-0">
           <img
-            src={visibleImages[activePhoto] || visibleImages[0] || ''}
+            src={visibleImages[activePhoto] || visibleImages[0] || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1200&q=80'}
             alt={trail.title}
             className="w-full h-full object-cover"
           />

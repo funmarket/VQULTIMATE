@@ -703,7 +703,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                     {/* Media Banner Section with Top Header Overlays */}
                     <div className="relative h-44 w-full overflow-hidden bg-neutral-900">
                       <img
-                        src={trail.imageUrl || trail.image_url}
+                        src={trail.imageUrl || trail.image_url || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80'}
                         alt={trail.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                       />
@@ -787,7 +787,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                       <div className="pt-3 border-t border-neutral-800/80 flex items-center justify-between gap-2">
                         <div className="flex items-center space-x-2 min-w-0 flex-1">
                           <img
-                            src={trail.authorAvatarUrl || trail.guardian_avatar}
+                            src={trail.authorAvatarUrl || trail.guardian_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
                             alt={trail.authorName || trail.guardian_name || 'Curator'}
                             className="w-6 h-6 rounded-full object-cover border border-[#00e599]/40 flex-shrink-0"
                           />

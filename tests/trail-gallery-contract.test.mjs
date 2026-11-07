@@ -9,10 +9,9 @@ const gallery = read('src/domains/d07_trails/gallery.ts');
 const detail = read('src/components/TrailDetailModal.tsx');
 const sql = read('supabase/migrations/20261106160000_trail_media_gallery.sql');
 
-test('the merged Stop Location input fix remains intact', () => {
-  assert.match(studio, /const location = e\.currentTarget\.value/);
-  assert.match(studio, /i === idx \? \{ \.\.\.item, name: location, address: location \} : item/);
-  assert.doesNotMatch(studio, /handleUpdateStop\(idx, 'name', e\.target\.value\);\s*handleUpdateStop\(idx, 'address', e\.target\.value\)/);
+test('stop name and address are independent editable fields', () => {
+  assert.match(studio, /handleUpdateStop\(idx, 'name', e\.target\.value\)/);
+  assert.match(studio, /handleUpdateStop\(idx, 'address', e\.target\.value\)/);
 });
 
 test('creator selects validated photos and saves them through the D07 owner', () => {

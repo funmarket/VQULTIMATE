@@ -1,0 +1,943 @@
+# GEMINI — VQULTIMATE DRIFT COMPLETE IMPLEMENTATION MISSION
+
+## Real Production Feature · Full-Screen Anonymous Rooms · Dedicated Database · Realtime Messaging
+
+### MANDATORY: READ THE ENTIRE SPECIFICATION BEFORE MODIFYING CODE
+
+You are acting as a senior full-stack React/TypeScript engineer, Supabase/PostgreSQL architect, realtime messaging engineer, and professional mobile UX designer.
+
+Your assignment is to transform the EXISTING Drift feature inside VQULTIMATE's Vibe page into a complete, genuinely working anonymous social communication system.
+
+**THIS IS NOT A PROTOTYPE, MOCKUP, SIMULATION, OR DEMO.**
+
+Implement genuine frontend behavior, actual backend contracts, real persistence, real realtime communication, real media handling, real authorization, and actual message expiration.
+
+Do not create fake functionality to make the interface appear finished.
+
+Do not claim something works unless you have verified it.
+
+**Working principle: Inspect → Design within approved architecture → Implement → Test → Verify → Report.**
+
+---
+
+# PART 1 — NON-NEGOTIABLE PROJECT RULES
+
+## 1.1 Preserve the existing application
+
+Work on the actual existing codebase.
+
+Before editing anything:
+
+1. Identify the exact repository, branch, and HEAD.
+2. Read the current `AGENTS.md` and applicable approved `Master Plan.md`, `Requirements.md`, `structure.md`, and `Database.md`.
+3. Inspect `VibeTab.tsx`, the existing Drift section, and relevant domain modules.
+4. Inspect the current Supabase schema and existing migrations.
+5. Identify the canonical ownership of each new behavior.
+6. Record all existing components that must remain unchanged.
+
+Do not use historical VQgemini code as an excuse to overwrite newer VQULTIMATE functionality.
+
+Do not start from a blank project.
+
+Do not introduce a new business domain outside the approved D01–D28 architecture.
+
+Do not change unrelated features, navigation, styles, or data.
+
+Implement in an authorized feature branch. Do not merge, deploy to production, apply live migrations, or change infrastructure permissions without explicit authorization.
+
+## 1.2 Absolutely preserve the existing Drift entry screen
+
+**THIS IS A HARD REQUIREMENT.**
+
+The current Vibe → Drift screen already has a two-column grid containing 12 wavelength cards.
+
+It must remain visually unchanged.
+
+Do not change:
+
+- Wavelength names.
+- Descriptions.
+- Existing order.
+- Card dimensions.
+- Colors.
+- Fonts.
+- Backgrounds.
+- Rounded corners.
+- Card layout.
+- Two-column arrangement.
+- Existing indicators.
+- Overall Vibe page styling.
+- Other Vibe sub-tabs.
+
+The 12 existing wavelengths are:
+
+1. Chill Vibes
+2. Sweat Vibes
+3. Lounge Vibes
+4. Brain Vibes
+5. Sunset Vibes
+6. Mellow Vibes
+7. Echo Vibes
+8. Zen Vibes
+9. Groove Vibes
+10. Pixel Vibes
+11. Quest Vibes
+12. Wander
+
+Use the existing source definitions rather than recreating this list or changing the displayed labels.
+
+**DO NOT REDESIGN THESE CARDS.**
+
+All creative redesign work belongs INSIDE the newly opened rooms.
+
+## 1.3 Replace the incorrect status
+
+Remove the text:
+
+**Tuned In Frequency**
+
+Replace it with:
+
+**🟢 Active Souls: 33**
+
+Here, 33 is only an example.
+
+In production, the number must reflect real, unique, currently active participants in the corresponding room.
+
+Never hardcode 33 as a real user count.
+
+Keep the existing **Tune In Wavelength** entry button and make it actually open the corresponding room.
+
+Clicking the room card or its entry action should lead to that room, without accidentally triggering multiple entries.
+
+---
+
+# PART 2 — EACH WAVELENGTH IS AN INDEPENDENT ROOM
+
+Each of the 12 wavelengths has a dedicated, independent room.
+
+Examples:
+
+Chill Vibes opens only Chill Vibes.
+
+Brain Vibes opens only Brain Vibes.
+
+Wander opens only Wander.
+
+Every room must have its own:
+
+- Persistent room identifier.
+- Room configuration.
+- Presence count.
+- Anonymous participants.
+- Message stream.
+- Message reactions.
+- Media messages.
+- Moderation state.
+- Room administrators.
+- Pinned announcements.
+- Room-specific notifications.
+
+Messages from one room must not leak into other rooms.
+
+All 12 rooms remain accessible to eligible authenticated VibeQuest accounts, subject to account-level moderation restrictions.
+
+No ordinary social follow or confirmed-Vibe relationship is required merely to join a public Drift wavelength room.
+
+---
+
+# PART 3 — FULL-SCREEN ROOM DESIGN
+
+## 3.1 General design
+
+When the user chooses a wavelength, open its room in a **FULL-SCREEN interface**.
+
+Do not open a small panel, inline expansion, tiny modal, or chat widget underneath the existing cards.
+
+The design should feel like a premium anonymous messenger combining:
+
+- Telegram's practical group-chat navigation.
+- Old-school Paltalk's social room atmosphere.
+- VibeQuest's dark neon aesthetic.
+- A distinctive anonymous, temporary world.
+
+Use deep charcoal backgrounds, modern message bubbles, restrained gradients, teal highlights, and colorful wavelength accents.
+
+Avoid clutter and excessive decoration.
+
+## 3.2 Required room layout
+
+The full-screen interface consists of:
+
+### A. Fixed top navigation bar
+
+Left side:
+
+- Back arrow to return to the unchanged Drift wavelength grid.
+- Small room icon.
+- Exact wavelength name.
+
+Below the title:
+
+**🟢 Active Souls: [real count]**
+
+Right side:
+
+- Compact expiration countdown.
+- Participant-list icon.
+- Three-dot options menu.
+
+The header remains visible during scrolling.
+
+### B. Countdown timer
+
+Display a visually distinctive countdown inspired by suspenseful elimination games.
+
+Example:
+
+**⏳ 02:47:19**
+
+Provide a thin progress bar.
+
+Countdown colors:
+
+- More than 1 hour: teal/green.
+- Under 1 hour: amber.
+- Under 5 minutes: red.
+- Final 10 seconds: subtle red pulse.
+
+Respect accessibility and reduced-motion settings.
+
+**Important:** Every anonymous message has its own three-hour expiry. Do not falsely present one room-wide timer as the expiry of every message.
+
+The header countdown must represent an explicitly defined room session/cycle or the next relevant expiration, with an accurate label.
+
+The room itself must not automatically close merely because an individual message expires.
+
+### C. Scrollable message area
+
+Full-height chat area supporting:
+
+- Text messages.
+- Emoji-only messages.
+- Photo messages.
+- Voice messages.
+- Replies.
+- Reactions.
+- Timestamps.
+- Pinned announcements.
+- Expiration/removal updates.
+- New-message notifications.
+- Loading and connectivity states.
+
+A typical message displays:
+
+Temporary anonymous avatar.
+
+**@velvet_nomad**
+
+"Anyone watching the sunset tonight? 🌅"
+
+18:42
+
+Message bubbles should be compact, visually attractive, and readable.
+
+No real profile names or pictures before mutual reveal.
+
+### D. Fixed bottom composer
+
+At the bottom of the screen:
+
+- Expandable message input.
+- Emoji selector.
+- Photo attachment action.
+- Camera action if available.
+- Voice recording action.
+- Send button.
+- Reply preview when replying to a message.
+
+The composer must remain usable when the phone keyboard opens.
+
+Support mobile safe areas and different screen sizes.
+
+On desktop, provide an appropriately sized centered or split-screen messenger layout.
+
+---
+
+# PART 4 — ANONYMOUS DRIFT IDENTITIES
+
+## 4.1 Temporary alias selection
+
+Before entering a room, users must have an active temporary Drift identity.
+
+Allow them to:
+
+- Enter a custom handle.
+- Generate a random handle.
+- Preview the alias.
+- Confirm their chosen temporary identity.
+
+Example aliases:
+
+@velvet_nomad
+
+@carthage_shadow
+
+@midnight_wanderer
+
+@desert_flaneur
+
+@neon_voyager
+
+Aliases must be validated and safely handled by the backend.
+
+Prevent impersonation of reserved system/admin names and resolve collisions safely.
+
+## 4.2 Identity privacy
+
+The system must maintain a private association between the authenticated account and its temporary alias.
+
+Other ordinary users see only the temporary identity.
+
+Before mutual reveal, do not expose:
+
+- Real username.
+- Real account ID.
+- Profile photograph.
+- Full name.
+- Followers.
+- Cultural passport.
+- Personal profile metadata.
+- Exact location.
+
+The app must never rely solely on hiding identity fields in React components.
+
+The server and database access contracts must prevent unauthorized identity disclosure.
+
+---
+
+# PART 5 — REAL PUBLIC ROOM MESSAGING
+
+Implement genuinely working realtime group conversations.
+
+Required:
+
+- Authenticated message submission.
+- Server-generated message IDs.
+- Server-authoritative creation times.
+- Real database persistence.
+- Room-specific realtime subscriptions.
+- Message ordering.
+- Duplicate-send prevention.
+- Reconnection handling.
+- Delivery failure reporting.
+- Message replies.
+- Emoji reactions.
+- Real unique active-user presence.
+- Correct removal of expired messages.
+
+A message must actually appear for another connected participant in the same room.
+
+Do not treat a local React state update as proof that messaging works.
+
+Do not show “sent successfully” unless the server confirms it.
+
+---
+
+# PART 6 — REAL MEDIA AND VOICE MESSAGES
+
+## 6.1 Photos
+
+Users may attach photos from their device or capture them using the real camera.
+
+Implement:
+
+- Permission handling.
+- Preview before sending.
+- Upload progress.
+- Real storage upload.
+- Attachment ownership.
+- Private access.
+- Download/view authorization.
+- Error handling.
+- Expiration cleanup.
+
+## 6.2 Voice messages
+
+Implement real browser microphone recording.
+
+Use a browser-supported recording format.
+
+Provide:
+
+- Start recording.
+- Recording indicator.
+- Stop.
+- Cancel.
+- Preview.
+- Send.
+- Playback.
+- Permission-denied state.
+
+Never use simulated audio clips or timers pretending to record.
+
+## 6.3 Dedicated Drift storage
+
+**DRIFT MUST HAVE ITS OWN PRIVATE MEDIA STORAGE AREA.**
+
+Proposed Supabase Storage bucket:
+
+`drift_media`
+
+Use this for Drift-specific:
+
+- Photos.
+- Voice messages.
+- Appropriate temporary attachments.
+
+Do not mix ephemeral Drift media with permanent social posts, profile pictures, or ordinary direct-message attachments.
+
+D13 remains the canonical media-lifecycle owner.
+
+---
+
+# PART 7 — PRIVATE ANONYMOUS MESSAGES
+
+This is a mandatory feature.
+
+From inside any public wavelength room, tapping another anonymous participant should open an action menu.
+
+Actions:
+
+- Send Private Drift.
+- View anonymous identity card.
+- Block.
+- Report.
+
+Choosing **Send Private Drift** opens a separate full-screen one-to-one conversation.
+
+Both participants continue using temporary handles.
+
+## 7.1 Private conversation UI
+
+Header:
+
+🎭 Private Drift
+
+@velvet_nomad ↔ @midnight_owl
+
+⏳ Temporary conversation
+
+Include:
+
+- Text messages.
+- Emoji reactions.
+- Photos.
+- Voice messages.
+- Replies.
+- Expiration indicators.
+- Block/report.
+- Reveal Vibe Handle.
+
+Private messages must never appear in public wavelength rooms.
+
+Private Drift messaging is not the same as ordinary permanent Vibes messaging.
+
+Use a distinct persistence boundary.
+
+Suggested resources:
+
+`drift_private_threads`
+
+`drift_private_messages`
+
+Only authorized thread participants may read or write their conversation.
+
+Provide a consent or message-request state so users can reject unsolicited contacts.
+
+---
+
+# PART 8 — MESSAGE IN A BOTTLE
+
+Preserve the original special Drift mechanic.
+
+Public rooms must NOT replace Message in a Bottle.
+
+Provide:
+
+**🌊 Cast a Drift**
+
+The user chooses a wavelength and writes a temporary anonymous message.
+
+Maximum length:
+
+**240 characters.**
+
+The bottle includes:
+
+- Anonymous temporary handle.
+- Wavelength.
+- Message content.
+- Creation time.
+- Expiration time.
+- Pickup status.
+- Pick Up Drift action.
+
+Another eligible user can select:
+
+**🌊 Pick Up Drift**
+
+This creates an anonymous private conversation between the two participants.
+
+Prevent self-pickup and duplicate conflicting pickups.
+
+Because the latest requirement specifies that **all anonymous Drift messages disappear after three hours**, use a three-hour lifetime for bottle message content too. Do not carry over the older example of a 24-hour bottle lifetime without explicit new approval.
+
+Once expired, a bottle cannot be picked up.
+
+Its associated content must be cleaned up under the same retention system.
+
+---
+
+# PART 9 — MUTUAL REVEAL VIBE HANDLE
+
+Inside private Drift conversations, provide:
+
+**✨ Reveal Vibe Handle**
+
+One participant can request an identity reveal.
+
+The other participant receives an invitation to reciprocate.
+
+One-sided reveal consent must never disclose the other person's real identity.
+
+Only when both parties give valid consent should the system:
+
+1. Confirm both consent records.
+2. Reveal the two canonical profiles to each other.
+3. Invoke the approved D17 confirmed-Vibe command.
+4. Create exactly one confirmed-Vibe relationship.
+5. Enable their ordinary D14 permanent message conversation.
+6. Provide navigation to the regular Vibes inbox.
+
+Prevent duplicated confirmations during retries or simultaneous actions.
+
+**Never transfer temporary anonymous message history into the permanent inbox automatically.**
+
+Previously sent Drift messages must continue to expire after three hours even if the participants become confirmed Vibes.
+
+Mutual reveal must be voluntary.
+
+---
+
+# PART 10 — STRICT THREE-HOUR DELETION
+
+This is an essential product requirement.
+
+**ALL DRIFT CHAT MESSAGES EXPIRE THREE HOURS AFTER CREATION.**
+
+This includes:
+
+- Public room text messages.
+- Private Drift text messages.
+- Emoji-only messages.
+- Message replies.
+- Photo messages.
+- Voice messages.
+- Bottle message content.
+
+Implement genuine backend expiration.
+
+Each message should have:
+
+`created_at`
+
+`expires_at`
+
+The expiration deadline must be generated or validated by the authoritative backend.
+
+A client must not be able to extend message lifetime.
+
+## 10.1 Expiration enforcement
+
+When the expiration deadline is reached:
+
+- The message becomes unreadable through authorized APIs.
+- Realtime clients remove it.
+- Replies/reactions cannot expose the expired content.
+- Expired media links stop working.
+- A cleanup process physically deletes expired records and objects.
+
+Use an appropriate scheduled backend process.
+
+The precise deletion schedule and backup-retention limitations must be documented. Do not claim complete deletion from backups or external screenshots if that is not enforceable.
+
+Room presence and alias mappings also need independently defined lifetimes.
+
+Do not delete permanent confirmed-Vibe relationships when ephemeral messages expire.
+
+---
+
+# PART 11 — SEPARATE DRIFT DATABASE STRUCTURES
+
+**Do not implement Drift messaging inside generic social-post tables or permanently retained direct-message tables.**
+
+Drift needs its own logically isolated persistence system.
+
+Stay within the existing approved VQULTIMATE Supabase project and D01–D28 single-writer architecture unless separately authorized to create an entirely new database service.
+
+Inspect existing objects first.
+
+Proposed dedicated objects:
+
+| Proposed resource | Purpose |
+|---|---|
+| `drift_rooms` | Independent wavelength room definitions |
+| `drift_room_presence` | Active participants and heartbeat status |
+| `drift_aliases` | Temporary anonymous identity records |
+| `drift_messages` | Ephemeral group-chat messages |
+| `drift_message_reactions` | Reactions tied to unexpired messages |
+| `drift_private_threads` | Private anonymous conversations |
+| `drift_private_messages` | Ephemeral private message records |
+| `drift_bottles` | Anonymous bottle messages and pickup status |
+| `drift_reveal_requests` | Bilateral reveal consent |
+| `drift_room_moderators` | Authorized room-management assignments |
+| `drift_moderation_actions` | Restricted moderation event records |
+| `drift_media` | Dedicated private media bucket |
+
+These are target logical resources. Inspect the existing schema to prevent duplication and finalize physical names before preparing migrations.
+
+Keep ownership explicit:
+
+- **D15:** Room lifecycle, participation, presence, and group-chat records.
+- **D14:** Private anonymous conversations and private-message records.
+- **D17:** Anonymous discovery, bottle pickup, reveal consent, confirmed-Vibe creation.
+- **D13:** Storage, attachment lifecycle, cleanup.
+- **D01:** Authenticated identity and platform administrator authorization.
+- **D23:** Notifications.
+
+Do not create shadow owners or direct cross-domain writes.
+
+## 11.1 Required database behavior
+
+Ensure the finalized design includes:
+
+- Stable primary keys.
+- Correct foreign-key relationships.
+- Appropriate uniqueness constraints.
+- Efficient room/message indexes.
+- Expiration indexes.
+- Atomic pickup and reveal operations.
+- Idempotent retries.
+- Race-condition handling.
+- Restricted identity mapping.
+- Media attachment cleanup.
+- Realtime compatibility.
+- Room-member authorization.
+
+RLS must be enabled where applicable, but do not invent broad permissions that reveal private messages or canonical identities.
+
+Security is part of basic feature correctness; wider production security hardening can be separately scheduled.
+
+## 11.2 Migration discipline
+
+Prepare reviewed, consolidated database migrations based on verified missing structures.
+
+Do not create tables piecemeal whenever a UI button requires one.
+
+Do not modify the production database without explicit authorization.
+
+Do not claim that creating tables alone completes the feature.
+
+---
+
+# PART 12 — ROOM MENUS AND ADMINISTRATION
+
+## 12.1 Normal user interface
+
+Every room has a three-dot menu.
+
+Normal users can access:
+
+- Room information.
+- Active Souls.
+- Mute room notifications.
+- Leave room.
+- Block another participant.
+- Report abuse.
+
+The normal user menu must not expose room-administration controls.
+
+## 12.2 Room administrators
+
+Only authorized assigned room administrators can:
+
+- Pin announcements.
+- Remove inappropriate messages.
+- Mute participants.
+- Remove disruptive participants from their assigned room.
+- Review scoped reports.
+- Enable slow mode where approved.
+
+They must not gain general platform administration permissions.
+
+## 12.3 App administrators
+
+Authorized app admins may:
+
+- Assign/revoke room administrators.
+- Manage room configurations.
+- Remove or ban disruptive participants.
+- Moderate across rooms.
+- Inspect restricted moderation records.
+- Apply platform-level Drift restrictions.
+
+The management menu should resemble the clarity of Telegram group settings without directly copying Telegram branding.
+
+All administrative actions must be enforced on the backend.
+
+Do not trust role flags supplied by the frontend.
+
+The actual identity behind an anonymous account must remain hidden from regular participants and ordinary room administrators.
+
+Provide restricted, auditable moderation capabilities for authorized platform staff.
+
+---
+
+# PART 13 — REAL ACTIVE SOULS
+
+The active user count is a key UI mechanic.
+
+**Active Souls: 33** means that 33 distinct participants are genuinely active within that room.
+
+Implement:
+
+- Join-room presence.
+- Periodic heartbeat or equivalent realtime presence.
+- Disconnect handling.
+- Idle timeout.
+- Distinct participant counting.
+- Immediate room-specific count updates.
+- Appropriate rejoin/reconnect handling.
+
+Do not count the same person twice for multiple tabs or connections.
+
+The count must not be a fabricated random number.
+
+The Active Souls button opens a participant list showing only temporary handles.
+
+---
+
+# PART 14 — NAVIGATION RULES
+
+The complete journey must work:
+
+**Vibe → Drift → Wavelength → Anonymous Alias → Full-Screen Room**
+
+From the room:
+
+- Public group chat.
+- Participant list.
+- Private anonymous chat.
+- Cast a Bottle.
+- Pick up eligible bottles.
+- Mutual reveal.
+- Return to room.
+- Return to original Drift card grid.
+
+The Back button must behave correctly.
+
+Do not break the five main app tabs.
+
+Do not alter Gossip, Vibes, Orbit, Echo or Pulls.
+
+Do not move Drift into a separate application.
+
+---
+
+# PART 15 — UI QUALITY AND RESPONSIVENESS
+
+Implement a professional mobile-first interface.
+
+Requirements:
+
+- True full viewport room experience.
+- Fixed header and bottom composer.
+- Keyboard-safe layout.
+- Smooth vertical message scrolling.
+- No horizontal overflow.
+- High-contrast controls.
+- Accessible button labels.
+- Correct focus management.
+- Reduced-motion support.
+- Graceful loading/error/offline states.
+- Attractive message bubbles.
+- Smooth but restrained motion.
+- Polished anonymous identity cards.
+- Consistent wavelength accent colors.
+- Responsive desktop adaptation.
+
+The suspenseful expiration timer should be atmospheric but not interfere with sending messages.
+
+Avoid copyrighted show graphics, logos or audio.
+
+---
+
+# PART 16 — REQUIRED REAL TESTS
+
+Do not claim completion based only on a successful build.
+
+Verify the following with actual results.
+
+### Test A — Entry screen preservation
+
+The original twelve cards remain unchanged except for the specified Active Souls replacement and navigation behavior.
+
+### Test B — Independent rooms
+
+Messages sent in Chill Vibes are never delivered into Brain Vibes.
+
+### Test C — Multiple real clients
+
+Two authenticated test accounts can enter a room and exchange messages through the real backend.
+
+### Test D — Presence
+
+Joining, leaving, disconnecting and reconnecting update Active Souls correctly.
+
+### Test E — Media
+
+Photos and voice notes upload, render, play and expire according to the correct rules.
+
+### Test F — Private Drift
+
+A participant opens a private anonymous conversation from another participant's temporary handle.
+
+Only the authorized participants can read its messages.
+
+### Test G — Identity privacy
+
+Ordinary clients cannot retrieve the canonical identity behind another temporary alias.
+
+### Test H — Bottle pickup
+
+An eligible account can cast and pick up a bottle.
+
+Self-pickup, expired pickup and conflicting duplicate pickup are rejected.
+
+### Test I — Reciprocal reveal
+
+One-sided reveal never exposes the other participant.
+
+Mutual consent creates one confirmed Vibe and enables the authorized normal DM conversation.
+
+### Test J — Expiration
+
+After three hours, anonymous messages become unreadable.
+
+Cleanup removes expired records and associated media.
+
+Use isolated test data or controlled test clocks—not real production messages—for expiry tests.
+
+### Test K — Administration
+
+Regular users cannot execute admin actions.
+
+Room admins have only scoped authority.
+
+App admins have the correct broader authority.
+
+### Test L — Regression
+
+Other Vibe tabs, navigation, camera functions, and existing social mechanics remain intact.
+
+---
+
+# PART 17 — REQUIRED DEVELOPMENT AND DELIVERY PROCESS
+
+Execute in controlled stages:
+
+**Stage 1 — Inspection**
+
+Confirm current source, relevant governing requirements, existing Supabase structures, and implementation boundaries.
+
+**Stage 2 — Architecture**
+
+Produce an exact ownership map, table/storage design, real API contracts, expiration lifecycle, and required tests.
+
+**Stage 3 — Backend implementation**
+
+Implement approved persistence and server-side behavior using the verified architecture and authorized environment.
+
+**Stage 4 — Frontend integration**
+
+Replace the current local-only Drift action with the genuine full-screen experience.
+
+**Stage 5 — Realtime and media**
+
+Connect messaging, presence, private threads, uploads, and expiration handling.
+
+**Stage 6 — Mutual reveal and administration**
+
+Integrate authoritative consent, confirmed-Vibe transitions, and role-specific management.
+
+**Stage 7 — Verification**
+
+Run the necessary tests and report evidence.
+
+If an action requires an approval you do not possess, stop that action and clearly identify the blocker. Continue only with independently authorized work.
+
+Never bypass a missing approval by pretending to complete the feature locally.
+
+---
+
+# PART 18 — FINAL REPORT FORMAT
+
+At completion, provide:
+
+1. Exact repository, branch and implementation commit.
+2. Governing files inspected.
+3. All modified source files.
+4. Database structures reused.
+5. Database structures newly prepared or created, with exact environment.
+6. Storage bucket configuration and access design.
+7. Realtime messaging implementation.
+8. Private anonymous-message behavior.
+9. Three-hour expiration and cleanup implementation.
+10. Active Souls counting mechanism.
+11. Bottle and mutual-reveal implementation.
+12. Administrator permissions.
+13. Actual test commands and results.
+14. UI screenshots of every major view.
+15. Known limitations and unverified behaviors.
+16. Explicit statement of whether any production database, deployment or protected branch was changed.
+
+Never describe unfinished backend behavior as working.
+
+---
+
+# FINAL COMMAND
+
+**IMPLEMENT THE COMPLETE DRIFT EXPERIENCE WITH REAL FUNCTIONALITY.**
+
+Preserve the existing 12 wavelength selection cards exactly.
+
+Replace “Tuned In Frequency” with genuine Active Souls participation counts.
+
+Make every wavelength open its own independent, full-screen realtime chat room.
+
+Implement anonymous temporary identities, group messages, private anonymous messages, media, voice notes, Message in a Bottle, reciprocal Reveal Vibe Handle, administrator functions, and genuine three-hour message expiration.
+
+Use dedicated, isolated Drift persistence and a private `drift_media` bucket, respecting VQULTIMATE's canonical ownership model.
+
+**DO NOT produce a superficial UI-only prototype.**
+
+**DO NOT claim a feature is complete without backend and behavioral verification.**
+
+**DO NOT alter unrelated application components.**
+
+**DO NOT mutate production infrastructure or merge/deploy without the required authorization.**
+
+The finished feature must be authentic, responsive, maintainable, and testable across multiple real accounts.
+
+**BUILD THE REAL DRIFT. KEEP THE ORIGINAL OUTSIDE. TRANSFORM THE INSIDE.**

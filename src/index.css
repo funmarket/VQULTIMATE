@@ -25,3 +25,52 @@
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
 }
+
+/* Telegram Animated Emojis Keyframes & Animation Utilities */
+@keyframes flameFlicker {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.15) rotate(-3deg); }
+  50% { transform: scale(0.95) rotate(2deg); }
+  75% { transform: scale(1.1) rotate(-1deg); }
+}
+
+@keyframes heartPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+
+@keyframes starSpin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes emojiBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px) scale(1.12); }
+}
+
+@keyframes emojiShake {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+
+@keyframes neonGlow {
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(45,212,191,0.5)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 10px rgba(45,212,191,0.95)); transform: scale(1.1); }
+}
+
+@keyframes emojiFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-flame-flicker { animation: flameFlicker 1.4s infinite ease-in-out; }
+.animate-heart-pulse { animation: heartPulse 1.2s infinite ease-in-out; }
+.animate-star-spin { animation: starSpin 3s infinite linear; }
+.animate-emoji-bounce { animation: emojiBounce 1.5s infinite ease-in-out; }
+.animate-emoji-shake { animation: emojiShake 1.2s infinite ease-in-out; }
+.animate-neon-glow { animation: neonGlow 1.8s infinite ease-in-out; }
+.animate-emoji-float { animation: emojiFloat 2s infinite ease-in-out; }
+
