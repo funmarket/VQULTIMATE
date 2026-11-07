@@ -4,7 +4,7 @@ import {
   User, ChevronLeft, ChevronRight, Check, X, Compass, Radio, Users, CheckCircle2,
   Lock, AlertCircle, Smile
 } from 'lucide-react';
-import { fetchVibePosts, VibePostItem, fetchCommentsForPost, addCommentToPost, VibeComment } from '../domains/d05_vibe';
+import { fetchVibePosts, createVibePost, VibePostItem, fetchCommentsForPost, addCommentToPost, VibeComment } from '../domains/d05_vibe';
 import { fetchDemoProfiles, fetchPublicProfileByHandle, UserProfile } from '../domains/d02_users';
 import { fetchOrbitProfiles, fetchEchoProfiles, unfollowUser, followUser } from '../domains/d03_social_graph';
 import { fetchPendingPulls, fetchConfirmedVibes, acceptConnectionPull, passConnectionPull, ConnectionPull, ConfirmedVibe } from '../domains/d17_matching';
@@ -196,7 +196,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
     );
   };
 
-  const handleCreatePost = (e: React.FormEvent) => {
+  const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPostCaption.trim() || !user) {
       showToast('Please sign in to publish a vibe post.');
@@ -208,15 +208,36 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
       username: user.username,
       avatar_url: user.avatar_url,
       caption: newPostCaption,
-      image_url: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80',
-      selfie_url: user.avatar_url,
+      image_url: '',
+      selfie_url: undefined,
       created_at: new Date().toISOString(),
-      reactions_count: 1,
+      reactions_count: 0,
       comments_count: 0
     };
+    await createVibePost(newPost);
     setPosts([newPost, ...posts]);
     setNewPostCaption('');
     showToast('Vibe broadcast published to district live feed!');
+  };
+
+  const handleSharePost = async (post: VibePostItem) => {
+    const shareText = `Check out this Vibe broadcast by @${post.username} on VibeQuest: "${post.caption}"`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'VibeQuest Gossip',
+          text: shareText,
+          url: window.location.href
+        });
+        return;
+      } catch {}
+    }
+    try {
+      await navigator.clipboard.writeText(`${shareText} - ${window.location.href}`);
+      showToast('Post link copied to clipboard!');
+    } catch {
+      showToast('Share link ready!');
+    }
   };
 
   // D14 Direct Message Flow with strict invariant: ECHO never grants DMs
@@ -599,7 +620,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                         </div>
                       </div>
                       <button
-                        onClick={() => showToast('Vibe post link copied to clipboard!')}
+                        onClick={() => handleSharePost(post)}
                         className="text-neutral-400 hover:text-white transition cursor-pointer"
                         aria-label="Share post"
                       >
@@ -607,15 +628,17 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                       </button>
                     </div>
 
-                    {/* Post Image with PIP Selfie */}
-                    <div className="relative aspect-[4/5] bg-neutral-950">
-                      <img src={post.image_url} alt="Scene" className="w-full h-full object-cover" />
-                      {post.selfie_url && (
-                        <div className="absolute top-4 left-4 w-24 h-32 rounded-2xl overflow-hidden border-4 border-orange-500 shadow-2xl">
-                          <img src={post.selfie_url} alt="Selfie" className="w-full h-full object-cover" />
-                        </div>
-                      )}
-                    </div>
+                    {/* Post Image with PIP Selfie - only if image_url is provided */}
+                    {post.image_url && post.image_url.trim() !== '' && (
+                      <div className="relative aspect-[4/5] bg-neutral-950">
+                        <img src={post.image_url} alt="Scene" className="w-full h-full object-cover" />
+                        {post.selfie_url && (
+                          <div className="absolute top-4 left-4 w-24 h-32 rounded-2xl overflow-hidden border-4 border-orange-500 shadow-2xl">
+                            <img src={post.selfie_url} alt="Selfie" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Caption & Actions */}
                     <div className="p-4 space-y-3">
@@ -648,7 +671,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                           <span>Comment</span>
                         </button>
                         <button
-                          onClick={() => showToast('Post shared to your Orbit feed!')}
+                          onClick={() => handleSharePost(post)}
                           className="flex items-center justify-center space-x-1.5 py-2 hover:bg-neutral-800/50 rounded-xl transition cursor-pointer"
                         >
                           <Share2 className="w-4 h-4" />
