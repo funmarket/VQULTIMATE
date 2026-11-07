@@ -10,11 +10,15 @@ test('the stop location is an enabled controlled text input', () => {
   assert.doesNotMatch(match[1], /disabled=|readOnly=/);
 });
 
-test('stop name and address update atomically in one state transaction', () => {
-  assert.match(source, /const location = e\.currentTarget\.value/);
-  assert.match(source, /setStops\(current => current\.map\(\(item, i\) =>/);
-  assert.match(source, /i === idx \? \{ \.\.\.item, name: location, address: location \} : item/);
-  assert.doesNotMatch(source, /handleUpdateStop\(idx, 'name', e\.target\.value\);\s*handleUpdateStop\(idx, 'address', e\.target\.value\)/);
+test('stop name and address are independent editable fields', () => {
+  assert.match(source, /handleUpdateStop\(idx, 'name', e\.target\.value\)/);
+  assert.match(source, /handleUpdateStop\(idx, 'address', e\.target\.value\)/);
+  assert.doesNotMatch(source, /name: location, address: location/);
+});
+
+test('a separate Google Maps address is required regardless of optional coordinates', () => {
+  assert.match(source, /id=\{`trail-stop-address-\$\{idx\}`\}[\s\S]*?type="text"\s+required\s+value=\{stop\.address\}/);
+  assert.match(source, /stops\.some\(\(s\) => !s\.address\.trim\(\)\)/);
 });
 
 test('publishing continues to validate that every stop has a location', () => {

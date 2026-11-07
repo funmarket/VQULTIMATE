@@ -16,8 +16,8 @@ export type TrailRoutePlan = {
  * Google Maps URLs can carry up to three intermediate waypoints in a mobile
  * browser; split longer itineraries into contiguous, user-selectable legs.
  * Transit has no intermediate waypoints, so each pair is a separate leg.
- * A missing stop coordinate blocks the full plan instead of silently skipping
- * part of the itinerary or guessing a position.
+ * Every stop requires a creator-entered Google Maps address. Coordinates are
+ * optional metadata; Google Maps resolves each entered address when opened.
  */
 export function buildTrailRoutePlan(trail: CommunityTrail, mode: TrailTravelMode): TrailRoutePlan {
   const stops: TrailStop[] = trail.stops?.length
@@ -26,13 +26,15 @@ export function buildTrailRoutePlan(trail: CommunityTrail, mode: TrailTravelMode
   if (stops.length < 2) {
     return { segments: [], error: 'Add at least two located stops to open Google Maps directions.' };
   }
+  const destination = (stop: TrailStop): string | null => {
+    const address = stop.address?.trim();
+    return address || null;
+  };
   for (const [index, stop] of stops.entries()) {
-    if (typeof stop.lat !== 'number' || typeof stop.lng !== 'number'
-      || !Number.isFinite(stop.lat) || !Number.isFinite(stop.lng)
-      || Math.abs(stop.lat) > 90 || Math.abs(stop.lng) > 180) {
+    if (!destination(stop)) {
       return {
         segments: [],
-        error: `Stop ${index + 1} (${stop.name || 'unnamed'}) has no verified coordinates. Routing is unavailable until it is located.`,
+        error: `Stop ${index + 1} (${stop.name || 'unnamed'}) needs a Google Maps address.`,
       };
     }
   }
@@ -45,7 +47,7 @@ export function buildTrailRoutePlan(trail: CommunityTrail, mode: TrailTravelMode
     const segmentStops = stops.slice(index, end + 1);
     const first = segmentStops[0];
     const last = segmentStops[segmentStops.length - 1];
-    const coord = (stop: TrailStop) => `${stop.lat},${stop.lng}`;
+    const coord = (stop: TrailStop) => destination(stop)!;
     const query = new URLSearchParams({
       api: '1',
       origin: coord(first),

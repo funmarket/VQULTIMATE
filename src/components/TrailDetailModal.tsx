@@ -32,21 +32,24 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
     const plan = buildTrailRoutePlan(trail, mode);
     if (plan.error) { onToast?.(plan.error); return; }
     if (plan.segments.length === 1) {
+      setRoutePlan(null);
       window.open(plan.segments[0].url, '_blank', 'noopener,noreferrer');
       return;
     }
     setRoutePlan({ mode, legs: plan.segments });
+    if (mode === 'transit') {
+      window.open(plan.segments[0].url, '_blank', 'noopener,noreferrer');
+      onToast?.('Opened the first public-transit leg. Return here to open each remaining leg in order.');
+    }
   };
   const navigateToStop = (stop: TrailStop) => {
-    if (typeof stop.lat !== 'number' || typeof stop.lng !== 'number' ||
-      !Number.isFinite(stop.lat) || !Number.isFinite(stop.lng) ||
-      Math.abs(stop.lat) > 90 || Math.abs(stop.lng) > 180) {
-      onToast?.('This stop has no verified map coordinates.');
+    const address = stop.address?.trim();
+    const destination = address || null;
+    if (!destination) {
+      onToast?.('This stop needs a Google Maps address.');
       return;
     }
-    const params = new URLSearchParams({
-      api: '1', destination: `${stop.lat},${stop.lng}`,
-    });
+    const params = new URLSearchParams({ api: '1', destination });
     window.open('https://www.google.com/maps/dir/?' + params.toString(), '_blank', 'noopener,noreferrer');
   };
   const [activePhoto, setActivePhoto] = useState(0);
@@ -62,7 +65,9 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
         ? trail.waypoints.map((wp, idx) => ({
             id: wp.id || `stop-${idx}`,
             name: wp.title || `Stop #${idx + 1}`,
-            address: wp.title || 'Itinerary Stop',
+            address: wp.address?.trim() || '',
+            lat: wp.lat,
+            lng: wp.lng,
             vibeNote: wp.description || wp.hint || 'Cultural checkpoint on trail route.',
             timeOfDay: (idx === 0 ? 'Morning' : idx === 1 ? 'Sunset' : 'Night'),
             durationMinutes: 60,
@@ -361,8 +366,9 @@ export const TrailDetailModal: React.FC<TrailDetailModalProps> = ({
                 Your itinerary needs {routePlan.legs.length} Google Maps legs.
               </p>
               <p className="text-[11px] text-neutral-400">
-                Open each leg in order to visit every stop. Maps has mobile waypoint limits;
-                transit is routed one stop at a time.
+                {routePlan.mode === 'transit'
+                  ? 'Hop On opens the first public-transit leg. Return here to open the remaining legs in order. Transit directions depend on Google Maps coverage.'
+                  : 'Open each leg in order to visit every stop. Maps has mobile waypoint limits.'}
               </p>
               <div className="grid gap-2">
                 {routePlan.legs.map((leg, index) => (
