@@ -69,6 +69,15 @@ test('Missing addresses block routing even when coordinates exist', () => {
   assert.equal(buildTrailRoutePlan(makeTrail([stop(1), {...stop(2), address: '', lng: 190}]), 'driving').segments.length, 0);
 });
 
+test('Hop On opens the first transit leg and offers remaining legs in the Trail modal', () => {
+  const detail = readFileSync(new URL('../src/components/TrailDetailModal.tsx', import.meta.url), 'utf8');
+  assert.match(detail, /if \(mode === 'transit'\) \{/);
+  assert.match(detail, /window\.open\(plan\.segments\[0\]\.url, '_blank', 'noopener,noreferrer'\)/);
+  assert.match(detail, /setRoutePlan\(\{ mode, legs: plan\.segments \}\)/);
+  assert.match(detail, /routePlan\.legs\.map/);
+  assert.match(detail, /Transit directions depend on Google Maps coverage/);
+});
+
 test('Four exact approved button labels and per-stop navigation appear in detail UI', () => {
   const detail = readFileSync(new URL('../src/components/TrailDetailModal.tsx', import.meta.url), 'utf8');
   const explore = readFileSync(new URL('../src/components/ExploreTab.tsx', import.meta.url), 'utf8');
