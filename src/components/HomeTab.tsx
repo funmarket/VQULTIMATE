@@ -304,10 +304,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         onNotify={showToast}
         onSuggestVibe={openSuggestVibe}
         onRsvp={() => { void handleRsvp(); }}
-        rsvpEnabled={rsvpEnabled}
+        rsvpEnabled={rsvpEnabled && (!user || (rsvpStatusEventId === flashEvent?.id && rsvpStatusUserId === user.id))}
         suggestionEnabled={suggestionEnabled}
         rsvpJoined={rsvpJoined}
-        rsvpLoading={rsvpLoading || rsvpStatusLoading || (rsvpEnabled && !!user && (rsvpStatusEventId !== flashEvent?.id || rsvpStatusUserId !== user.id))}
+        rsvpLoading={rsvpLoading || rsvpStatusLoading}
       />
 
       {/* Vibe Pulses — Exact Visual Reference & Genuine City Aggregation */}
