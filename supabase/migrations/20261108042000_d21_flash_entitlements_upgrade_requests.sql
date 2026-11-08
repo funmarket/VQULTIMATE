@@ -78,7 +78,6 @@ create policy d11_admin_or_entitled_event_create on public.flash_events
     created_by_auth_user_id = (select auth.uid())
     and status = 'active'
     and starts_at >= now() - interval '2 minutes'
-    and starts_at <= now() + interval '30 days'
     and (
       exists (
         select 1 from public.vq_admin_assignments a
