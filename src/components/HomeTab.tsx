@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { fetchNearbyPlaces, VibePlace, getDeviceLocation } from '../domains/d03_vibe_orbit';
 import { fetchCulturalTrails, fetchVibeGuardians, CulturalTrail, VibeGuardian, TrailWaypoint } from '../domains/d07_trails';
-import { fetchActiveFlashEvent, FlashEvent } from '../domains/d11_events';
+import { fetchActiveFlashEvent, canCreateFlashEvent, FlashEvent } from '../domains/d11_events';
 import { fetchCommentsForPost, addCommentToPost, VibeComment } from '../domains/d05_vibe';
 import { fetchCityPulses, VibePulsesSummary, CityPulse } from '../domains/d04_geo_presence';
 import { UserProfile } from '../domains/d01_auth';
@@ -36,6 +36,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const [selectedTrail, setSelectedTrail] = useState<CulturalTrail | null>(null);
   const [selectedGuardian, setSelectedGuardian] = useState<VibeGuardian | null>(null);
   const [isCreateFlashOpen, setIsCreateFlashOpen] = useState(false);
+  const [canCreateFlash, setCanCreateFlash] = useState(false);
   const [homeToast, setHomeToast] = useState<string | null>(null);
 
   // Social feed comments modal state
@@ -47,9 +48,15 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const guardiansScrollRef = useRef<HTMLDivElement>(null);
 
   const loadFlash = async () => {
-    const ev = await fetchActiveFlashEvent();
-    setFlashEvent(ev);
-    if (ev) setSecondsLeft(ev.seconds_left);
+    try {
+      const ev = await fetchActiveFlashEvent();
+      setFlashEvent(ev);
+      setSecondsLeft(ev?.seconds_left ?? 0);
+    } catch (error) {
+      console.warn('Flash Events could not be loaded:', error);
+      setFlashEvent(null);
+      setSecondsLeft(0);
+    }
   };
 
   useEffect(() => {
@@ -65,6 +72,17 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
 
     return () => clearInterval(flashPoll);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    setCanCreateFlash(false);
+    canCreateFlashEvent().then(allowed => {
+      if (active) setCanCreateFlash(allowed);
+    }).catch(() => {
+      if (active) setCanCreateFlash(false);
+    });
+    return () => { active = false; };
+  }, [user?.id]);
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -148,13 +166,19 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
       {/* Flash Events slot retains its layout even when no event is active. */}
       <div className="rounded-3xl bg-neutral-900 border border-purple-500/30 p-5 shadow-2xl space-y-4 animate-fadeIn relative overflow-hidden">
         <div className="flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => setIsCreateFlashOpen(true)}
-            className="px-4 py-2.5 rounded-full border border-neutral-700 hover:border-neutral-500 bg-neutral-950 text-white font-bold text-xs tracking-wider transition cursor-pointer flex items-center space-x-1 shadow-md"
-          >
-            <span>+ CREATE FLASH</span>
-          </button>
+          {canCreateFlash ? (
+            <button
+              type="button"
+              onClick={() => setIsCreateFlashOpen(true)}
+              className="px-4 py-2.5 rounded-full border border-neutral-700 hover:border-neutral-500 bg-neutral-950 text-white font-bold text-xs tracking-wider transition cursor-pointer flex items-center space-x-1 shadow-md"
+            >
+              <span>+ CREATE FLASH</span>
+            </button>
+          ) : (
+            <span aria-hidden="true" className="px-4 py-2.5 rounded-full border border-transparent bg-transparent text-xs font-bold tracking-wider invisible">
+              + CREATE FLASH
+            </span>
+          )}
 
           {hasActiveFlash ? (
             <button
@@ -205,8 +229,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
 
             <div className="flex items-center justify-between pt-2 border-t border-neutral-800 text-xs">
               <div>
-                <span className="text-pink-500 font-bold">Reward: 500</span>
-                <span className="text-white font-bold ml-1">VIBE Points</span>
+                <span className="text-pink-500 font-bold">Live Flash Event</span>
               </div>
               <div className="flex items-center space-x-1 text-neutral-400 font-medium">
                 <Clock className="w-3.5 h-3.5 text-pink-500 animate-pulse" />
@@ -566,6 +589,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
       {isCreateFlashOpen && (
         <CreateFlashModal
           user={user}
+          canCreate={canCreateFlash}
           onClose={() => setIsCreateFlashOpen(false)}
           onCreated={loadFlash}
           onToast={showToast}
