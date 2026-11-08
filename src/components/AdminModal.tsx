@@ -2,7 +2,7 @@ import React from 'react';
 import { X, Shield, Users, ClipboardList } from 'lucide-react';
 import { UserProfile } from '../domains/d01_auth';
 import { fetchPendingUpgradeRequests, PendingUpgradeRequest } from '../domains/d21_entitlements/api';
-import { fetchPendingVibeSuggestions, PendingVibeSuggestion } from '../domains/d11_events/participation';
+import { fetchPendingVibeSuggestions, PendingVibeSuggestion } from '../domains/d11_events';
 
 interface AdminModalProps {
   user: UserProfile | null;
