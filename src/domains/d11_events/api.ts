@@ -10,43 +10,52 @@ type FlashEventRow = {
   description: string;
   place_id: string | null;
   secret_id: string | null;
+  starts_at: string;
   ends_at: string;
   kind: FlashEvent['kind'];
 };
 
+const DISCOVERY_WINDOW_MINUTES = 60;
+const MAX_DISCOVERY_ITEMS = 20;
+
 /**
  * D11 Flash Events are independent of D18's 60-second vibe_flash_windows.
- * The feature stays disabled until the reviewed D11 migration is applied
- * and VITE_D11_FLASH_EVENTS_ENABLED is enabled for the target environment.
+ * Only published events that start within 60 minutes and end in the future
+ * can appear on Home. Supabase RLS enforces this same window.
  */
-export async function fetchActiveFlashEvent(): Promise<FlashEvent | null> {
-  if (!eventsEnabled) return null;
-
+export async function fetchDiscoverableFlashEvents(): Promise<FlashEvent[]> {
+  if (!eventsEnabled) return [];
+  const now = Date.now();
   const { data, error } = await supabase.from('flash_events')
-    .select('id,title,description,place_id,secret_id,ends_at,kind')
+    .select('id,title,description,place_id,secret_id,starts_at,ends_at,kind')
     .eq('status', 'active')
-    .lte('starts_at', new Date().toISOString())
-    .gt('ends_at', new Date().toISOString())
-    .order('ends_at', { ascending: true })
-    .limit(1)
-    .maybeSingle();
+    .lte('starts_at', new Date(now + DISCOVERY_WINDOW_MINUTES * 60 * 1000).toISOString())
+    .gt('ends_at', new Date(now).toISOString())
+    .order('starts_at', { ascending: true })
+    .limit(MAX_DISCOVERY_ITEMS);
 
   if (error) throw new Error(`Flash Events could not be loaded: ${error.message}`);
-  if (!data) return null;
-  const ev = data as FlashEventRow;
-  const secondsLeft = Math.max(0, Math.floor((Date.parse(ev.ends_at) - Date.now()) / 1000));
-  if (secondsLeft <= 0) return null;
+  return ((data || []) as FlashEventRow[])
+    .filter(ev => {
+      const start = Date.parse(ev.starts_at);
+      const end = Date.parse(ev.ends_at);
+      return Number.isFinite(start) && Number.isFinite(end) && end > now && start <= now + 60 * 60 * 1000;
+    })
+    .sort((a,b) => {
+      const aLive = Date.parse(a.starts_at) <= now;
+      const bLive = Date.parse(b.starts_at) <= now;
+      if (aLive !== bLive) return aLive ? -1 : 1;
+      return Date.parse(a.starts_at) - Date.parse(b.starts_at);
+    })
+    .map(ev => ({
+      ...ev,
+      seconds_left: Math.max(0, Math.ceil((Date.parse(ev.ends_at) - now) / 1000))
+    }));
+}
 
-  return {
-    id: ev.id,
-    title: ev.title,
-    description: ev.description,
-    place_id: ev.place_id,
-    secret_id: ev.secret_id,
-    ends_at: ev.ends_at,
-    seconds_left: secondsLeft,
-    kind: ev.kind
-  };
+/** Backward-compatible single-feature query for callers not yet migrated to the gallery. */
+export async function fetchActiveFlashEvent(): Promise<FlashEvent | null> {
+  return (await fetchDiscoverableFlashEvents())[0] ?? null;
 }
 
 export async function canCreateFlashEvent(): Promise<boolean> {
