@@ -52,15 +52,30 @@ test('PlaceDetailModal component satisfies reference visual and behavioral contr
   assert.match(modalContent, /Close Spot Details/, 'Must render Close Spot Details button');
 });
 
-test('Google Places Edge Function and d03 public API enforce real places with zero hardcoded mocks', () => {
+test('Google Places Edge Function and d03 public API enforce real places with strict leisure filter', () => {
   // 1. Edge Function exists and holds the Google Places API key securely
   const edgeFunctionPath = resolve('supabase/functions/nearby-places/index.ts');
   const edgeContent = readFileSync(edgeFunctionPath, 'utf8');
   assert.match(edgeContent, /GOOGLE_PLACES_API_KEY/, 'Edge function must read GOOGLE_PLACES_API_KEY from environment');
-  assert.match(edgeContent, /maps\.googleapis\.com\/maps\/api\/place\/nearbysearch\/json/, 'Edge function must call Google Places Nearby Search');
+  assert.match(edgeContent, /ALLOWED_LEISURE_TYPES/, 'Must define ALLOWED_LEISURE_TYPES');
+  assert.match(edgeContent, /EXCLUDED_TYPES/, 'Must define EXCLUDED_TYPES');
+  assert.match(edgeContent, /isStrictlyLeisurePlace/, 'Must implement isStrictlyLeisurePlace filtering function');
   assert.match(edgeContent, /photo_reference/, 'Edge function must support secure photo proxying');
 
-  // 2. d03 domain api calls Edge Function and has NO hardcoded place arrays
+  // 2. Leisure inclusions & exclusions
+  assert.match(edgeContent, /restaurant/, 'Must include restaurant in allowed leisure');
+  assert.match(edgeContent, /cafe/, 'Must include cafe in allowed leisure');
+  assert.match(edgeContent, /bar/, 'Must include bar in allowed leisure');
+  assert.match(edgeContent, /bank/, 'Must exclude banks');
+  assert.match(edgeContent, /school/, 'Must exclude schools');
+  assert.match(edgeContent, /hospital/, 'Must exclude hospitals');
+  assert.match(edgeContent, /lawyer/, 'Must exclude lawyer offices');
+
+  // 3. Closest first, then highest rating sorting
+  assert.match(edgeContent, /calculateHaversineMeters/, 'Must compute distance via Haversine in edge function');
+  assert.match(edgeContent, /distDiff\)\s*>\s*200/, 'Must prioritize closest first, then rating for equidistant spots');
+
+  // 4. d03 domain api calls Edge Function and has NO hardcoded place arrays
   const d03ApiPath = resolve('src/domains/d03_vibe_orbit/api.ts');
   const d03Content = readFileSync(d03ApiPath, 'utf8');
   assert.match(d03Content, /fetchNearbyPlaces/, 'd03 must export fetchNearbyPlaces');
@@ -68,10 +83,33 @@ test('Google Places Edge Function and d03 public API enforce real places with ze
   assert.doesNotMatch(d03Content, /CANONICAL_PO_PLACES/, 'Must not contain hardcoded CANONICAL_PO_PLACES array');
   assert.match(d03Content, /calculateDistanceMeters/, 'Must compute distance using Haversine');
 
-  // 3. d03 index.ts exports public API
+  // 5. d03 index.ts exports public API
   const d03IndexPath = resolve('src/domains/d03_vibe_orbit/index.ts');
   const d03IndexContent = readFileSync(d03IndexPath, 'utf8');
   assert.match(d03IndexContent, /export \* from '\.\/api'/, 'index.ts must export domain API');
+});
+
+test('D04 fetchCityPulses prioritizes real user vibes, then leisure places, without fake baseline fallback', () => {
+  const d04ApiPath = resolve('src/domains/d04_geo_presence/api.ts');
+  const d04Content = readFileSync(d04ApiPath, 'utf8');
+
+  // Mode A: user vibes
+  assert.match(d04Content, /mode_a_live/, 'Must support Mode A live user vibes');
+  assert.match(d04Content, /from\('city_pulses'\)/, 'Must query Supabase city_pulses');
+
+  // Mode B: real leisure places fallback
+  assert.match(d04Content, /mode_b_real_places/, 'Must support Mode B real leisure places');
+  assert.match(d04Content, /fetchNearbyPlaces\(coords\)/, 'Mode B must call fetchNearbyPlaces');
+
+  // Sorting Mode B: closest first, then highest rating
+  assert.match(d04Content, /distDiff\)\s*>\s*200/, 'Must sort Mode B by distance then rating');
+
+  // Zero fake fallback: liveCities is NOT populated with CANONICAL_CITY_BASELINES
+  assert.doesNotMatch(
+    d04Content,
+    /liveCities\s*=\s*CANONICAL_CITY_BASELINES\.map/,
+    'fetchCityPulses must NEVER populate liveCities with CANONICAL_CITY_BASELINES'
+  );
 });
 
 test('MapLibre in ExploreTab centers once and prevents unwanted recentering during user browsing', () => {

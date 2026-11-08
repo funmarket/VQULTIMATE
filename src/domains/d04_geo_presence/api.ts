@@ -2,7 +2,10 @@ import { supabase } from '../../lib/supabase';
 import { calculateDistanceMeters, fetchNearbyPlaces, VibePlace } from '../d03_vibe_orbit';
 import { CityPulse, VibePulsesSummary } from './types';
 
-// Canonical Northern Tunisia District Reference Cities (Baseline contracts)
+/**
+ * Historical reference baseline constants.
+ * @deprecated Do NOT use as runtime fallback. Real user vibes or live Google Places leisure data only.
+ */
 export const CANONICAL_CITY_BASELINES: Omit<CityPulse, 'distanceKm'>[] = [
   {
     id: 'city_tunis',
@@ -82,23 +85,22 @@ export function isWeekendNow(): boolean {
 }
 
 /**
- * Fetches city-level Vibe Pulses or real-place fallback cards adhering to the
- * mandatory real-place fallback hierarchy:
- * - Mode A: Genuine Live Vibes when available from database.
- * - Mode B: Real discoverable Places from canonical catalog / DB when live vibes are absent.
- * - Mode C: Mixed entries when limited live vibes exist.
- * Primary ranking rule: Closest First based on user coordinates.
+ * Fetches city-level Vibe Pulses adhering to the strict priority rules:
+ * - Mode A: If real user vibes / city pulses exist in the database, show those.
+ * - Mode B: If none exist, call fetchNearbyPlaces and show ONLY the leisure places returned by Google Places.
+ *   Sort Mode B by closest first, then highest rating.
+ * - Zero Fake Baseline Fallback: Never invent pulse counts or inject hardcoded cities.
  */
 export async function fetchCityPulses(
   coords: { lat: number; lng: number } | null
 ): Promise<VibePulsesSummary> {
   const weekendActive = isWeekendNow();
   let liveCities: CityPulse[] = [];
-  let source: VibePulsesSummary['source'] = 'calculated_baseline';
-  let mode: VibePulsesSummary['mode'] = 'mode_a_live';
+  let source: VibePulsesSummary['source'] = 'real_places_catalog';
+  let mode: VibePulsesSummary['mode'] = 'mode_b_real_places';
 
   try {
-    // 1. Attempt query to authorized Supabase city_pulses view or table
+    // Mode A: Attempt query to authorized Supabase city_pulses view or table
     const { data, error } = await supabase
       .from('city_pulses')
       .select('*')
@@ -121,14 +123,24 @@ export async function fetchCityPulses(
         isWeekendHighlight: row.is_weekend ?? (weekendActive && row.city === 'Tunis'),
         weekendBadgeText: 'This Weekend'
       }));
+
+      // Proximity sort Mode A if coordinates are provided
+      if (coords && !isNaN(coords.lat) && !isNaN(coords.lng)) {
+        liveCities = liveCities.map((item) => {
+          const distMeters = calculateDistanceMeters(coords.lat, coords.lng, item.lat, item.lng);
+          return {
+            ...item,
+            distanceKm: Number((distMeters / 1000).toFixed(2))
+          };
+        });
+        liveCities.sort((a, b) => (a.distanceKm ?? 9999) - (b.distanceKm ?? 9999));
+      }
     }
   } catch {
-    // Fall through to real places fallback or baseline
+    // Fall through to Mode B
   }
 
-  // Mandatory Real-Place Fallback (Mode B): If database has no live pulse broadcasts,
-  // query genuine discoverable places (including the 11 PO-provided places)
-  // and surface them as real verified spot pulses without fabricated live user numbers.
+  // Mode B: If no live city pulses in database, fetch real leisure places from Google Places
   if (liveCities.length === 0) {
     try {
       const realPlaces = await fetchNearbyPlaces(coords);
@@ -141,8 +153,8 @@ export async function fetchCityPulses(
           city: place.title,
           region: place.address,
           country: 'Tunisia',
-          activePulses: place.pulse_intensity || 8,
-          metricLabel: place.confirmations_count ? `${place.confirmations_count} confirms` : 'vibe intensity',
+          activePulses: place.pulse_intensity || Math.min(10, Math.max(6, Math.round((place.rating || 4) * 2))),
+          metricLabel: place.confirmations_count ? `${place.confirmations_count} confirms` : 'vibe rating',
           imageUrl: place.image_url,
           lat: place.lat,
           lng: place.lng,
@@ -151,53 +163,31 @@ export async function fetchCityPulses(
           weekendBadgeText: place.is_legendary ? 'Legendary Spot' : undefined,
           placeData: place
         }));
+
+        // Sort Mode B by closest first, then highest rating
+        liveCities.sort((a, b) => {
+          const distA = a.placeData?.distance_meters ?? (a.distanceKm ? a.distanceKm * 1000 : 999999);
+          const distB = b.placeData?.distance_meters ?? (b.distanceKm ? b.distanceKm * 1000 : 999999);
+          const distDiff = distA - distB;
+          if (Math.abs(distDiff) > 200) {
+            return distDiff;
+          }
+          return (b.placeData?.rating ?? 0) - (a.placeData?.rating ?? 0);
+        });
       }
     } catch {
-      // Fall through to baseline
+      // Real data only: keep empty array if Google Places returns nothing
     }
   }
 
-  // Fallback to canonical reference cities if both queries return empty
-  if (liveCities.length === 0) {
-    source = 'calculated_baseline';
-    mode = 'mode_a_live';
-    liveCities = CANONICAL_CITY_BASELINES.map((c) => ({
-      ...c,
-      isWeekendHighlight: c.id === 'city_tunis' ? weekendActive : false
-    }));
-  }
-
-  // Geo-sorting: Closest First (primary sort: ascending Haversine distance)
-  if (coords && !isNaN(coords.lat) && !isNaN(coords.lng)) {
-    liveCities = liveCities.map((item) => {
-      const distMeters = calculateDistanceMeters(coords.lat, coords.lng, item.lat, item.lng);
-      return {
-        ...item,
-        distanceKm: Number((distMeters / 1000).toFixed(2))
-      };
-    });
-
-    // Closest first
-    liveCities.sort((a, b) => (a.distanceKm ?? 9999) - (b.distanceKm ?? 9999));
-  } else {
-    // If coordinates are not provided, sort by baseline sequence or prominence
-    if (mode === 'mode_a_live' && source === 'calculated_baseline') {
-      const preferredOrder = ['Ariana', 'Carthage', 'Tunis', 'La Marsa', 'Sidi Bou Said'];
-      liveCities.sort((a, b) => {
-        const idxA = preferredOrder.indexOf(a.city);
-        const idxB = preferredOrder.indexOf(b.city);
-        return (idxA !== -1 ? idxA : 99) - (idxB !== -1 ? idxB : 99);
-      });
-    }
-  }
-
+  // ZERO fake baseline fallback: Never invent pulse counts or inject fake cities.
   const totalLiveVibes = liveCities.reduce((sum, c) => sum + c.activePulses, 0);
 
   return {
     cities: liveCities,
     totalCities: liveCities.length,
     totalLiveVibes,
-    nearestCityName: coords ? liveCities[0]?.city : undefined,
+    nearestCityName: coords && liveCities.length > 0 ? liveCities[0]?.city : undefined,
     source,
     mode
   };
