@@ -1,79 +1,93 @@
 import React from 'react';
-import { X, Shield, Users, MapPin, Database, Award, CheckCircle } from 'lucide-react';
+import { X, Shield, Users, ClipboardList } from 'lucide-react';
 import { UserProfile } from '../domains/d01_auth';
+import { fetchPendingUpgradeRequests, PendingUpgradeRequest } from '../domains/d21_entitlements/api';
 
 interface AdminModalProps {
   user: UserProfile | null;
   onClose: () => void;
 }
 
+/** Platform Administrator is a limited, read-only upgrade triage surface for now. */
 export const AdminModal: React.FC<AdminModalProps> = ({ user, onClose }) => {
+  const [requests, setRequests] = React.useState<PendingUpgradeRequest[]>([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const loadRequests = React.useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setRequests(await fetchPendingUpgradeRequests());
+    } catch (err) {
+      setRequests([]);
+      setError(err instanceof Error ? err.message : 'Upgrade requests unavailable.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (user?.role !== 'admin') return;
+    void loadRequests();
+  }, [user?.id, user?.role, loadRequests]);
+
+  if (user?.role !== 'admin') {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4">
+        <div className="max-w-md w-full rounded-3xl border border-neutral-700 bg-neutral-900 p-6 text-white">
+          <p role="alert" className="text-sm">Administrator authorization required.</p>
+          <button type="button" onClick={onClose} className="mt-4 rounded-xl bg-neutral-800 px-4 py-2">Close</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
       <div className="w-full max-w-md bg-neutral-900 border border-orange-500/30 rounded-t-3xl sm:rounded-3xl p-6 space-y-5 shadow-2xl text-white max-h-[85vh] overflow-y-auto">
         <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
           <div className="flex items-center space-x-2 text-orange-400">
-            <Shield className="w-5 h-5 text-orange-400" />
-            <h3 className="font-black text-sm tracking-wide">Platform Administrator (D01/D21)</h3>
+            <Shield className="w-5 h-5" />
+            <h3 className="font-black text-sm tracking-wide">Platform Administrator</h3>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white cursor-pointer"
-          >
+          <button type="button" onClick={onClose} aria-label="Close admin panel"
+            className="p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="rounded-2xl bg-orange-500/10 border border-orange-500/30 p-4 space-y-1">
-          <span className="text-[10px] uppercase tracking-wider font-bold text-orange-400">Sole Admin Authorization</span>
-          <p className="text-xs font-mono text-white">funmarketmn@hotmail.com</p>
-          <p className="text-[11px] text-neutral-300">
-            Governing Supabase instance <span className="font-mono text-teal-300">avdfessrhbsqwlfmbdau</span>. Full security rules & RLS policies operational.
-          </p>
-        </div>
-
-        <div className="space-y-3">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400">Governance Controls</h4>
-          
-          <div className="space-y-2">
-            <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-between text-xs">
-              <div className="flex items-center space-x-2.5">
-                <Database className="w-4 h-4 text-teal-400" />
-                <span>PostgreSQL Database Shards</span>
-              </div>
-              <span className="text-emerald-400 font-bold">100% HEALTHY</span>
-            </div>
-
-            <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-between text-xs">
-              <div className="flex items-center space-x-2.5">
-                <Users className="w-4 h-4 text-orange-400" />
-                <span>Active District Explorers</span>
-              </div>
-              <span className="text-amber-300 font-bold">LIVE SYNC</span>
-            </div>
-
-            <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-between text-xs">
-              <div className="flex items-center space-x-2.5">
-                <MapPin className="w-4 h-4 text-purple-400" />
-                <span>Vibe Orbit Concentric Ring Beacons</span>
-              </div>
-              <span className="text-teal-400 font-bold">ACTIVE (D03)</span>
-            </div>
-
-            <div className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 flex items-center justify-between text-xs">
-              <div className="flex items-center space-x-2.5">
-                <Award className="w-4 h-4 text-amber-400" />
-                <span>Sole Guardian Multi-Sig Authority</span>
-              </div>
-              <span className="text-emerald-400 font-bold">CONFIRMED</span>
-            </div>
+        <div className="rounded-2xl bg-orange-500/10 border border-orange-500/30 p-4 space-y-2">
+          <div className="flex items-center gap-2 text-orange-300">
+            <ClipboardList className="w-4 h-4" />
+            <span className="text-xs uppercase font-black tracking-wide">Account upgrade requests</span>
           </div>
+          <p className="text-xs text-neutral-300">Read-only review queue. A request is not proof of payment or an active entitlement.</p>
+          <button type="button" onClick={() => void loadRequests()} disabled={loading}
+            className="rounded-xl border border-orange-500/40 bg-neutral-950 px-3 py-2 text-xs font-bold disabled:opacity-50">
+            {loading ? 'Loading requests...' : 'Refresh requests'}
+          </button>
+          {error && <p role="alert" className="text-xs text-amber-300">{error}</p>}
+          {!loading && !error && requests.length === 0 && (
+            <p className="text-xs text-neutral-400">No upgrade requests (or request service not enabled).</p>
+          )}
+          {requests.map(request => (
+            <div key={request.id} className="rounded-xl border border-neutral-700 bg-neutral-950 p-3 space-y-1">
+              <p className="text-xs font-bold">{request.requested_plan.toUpperCase()} upgrade requested</p>
+              <p className="text-[11px] text-neutral-400 break-all">Account: {request.auth_user_id}</p>
+              <p className="text-[11px] text-neutral-400">{new Date(request.created_at).toLocaleString()}</p>
+              <p className="text-[11px] text-amber-300">Pending verification — no activation action</p>
+            </div>
+          ))}
         </div>
 
-        <button
-          onClick={onClose}
-          className="w-full py-3 rounded-2xl bg-neutral-800 hover:bg-neutral-700 font-bold text-xs text-white transition cursor-pointer"
-        >
+        <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4 space-y-2">
+          <div className="flex items-center gap-2 text-white"><Users className="w-4 h-4 text-orange-400"/><span className="text-xs font-bold">Administrator controls</span></div>
+          <p className="text-xs text-neutral-400">Entitlement approval, verified billing fulfillment, Flash banner scheduling and full Platform Administrator management are not yet implemented. These require separate authorization and server-side enforcement.</p>
+        </div>
+
+        <button type="button" onClick={onClose}
+          className="w-full py-3 rounded-2xl bg-neutral-800 hover:bg-neutral-700 font-bold text-xs text-white">
           Close Console
         </button>
       </div>
