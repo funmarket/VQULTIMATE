@@ -11,7 +11,8 @@ test('Home uses server-backed D11 creator permission, not profile role or userna
   assert.match(home, /import \{ fetchActiveFlashEvent, canCreateFlashEvent, FlashEvent \} from '\.\.\/domains\/d11_events'/);
   assert.match(home, /canCreateFlashEvent\(\)\.then\(/);
   assert.match(home, /\[user\?\.id\]/);
-  assert.match(home, /\{canCreateFlash \? \(/);
+  assert.match(home, /onClick=\{handleCreateFlashEntry\}/);
+  assert.match(home, /if \(canCreateFlash\)/);
   assert.match(home, /canCreate=\{canCreateFlash\}/);
   assert.doesNotMatch(home, /user\?\.(?:role|username)\s*===\s*['"]admin['"]/);
   assert.match(modal, /canCreate: boolean/);
@@ -25,8 +26,8 @@ test('Home retains a stable event frame regardless of creator permission or even
   assert.match(home, /\{hasActiveFlash \? \(/);
   assert.match(home, /No Flash Events are active right now\./);
   assert.match(home, /Explore Vibes/);
-  assert.match(home, /\{canCreateFlash \? \(/);
-  assert.match(home, /aria-hidden="true"/);
+  assert.match(home, /onClick=\{handleCreateFlashEntry\}/);
+  assert.match(home, /setIsFlashUpgradeOpen\(true\)/);
 });
 
 test('D11 event API is feature-flagged, time-bounded, and denies unverified creators', () => {
