@@ -25,7 +25,7 @@ test('active D11 event renders the approved live labels from real event data', (
   assert.match(panel, /MORE FLASH EVENTS/);
   assert.match(panel, /flashEvent\.title/);
   assert.match(panel, /flashEvent\.description/);
-  assert.match(panel, /flashEvent\.ends_at/);
+  assert.match(panel, /secondsLeft/);
   assert.match(panel, /More Flash Events are not available yet/);
 });
 test('no active event replaces the entire card with the approved Vibe Suggestions design', () => {
@@ -39,7 +39,7 @@ test('no active event replaces the entire card with the approved Vibe Suggestion
   assert.match(panel, /TRENDING NOW/);
   assert.match(panel, /MORE SUGGESTIONS/);
   assert.match(panel, /VIBEQUEST/);
-  assert.match(panel, /onSelectPlace\(place\)/);
+  assert.match(panel, /onSelectPlace\(item\.place\)/);
   assert.match(panel, /onNavigateTab\('explore'\)/);
 });
 test('images and thumbnails come from existing APIs and render truthful empty states', () => {
