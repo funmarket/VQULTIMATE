@@ -6,6 +6,7 @@ import {
 import { fetchNearbyPlaces, VibePlace, getDeviceLocation } from '../domains/d03_vibe_orbit';
 import { fetchCulturalTrails, fetchVibeGuardians, CulturalTrail, VibeGuardian, TrailWaypoint } from '../domains/d07_trails';
 import { fetchActiveFlashEvent, canCreateFlashEvent, FlashEvent } from '../domains/d11_events';
+import { requestAccountUpgrade, FlashUpgradePlan } from '../domains/d21_entitlements/api';
 import { fetchCommentsForPost, addCommentToPost, VibeComment } from '../domains/d05_vibe';
 import { fetchCityPulses, VibePulsesSummary, CityPulse } from '../domains/d04_geo_presence';
 import { UserProfile } from '../domains/d01_auth';
@@ -38,6 +39,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const [isCreateFlashOpen, setIsCreateFlashOpen] = useState(false);
   const [isFlashUpgradeOpen, setIsFlashUpgradeOpen] = useState(false);
   const [flashAccessNotice, setFlashAccessNotice] = useState(false);
+  const [upgradeSubmitting, setUpgradeSubmitting] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState('');
   const [canCreateFlash, setCanCreateFlash] = useState(false);
   const [homeToast, setHomeToast] = useState<string | null>(null);
 
@@ -159,6 +162,23 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
     : featuredPlace;
   const accountType = (user?.accountType || user?.tier || 'vibe').toLowerCase();
   const isProOrBusiness = accountType === 'pro' || accountType === 'business';
+
+  const submitFlashUpgrade = async (plan: FlashUpgradePlan) => {
+    setUpgradeSubmitting(true);
+    setUpgradeMessage('');
+    try {
+      const result = await requestAccountUpgrade(plan);
+      if (result.success) {
+        setUpgradeMessage('Request submitted for review. Your account has not been upgraded or charged.');
+      } else {
+        setUpgradeMessage(result.error || 'Your request could not be submitted.');
+      }
+    } catch {
+      setUpgradeMessage('Your request could not be submitted.');
+    } finally {
+      setUpgradeSubmitting(false);
+    }
+  };
 
   const handleCreateFlashEntry = () => {
     if (canCreateFlash) {
@@ -630,16 +650,21 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
               <button type="button" aria-label="Close upgrade window" onClick={() => setIsFlashUpgradeOpen(false)} className="p-2 text-neutral-400 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-purple-500/40 bg-purple-500/10 p-4">
+              <button type="button" disabled={upgradeSubmitting} onClick={() => void submitFlashUpgrade('pro')}
+                className="rounded-2xl border border-purple-500/40 bg-purple-500/10 p-4 text-left disabled:opacity-50">
                 <span className="font-bold text-white text-sm">Pro account</span>
                 <p className="mt-1 text-xs text-neutral-300">For creators organizing their own events.</p>
-              </div>
-              <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4">
+                <span className="mt-3 block text-[11px] font-bold text-purple-200">Request Pro upgrade</span>
+              </button>
+              <button type="button" disabled={upgradeSubmitting} onClick={() => void submitFlashUpgrade('business')}
+                className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-left disabled:opacity-50">
                 <span className="font-bold text-white text-sm">Business account</span>
                 <p className="mt-1 text-xs text-neutral-300">For venues and businesses promoting events.</p>
-              </div>
+                <span className="mt-3 block text-[11px] font-bold text-amber-200">Request Business upgrade</span>
+              </button>
             </div>
-            <p className="text-xs text-amber-200">Upgrades are not available yet. No payment or account change will be made.</p>
+            <p className="text-xs text-amber-200">These are upgrade requests, not subscriptions. No payment or account change is made.</p>
+            {upgradeMessage && <p role="status" className="text-xs text-white">{upgradeMessage}</p>}
             <button type="button" onClick={() => setIsFlashUpgradeOpen(false)}
               className="w-full rounded-xl bg-white py-3 text-xs font-black text-neutral-950">Got it</button>
           </div>
