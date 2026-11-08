@@ -1,3 +1,4 @@
+import { supabase } from '../../lib/supabase';
 import { VQTransaction } from './types';
 
 export interface VQTransactionHistory {
@@ -5,19 +6,52 @@ export interface VQTransactionHistory {
   error: string | null;
 }
 
+type LedgerRow = {
+  id: string;
+  direction: 'credit' | 'debit';
+  amount: number;
+  reason_code: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+const ledgerEnabled = import.meta.env.VITE_D06_LEDGER_READ_ENABLED === 'true';
+
 /**
- * D06 Purse read gate.
- * The former vq_transactions relation does not exist. The actual vq_ledger
- * contains legacy text user IDs, different ledger fields, and currently has
- * an unrestricted public RLS policy. Do not query it from an untrusted client
- * or treat a failed read as an empty history.
- *
- * Re-enable this method only after the ledger domain owner approves a
- * user-scoped read API, canonical identity mapping and RLS verification.
+ * Read-only, verified Auth-identity ledger access. Never filter using
+ * untrusted legacy text user_id; the SQL RLS policy must bind rows
+ * to the authenticated owner_auth_user_id instead.
  */
 export async function fetchUserTransactions(_userId: string): Promise<VQTransactionHistory> {
-  return {
-    transactions: [],
-    error: 'Transaction history is temporarily unavailable pending a verified, account-scoped VQ Ledger API. No balance or transactions were changed.'
-  };
+  if (!ledgerEnabled) {
+    return {
+      transactions: [],
+      error: 'Transaction history is unavailable until owner-scoped ledger security is installed.'
+    };
+  }
+
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError || !auth.user) {
+    return { transactions: [], error: 'Sign in to view your transaction history.' };
+  }
+
+  const { data, error } = await supabase.from('vq_ledger')
+    .select('id,direction,amount,reason_code,notes,created_at')
+    .order('created_at', { ascending: false });
+
+  if (error) return { transactions: [], error: `Unable to load transaction history: ${error.message}` };
+
+  const transactions: VQTransaction[] = ((data || []) as LedgerRow[]).map((entry) => {
+    const amount = Math.abs(Number(entry.amount) || 0);
+    return {
+      id: entry.id,
+      user_id: auth.user.id,
+      type: entry.direction === 'credit' ? 'earned' : 'spent',
+      amount: entry.direction === 'credit' ? amount : -amount,
+      description: entry.notes?.trim() || entry.reason_code || 'VQ ledger entry',
+      created_at: entry.created_at
+    };
+  });
+
+  return { transactions, error: null };
 }
