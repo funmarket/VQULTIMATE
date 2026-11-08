@@ -154,6 +154,9 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
 
   const hasActiveFlash = Boolean(flashEvent && secondsLeft > 0);
   const featuredPlace = places.find(place => Boolean(place.image_url));
+  const photoPlace = hasActiveFlash
+    ? places.find(place => place.id === flashEvent?.place_id && Boolean(place.image_url))
+    : featuredPlace;
   const accountType = (user?.accountType || user?.tier || 'vibe').toLowerCase();
   const isProOrBusiness = accountType === 'pro' || accountType === 'business';
 
@@ -186,10 +189,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
             onClick={handleCreateFlashEntry}
             className="px-4 py-2.5 rounded-full border border-neutral-700 hover:border-neutral-500 bg-neutral-950 text-white font-bold text-xs tracking-wider transition cursor-pointer flex items-center space-x-1 shadow-md"
           >
-            <span>+ CREATE FLASH</span>
+            <span>+ CREATE EVENT</span>
           </button>
 
-                    {hasActiveFlash ? (
+          {hasActiveFlash ? (
             <button
               type="button"
               onClick={() => {
@@ -225,6 +228,26 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
           </span>
         </div>
 
+        <div className="relative h-32 rounded-2xl overflow-hidden bg-gradient-to-br from-purple-950 via-neutral-900 to-orange-950 border border-neutral-800">
+          {photoPlace && (
+            <>
+              <img src={photoPlace.image_url} alt={photoPlace.title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/90 via-neutral-950/20 to-transparent" />
+              <button type="button" onClick={() => onSelectPlace(photoPlace)}
+                className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2 text-left text-xs text-white">
+                <span className="truncate font-bold">{photoPlace.title}</span>
+                <span className="shrink-0 text-[10px] font-bold text-amber-300 uppercase">{hasActiveFlash ? 'Event location' : 'Suggested place'}</span>
+              </button>
+            </>
+          )}
+          {!photoPlace && (
+            <div className="absolute inset-0 flex items-center justify-center gap-2 text-neutral-300/70">
+              <Sparkles className="h-5 w-5 text-purple-400" />
+              <span className="text-xs font-semibold tracking-wide">Explore local vibes</span>
+            </div>
+          )}
+        </div>
+
         {hasActiveFlash ? (
           <>
             <div className="space-y-1.5">
@@ -248,25 +271,6 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
           </>
         ) : (
           <>
-            <div className="relative h-32 rounded-2xl overflow-hidden bg-gradient-to-br from-purple-950 via-neutral-900 to-orange-950 border border-neutral-800">
-              {featuredPlace && (
-                <>
-                  <img src={featuredPlace.image_url} alt={featuredPlace.title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/90 via-neutral-950/20 to-transparent" />
-                  <button type="button" onClick={() => onSelectPlace(featuredPlace)}
-                    className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2 text-left text-xs text-white">
-                    <span className="truncate font-bold">{featuredPlace.title}</span>
-                    <span className="shrink-0 text-[10px] font-bold text-amber-300 uppercase">Suggested place</span>
-                  </button>
-                </>
-              )}
-              {!featuredPlace && (
-                <div className="absolute inset-0 flex items-center justify-center gap-2 text-neutral-300/70">
-                  <Sparkles className="h-5 w-5 text-purple-400" />
-                  <span className="text-xs font-semibold tracking-wide">Explore local vibes</span>
-                </div>
-              )}
-            </div>
             <div className="space-y-1.5 min-h-[54px]" role="status" aria-live="polite">
               <h3 className="font-bold text-base text-white tracking-tight">
                 No Flash Events are active right now.
