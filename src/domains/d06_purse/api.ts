@@ -1,21 +1,23 @@
-import { supabase } from '../../lib/supabase';
 import { VQTransaction } from './types';
 
-export async function fetchUserTransactions(userId: string): Promise<VQTransaction[]> {
-  if (!userId) return [];
-  try {
-    const { data, error } = await supabase
-      .from('vq_transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+export interface VQTransactionHistory {
+  transactions: VQTransaction[];
+  error: string | null;
+}
 
-    if (error || !data || data.length === 0) {
-      return [];
-    }
-    return data as VQTransaction[];
-  } catch (err) {
-    console.warn('Error fetching transactions from Supabase:', err);
-    return [];
-  }
+/**
+ * D06 Purse read gate.
+ * The former vq_transactions relation does not exist. The actual vq_ledger
+ * contains legacy text user IDs, different ledger fields, and currently has
+ * an unrestricted public RLS policy. Do not query it from an untrusted client
+ * or treat a failed read as an empty history.
+ *
+ * Re-enable this method only after the ledger domain owner approves a
+ * user-scoped read API, canonical identity mapping and RLS verification.
+ */
+export async function fetchUserTransactions(_userId: string): Promise<VQTransactionHistory> {
+  return {
+    transactions: [],
+    error: 'Transaction history is temporarily unavailable pending a verified, account-scoped VQ Ledger API. No balance or transactions were changed.'
+  };
 }
