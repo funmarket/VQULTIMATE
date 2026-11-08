@@ -16,6 +16,8 @@ import { CreateFlashModal } from './CreateFlashModal';
 import { HomeSocialFeed } from './HomeSocialFeed';
 import { VibePulsesCarousel } from './VibePulsesCarousel';
 import { HomeFlashDiscoveryPanel } from './HomeFlashDiscoveryPanel';
+import { SuggestVibeModal } from './SuggestVibeModal';
+import { joinFlashEvent, cancelFlashRsvp, getMyFlashRsvp, submitVibeSuggestion } from '../domains/d11_events/participation';
 
 interface HomeTabProps {
   user: UserProfile | null;
@@ -43,6 +45,11 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const [upgradeSubmitting, setUpgradeSubmitting] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState('');
   const [canCreateFlash, setCanCreateFlash] = useState(false);
+  const [suggestVibeOpen, setSuggestVibeOpen] = useState(false);
+  const [rsvpJoined, setRsvpJoined] = useState(false);
+  const [rsvpLoading, setRsvpLoading] = useState(false);
+  const rsvpEnabled = import.meta.env.VITE_D11_PARTICIPATION_ENABLED === 'true' && import.meta.env.VITE_D11_FLASH_EVENTS_ENABLED === 'true';
+  const suggestionEnabled = import.meta.env.VITE_D11_PARTICIPATION_ENABLED === 'true';
   const [homeToast, setHomeToast] = useState<string | null>(null);
 
   // Social feed comments modal state
@@ -97,6 +104,41 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
     }, 1000);
     return () => clearInterval(timer);
   }, [secondsLeft]);
+
+  useEffect(() => {
+    let mounted = true;
+    setRsvpJoined(false);
+    if (rsvpEnabled && flashEvent?.id && user?.id) {
+      void getMyFlashRsvp(flashEvent.id).then(joined => {
+        if (mounted) setRsvpJoined(joined);
+      }).catch(() => {
+        if (mounted) showToast('Could not load your RSVP status.');
+      });
+    }
+    return () => { mounted = false; };
+  }, [flashEvent?.id, user?.id, rsvpEnabled]);
+
+  const handleRsvp = async () => {
+    if (!rsvpEnabled || !flashEvent || secondsLeft <= 0 || rsvpLoading) return;
+    if (!user) { showToast('Sign in to RSVP for a Flash Event.'); return; }
+    setRsvpLoading(true);
+    try {
+      const result = rsvpJoined ? await cancelFlashRsvp(flashEvent.id) : await joinFlashEvent(flashEvent.id);
+      if (!result.success) { showToast(result.error || 'Could not update RSVP.'); return; }
+      setRsvpJoined(!rsvpJoined);
+      showToast(rsvpJoined ? 'Your RSVP was cancelled.' : 'Your RSVP was saved.');
+    } catch {
+      showToast('Could not update RSVP.');
+    } finally {
+      setRsvpLoading(false);
+    }
+  };
+
+  const openSuggestVibe = () => {
+    if (!suggestionEnabled) return;
+    if (!user) { showToast('Sign in to suggest a Vibe.'); return; }
+    setSuggestVibeOpen(true);
+  };
 
   const showToast = (msg: string) => {
     setHomeToast(msg);
@@ -213,6 +255,12 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         onNavigateTab={onNavigateTab}
         onSelectPlace={onSelectPlace}
         onNotify={showToast}
+        onSuggestVibe={openSuggestVibe}
+        onRsvp={() => { void handleRsvp(); }}
+        rsvpEnabled={rsvpEnabled}
+        suggestionEnabled={suggestionEnabled}
+        rsvpJoined={rsvpJoined}
+        rsvpLoading={rsvpLoading}
       />
 
       {/* Vibe Pulses — Exact Visual Reference & Genuine City Aggregation */}
@@ -588,6 +636,17 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
               className="w-full rounded-xl bg-white py-3 text-xs font-black text-neutral-950">Close</button>
           </div>
         </div>
+      )}
+
+      {suggestVibeOpen && (
+        <SuggestVibeModal
+          onClose={() => setSuggestVibeOpen(false)}
+          onSubmit={submitVibeSuggestion}
+          onSubmitted={() => {
+            setSuggestVibeOpen(false);
+            showToast('Suggestion submitted for review.');
+          }}
+        />
       )}
 
       {/* Create Flash Event Modal */}
