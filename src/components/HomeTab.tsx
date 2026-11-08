@@ -52,6 +52,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [rsvpStatusLoading, setRsvpStatusLoading] = useState(false);
   const [rsvpStatusEventId, setRsvpStatusEventId] = useState<string | null>(null);
+  const [rsvpStatusUserId, setRsvpStatusUserId] = useState<string | null>(null);
   const userIdRef = useRef(user?.id);
   userIdRef.current = user?.id;
   const rsvpEnabled = import.meta.env.VITE_D11_PARTICIPATION_ENABLED === 'true' && import.meta.env.VITE_D11_FLASH_EVENTS_ENABLED === 'true';
@@ -70,6 +71,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
     selectedFlashId.current = event.id;
     setRsvpJoined(false);
     setRsvpStatusEventId(null);
+    setRsvpStatusUserId(null);
     setRsvpStatusLoading(true);
     setFlashEvent(event);
     setSecondsLeft(Math.max(0, Math.ceil((Date.parse(event.ends_at) - Date.now()) / 1000)));
@@ -129,6 +131,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
     let mounted = true;
     setRsvpJoined(false);
     setRsvpStatusEventId(null);
+    setRsvpStatusUserId(null);
     setRsvpStatusLoading(Boolean(rsvpEnabled && flashEvent?.id && user?.id));
     if (rsvpEnabled && flashEvent?.id && user?.id) {
       const eventId = flashEvent.id;
@@ -137,6 +140,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         if (mounted && selectedFlashId.current === eventId && userIdRef.current === actingUserId) {
           setRsvpJoined(joined);
           setRsvpStatusEventId(eventId);
+          setRsvpStatusUserId(actingUserId);
         }
       }).catch(() => {
         if (mounted && selectedFlashId.current === eventId && userIdRef.current === actingUserId) {
@@ -157,7 +161,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
     const eventId = flashEvent.id;
     const actingUserId = user.id;
     // Never apply a previous event's RSVP state, including during a poll-driven selection change.
-    if (selectedFlashId.current !== eventId || rsvpStatusEventId !== eventId) return;
+    if (selectedFlashId.current !== eventId || rsvpStatusEventId !== eventId || rsvpStatusUserId !== actingUserId) return;
     const wasJoined = rsvpJoined;
     setRsvpLoading(true);
     try {
@@ -303,7 +307,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         rsvpEnabled={rsvpEnabled}
         suggestionEnabled={suggestionEnabled}
         rsvpJoined={rsvpJoined}
-        rsvpLoading={rsvpLoading || rsvpStatusLoading || (rsvpEnabled && !!user && rsvpStatusEventId !== flashEvent?.id)}
+        rsvpLoading={rsvpLoading || rsvpStatusLoading || (rsvpEnabled && !!user && (rsvpStatusEventId !== flashEvent?.id || rsvpStatusUserId !== user.id))}
       />
 
       {/* Vibe Pulses — Exact Visual Reference & Genuine City Aggregation */}
