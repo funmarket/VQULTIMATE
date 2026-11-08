@@ -134,7 +134,9 @@ export async function addCommentToPost(
   if (!content.trim()) return null;
 
   try {
+    const commentId = 'comm_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     const payload = {
+      id: commentId,
       post_id: postId,
       username: user.username,
       avatar_url: user.avatar_url,
@@ -152,6 +154,16 @@ export async function addCommentToPost(
       console.warn('Supabase addCommentToPost error:', error);
       return null;
     }
+
+    // Increment comments_count on vibe_posts
+    try {
+      const { data: postData } = await supabase.from('vibe_posts').select('comments_count').eq('id', postId).maybeSingle();
+      const currentCount = (postData?.comments_count || 0) + 1;
+      await supabase.from('vibe_posts').update({ comments_count: currentCount }).eq('id', postId);
+    } catch (e) {
+      console.warn('Failed to increment comments_count on vibe_posts:', e);
+    }
+
     return data as VibeComment;
   } catch (err) {
     console.warn('Supabase addCommentToPost exception:', err);

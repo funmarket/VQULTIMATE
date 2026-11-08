@@ -1,21 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { Heart, MessageCircle, Share2, Sparkles } from 'lucide-react';
-import { fetchVibePosts, VibePostItem, addReactionToPost } from '../domains/d05_vibe';
+import { Heart, MessageCircle, Share2, Sparkles, Send } from 'lucide-react';
+import { fetchVibePosts, VibePostItem, addReactionToPost, fetchCommentsForPost, addCommentToPost, VibeComment } from '../domains/d05_vibe';
 import { fetchOrbitProfiles } from '../domains/d03_social_graph';
 import { fetchConfirmedVibes } from '../domains/d17_matching';
 import { UserProfile } from '../domains/d01_auth';
 
 interface HomeSocialFeedProps {
   user: UserProfile | null;
-  onOpenComments: (postId: string) => void;
+  onOpenComments: (postId: string) => void; // kept for backwards compatibility if needed
   onToast: (msg: string) => void;
 }
 
-export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onOpenComments, onToast }) => {
+export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast }) => {
   const [activeTab, setActiveTab] = useState<'network' | 'local' | 'for_you'>('network');
   const [posts, setPosts] = useState<VibePostItem[]>([]);
   const [networkUserIds, setNetworkUserIds] = useState<Set<string>>(new Set());
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+
+  // Inline comments state
+  const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
+  const [postComments, setPostComments] = useState<Record<string, VibeComment[]>>({});
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
+  const [commentLoading, setCommentLoading] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchVibePosts().then(setPosts);
@@ -46,7 +52,6 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onOpenComm
     });
     const success = await addReactionToPost(postId);
     if (!success) {
-      // Rollback on failure
       setLikedPosts(prev => {
         const next = new Set(prev);
         if (isLiked) next.add(postId);
@@ -55,6 +60,47 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onOpenComm
       });
       onToast('Failed to record reaction.');
     }
+  };
+
+  const handleToggleComments = async (postId: string) => {
+    if (expandedPostId === postId) {
+      setExpandedPostId(null);
+      return;
+    }
+    setExpandedPostId(postId);
+    if (!postComments[postId]) {
+      const comms = await fetchCommentsForPost(postId);
+      setPostComments(prev => ({ ...prev, [postId]: comms }));
+    }
+  };
+
+  const handleSendComment = async (e: React.FormEvent, postId: string) => {
+    e.preventDefault();
+    const content = commentInputs[postId]?.trim();
+    if (!content) return;
+    if (!user) {
+      onToast('Please sign in to comment.');
+      return;
+    }
+
+    setCommentLoading(prev => ({ ...prev, [postId]: true }));
+    const result = await addCommentToPost(postId, content, {
+      username: user.username,
+      avatar_url: user.avatar_url || ''
+    });
+
+    if (result) {
+      setPostComments(prev => ({
+        ...prev,
+        [postId]: [...(prev[postId] || []), result]
+      }));
+      setCommentInputs(prev => ({ ...prev, [postId]: '' }));
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments_count: p.comments_count + 1 } : p));
+      onToast('Comment posted successfully!');
+    } else {
+      onToast('Failed to post comment. Please try again.');
+    }
+    setCommentLoading(prev => ({ ...prev, [postId]: false }));
   };
 
   const handleShare = async (post: VibePostItem) => {
@@ -131,6 +177,8 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onOpenComm
           filteredPosts.map((post) => {
             const isLiked = likedPosts.has(post.id);
             const likesCount = post.reactions_count + (isLiked ? 1 : 0);
+            const isExpanded = expandedPostId === post.id;
+            const commentsList = postComments[post.id] || [];
             const formattedDate = new Date(post.created_at || Date.now()).toLocaleDateString('en-US', {
               month: 'numeric',
               day: 'numeric',
@@ -196,7 +244,7 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onOpenComm
                   </button>
 
                   <button
-                    onClick={() => onOpenComments(post.id)}
+                    onClick={() => handleToggleComments(post.id)}
                     className="flex items-center space-x-1.5 hover:text-teal-400 transition cursor-pointer"
                   >
                     <MessageCircle className="w-4 h-4 text-neutral-400" />
@@ -211,6 +259,56 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onOpenComm
                     <span className="font-bold text-white">Share</span>
                   </button>
                 </div>
+
+                {/* 5. Facebook-Style Inline Comment Section */}
+                {isExpanded && (
+                  <div className="pt-3 border-t border-neutral-800 space-y-3 animate-fadeIn">
+                    <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                      {commentsList.length > 0 ? (
+                        commentsList.map((comm) => (
+                          <div key={comm.id} className="flex space-x-2.5 items-start bg-neutral-950/70 p-2.5 rounded-2xl border border-neutral-800/80">
+                            <img
+                              src={comm.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'}
+                              alt={comm.username}
+                              className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-xs text-amber-300">@{comm.username}</span>
+                                <span className="text-[10px] text-neutral-500">
+                                  {new Date(comm.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                              <p className="text-xs text-neutral-300 mt-0.5 leading-relaxed">{comm.content}</p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="py-3 text-center text-xs text-neutral-500 italic">
+                          No comments yet. Be the first to reply!
+                        </div>
+                      )}
+                    </div>
+
+                    <form onSubmit={(e) => handleSendComment(e, post.id)} className="flex items-center space-x-2 pt-1">
+                      <input
+                        type="text"
+                        value={commentInputs[post.id] || ''}
+                        onChange={(e) => setCommentInputs({ ...commentInputs, [post.id]: e.target.value })}
+                        placeholder="Write a comment..."
+                        className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
+                      />
+                      <button
+                        type="submit"
+                        disabled={commentLoading[post.id]}
+                        className="p-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-neutral-950 font-bold transition cursor-pointer disabled:opacity-50"
+                        title="Send comment"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                      </button>
+                    </form>
+                  </div>
+                )}
               </div>
             );
           })
@@ -227,4 +325,5 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onOpenComm
     </div>
   );
 };
+
 
