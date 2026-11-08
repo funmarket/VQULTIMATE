@@ -40,7 +40,7 @@ test('Both approved cards retain labels and wire real RSVP and Suggest Vibe acti
   assert.match(panel, /RSVP/);
   assert.match(panel, /onSuggestVibe/);
   assert.match(panel, /onRsvp/);
-  assert.match(home, /submitVibeSuggestion\(/);
+  assert.match(home, /onSubmit=\{submitVibeSuggestion\}/);
   assert.match(home, /joinFlashEvent\(/);
   assert.match(home, /cancelFlashRsvp\(/);
   assert.match(home, /getMyFlashRsvp\(/);
