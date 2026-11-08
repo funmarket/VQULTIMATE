@@ -50,6 +50,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const [suggestVibeOpen, setSuggestVibeOpen] = useState(false);
   const [rsvpJoined, setRsvpJoined] = useState(false);
   const [rsvpLoading, setRsvpLoading] = useState(false);
+  const [rsvpStatusLoading, setRsvpStatusLoading] = useState(false);
+  const [rsvpStatusEventId, setRsvpStatusEventId] = useState<string | null>(null);
+  const userIdRef = useRef(user?.id);
+  userIdRef.current = user?.id;
   const rsvpEnabled = import.meta.env.VITE_D11_PARTICIPATION_ENABLED === 'true' && import.meta.env.VITE_D11_FLASH_EVENTS_ENABLED === 'true';
   const suggestionEnabled = import.meta.env.VITE_D11_PARTICIPATION_ENABLED === 'true';
   const [homeToast, setHomeToast] = useState<string | null>(null);
@@ -64,6 +68,9 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
 
   const selectFlashEvent = (event: FlashEvent) => {
     selectedFlashId.current = event.id;
+    setRsvpJoined(false);
+    setRsvpStatusEventId(null);
+    setRsvpStatusLoading(true);
     setFlashEvent(event);
     setSecondsLeft(Math.max(0, Math.ceil((Date.parse(event.ends_at) - Date.now()) / 1000)));
   };
@@ -121,27 +128,48 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   useEffect(() => {
     let mounted = true;
     setRsvpJoined(false);
+    setRsvpStatusEventId(null);
+    setRsvpStatusLoading(Boolean(rsvpEnabled && flashEvent?.id && user?.id));
     if (rsvpEnabled && flashEvent?.id && user?.id) {
-      void getMyFlashRsvp(flashEvent.id).then(joined => {
-        if (mounted) setRsvpJoined(joined);
+      const eventId = flashEvent.id;
+      const actingUserId = user.id;
+      void getMyFlashRsvp(eventId).then(joined => {
+        if (mounted && selectedFlashId.current === eventId && userIdRef.current === actingUserId) {
+          setRsvpJoined(joined);
+          setRsvpStatusEventId(eventId);
+        }
       }).catch(() => {
-        if (mounted) showToast('Could not load your RSVP status.');
+        if (mounted && selectedFlashId.current === eventId && userIdRef.current === actingUserId) {
+          showToast('Could not load your RSVP status.');
+        }
+      }).finally(() => {
+        if (mounted && selectedFlashId.current === eventId && userIdRef.current === actingUserId) {
+          setRsvpStatusLoading(false);
+        }
       });
     }
     return () => { mounted = false; };
   }, [flashEvent?.id, user?.id, rsvpEnabled]);
 
   const handleRsvp = async () => {
-    if (!rsvpEnabled || !flashEvent || secondsLeft <= 0 || rsvpLoading) return;
+    if (!rsvpEnabled || !flashEvent || secondsLeft <= 0 || rsvpLoading || rsvpStatusLoading) return;
     if (!user) { showToast('Sign in to RSVP for a Flash Event.'); return; }
+    const eventId = flashEvent.id;
+    const actingUserId = user.id;
+    // Never apply a previous event's RSVP state, including during a poll-driven selection change.
+    if (selectedFlashId.current !== eventId || rsvpStatusEventId !== eventId) return;
+    const wasJoined = rsvpJoined;
     setRsvpLoading(true);
     try {
-      const result = rsvpJoined ? await cancelFlashRsvp(flashEvent.id) : await joinFlashEvent(flashEvent.id);
+      const result = wasJoined ? await cancelFlashRsvp(eventId) : await joinFlashEvent(eventId);
+      if (selectedFlashId.current !== eventId || userIdRef.current !== actingUserId) return;
       if (!result.success) { showToast(result.error || 'Could not update RSVP.'); return; }
-      setRsvpJoined(!rsvpJoined);
-      showToast(rsvpJoined ? 'Your RSVP was cancelled.' : 'Your RSVP was saved.');
+      setRsvpJoined(!wasJoined);
+      showToast(wasJoined ? 'Your RSVP was cancelled.' : 'Your RSVP was saved.');
     } catch {
-      showToast('Could not update RSVP.');
+      if (selectedFlashId.current === eventId && userIdRef.current === actingUserId) {
+        showToast('Could not update RSVP.');
+      }
     } finally {
       setRsvpLoading(false);
     }
@@ -275,7 +303,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         rsvpEnabled={rsvpEnabled}
         suggestionEnabled={suggestionEnabled}
         rsvpJoined={rsvpJoined}
-        rsvpLoading={rsvpLoading}
+        rsvpLoading={rsvpLoading || rsvpStatusLoading || (rsvpEnabled && !!user && rsvpStatusEventId !== flashEvent?.id)}
       />
 
       {/* Vibe Pulses — Exact Visual Reference & Genuine City Aggregation */}
