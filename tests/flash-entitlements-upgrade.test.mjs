@@ -22,6 +22,7 @@ test('upgrade is a real authenticated request, never a self-granted paid plan',(
   assert.match(ent,/requested_plan/);
   assert.match(ent,/supabase\.auth\.getUser\(\)/);
   assert.match(home,/requestAccountUpgrade\(/);
+  assert.match(home,/allowed = await canCreateFlashEvent\(\)/);
   assert.match(home,/Request Pro upgrade/);
   assert.match(home,/Request Business upgrade/);
   assert.match(home,/Request submitted for review/);
