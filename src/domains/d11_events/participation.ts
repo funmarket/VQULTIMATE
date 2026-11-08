@@ -68,3 +68,37 @@ export async function submitVibeSuggestion(params: {
     ? { success: false, error: 'Could not submit your suggestion.' }
     : { success: true };
 }
+
+
+export interface PendingVibeSuggestion {
+  id: string;
+  auth_user_id: string;
+  title: string;
+  description: string;
+  category: SuggestionCategory;
+  created_at: string;
+}
+
+/**
+ * Moderation queue is read-only. The live database RLS policy limits reads
+ * to an authenticated platform administrator; ordinary users cannot review.
+ */
+export async function fetchPendingVibeSuggestions(): Promise<PendingVibeSuggestion[]> {
+  if (!participationEnabled) return [];
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError || !auth.user) throw new Error('Sign in to review suggestions.');
+  const { data: assignment, error: assignmentError } = await supabase.from('vq_admin_assignments')
+    .select('auth_user_id')
+    .eq('auth_user_id', auth.user.id)
+    .eq('role', 'platform_admin')
+    .eq('active', true)
+    .maybeSingle();
+  if (assignmentError || !assignment) throw new Error('Platform Administrator authorization required.');
+  const { data, error } = await supabase.from('vibe_suggestion_submissions')
+    .select('id,auth_user_id,title,description,category,created_at')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true })
+    .limit(50);
+  if (error) throw new Error('Could not load pending Vibe suggestions.');
+  return (data || []) as PendingVibeSuggestion[];
+}
