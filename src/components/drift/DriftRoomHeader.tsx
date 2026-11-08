@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, Users, MoreVertical, Wine, Clock, Pin, X } from 'lucide-react';
+import { ChevronLeft, Users, MoreVertical, Wine, Clock, Pin, X, MessageSquare } from 'lucide-react';
 import { DriftRoom } from '../../domains/d15_drift';
 
 interface DriftRoomHeaderProps {
@@ -14,6 +14,7 @@ interface DriftRoomHeaderProps {
   onLeave: () => void;
   onToggleSoulsDrawer: () => void;
   onOpenBottleModal: () => void;
+  onOpenMessages: () => void;
   onOpenIdentityModal: () => void;
   onOpenAdminPinModal?: () => void;
   onDismissPinnedBanner: () => void;
@@ -32,6 +33,7 @@ export const DriftRoomHeader: React.FC<DriftRoomHeaderProps> = ({
   onLeave,
   onToggleSoulsDrawer,
   onOpenBottleModal,
+  onOpenMessages,
   onOpenIdentityModal,
   onOpenAdminPinModal,
   onDismissPinnedBanner,
@@ -169,6 +171,16 @@ export const DriftRoomHeader: React.FC<DriftRoomHeaderProps> = ({
                     >
                       <Wine className="w-3.5 h-3.5" />
                       <span>Cast / Pick Bottle</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setOptionsMenuOpen(false);
+                        onOpenMessages();
+                      }}
+                      className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-neutral-800 text-teal-300 font-bold flex items-center space-x-2 cursor-pointer transition border border-teal-500/20 bg-teal-950/30"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 text-teal-400" />
+                      <span>Messages</span>
                     </button>
                     <button
                       onClick={() => {

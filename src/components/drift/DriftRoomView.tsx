@@ -22,6 +22,7 @@ import { DriftUserActionModal } from './DriftUserActionModal';
 import { DriftIdentityModal } from './DriftIdentityModal';
 import { DriftAdminPinModal } from './DriftAdminPinModal';
 import { CastBottleModal } from './CastBottleModal';
+import { DriftMessagesModal } from './DriftMessagesModal';
 import { PrivateDriftView } from './PrivateDriftView';
 import { DriftFloatingBottleIndicator } from './DriftFloatingBottleIndicator';
 
@@ -66,6 +67,7 @@ export const DriftRoomView: React.FC<DriftRoomViewProps> = ({
   const [selectedActionSoul, setSelectedActionSoul] = useState<{ handle: string; userId?: string; color?: string } | null>(null);
   const [selectedActionMessage, setSelectedActionMessage] = useState<DriftMessage | null>(null);
   const [bottleModalOpen, setBottleModalOpen] = useState(false);
+  const [messagesModalOpen, setMessagesModalOpen] = useState(false);
   const [activePrivateThread, setActivePrivateThread] = useState<DriftPrivateThread | null>(null);
   const [adminPinModalOpen, setAdminPinModalOpen] = useState(false);
   const [adminPinInitialText, setAdminPinInitialText] = useState('');
@@ -317,6 +319,7 @@ export const DriftRoomView: React.FC<DriftRoomViewProps> = ({
         onLeave={onLeave}
         onToggleSoulsDrawer={() => setSoulsDrawerOpen(!soulsDrawerOpen)}
         onOpenBottleModal={() => setBottleModalOpen(true)}
+        onOpenMessages={() => setMessagesModalOpen(true)}
         onOpenIdentityModal={() => setIdentityModalOpen(true)}
         onOpenAdminPinModal={() => {
           setAdminPinInitialText(pinnedAnnouncement || '');
@@ -459,6 +462,19 @@ export const DriftRoomView: React.FC<DriftRoomViewProps> = ({
             });
           }}
           onClose={() => setBottleModalOpen(false)}
+        />
+      )}
+
+      {/* DRIFT MESSAGES INBOX MODAL */}
+      {messagesModalOpen && (
+        <DriftMessagesModal
+          currentUserId={currentUserId}
+          currentHandle={currentAlias.handle}
+          onSelectThread={(thread) => {
+            setMessagesModalOpen(false);
+            setActivePrivateThread(thread);
+          }}
+          onClose={() => setMessagesModalOpen(false)}
         />
       )}
 
