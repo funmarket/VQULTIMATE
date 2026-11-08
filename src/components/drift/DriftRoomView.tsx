@@ -6,10 +6,12 @@ import {
   DriftAlias,
   DriftMessage,
   DriftPrivateThread,
+  DriftBottle,
   updateDriftAlias,
   fetchPrivateThreadById,
   recordRoomPresence,
-  createOrGetPrivateThread
+  createOrGetPrivateThread,
+  fetchFloatingBottles
 } from '../../domains/d15_drift';
 import { DriftRoomHeader } from './DriftRoomHeader';
 import { DriftMessageItem } from './DriftMessageItem';
@@ -21,6 +23,7 @@ import { DriftIdentityModal } from './DriftIdentityModal';
 import { DriftAdminPinModal } from './DriftAdminPinModal';
 import { CastBottleModal } from './CastBottleModal';
 import { PrivateDriftView } from './PrivateDriftView';
+import { DriftFloatingBottleIndicator } from './DriftFloatingBottleIndicator';
 
 import { useDriftRoomMessages } from './useDriftRoomMessages';
 import { useDriftPresence } from './useDriftPresence';
@@ -67,6 +70,32 @@ export const DriftRoomView: React.FC<DriftRoomViewProps> = ({
   const [adminPinModalOpen, setAdminPinModalOpen] = useState(false);
   const [adminPinInitialText, setAdminPinInitialText] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [floatingBottles, setFloatingBottles] = useState<DriftBottle[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchFloatingBottles(room.id).then((bottles) => {
+      if (isMounted) setFloatingBottles(bottles);
+    });
+
+    const channel = supabase
+      .channel('drift_room_floating_bottles_' + room.id)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'drift_bottles' },
+        () => {
+          fetchFloatingBottles(room.id).then((bottles) => {
+            if (isMounted) setFloatingBottles(bottles);
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, [room.id]);
 
   // Telegram-style Emoji Picker State
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
@@ -348,6 +377,14 @@ export const DriftRoomView: React.FC<DriftRoomViewProps> = ({
             showToast={showToast}
           />
         )}
+      </div>
+
+      {/* FLOATING MESSAGE IN A BOTTLE INDICATOR */}
+      <div className="relative">
+        <DriftFloatingBottleIndicator
+          bottleCount={floatingBottles.length}
+          onClick={() => setBottleModalOpen(true)}
+        />
       </div>
 
       {/* MODULAR COMPOSER BAR & EXPANDED TOOLBAR */}
