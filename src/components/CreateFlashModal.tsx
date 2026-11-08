@@ -5,6 +5,7 @@ import { UserProfile } from '../domains/d01_auth';
 
 interface CreateFlashModalProps {
   user: UserProfile | null;
+  canCreate: boolean;
   onClose: () => void;
   onCreated: () => void;
   onToast: (msg: string) => void;
@@ -12,6 +13,7 @@ interface CreateFlashModalProps {
 
 export const CreateFlashModal: React.FC<CreateFlashModalProps> = ({
   user,
+  canCreate,
   onClose,
   onCreated,
   onToast
@@ -23,14 +25,14 @@ export const CreateFlashModal: React.FC<CreateFlashModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const isAdmin = user?.role === 'admin' || user?.username === 'funmarketmn';
+  const isAdmin = canCreate;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
 
     if (!isAdmin) {
-      setErrorMsg('Unauthorized: Only platform administrators and verified business operators can spawn Flash Events.');
+      setErrorMsg('Unauthorized: Only server-verified platform administrators can create Flash Events.');
       return;
     }
     if (!title.trim() || !description.trim()) {
@@ -85,7 +87,7 @@ export const CreateFlashModal: React.FC<CreateFlashModalProps> = ({
         {!isAdmin && (
           <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center space-x-2">
             <Shield className="w-4 h-4 flex-shrink-0" />
-            <span>Only sole admin (funmarketmn@hotmail.com) or business operators can create flash events.</span>
+            <span>Only authorized platform administrators can create Flash Events.</span>
           </div>
         )}
 
