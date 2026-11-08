@@ -669,6 +669,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         <CreateFlashModal
           user={user}
           canCreate={canCreateFlash}
+          places={places}
           onClose={() => setIsCreateFlashOpen(false)}
           onCreated={loadFlash}
           onToast={showToast}
