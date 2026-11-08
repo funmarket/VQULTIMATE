@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { fetchNearbyPlaces, VibePlace, getDeviceLocation } from '../domains/d03_vibe_orbit';
 import { fetchCulturalTrails, fetchVibeGuardians, CulturalTrail, VibeGuardian, TrailWaypoint } from '../domains/d07_trails';
-import { fetchActiveFlashEvent, canCreateFlashEvent, FlashEvent } from '../domains/d11_events';
+import { fetchDiscoverableFlashEvents, canCreateFlashEvent, FlashEvent } from '../domains/d11_events';
 import { requestAccountUpgrade, FlashUpgradePlan } from '../domains/d21_entitlements/api';
 import { fetchCommentsForPost, addCommentToPost, VibeComment } from '../domains/d05_vibe';
 import { fetchCityPulses, VibePulsesSummary, CityPulse } from '../domains/d04_geo_presence';
@@ -36,6 +36,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
     source: 'calculated_baseline'
   });
   const [flashEvent, setFlashEvent] = useState<FlashEvent | null>(null);
+  const [flashEvents, setFlashEvents] = useState<FlashEvent[]>([]);
+  const selectedFlashId = useRef<string | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number>(0);
   const [selectedTrail, setSelectedTrail] = useState<CulturalTrail | null>(null);
   const [selectedGuardian, setSelectedGuardian] = useState<VibeGuardian | null>(null);
@@ -60,13 +62,24 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const trailsScrollRef = useRef<HTMLDivElement>(null);
   const guardiansScrollRef = useRef<HTMLDivElement>(null);
 
+  const selectFlashEvent = (event: FlashEvent) => {
+    selectedFlashId.current = event.id;
+    setFlashEvent(event);
+    setSecondsLeft(Math.max(0, Math.ceil((Date.parse(event.ends_at) - Date.now()) / 1000)));
+  };
+
   const loadFlash = async () => {
     try {
-      const ev = await fetchActiveFlashEvent();
-      setFlashEvent(ev);
-      setSecondsLeft(ev?.seconds_left ?? 0);
+      const events = await fetchDiscoverableFlashEvents();
+      setFlashEvents(events);
+      const selected = events.find(event => event.id === selectedFlashId.current) || events[0] || null;
+      selectedFlashId.current = selected?.id ?? null;
+      setFlashEvent(selected);
+      setSecondsLeft(selected ? Math.max(0, Math.ceil((Date.parse(selected.ends_at) - Date.now()) / 1000)) : 0);
     } catch (error) {
       console.warn('Flash Events could not be loaded:', error);
+      setFlashEvents([]);
+      selectedFlashId.current = null;
       setFlashEvent(null);
       setSecondsLeft(0);
     }
@@ -248,6 +261,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
       {/* Approved visual states: genuine D11 Flash Event or location-aware Vibe Suggestions. */}
       <HomeFlashDiscoveryPanel
         flashEvent={flashEvent}
+        flashEvents={flashEvents}
+        onSelectFlashEvent={selectFlashEvent}
         secondsLeft={secondsLeft}
         places={places}
         pulsesSummary={pulsesSummary}
