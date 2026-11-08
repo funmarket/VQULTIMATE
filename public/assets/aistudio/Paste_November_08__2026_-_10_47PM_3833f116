@@ -1,0 +1,898 @@
+# VQULTIMATE — HOME SOCIAL NETWORK FEED RESTORATION & END-TO-END BACKEND REPAIR
+
+## ⚠️ MANDATORY — ABSOLUTE NO-DRIFT WARNING
+
+**Do not touch unrelated application features or another agent's work.**
+
+**Do not commit, push, merge or deploy.**
+
+**EXACT REFERENCE UI/UX. REAL DOMAIN OWNERSHIP. REAL BACKEND WIRING. CLEAN EXISTING-CODE REPLACEMENT. MANUAL SQL APPROVAL GATE. ZERO SCOPE DRIFT.**
+
+These restrictions apply throughout the entire task, including database integration, component cleanup, dependencies, tests and final reporting.
+
+Do not interpret this warning as permission to leave the authorized feature broken. Complete every safe, authorized repair, isolate genuine dependencies, and report only the portions that cannot proceed.
+
+---
+
+# 1. MISSION — FIX THE EXISTING HOME SOCIAL NETWORK
+
+**Current application:** `funmarket/VQULTIMATE`
+
+**UI/UX reference:** https://github.com/funmarket/VQgemini
+
+**Visual source of truth:** The Product Owner's attached screenshot showing the compact dark social post card with microphone imagery, mood label, author information, Verified Sync badge, caption and minimal social interaction controls.
+
+### Target section
+
+**MY NETWORK | LOCAL VIBES | FOR YOU**
+
+The current implementation is visually incorrect compared with the reference, takes up excessive vertical space, and has defective or misleading comment behavior.
+
+Your task is to repair the existing implementation professionally.
+
+This includes:
+
+1. Restore the exact reference card layout and dimensions.
+2. Restore the reference's visual styling, colors, typography, spacing and interactions.
+3. Correct the existing comments functionality.
+4. Correct fake-success behavior for post interactions.
+5. Preserve and correctly wire genuine likes/reactions.
+6. Preserve and correctly wire sharing.
+7. Correct the three feed filtering mechanisms.
+8. Use genuine canonical social posts and authenticated users.
+9. Preserve the application's existing backend improvements.
+10. Remove obsolete or duplicate implementation code only when proven safe.
+11. Verify the complete feature end-to-end.
+12. Provide SQL for manual review if any database dependency is genuinely missing.
+
+**This is a replacement/repair of the existing Home social feed, NOT authorization to create a second social network.**
+
+---
+
+# 2. MANDATORY DOCUMENT AND SOURCE INSPECTION
+
+Before editing, inspect the current branch, HEAD, working tree, and active work from other agents.
+
+Read the applicable approved documentation:
+
+- `AGENTS.md`
+- `Master Plan.md`
+- `Requirements.md`
+- `structure.md`
+- `Database.md`
+
+Use the newest Product Owner decisions and current approved architecture.
+
+### Inspect the current implementation
+
+Known relevant files from the previous read-only audit:
+
+- `src/components/HomeSocialFeed.tsx`
+- `src/components/HomeTab.tsx`
+- `src/domains/d05_vibe/api.ts`
+- `src/domains/d05_vibe/types.ts`
+
+These are inspection starting points, not an automatic modification allowlist.
+
+Inspect their current versions because repository state may have changed.
+
+Trace all dependencies, imports, domain APIs and call sites.
+
+### Inspect the reference implementation
+
+From `funmarket/VQgemini`, inspect:
+
+- `src/features/home/components/HomeFeedTabs.tsx`
+- `src/features/home/hooks/useHomeFeedActions.ts`
+- `src/features/home/data/homeHelpers.ts`
+- Relevant existing post presentation, profile navigation and social interaction components.
+
+Inspect actual reference CSS classes and layout behavior.
+
+**Do not blindly copy the historical reference's storage, mock data or simulated social operations.**
+
+Reference UI/UX is authoritative for appearance and intended interaction.
+
+Current canonical domain services are authoritative for implementation and persistence.
+
+---
+
+# 3. CONFIRMED ISSUES TO RECHECK AND REPAIR
+
+The previous source inspection identified the following issues.
+
+Reconfirm each against the current working tree before editing.
+
+### A. Oversized social post cards
+
+Current `HomeSocialFeed.tsx` used:
+
+`aspect-[4/5]`
+
+The reference uses:
+
+`aspect-[4/3]`
+
+The current implementation also separates the image, header and action controls differently from the reference.
+
+This produces excessive card height.
+
+Repair the layout to match the reference screenshot.
+
+### B. Comment false-success
+
+The examined `addCommentToPost()` implementation:
+
+- Creates a local comment.
+- Saves it to localStorage.
+- Attempts a Supabase insert.
+- Returns the local comment even when the backend insert fails.
+
+This can display a successful comment that does not exist in the authoritative database.
+
+**This behavior must be eliminated.**
+
+### C. Non-authoritative comment retrieval
+
+The examined `fetchCommentsForPost()` implementation combines Supabase comments with locally persisted comments.
+
+This can conceal backend errors and display comments that were never accepted by the server.
+
+Do not treat localStorage as authoritative comment persistence.
+
+### D. Reaction false-success
+
+The Home feed optimistically toggles liked state without properly reconciling the result of `addReactionToPost()`.
+
+The inspected API does not establish a complete unlike operation.
+
+Repair this according to the approved canonical reaction contract.
+
+### E. My Network filtering defect
+
+The examined code returns every post when the relationship-ID set is empty.
+
+This can expose unrelated posts under My Network.
+
+Correct this without confusing D03 follows with D17 Confirmed Vibes.
+
+### F. Local Vibes filtering defect
+
+The examined code effectively displays all posts under Local Vibes.
+
+Implement only the authorized location-based filtering supported by the current application contracts.
+
+Do not fabricate locations or location consent.
+
+### G. For You ranking
+
+The examined code uses reactions/comments as a simplified inclusion test.
+
+Inspect the approved requirements and current supported ranking signals.
+
+Do not invent a personalization algorithm or fake relevance score.
+
+### H. Share feedback
+
+The inspected share code may report that a link is ready even after clipboard failure.
+
+Ensure user feedback accurately reflects what was completed.
+
+---
+
+# 4. EXACT REFERENCE SOCIAL POST DESIGN
+
+The final Home social feed must match the supplied screenshot and relevant VQgemini source.
+
+**Do not redesign the card.**
+
+### Card container
+
+Preserve the reference presentation:
+
+- Dark premium background.
+- Approximate reference color `#131116`.
+- Subtle light border.
+- Rounded corners equivalent to the reference.
+- Consistent inner padding.
+- Soft shadow.
+- Correct card width relative to the existing Home container.
+- Compact vertical hierarchy.
+- Correct spacing between posts.
+
+Use the current application's responsive framework without introducing global styling changes.
+
+### Media section
+
+Place the main image at the top of the post card.
+
+Use the reference's:
+
+- **4:3 media aspect ratio.**
+- Rounded media corners.
+- Image crop and object-fit behavior.
+- Inner margins.
+- Media border and shadow.
+- Mood/zone badge positioned on the image.
+
+Do not stretch images.
+
+Do not arbitrarily increase image height.
+
+Do not fabricate an image when the post has no media.
+
+Text-only posts must use a legitimate compact layout.
+
+Do not display unrelated stock photographs as actual post content.
+
+### Mood label
+
+Preserve the reference style for labels such as `COZY`.
+
+The displayed label must originate from the post's actual supported metadata.
+
+Do not assign random moods.
+
+### Author section
+
+Below the image, match the reference:
+
+- Circular author avatar.
+- Gold/cream username.
+- Correct username size and weight.
+- Actual publication timestamp.
+- `VERIFIED SYNC` badge where genuinely authorized.
+- Same alignment and spacing as the reference.
+
+Do not display `Just now` for old posts.
+
+Do not display a Verified Sync badge merely because a post was loaded.
+
+Use genuine persisted data and the approved verification meaning.
+
+### Caption
+
+Preserve the reference's:
+
+- Text color.
+- Font size.
+- Line height.
+- Caption position.
+- Padding.
+- Spacing above the action row.
+
+Do not change post contents.
+
+### Social action row
+
+Reproduce the compact one-line reference:
+
+**Heart icon + Count | Comment icon + Count | Share icon + Label**
+
+Keep:
+
+- Correct icon sizes.
+- Muted gray colors.
+- Minimal spacing.
+- Subtle divider.
+- Compact card footer.
+- Functional touch targets.
+
+Do not retain the oversized multi-row action layout from the defective implementation.
+
+### Tabs
+
+Keep the existing three tabs:
+
+- `MY NETWORK`
+- `LOCAL VIBES`
+- `FOR YOU`
+
+Match the reference's label appearance, active underline, spacing and responsive presentation.
+
+Do not replace these tabs with new social categories.
+
+---
+
+# 5. COMMENTS — FULL END-TO-END REPAIR
+
+**This is a mandatory functional repair, not a cosmetic change.**
+
+### Required user journey
+
+1. An authenticated user opens a genuine social post.
+2. The user selects Comments.
+3. The reference-style inline comment section opens.
+4. Existing authorized comments are loaded from Supabase.
+5. The user enters a message.
+6. The application validates the input.
+7. The authorized owning domain submits the comment.
+8. The backend validates identity and permissions.
+9. The database persists the comment.
+10. The application receives confirmed success.
+11. The comment appears under the correct post.
+12. Its count updates accurately.
+13. The comment remains available after refresh.
+
+### Reference interaction
+
+The VQgemini reference supports an inline comment expansion inside the post card.
+
+Adopt that UI/UX rather than retaining the unrelated oversized comments modal, unless current governing requirements explicitly supersede it.
+
+Preserve:
+
+- Inline expansion.
+- Compact comment list.
+- Author information.
+- Actual timestamps.
+- Comment input.
+- Post button.
+- Existing supported reply behavior.
+
+### Backend requirements
+
+Use the existing approved canonical social publishing/comment ownership.
+
+Do not write through a duplicate comments service.
+
+Do not return a successful comment when the backend rejects it.
+
+Do not persist fake comments locally.
+
+Do not create random local IDs as proof of server persistence.
+
+Do not silently ignore RLS errors.
+
+Display truthful loading, failure and retry states.
+
+Prevent duplicate submissions.
+
+### Comment count
+
+Counts must reflect authoritative persisted comments or a verified consistent aggregate.
+
+Do not increment permanently merely because the frontend button was pressed.
+
+Do not assume one comment succeeded when the database returned an error.
+
+### Replies
+
+The reference contains visual nested reply behavior.
+
+If replies are already supported by the current approved social comment contract, wire them genuinely.
+
+If they require missing schema or unapproved behavior, preserve the interface appropriately and report the dependency.
+
+Do not simulate thread persistence.
+
+Do not invent a reply backend.
+
+---
+
+# 6. LIKES / REACTIONS — FULLY FUNCTIONAL
+
+Inspect the actual canonical reaction service.
+
+Required behavior:
+
+- Authenticated user reacts to an existing post.
+- Backend verifies authorization.
+- Correct post receives the reaction.
+- Duplicate reactions are prevented.
+- Unlike/removal works if supported by the approved contract.
+- Counts are accurate.
+- User reaction status persists across reloads.
+- Backend failures are handled truthfully.
+
+Optimistic UI is permitted only with correct rollback or reconciliation after failure.
+
+Do not show a permanent success state when the backend rejects the action.
+
+Do not generate fake engagement counts.
+
+Do not confuse likes with VQ transfers or other reward operations.
+
+---
+
+# 7. SHARING — REAL POST IDENTITY AND ROUTING
+
+Preserve the reference's compact Share control.
+
+Use the canonical post identifier.
+
+Verify whether the app has a legitimate shareable post URL.
+
+If so, use the actual route.
+
+If not, do not fabricate `/post/{id}` as a working destination without checking routing support.
+
+Handle native sharing and clipboard actions honestly.
+
+No fake success notifications.
+
+No broken deep links.
+
+No duplicate share services.
+
+Do not modify unrelated application routing.
+
+---
+
+# 8. CORRECT THE THREE FEED CONTRACTS
+
+### MY NETWORK
+
+Use the approved social relationship model.
+
+Respect the existing distinction:
+
+**D03 ECHO / ORBIT:** Unilateral follow relationships.
+
+**D17 PULLS / Confirmed Vibes:** Mutual connection relationships.
+
+Do not convert followers into Confirmed Vibes.
+
+Do not generate PULLS from follows.
+
+Determine the exact approved My Network eligibility rules from current requirements.
+
+Only show posts the current user is authorized to see.
+
+An empty network must not automatically display every public post.
+
+### LOCAL VIBES
+
+Use the approved location and post-visibility contracts.
+
+Do not invent latitude/longitude.
+
+Do not expose private or precise user locations.
+
+Do not treat all globally available posts as local.
+
+Use legitimate existing D04/location data.
+
+If local filtering is unavailable, show an accurate unavailable or empty state rather than silently displaying unrelated posts.
+
+### FOR YOU
+
+Use approved discovery and ranking rules.
+
+Do not hardcode example posts.
+
+Do not manufacture engagement.
+
+Do not invent personalization scores.
+
+If the current approved behavior is a basic deterministic feed, implement that correctly and describe it truthfully.
+
+### Shared rules
+
+All three tabs must use genuine canonical posts.
+
+Preserve the correct post visibility and authorization.
+
+Avoid duplicate post records.
+
+Do not copy posts into separate tables for each tab.
+
+Do not silently show locally cached fake content when the backend fails.
+
+---
+
+# 9. SUPABASE — INSPECT EXISTING TABLES BEFORE CHANGING ANYTHING
+
+Supabase project:
+
+`avdfessrhbsqwlfmbdau`
+
+Previous read-only inspection confirmed these existing tables:
+
+- `vibe_posts`
+- `vibe_comments`
+- `vibe_reactions`
+- `social_posts`
+
+**These tables already exist. Do not create duplicates.**
+
+Inspect their actual current schema, relationships, policies and records.
+
+### Mandatory checks
+
+Verify:
+
+- Canonical post ownership.
+- Author identity.
+- Post visibility.
+- Comment-to-post relationship.
+- Reaction-to-post relationship.
+- Relevant indexes.
+- Foreign keys.
+- Uniqueness constraints.
+- User authorization.
+- RLS policies.
+- SQL functions.
+- Data API privileges.
+- Actual client query compatibility.
+
+The existence of similarly named tables does not prove they are interchangeable.
+
+Determine the canonical D12 publishing model from the approved governing documents.
+
+Do not assume the legacy `d05_vibe` module is automatically the correct owner of all social publishing operations.
+
+### Single-writer requirement
+
+Use the approved domain owner for mutations.
+
+Do not leave two competing APIs writing the same social content.
+
+Do not create direct Supabase writes inside Home presentation components.
+
+If the current source has legacy cross-domain ownership violations, make the smallest authorized correction or report the exact ownership blocker.
+
+Do not use an architecture cleanup as an excuse for unrelated refactoring.
+
+---
+
+# 10. MANUAL SQL APPROVAL GATE
+
+If a database dependency is genuinely missing, provide the exact SQL proposal.
+
+**Do not execute database modifications.**
+
+The Product Owner will review and execute approved SQL manually in the Supabase SQL Editor.
+
+### Required SQL deliverable
+
+For every missing resource, provide:
+
+1. Existing relevant schema.
+2. Exact missing requirement.
+3. Canonical domain owner.
+4. Why existing tables cannot support the behavior.
+5. Complete proposed SQL.
+6. Any required RLS policies.
+7. Constraints and indexes.
+8. Authentication/authorization compatibility.
+9. Execution order.
+10. Read-only verification SQL.
+11. Existing-data compatibility.
+12. Safe rollback/recovery considerations.
+
+Do not generate a new table merely because the frontend currently has a failing operation.
+
+Reuse existing canonical structures where appropriate.
+
+Do not insert fake comments or likes.
+
+Do not generate artificial test posts in shared production data.
+
+### Important: do not block the entire repair unnecessarily
+
+If SQL is required for one portion:
+
+- Continue the authorized visual work.
+- Complete independent frontend corrections.
+- Complete integrations supported by existing infrastructure.
+- Prepare code that can safely operate after the approved schema change.
+- Report the dependency clearly.
+- Mark only the affected behavior `BLOCKED — SQL PENDING`.
+
+Do not claim backend completion before the SQL exists and has been verified.
+
+**Do not substitute a fake implementation just to avoid reporting a dependency.**
+
+---
+
+# 11. CLEAN ARCHITECTURE — NO MONOLITHIC OR DUPLICATED IMPLEMENTATIONS
+
+Maintain the modular architecture.
+
+The Home presentation should not own permanent social content.
+
+Keep responsibilities appropriately separated:
+
+- Social feed presentation.
+- Social post card presentation.
+- Comment presentation.
+- Loading and error states.
+- Domain-owned post queries.
+- Domain-owned comment operations.
+- Domain-owned reaction operations.
+- Existing relationship filtering.
+- Existing location-based filtering.
+
+Use existing components and APIs wherever they are authoritative.
+
+Do not create unnecessary new files.
+
+Do not create one giant component combining all persistence and presentation responsibilities.
+
+Do not introduce duplicate PostCard components without proving replacement is necessary.
+
+Do not create parallel backend services.
+
+Do not leave obsolete event handlers.
+
+Do not leave unused localStorage persistence.
+
+Do not leave dead imports.
+
+Do not change unrelated CSS.
+
+Do not introduce unnecessary dependencies.
+
+### Cleanup requirement
+
+After the repair, demonstrate that:
+
+- The old defective social card is no longer active.
+- The correct Home card is used by all three tabs.
+- No duplicate comment implementation remains active.
+- No competing reaction logic remains active.
+- No unnecessary local fallback masks backend errors.
+- Existing canonical post data has not been lost.
+
+Do not delete genuine data.
+
+---
+
+# 12. SOURCE-SPECIFIC FAKE IMPLEMENTATION WARNINGS
+
+The reference application itself contains historical mock behavior.
+
+In the inspected reference:
+
+- `homeHelpers.ts` includes hardcoded social feed examples.
+- `HomeFeedTabs.tsx` can create browser-local comments.
+- Likes are updated through local state.
+- Some author and media information is sample data.
+- The reference uses simulated success feedback for certain interactions.
+
+**These behaviors are NOT approved for adoption.**
+
+Adopt the reference styling and intended interactions, but replace simulated implementation with real canonical services.
+
+### Absolutely prohibited
+
+- Hardcoded live social posts.
+- Invented test users.
+- Fake author avatars used as actual accounts.
+- Artificial post counts.
+- Fake reactions.
+- Fake comment counts.
+- Local-only comments.
+- Fake post timestamps.
+- False Verified Sync status.
+- Fabricated share success.
+- Random post IDs used as persistence proof.
+- Client-only permissions.
+- Silent database failures.
+- Mock backend APIs.
+- Creating duplicate post tables.
+- Creating another social network alongside the current one.
+- Fake success notifications.
+
+Use existing genuine authorized test accounts when testing, but do not fabricate social content or modify shared production data without approval.
+
+---
+
+# 13. MANDATORY END-TO-END TESTING
+
+### Visual testing
+
+Compare actual current-app screenshots against the provided reference.
+
+Verify:
+
+- Reference card dimensions.
+- Correct 4:3 media ratio.
+- Correct image placement.
+- Correct author section.
+- Correct timestamp.
+- Correct Verified Sync presentation.
+- Correct caption position.
+- Compact interaction row.
+- Correct tab styling.
+- Correct inline comment expansion.
+- Mobile and desktop responsiveness.
+
+### Comment testing
+
+Using authorized test accounts and an isolated environment:
+
+1. Open an existing real post.
+2. Load existing comments.
+3. Submit a new comment.
+4. Confirm actual database persistence.
+5. Confirm the comment appears under the correct post.
+6. Refresh and verify persistence.
+7. Test rejected writes.
+8. Verify the UI does not fabricate success.
+9. Verify duplicate submissions are prevented.
+10. Verify accurate comment counts.
+
+### Reaction testing
+
+1. Load actual reaction state.
+2. Like a post.
+3. Confirm backend persistence.
+4. Refresh.
+5. Verify the reaction persists.
+6. Unlike where supported.
+7. Verify the count updates.
+8. Test backend rejection.
+9. Confirm no permanent false-success UI.
+
+### Feed testing
+
+- My Network shows authorized relevant posts.
+- Empty Network does not become a global feed.
+- Local Vibes uses real supported location logic.
+- For You follows its approved ranking contract.
+- Switching tabs does not duplicate posts.
+- Switching tabs does not reset unrelated Home features.
+- Post visibility and authorization remain correct.
+
+### Regression testing
+
+- Guardian cards unchanged.
+- Trails unchanged.
+- Vibe Pulses unchanged.
+- Nearby Waypoints unchanged.
+- Drift unchanged.
+- Share publishing unchanged outside required integration.
+- ECHO/PULL mechanics unchanged.
+- Existing user profiles unchanged.
+- No unrelated navigation changes.
+
+Run actual TypeScript, production build, targeted tests and scope verification.
+
+Do not mark unexecuted checks as passed.
+
+---
+
+# 14. FINAL ENGINEERING REPORT — REQUIRED
+
+Provide:
+
+**A. Root-cause analysis**
+
+Explain the current visual and functional defects.
+
+**B. Reference comparison**
+
+Identify exact reference components and styling details adopted.
+
+**C. Before/after screenshots**
+
+Demonstrate visual fidelity at mobile and desktop widths.
+
+**D. Changed-file inventory**
+
+List every modified, created and removed file with its purpose.
+
+**E. Domain ownership map**
+
+Show which domain owns every persistent operation.
+
+**F. Post data flow**
+
+Show how genuine canonical posts reach My Network, Local Vibes and For You.
+
+**G. Comment verification**
+
+Show actual read/write evidence and failure handling.
+
+**H. Reaction verification**
+
+Show actual read/write evidence, uniqueness and unlike behavior where supported.
+
+**I. Sharing verification**
+
+Demonstrate legitimate share routing and truthful feedback.
+
+**J. Supabase schema report**
+
+Identify existing tables, policies and constraints.
+
+**K. SQL Editor handoff**
+
+If anything is missing, provide complete proposed SQL. Do not execute it.
+
+**L. Architecture cleanup**
+
+Prove there are no duplicate social card implementations, orphaned files, abandoned local fallback paths or conflicting writers.
+
+**M. Testing**
+
+Provide exact commands, test results, exit codes and runtime evidence.
+
+**N. Git scope proof**
+
+Provide:
+
+- Starting branch and HEAD.
+- Initial working-tree status.
+- Exact changed-file inventory.
+- `git diff --name-status`.
+- `git diff --stat`.
+- Final working-tree status.
+
+Clearly separate preexisting agent changes from changes made for this task.
+
+**O. Remaining blockers**
+
+Classify each feature as:
+
+- VERIFIED
+- IMPLEMENTED — NOT VERIFIED
+- BLOCKED — SQL PENDING
+- BLOCKED — DEPENDENCY
+- NOT IMPLEMENTED
+
+Do not claim the complete feature is operational while mandatory backend behavior remains unverified.
+
+---
+
+# 15. EXECUTION INSTRUCTIONS
+
+Proceed in the following order:
+
+**Phase 1 — Inspect**
+
+Read current governing documentation, inspect both repositories and map the relevant dependencies.
+
+**Phase 2 — Establish scope**
+
+Identify the exact current files and authorized domain boundaries.
+
+**Phase 3 — Visual restoration**
+
+Correct the existing Home social cards to match the supplied reference UI/UX.
+
+**Phase 4 — Functional repair**
+
+Correct comments, reactions, sharing and feed filtering through canonical domain APIs.
+
+**Phase 5 — Database reconciliation**
+
+Inspect existing Supabase resources and identify genuine missing dependencies.
+
+**Phase 6 — SQL handoff**
+
+Provide exact SQL where needed. Do not execute it.
+
+**Phase 7 — Verification**
+
+Run all safe available tests, visual checks and scope-diff verification.
+
+**Phase 8 — Cleanup**
+
+Remove only proven obsolete replacement code within the authorized scope.
+
+**Phase 9 — Final report**
+
+Provide verifiable evidence, precise blockers and complete changed-file inventory.
+
+Do not stop at an architectural plan when safe implementation work is possible.
+
+Do not silently expand the task into unrelated modules.
+
+---
+
+## ⚠️ FINAL MANDATORY — ABSOLUTE NO-DRIFT WARNING
+
+**Do not touch unrelated application features or another agent's work.**
+
+**Do not commit, push, merge or deploy.**
+
+**EXACT REFERENCE UI/UX. REAL DOMAIN OWNERSHIP. REAL BACKEND WIRING. CLEAN EXISTING-CODE REPLACEMENT. MANUAL SQL APPROVAL GATE. ZERO SCOPE DRIFT.**
+
+**FINAL ACCEPTANCE RULE:**
+
+The task is complete only when the Home social feed looks like the reference, the authorized backend interactions work genuinely, the existing canonical social architecture is preserved, and there are no competing implementations or unreported blockers.
+
+**NO MOCKS. NO FALSE SUCCESS. NO DUPLICATES. NO MONOLITHIC CODE. NO UNAUTHORIZED DATABASE CHANGES. NO SCOPE DRIFT.**

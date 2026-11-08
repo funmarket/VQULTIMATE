@@ -100,7 +100,6 @@ export async function addReactionToPost(postId: string): Promise<boolean> {
 }
 
 export async function fetchCommentsForPost(postId: string): Promise<VibeComment[]> {
-  let remoteComments: VibeComment[] = [];
   try {
     const { data, error } = await supabase
       .from('vibe_comments')
@@ -108,39 +107,23 @@ export async function fetchCommentsForPost(postId: string): Promise<VibeComment[
       .eq('post_id', postId)
       .order('created_at', { ascending: true });
 
-    if (!error && data) {
-      remoteComments = (data as any[]).map((row) => ({
-        id: String(row.id),
-        post_id: row.post_id,
-        username: row.username || row.handle || 'explorer',
-        avatar_url: row.avatar_url || row.avatar || '',
-        content: row.content || row.comment || '',
-        created_at: row.created_at || new Date().toISOString()
-      }));
+    if (error || !data) {
+      console.warn('fetchCommentsForPost error:', error);
+      return [];
     }
+
+    return (data as any[]).map((row) => ({
+      id: String(row.id),
+      post_id: row.post_id,
+      username: row.username || row.handle || 'explorer',
+      avatar_url: row.avatar_url || row.avatar || '',
+      content: row.content || row.comment || '',
+      created_at: row.created_at || new Date().toISOString()
+    }));
   } catch (err) {
-    console.warn('Error fetching comments from Supabase:', err);
+    console.warn('fetchCommentsForPost exception:', err);
+    return [];
   }
-
-  let localComments: VibeComment[] = [];
-  try {
-    const key = `vq_vibe_comments_${postId}`;
-    const raw = typeof window !== 'undefined' ? localStorage.getItem(key) : null;
-    if (raw) {
-      localComments = JSON.parse(raw);
-    }
-  } catch {}
-
-  const map = new Map<string, VibeComment>();
-  [...remoteComments, ...localComments].forEach(c => {
-    if (!map.has(c.id)) {
-      map.set(c.id, c);
-    }
-  });
-
-  const merged = Array.from(map.values());
-  merged.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-  return merged;
 }
 
 export async function addCommentToPost(
@@ -148,38 +131,30 @@ export async function addCommentToPost(
   content: string,
   user: { username: string; avatar_url: string }
 ): Promise<VibeComment | null> {
-  const newComment: VibeComment = {
-    id: 'comm_' + Date.now(),
-    post_id: postId,
-    username: user.username,
-    avatar_url: user.avatar_url,
-    content,
-    created_at: new Date().toISOString()
-  };
+  if (!content.trim()) return null;
 
   try {
-    const key = `vq_vibe_comments_${postId}`;
-    const raw = typeof window !== 'undefined' ? localStorage.getItem(key) : null;
-    const list: VibeComment[] = raw ? JSON.parse(raw) : [];
-    list.push(newComment);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(key, JSON.stringify(list));
-    }
-  } catch {}
+    const payload = {
+      post_id: postId,
+      username: user.username,
+      avatar_url: user.avatar_url,
+      content: content.trim(),
+      created_at: new Date().toISOString()
+    };
 
-  try {
     const { data, error } = await supabase
       .from('vibe_comments')
-      .insert([newComment])
+      .insert([payload])
       .select()
       .single();
 
     if (error || !data) {
       console.warn('Supabase addCommentToPost error:', error);
-      return newComment;
+      return null;
     }
     return data as VibeComment;
-  } catch {
-    return newComment;
+  } catch (err) {
+    console.warn('Supabase addCommentToPost exception:', err);
+    return null;
   }
 }

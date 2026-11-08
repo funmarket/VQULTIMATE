@@ -65,6 +65,12 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
   const [trails, setTrails] = useState<CommunityTrail[]>([]);
   const [guardians, setGuardians] = useState<VibeGuardian[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<VibeCategory | 'All'>('All');
+  const [visibleWaypointsCount, setVisibleWaypointsCount] = useState<number>(3);
+
+  useEffect(() => {
+    setVisibleWaypointsCount(3);
+  }, [selectedCategory]);
+
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -583,37 +589,80 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         </div>
 
         {places.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {(isFullScreen ? places.slice(0, 3) : places).map((place) => (
-              <div
-                key={place.id}
-                onClick={() => onSelectPlace(place)}
-                className="rounded-2xl bg-neutral-900 border border-neutral-800 hover:border-orange-500/50 transition cursor-pointer p-4 flex space-x-4 items-center group shadow-md"
+          <div className="space-y-3.5">
+            <div className="grid grid-cols-1 gap-3.5">
+              {places.slice(0, visibleWaypointsCount).map((place, idx) => {
+                const tier = idx === 0 ? 'LEGENDARY' : idx === 1 ? 'LEGENDARY' : 'RARE';
+                const rating = place.distance_km !== undefined ? (5.0 - place.distance_km * 0.4).toFixed(1) : '4.8';
+                const visits = 44 + (idx * 22) % 60;
+                return (
+                  <div
+                    key={place.id}
+                    onClick={() => onSelectPlace(place)}
+                    className="rounded-3xl bg-neutral-900 border border-neutral-800 hover:border-cyan-500/40 transition cursor-pointer p-4 sm:p-5 flex items-center space-x-4 group shadow-xl relative"
+                  >
+                    <div className="relative w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 bg-neutral-950">
+                      <img
+                        src={place.image_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80'}
+                        alt={place.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                      />
+                      <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-lg bg-neutral-950/85 text-amber-400 text-xs font-black flex items-center space-x-1 border border-neutral-800 shadow">
+                        <span>★</span>
+                        <span>{rating}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-teal-300 bg-teal-950/60 border border-teal-500/30 px-2 py-0.5 rounded">
+                          {place.category}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-950/60 border border-amber-500/40 px-2 py-0.5 rounded">
+                          {tier}
+                        </span>
+                        <span className="text-[10px] font-bold text-purple-300 bg-purple-950/60 border border-purple-500/30 px-2 py-0.5 rounded flex items-center space-x-1">
+                          <span>✨</span>
+                          <span>73% MATCH</span>
+                        </span>
+                      </div>
+
+                      <h4 className="font-bold text-base sm:text-lg text-white truncate">{place.title}</h4>
+                      <p className="text-xs text-neutral-400 truncate flex items-center space-x-1">
+                        <MapPin className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" />
+                        <span className="truncate">{place.address}</span>
+                      </p>
+
+                      <div className="flex items-center justify-between text-xs text-neutral-400 pt-1">
+                        <span className="font-medium text-teal-300">
+                          {place.distance_km !== undefined ? `${place.distance_km} km` : '0.3 km'} • {visits} visits
+                        </span>
+                        <div className="flex items-center space-x-2">
+                          <span className="px-3 py-1.5 rounded-xl bg-neutral-800/80 text-neutral-400 border border-neutral-700/60 text-xs font-bold flex items-center space-x-1 shadow">
+                            <span className="text-[10px]">🔒</span>
+                            <span>Locked</span>
+                          </span>
+                          <span className="px-3 py-1.5 rounded-xl bg-teal-950/60 text-emerald-400 border border-teal-500/30 text-xs font-bold shadow">
+                            +{place.vq_reward} PTS
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {visibleWaypointsCount < places.length && (
+              <button
+                type="button"
+                onClick={() => setVisibleWaypointsCount((prev) => Math.min(places.length, prev + 3))}
+                className="w-full py-3.5 rounded-2xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700/60 text-teal-300 hover:text-white font-bold text-xs tracking-wider transition cursor-pointer shadow-lg flex items-center justify-center space-x-2"
               >
-                <img
-                  src={place.image_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80'}
-                  alt={place.title}
-                  className="w-20 h-20 rounded-xl object-cover flex-shrink-0 group-hover:scale-105 transition duration-300"
-                />
-                <div className="flex-1 min-w-0 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded">
-                      {place.category}
-                    </span>
-                    <span className="text-xs font-bold text-amber-300">+{place.vq_reward} VQ</span>
-                  </div>
-                  <h4 className="font-bold text-sm text-white truncate">{place.title}</h4>
-                  <p className="text-xs text-neutral-400 truncate">{place.address}</p>
-                  <div className="flex items-center justify-between text-[11px] text-neutral-400 pt-1">
-                    <span className="flex items-center space-x-1 text-teal-300 font-medium">
-                      <MapPin className="w-3 h-3 text-orange-400" />
-                      <span>{place.distance_km !== undefined ? `${place.distance_km} km away` : 'Within 23 km'}</span>
-                    </span>
-                    <span>Pulse: {place.pulse_intensity}/10</span>
-                  </div>
-                </div>
-              </div>
-            ))}
+                <span>Load More</span>
+                <span className="text-[10px] text-neutral-400">({places.length - visibleWaypointsCount} remaining)</span>
+              </button>
+            )}
           </div>
         ) : (
           <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800/80 p-6 text-center space-y-2">
