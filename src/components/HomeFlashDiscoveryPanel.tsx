@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CalendarDays, Compass, Flame, MapPin, Sparkles, Users, Clock } from 'lucide-react';
 import { FlashEvent } from '../domains/d11_events';
+import { FlashEventDetailModal } from './FlashEventDetailModal';
 import { VibePlace } from '../domains/d03_vibe_orbit';
 import { CityPulse, VibePulsesSummary } from '../domains/d04_geo_presence';
 
@@ -37,6 +38,7 @@ export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = (
   onSuggestVibe, onRsvp, rsvpEnabled, suggestionEnabled, rsvpJoined, rsvpLoading
 }) => {
   const [showAllFlashEvents, setShowAllFlashEvents] = useState(false);
+  const [showFlashDetail, setShowFlashDetail] = useState(false);
   const hasActiveFlash = Boolean(flashEvent && secondsLeft > 0);
   const picturePlaces = places.filter(place => Boolean(place.image_url));
   const realCities = pulsesSummary.cities.filter(city => Boolean(city.imageUrl));
@@ -61,10 +63,7 @@ export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = (
     else onNavigateTab('explore');
   };
 
-  const hunt = () => {
-    if (eventPlace) onSelectPlace(eventPlace);
-    else onNotify('This Flash Event has no available place destination yet.');
-  };
+  const hunt = () => setShowFlashDetail(true);
 
   const frameHeading = (title: string, detail: string) => (
     <div className="flex items-center justify-between gap-2">
@@ -149,6 +148,18 @@ export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = (
         </div>
         <p className="text-center text-xs text-neutral-400">Discover the drop. Catch the moment.</p>
         <p className="text-center text-[10px] font-black tracking-widest text-pink-400">VIBEQUEST · FLASH EVENTS</p>
+        {showFlashDetail && (
+          <FlashEventDetailModal
+            event={flashEvent}
+            place={eventPlace}
+            onClose={() => setShowFlashDetail(false)}
+            onViewPlace={onSelectPlace}
+            onRsvp={onRsvp}
+            rsvpEnabled={rsvpEnabled}
+            rsvpJoined={rsvpJoined}
+            rsvpLoading={rsvpLoading}
+          />
+        )}
       </section>
     );
   }
