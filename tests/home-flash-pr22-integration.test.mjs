@@ -12,7 +12,7 @@ test('Home uses server-backed D11 creator permission, not profile role or userna
   assert.match(home, /canCreateFlashEvent\(\)\.then\(/);
   assert.match(home, /\[user\?\.id\]/);
   assert.match(home, /onClick=\{handleCreateFlashEntry\}/);
-  assert.match(home, /if \(canCreateFlash\)/);
+  assert.match(home, /allowed = await canCreateFlashEvent\(\)/);
   assert.match(home, /canCreate=\{canCreateFlash\}/);
   assert.doesNotMatch(home, /user\?\.(?:role|username)\s*===\s*['"]admin['"]/);
   assert.match(modal, /canCreate: boolean/);
