@@ -17,7 +17,7 @@ import { HomeSocialFeed } from './HomeSocialFeed';
 import { VibePulsesCarousel } from './VibePulsesCarousel';
 import { HomeFlashDiscoveryPanel } from './HomeFlashDiscoveryPanel';
 import { SuggestVibeModal } from './SuggestVibeModal';
-import { joinFlashEvent, cancelFlashRsvp, getMyFlashRsvp, submitVibeSuggestion } from '../domains/d11_events/participation';
+import { joinFlashEvent, cancelFlashRsvp, getMyFlashRsvp, submitVibeSuggestion } from '../domains/d11_events';
 
 interface HomeTabProps {
   user: UserProfile | null;
