@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { FlashEvent } from './types';
+import { getVerifiedEventEntitlement } from '../d21_entitlements/api';
 
 const eventsEnabled = import.meta.env.VITE_D11_FLASH_EVENTS_ENABLED === 'true';
 
@@ -60,7 +61,13 @@ export async function canCreateFlashEvent(): Promise<boolean> {
     .eq('active', true)
     .maybeSingle();
 
-  return !error && !!data;
+  if (error) return false;
+  if (data) return true;
+  try {
+    return Boolean(await getVerifiedEventEntitlement());
+  } catch {
+    return false;
+  }
 }
 
 export async function createFlashEvent(params: {
@@ -79,7 +86,7 @@ export async function createFlashEvent(params: {
   const { data: auth, error: authError } = await supabase.auth.getUser();
   if (authError || !auth.user) return { success: false, error: 'Sign in to create Flash Events.' };
   if (!(await canCreateFlashEvent())) {
-    return { success: false, error: 'Only authorized platform administrators can create Flash Events.' };
+    return { success: false, error: 'Only server-verified Pro, Business or App Admin accounts can create Flash Events.' };
   }
 
   const title = params.title.trim();
