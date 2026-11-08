@@ -7,14 +7,16 @@ const api = readFileSync(new URL('../src/domains/d11_events/api.ts', import.meta
 
 test('Flash card keeps a real-photo suggestion slot but does not fake a live event', () => {
   assert.match(home, /places\.find\(place => Boolean\(place\.image_url\)\)/);
-  assert.match(home, /alt=\{featuredPlace\.title\}/);
+  assert.match(home, /alt=\{photoPlace\.title\}/);
+  assert.match(home, /photoPlace = hasActiveFlash/);
+  assert.match(home, /Event location/);
   assert.match(home, /Suggested place/);
   assert.match(home, /No Flash Events are active right now\./);
   assert.match(home, /\{hasActiveFlash \? \(/);
 });
 
 test('Create Flash button is available as an upgrade entry point for regular users', () => {
-  assert.match(home, /\+ CREATE FLASH/);
+  assert.match(home, /\+ CREATE EVENT/);
   assert.match(home, /setIsFlashUpgradeOpen\(true\)/);
   assert.match(home, /Upgrade to Pro or Business/);
   assert.match(home, /Pro account/);
