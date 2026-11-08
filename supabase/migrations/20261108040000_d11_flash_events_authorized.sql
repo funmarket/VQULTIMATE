@@ -44,7 +44,7 @@ grant insert (title,description,place_id,starts_at,ends_at,kind)
 drop policy if exists d11_public_active_events_read on public.flash_events;
 create policy d11_public_active_events_read on public.flash_events
   for select to anon,authenticated
-  using (status='active' and starts_at <= now() and ends_at > now());
+  using (status='active' and starts_at <= now() + interval '60 minutes' and ends_at > now());
 drop policy if exists d11_admin_only_event_create on public.flash_events;
 create policy d11_admin_only_event_create on public.flash_events
   for insert to authenticated
@@ -52,12 +52,13 @@ create policy d11_admin_only_event_create on public.flash_events
     created_by_auth_user_id = (select auth.uid())
     and status = 'active'
     and starts_at >= now() - interval '2 minutes'
-    and starts_at <= now() + interval '5 minutes'
+    and starts_at <= now() + interval '30 days'
     and exists (
       select 1 from public.vq_admin_assignments a
       where a.auth_user_id = (select auth.uid())
         and a.active = true and a.role = 'platform_admin'
     )
   );
+-- Scheduled events remain visible only within 60 minutes of start; event expiry is based on ends_at.
 -- No update/delete grants; no forged event state changes from clients.
 -- Business operator authorizations require a separate verified D11 entitlement contract.
