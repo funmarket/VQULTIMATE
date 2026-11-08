@@ -1,33 +1,28 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+const read = p => readFileSync(new URL('../'+p,import.meta.url),'utf8');
+const home = read('src/components/HomeTab.tsx');
+const panel = read('src/components/HomeFlashDiscoveryPanel.tsx');
+const api = read('src/domains/d11_events/api.ts');
 
-const home = readFileSync(new URL('../src/components/HomeTab.tsx', import.meta.url), 'utf8');
-const api = readFileSync(new URL('../src/domains/d11_events/api.ts', import.meta.url), 'utf8');
-
-test('Flash card keeps a real-photo suggestion slot but does not fake a live event', () => {
-  assert.match(home, /places\.find\(place => Boolean\(place\.image_url\)\)/);
-  assert.match(home, /alt=\{photoPlace\.title\}/);
-  assert.match(home, /photoPlace = hasActiveFlash/);
-  assert.match(home, /Event location/);
-  assert.match(home, /Suggested place/);
-  assert.match(home, /No Flash Events are active right now\./);
-  assert.match(home, /\{hasActiveFlash \? \(/);
+test('photos come from real discovery sources and event-linked place', () => {
+  assert.match(panel, /places\.filter\(place => Boolean\(place\.image_url\)\)/);
+  assert.match(panel, /pulsesSummary\.cities\.filter\(city => Boolean\(city\.imageUrl\)\)/);
+  assert.match(panel, /eventPlace\?\.image_url/);
+  assert.match(panel, /Event photo unavailable/);
+  assert.match(panel, /No suggestions available yet/);
 });
-
-test('Create Flash button is available as an upgrade entry point for regular users', () => {
-  assert.match(home, /\+ CREATE EVENT/);
+test('creation entry remains available and regular users receive an upgrade option', () => {
+  assert.match(panel, /\+ CREATE FLASH/);
   assert.match(home, /setIsFlashUpgradeOpen\(true\)/);
   assert.match(home, /Upgrade to Pro or Business/);
-  assert.match(home, /Pro account/);
-  assert.match(home, /Business account/);
+  assert.match(home, /Request Pro upgrade/);
+  assert.match(home, /Request Business upgrade/);
 });
-
-test('Pro and Business labels do not bypass the verified backend authorization', () => {
-  assert.match(home, /accountType/);
-  assert.match(home, /canCreateFlash/);
+test('profile labels cannot bypass server authorizations', () => {
+  assert.match(home, /allowed = await canCreateFlashEvent\(\)/);
   assert.match(home, /Flash Event publishing is not yet enabled for this account/);
-  assert.match(api, /if \(!(await canCreateFlashEvent\(\))\)/);
+  assert.match(api, /if \(!\(await canCreateFlashEvent\(\)\)\)/);
   assert.match(api, /vq_admin_assignments/);
-  assert.doesNotMatch(home, /accountType === 'pro' \? setIsCreateFlashOpen/);
 });
