@@ -7,7 +7,7 @@ test('DriftFloatingBottleIndicator component satisfies reference visual and acce
   const indicatorPath = resolve('src/components/drift/DriftFloatingBottleIndicator.tsx');
   const content = readFileSync(indicatorPath, 'utf8');
 
-  assert.match(content, /vibe_message_bottle_d7f0607e\.png/, 'Must reference the attached authoritative bottle image asset');
+  assert.match(content, /\/assets\/aistudio\/vibe_message_bottle_d7f0607e\.png/, 'Must reference the authoritative bottle image asset via public root /assets path');
   assert.match(content, /Open Message in a Bottle/, 'Must have accessible label for screen readers');
   assert.match(content, /bottleCount <= 0/, 'Must hide when no active bottles exist');
   assert.match(content, /prefersReducedMotion/, 'Must support accessibility motion preferences');

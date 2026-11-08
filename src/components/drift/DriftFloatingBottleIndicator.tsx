@@ -58,7 +58,7 @@ export const DriftFloatingBottleIndicator: React.FC<DriftFloatingBottleIndicator
         {/* Bottle Image (no outer solid circle container, just bottle & flashing aura) */}
         <div className="relative w-14 h-14 flex items-center justify-center drop-shadow-[0_8px_20px_rgba(0,220,235,0.4)]">
           <img
-            src="/public/assets/aistudio/vibe_message_bottle_d7f0607e.png"
+            src="/assets/aistudio/vibe_message_bottle_d7f0607e.png"
             alt="Message in a Bottle"
             className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(236,72,153,0.4)] group-hover:scale-110 transition-transform duration-300"
           />
