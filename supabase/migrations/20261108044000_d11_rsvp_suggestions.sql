@@ -34,7 +34,7 @@ create policy d11_rsvp_live_event_self_insert on public.flash_event_rsvps
       select 1 from public.flash_events e
       where e.id = event_id
         and e.status = 'active'
-        and e.starts_at <= now()
+        and e.starts_at <= now() + interval '60 minutes'
         and e.ends_at > now()
     )
   );
