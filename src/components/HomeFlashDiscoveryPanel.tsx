@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CalendarDays, Compass, Flame, MapPin, Sparkles, Users, Clock } from 'lucide-react';
 import { FlashEvent } from '../domains/d11_events';
 import { VibePlace } from '../domains/d03_vibe_orbit';
@@ -6,6 +6,8 @@ import { CityPulse, VibePulsesSummary } from '../domains/d04_geo_presence';
 
 interface HomeFlashDiscoveryPanelProps {
   flashEvent: FlashEvent | null;
+  flashEvents: FlashEvent[];
+  onSelectFlashEvent: (event: FlashEvent) => void;
   secondsLeft: number;
   places: VibePlace[];
   pulsesSummary: VibePulsesSummary;
@@ -31,9 +33,10 @@ function Photo({ src, alt, className = '' }: { src: string; alt: string; classNa
 }
 
 export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = ({
-  flashEvent, secondsLeft, places, pulsesSummary, onCreateFlash, onNavigateTab, onSelectPlace, onNotify,
+  flashEvent, flashEvents, onSelectFlashEvent, secondsLeft, places, pulsesSummary, onCreateFlash, onNavigateTab, onSelectPlace, onNotify,
   onSuggestVibe, onRsvp, rsvpEnabled, suggestionEnabled, rsvpJoined, rsvpLoading
 }) => {
+  const [showAllFlashEvents, setShowAllFlashEvents] = useState(false);
   const hasActiveFlash = Boolean(flashEvent && secondsLeft > 0);
   const picturePlaces = places.filter(place => Boolean(place.image_url));
   const realCities = pulsesSummary.cities.filter(city => Boolean(city.imageUrl));
@@ -45,7 +48,12 @@ export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = (
   const more = suggestions.filter(item => item.id !== hero?.id).slice(0, 4);
   const eventPlace = hasActiveFlash ? places.find(place => place.id === flashEvent?.place_id) : undefined;
   const eventPhoto = eventPlace?.image_url || '';
+  const now = Date.now();
+  const startsInSeconds = flashEvent ? Math.max(0, Math.ceil((Date.parse(flashEvent.starts_at) - now) / 1000)) : 0;
+  const startsInMinutes = Math.ceil(startsInSeconds / 60);
   const timeLeft = Math.max(0, Math.ceil(secondsLeft / 60));
+  const galleryEvents = flashEvents.filter(event => event.id !== flashEvent?.id);
+  const galleryVisible = showAllFlashEvents ? galleryEvents : galleryEvents.slice(0, 4);
 
   const openSuggestion = (item: typeof suggestions[number]) => {
     if (item.kind === 'place') onSelectPlace(item.place);
@@ -110,16 +118,31 @@ export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = (
             <div className="mt-2 text-lg font-black text-white">{flashEvent.title}</div>
           </div>
           <div className="absolute bottom-3 right-3 rounded-xl border border-amber-500 bg-neutral-950/90 px-3 py-2 text-xs font-black text-amber-300">
-            <Clock className="mr-1 inline h-3.5 w-3.5" /> {timeLeft} MIN LEFT
+            <Clock className="mr-1 inline h-3.5 w-3.5" /> {startsInSeconds > 0 ? `STARTS IN ${startsInMinutes} MIN` : `${timeLeft} MIN LEFT`}
           </div>
         </div>
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-black text-white">MORE FLASH EVENTS</h3>
-          <span className="text-xs font-bold text-neutral-500">SEE ALL — SOON</span>
+          {galleryEvents.length > 4 ? (
+            <button type="button" onClick={() => setShowAllFlashEvents(value => !value)}
+              className="text-xs font-bold text-cyan-400">{showAllFlashEvents ? 'SHOW LESS' : 'SEE ALL ›'}</button>
+          ) : <span className="text-xs font-bold text-neutral-400">{galleryEvents.length} AVAILABLE</span>}
         </div>
-        <div className="grid grid-cols-4 gap-2" aria-label="More Flash Events are not available yet">
-          {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className={thumbnail} aria-hidden="true">
+        <div className="grid grid-cols-4 gap-2" aria-label={galleryEvents.length ? 'More Flash Events' : 'More Flash Events are not available yet'}>
+          {galleryVisible.map(event => {
+            const place = places.find(place => place.id === event.place_id);
+            return (
+              <button type="button" key={event.id} onClick={() => onSelectFlashEvent(event)}
+                className={thumbnail} aria-label={`View Flash Event: ${event.title}`}>
+                {place?.image_url ? <Photo src={place.image_url} alt={event.title} /> : (
+                  <div className="flex h-full items-center justify-center"><Sparkles className="h-4 w-4 text-fuchsia-300" /></div>
+                )}
+                <span className="absolute inset-x-0 bottom-0 bg-black/75 p-1 text-left text-[9px] font-bold text-white line-clamp-2">{event.title}</span>
+              </button>
+            );
+          })}
+          {Array.from({ length: Math.max(0, 4 - galleryVisible.length) }, (_, i) => (
+            <div key={'empty-flash-' + i} className={thumbnail} aria-hidden="true">
               <div className="flex h-full items-center justify-center"><Sparkles className="h-4 w-4 text-neutral-600" /></div>
             </div>
           ))}
