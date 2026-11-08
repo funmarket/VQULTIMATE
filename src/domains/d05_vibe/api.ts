@@ -53,14 +53,12 @@ export async function fetchVibePosts(): Promise<VibePostItem[]> {
 }
 
 export async function createVibePost(post: VibePostItem): Promise<boolean> {
-  try {
-    const raw = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_POSTS_KEY) : null;
-    const list: VibePostItem[] = raw ? JSON.parse(raw) : [];
-    list.unshift(post);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(list));
-    }
-  } catch {}
+  // Browser object URLs expire with their creating context and must never
+  // be persisted as post media or presented as durable remote content.
+  if (post.image_url?.startsWith('blob:') || post.selfie_url?.startsWith('blob:')) {
+    console.warn('Refusing to persist temporary blob URL as a Vibe post.');
+    return false;
+  }
 
   try {
     const { error } = await supabase
@@ -81,6 +79,14 @@ export async function createVibePost(post: VibePostItem): Promise<boolean> {
       console.warn('Supabase vibe_posts insert warning:', error);
       return false;
     }
+
+    // Cache only after the backend has confirmed the durable post.
+    try {
+      const raw = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_POSTS_KEY) : null;
+      const list: VibePostItem[] = raw ? JSON.parse(raw) : [];
+      if (!list.some(item => item.id === post.id)) list.unshift(post);
+      if (typeof window !== 'undefined') localStorage.setItem(LOCAL_POSTS_KEY, JSON.stringify(list));
+    } catch {}
     return true;
   } catch (err) {
     console.warn('Supabase vibe_posts insert exception:', err);
