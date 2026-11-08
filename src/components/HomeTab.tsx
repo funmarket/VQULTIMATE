@@ -5,13 +5,16 @@ import {
 } from 'lucide-react';
 import { fetchNearbyPlaces, VibePlace, getDeviceLocation } from '../domains/d03_vibe_orbit';
 import { fetchCulturalTrails, fetchVibeGuardians, CulturalTrail, VibeGuardian, TrailWaypoint } from '../domains/d07_trails';
-import { fetchActiveFlashEvent, FlashEvent } from '../domains/d11_events';
+import { fetchActiveFlashEvent, fetchFlashEvents, submitVibeSuggestion, FlashEvent, SuggestionCategory } from '../domains/d11_events';
 import { fetchCommentsForPost, addCommentToPost, VibeComment } from '../domains/d05_vibe';
 import { fetchCityPulses, VibePulsesSummary, CityPulse } from '../domains/d04_geo_presence';
 import { UserProfile } from '../domains/d01_auth';
 import { TrailDetailModal } from './TrailDetailModal';
 import { GuardianDetailModal } from './GuardianDetailModal';
 import { CreateFlashModal } from './CreateFlashModal';
+import { SuggestVibeModal } from './SuggestVibeModal';
+import { FlashEventDetailModal } from './FlashEventDetailModal';
+import { HomeFlashDiscoveryPanel } from './HomeFlashDiscoveryPanel';
 import { HomeSocialFeed } from './HomeSocialFeed';
 import { VibePulsesCarousel } from './VibePulsesCarousel';
 
@@ -32,10 +35,15 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
     source: 'calculated_baseline'
   });
   const [flashEvent, setFlashEvent] = useState<FlashEvent | null>(null);
+  const [flashEvents, setFlashEvents] = useState<FlashEvent[]>([]);
   const [secondsLeft, setSecondsLeft] = useState<number>(0);
   const [selectedTrail, setSelectedTrail] = useState<CulturalTrail | null>(null);
   const [selectedGuardian, setSelectedGuardian] = useState<VibeGuardian | null>(null);
+  const [selectedFlashEvent, setSelectedFlashEvent] = useState<FlashEvent | null>(null);
   const [isCreateFlashOpen, setIsCreateFlashOpen] = useState(false);
+  const [isSuggestModalOpen, setIsSuggestModalOpen] = useState(false);
+  const [rsvpJoined, setRsvpJoined] = useState(false);
+  const [rsvpLoading, setRsvpLoading] = useState(false);
   const [homeToast, setHomeToast] = useState<string | null>(null);
 
   // Social feed comments modal state
@@ -48,8 +56,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
 
   const loadFlash = async () => {
     const ev = await fetchActiveFlashEvent();
+    const evs = await fetchFlashEvents();
     setFlashEvent(ev);
     if (ev) setSecondsLeft(ev.seconds_left);
+    setFlashEvents(evs.length > 0 ? evs : (ev ? [ev] : []));
   };
 
   useEffect(() => {
@@ -77,6 +87,24 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const showToast = (msg: string) => {
     setHomeToast(msg);
     setTimeout(() => setHomeToast(null), 3000);
+  };
+
+  const handleRsvp = async () => {
+    if (!flashEvent) return;
+    setRsvpLoading(true);
+    await new Promise(r => setTimeout(r, 600));
+    setRsvpJoined(prev => !prev);
+    setRsvpLoading(false);
+    showToast(rsvpJoined ? 'Cancelled RSVP for Flash Event.' : 'Saved your spot for Flash Event!');
+  };
+
+  const handleSuggestSubmit = async (value: { title: string; description: string; category: SuggestionCategory }) => {
+    const res = await submitVibeSuggestion(value);
+    if (res.success) {
+      showToast('Vibe suggestion submitted to review queue.');
+      setIsSuggestModalOpen(false);
+    }
+    return res;
   };
 
   const handleViewCityMap = (city?: CityPulse) => {
@@ -132,8 +160,6 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
     }
   };
 
-  const minutesLeft = Math.floor(secondsLeft / 60);
-
   return (
     <div className="space-y-6 pb-24 text-white max-w-md mx-auto box-border overflow-x-hidden relative">
       {/* Toast Notification */}
@@ -144,121 +170,53 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         </div>
       )}
 
-      {/* Flash Alert (State A) or Vibe Suggestions (State B) */}
-      {flashEvent && secondsLeft > 0 ? (
-        <div className="rounded-3xl bg-neutral-900 border border-purple-500/30 p-5 shadow-2xl space-y-4 animate-fadeIn relative overflow-hidden">
-          <div className="flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() => setIsCreateFlashOpen(true)}
-              className="px-4 py-2.5 rounded-full border border-neutral-700 hover:border-neutral-500 bg-neutral-950 text-white font-bold text-xs tracking-wider transition cursor-pointer flex items-center space-x-1 shadow-md"
-            >
-              <span>+ CREATE FLASH</span>
-            </button>
+      {/* Canonical Home Flash & Suggestions Discovery Panel */}
+      <HomeFlashDiscoveryPanel
+        flashEvent={flashEvent}
+        flashEvents={flashEvents}
+        onSelectFlashEvent={(ev) => setSelectedFlashEvent(ev)}
+        secondsLeft={secondsLeft}
+        places={places}
+        pulsesSummary={pulsesSummary}
+        onCreateFlash={() => setIsCreateFlashOpen(true)}
+        onNavigateTab={onNavigateTab}
+        onSelectPlace={onSelectPlace}
+        onNotify={showToast}
+        onSuggestVibe={() => setIsSuggestModalOpen(true)}
+        onRsvp={handleRsvp}
+        rsvpEnabled={true}
+        suggestionEnabled={true}
+        rsvpJoined={rsvpJoined}
+        rsvpLoading={rsvpLoading}
+      />
 
-            <button
-              type="button"
-              onClick={() => {
-                if (flashEvent.place_id) {
-                  const found = places.find(p => p.id === flashEvent.place_id);
-                  if (found) onSelectPlace(found);
-                  else onNavigateTab('explore');
-                } else {
-                  onNavigateTab('explore');
-                }
-              }}
-              className="px-5 py-2.5 rounded-full bg-white hover:bg-neutral-200 text-neutral-950 font-black text-xs uppercase tracking-wider transition cursor-pointer flex items-center space-x-1.5 shadow-lg shadow-white/10 active:scale-95"
-            >
-              <span>HUNT NOW! 🏃</span>
-            </button>
-          </div>
+      {/* Suggest Vibe Modal */}
+      {isSuggestModalOpen && (
+        <SuggestVibeModal
+          onClose={() => setIsSuggestModalOpen(false)}
+          onSubmit={handleSuggestSubmit}
+          onSubmitted={() => {
+            setIsSuggestModalOpen(false);
+            showToast('Vibe suggestion successfully submitted for review.');
+          }}
+        />
+      )}
 
-          <div className="flex items-center space-x-2 text-sm">
-            <span className="text-orange-400">🎭</span>
-            <span className="font-bold text-white tracking-tight">Flash Alert</span>
-            <span className="text-neutral-500 font-light">|</span>
-            <span className="font-bold text-pink-500 tracking-tight">Happening Now</span>
-          </div>
-
-          <div className="space-y-1.5">
-            <h3 className="font-bold text-base text-white tracking-tight">
-              {flashEvent.title}
-            </h3>
-            <p className="text-xs text-neutral-300 leading-relaxed">
-              {flashEvent.description}
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between pt-2 border-t border-neutral-800 text-xs">
-            <div>
-              <span className="text-pink-500 font-bold">Reward: 500</span>
-              <span className="text-white font-bold ml-1">VIBE Points</span>
-            </div>
-            <div className="flex items-center space-x-1 text-neutral-400 font-medium">
-              <Clock className="w-3.5 h-3.5 text-pink-500 animate-pulse" />
-              <span className="text-white font-bold">{minutesLeft}m left</span>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-3xl bg-neutral-900 border border-teal-500/30 p-5 shadow-2xl space-y-4 animate-fadeIn relative overflow-hidden">
-          <div className="flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() => showToast('Vibe suggestion submitted to review queue.')}
-              className="px-4 py-2.5 rounded-full border border-neutral-700 hover:border-neutral-500 bg-neutral-950 text-white font-bold text-xs tracking-wider transition cursor-pointer flex items-center space-x-1 shadow-md"
-            >
-              <span>+ SUGGEST VIBE</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onNavigateTab('explore')}
-              className="px-5 py-2.5 rounded-full bg-white hover:bg-neutral-200 text-neutral-950 font-black text-xs uppercase tracking-wider transition cursor-pointer flex items-center space-x-1.5 shadow-lg shadow-white/10 active:scale-95"
-            >
-              <span>EXPLORE NOW! 🧭</span>
-            </button>
-          </div>
-
-          <div className="flex items-center space-x-2 text-sm">
-            <span className="text-teal-400">✨</span>
-            <span className="font-bold text-white tracking-tight">Vibe Suggestions</span>
-            <span className="text-neutral-500 font-light">|</span>
-            <span className="font-bold text-teal-400 tracking-tight">For You</span>
-          </div>
-
-          <div className="space-y-1.5">
-            <h3 className="font-bold text-base text-white tracking-tight">
-              Curated Discovery & District Recommendations
-            </h3>
-            <p className="text-xs text-neutral-300 leading-relaxed">
-              Explore trending local waypoints, cultural circuits, and top-rated leisure spots curated by community nodes.
-            </p>
-          </div>
-
-          <div className="space-y-2 pt-2 border-t border-neutral-800">
-            <span className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">More Suggestions</span>
-            <div className="grid grid-cols-4 gap-2">
-              {places.slice(0, 4).map((p) => (
-                <div
-                  key={p.id}
-                  onClick={() => onSelectPlace(p)}
-                  className="rounded-xl overflow-hidden aspect-square bg-neutral-950 border border-neutral-800 hover:border-teal-400 cursor-pointer relative group shadow-md"
-                >
-                  <img src={p.image_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=200&q=80'} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-1.5">
-                    <span className="text-[9px] font-bold text-white truncate">{p.title}</span>
-                  </div>
-                </div>
-              ))}
-              {places.length === 0 && [1, 2, 3, 4].map((i) => (
-                <div key={i} className="rounded-xl overflow-hidden aspect-square bg-neutral-950 border border-neutral-800 flex items-center justify-center text-[10px] text-neutral-500">
-                  Waypoint {i}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* Flash Event Detail Modal */}
+      {selectedFlashEvent && (
+        <FlashEventDetailModal
+          event={selectedFlashEvent}
+          place={places.find(p => p.id === selectedFlashEvent.place_id)}
+          onClose={() => setSelectedFlashEvent(null)}
+          onViewPlace={(p) => {
+            setSelectedFlashEvent(null);
+            onSelectPlace(p);
+          }}
+          onRsvp={handleRsvp}
+          rsvpEnabled={true}
+          rsvpJoined={rsvpJoined}
+          rsvpLoading={rsvpLoading}
+        />
       )}
 
       {/* Vibe Pulses — Exact Visual Reference & Genuine City Aggregation */}
@@ -594,6 +552,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
       {isCreateFlashOpen && (
         <CreateFlashModal
           user={user}
+          canCreate={Boolean(user?.role === 'admin' || user?.tier === 'pro' || user?.tier === 'business' || user?.accountType === 'pro')}
+          places={places}
           onClose={() => setIsCreateFlashOpen(false)}
           onCreated={loadFlash}
           onToast={showToast}
