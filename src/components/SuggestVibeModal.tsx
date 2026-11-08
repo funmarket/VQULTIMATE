@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { SuggestionCategory } from '../domains/d11_events/participation';
+import { SuggestionCategory } from '../domains/d11_events';
 
 interface SuggestVibeModalProps {
   onClose: () => void;
