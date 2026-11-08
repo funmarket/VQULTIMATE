@@ -9,21 +9,39 @@ interface PurseTabProps {
 
 export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
   const [transactions, setTransactions] = useState<VQTransaction[]>([]);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [staked, setStaked] = useState(false);
   const [stakeSuccess, setStakeSuccess] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      fetchUserTransactions(user.id).then((data) => {
-        setTransactions(data);
-        setLoading(false);
-      });
-    } else {
-      setTransactions([]);
+    let active = true;
+    setLoading(true);
+    setTransactions([]);
+    setHistoryError(null);
+
+    if (!user) {
       setLoading(false);
+      return () => { active = false; };
     }
-  }, [user]);
+
+    fetchUserTransactions(user.id)
+      .then((result) => {
+        if (!active) return;
+        setTransactions(result.transactions);
+        setHistoryError(result.error);
+      })
+      .catch((error) => {
+        if (!active) return;
+        setTransactions([]);
+        setHistoryError(error instanceof Error ? error.message : 'Transaction history could not be loaded.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => { active = false; };
+  }, [user?.id]);
 
   const handleStake = () => {
     setStaked(true);
@@ -107,7 +125,16 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
           <span>Transaction Ledger</span>
         </h3>
 
-        {transactions.length > 0 ? (
+        {loading ? (
+          <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800 p-6 text-center text-xs text-neutral-400">
+            Loading transaction history...
+          </div>
+        ) : historyError ? (
+          <div role="alert" className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-6 text-center space-y-2">
+            <h4 className="font-bold text-xs text-amber-300">Transaction history unavailable</h4>
+            <p className="text-[11px] text-neutral-300">{historyError}</p>
+          </div>
+        ) : transactions.length > 0 ? (
           <div className="space-y-2">
             {transactions.map((tx) => (
               <div key={tx.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
