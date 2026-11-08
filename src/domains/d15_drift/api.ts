@@ -782,6 +782,27 @@ export async function fetchPrivateThreadById(threadId: string): Promise<DriftPri
   }
 }
 
+export async function fetchUserPrivateThreads(userId: string): Promise<DriftPrivateThread[]> {
+  try {
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from('drift_private_threads')
+      .select('*')
+      .or(`user_1_id.eq.${userId},user_2_id.eq.${userId}`)
+      .gt('expires_at', now)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.warn('fetchUserPrivateThreads error:', error);
+      return [];
+    }
+    return (data || []) as DriftPrivateThread[];
+  } catch (err) {
+    console.warn('fetchUserPrivateThreads exception:', err);
+    return [];
+  }
+}
+
 export async function fetchPrivateMessages(threadId: string): Promise<DriftPrivateMessage[]> {
   try {
     const now = new Date().toISOString();
