@@ -24,7 +24,8 @@ test('event and suggestion visuals are mutually exclusive and honest', () => {
 });
 test('D11 uses feature-flagged, time-bounded Supabase query', () => {
   assert.match(events, /VITE_D11_FLASH_EVENTS_ENABLED/);
-  assert.match(events, /if \(!eventsEnabled\) return null/);
+  assert.match(events, /if \(!eventsEnabled\) return \[\]/);
+  assert.match(events, /fetchDiscoverableFlashEvents/);
   assert.match(events, /\.from\('flash_events'\)/);
   assert.match(events, /\.lte\('starts_at'/);
   assert.match(events, /\.gt\('ends_at'/);
