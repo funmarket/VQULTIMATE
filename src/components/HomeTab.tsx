@@ -160,6 +160,11 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const photoPlace = hasActiveFlash
     ? places.find(place => place.id === flashEvent?.place_id && Boolean(place.image_url))
     : featuredPlace;
+  // City-pulse photography is a genuine discovery fallback, never imagery for a live event.
+  const featuredCity = !hasActiveFlash && !photoPlace
+    ? pulsesSummary.cities.find(city => Boolean(city.imageUrl))
+    : undefined;
+  const photoSource = photoPlace ? 'place' : featuredCity ? 'city' : 'none';
   const accountType = (user?.accountType || user?.tier || 'vibe').toLowerCase();
   const isProOrBusiness = accountType === 'pro' || accountType === 'business';
 
@@ -268,7 +273,20 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
               </button>
             </>
           )}
-          {!photoPlace && (
+          {photoSource === 'city' && featuredCity && (
+            <>
+              <img src={featuredCity.imageUrl} alt={`City discovery: ${featuredCity.city}`}
+                aria-label="City discovery image"
+                className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/90 via-neutral-950/20 to-transparent" />
+              <button type="button" onClick={() => onNavigateTab('explore')}
+                className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2 text-left text-xs text-white">
+                <span className="truncate font-bold">{featuredCity.city}</span>
+                <span className="shrink-0 text-[10px] font-bold text-amber-300 uppercase">City discovery</span>
+              </button>
+            </>
+          )}
+          {!photoPlace && !featuredCity && (
             <div className="absolute inset-0 flex items-center justify-center gap-2 text-neutral-300/70">
               <Sparkles className="h-5 w-5 text-purple-400" />
               <span className="text-xs font-semibold tracking-wide">Explore local vibes</span>
