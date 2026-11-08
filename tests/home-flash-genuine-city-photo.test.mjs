@@ -1,25 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+const panel = readFileSync(new URL('../src/components/HomeFlashDiscoveryPanel.tsx',import.meta.url),'utf8');
 
-const home = readFileSync(new URL('../src/components/HomeTab.tsx', import.meta.url), 'utf8');
-
-test('Flash imagery falls back to genuine city-pulse imagery when location-based places have no photo', () => {
-  assert.match(home, /pulsesSummary\.cities\.find\(city => Boolean\(city\.imageUrl\)\)/);
-  assert.match(home, /photoPlace \? 'place' : featuredCity \? 'city' : 'none'/);
-  assert.match(home, /City discovery/);
-  assert.match(home, /src=\{featuredCity\.imageUrl\}/);
+test('no-event suggestion feed reuses genuine city image data', () => {
+  assert.match(panel, /pulsesSummary\.cities\.filter/);
+  assert.match(panel, /city\.imageUrl/);
+  assert.match(panel, /kind: 'city'/);
+  assert.match(panel, /onNavigateTab\('explore'\)/);
 });
-
-test('City discovery is not represented as an active Flash Event or venue', () => {
-  assert.match(home, /aria-label="City discovery image"/);
-  assert.match(home, /No Flash Events are active right now\./);
-  assert.match(home, /\{hasActiveFlash \? \(/);
-  assert.match(home, /onClick=\{\(\) => onNavigateTab\('explore'\)\}/);
+test('live event image is tied only to actual event place', () => {
+  assert.match(panel, /places\.find\(place => place\.id === flashEvent\?\.place_id\)/);
+  assert.match(panel, /eventPhoto/);
+  assert.doesNotMatch(panel, /CANONICAL_CITY_BASELINES|Secret Pop-Up Gallery/);
 });
-
-test('When genuine imagery is unavailable, card dimensions and honest placeholder remain', () => {
-  assert.match(home, /relative h-32 rounded-2xl overflow-hidden/);
-  assert.match(home, /Explore local vibes/);
-  assert.match(home, /!photoPlace && !featuredCity/);
+test('missing genuine media has an honest fixed-size fallback', () => {
+  assert.match(panel, /relative h-56 overflow-hidden rounded-2xl/);
+  assert.match(panel, /No suggestions available yet/);
+  assert.match(panel, /Event photo unavailable/);
 });
