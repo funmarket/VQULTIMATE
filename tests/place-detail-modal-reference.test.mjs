@@ -12,7 +12,7 @@ test('PlaceDetailModal component satisfies reference visual and behavioral contr
   assert.match(modalContent, /#0d111a|neutral-900/, 'Must use deep dark background container');
 
   // 2. Hero image with emerald category pill and close button
-  assert.match(modalContent, /CAFÉS/, 'Must render category pill including CAFÉS');
+  assert.match(modalContent, /categoryLabel/, 'Must render category pill');
   assert.match(modalContent, /#00d68f|emerald-400|emerald-500/, 'Category pill must have vibrant emerald styling');
   assert.match(modalContent, /Close spot details|aria-label="Close/, 'Must have close button on hero image');
 
@@ -32,8 +32,9 @@ test('PlaceDetailModal component satisfies reference visual and behavioral contr
   assert.match(modalContent, /Vibe Confidence:/, 'Must display Vibe Confidence label');
   assert.match(modalContent, /confirmations/, 'Must display confirmations count');
   assert.match(modalContent, /#00e5a3|emerald-400|teal-400/, 'Vibe confidence must have bright cyan/teal styling');
-  assert.match(modalContent, /OpenStreetMap/, 'Must state location has been mapped on OpenStreetMap');
-  assert.match(modalContent, /Verified by VibeQuest community nodes/, 'Must include VibeQuest community nodes verification');
+  assert.doesNotMatch(modalContent, /OpenStreetMap/, 'Must not state location has been mapped on OpenStreetMap');
+  assert.doesNotMatch(modalContent, /Verified by VibeQuest community nodes/, 'Must not include fake community nodes verification');
+  assert.match(modalContent, /Verified Google Places venue/, 'Must display verified Google Places venue status');
 
   // 6. AI Vibe Match Score card
   assert.match(modalContent, /AI VIBE MATCH SCORE/, 'Must display AI VIBE MATCH SCORE banner');

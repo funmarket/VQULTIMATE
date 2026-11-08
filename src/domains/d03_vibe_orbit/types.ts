@@ -43,4 +43,5 @@ export interface VibePlace {
   phone?: string;
   price_band?: string;
   ai_match_score?: number;
+  open_now?: boolean;
 }

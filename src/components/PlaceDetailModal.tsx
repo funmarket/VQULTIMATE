@@ -48,7 +48,7 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
       ? `${(place.distance_meters / 1000).toFixed(2)} km`
       : '0.38 km';
   const matchScore = place.ai_match_score ?? 73;
-  const categoryLabel = (place.category === 'Spots' ? 'CAFÉS' : place.category.toUpperCase());
+  const categoryLabel = place.category.toUpperCase();
 
   const handleCheckInClick = () => {
     if (!isCheckedIn) {
@@ -171,15 +171,26 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
             {/* 4. Tab 1: Info (Exact visual reference replication) */}
             {activeTab === 'info' && (
               <div className="space-y-4 pt-1">
-                {/* Rating row: ⭐ 4.6 Out of 5.0 (31 check-ins) */}
-                <div className="flex items-center gap-1.5">
+                {/* Rating row: ⭐ 4.6 Out of 5.0 (31 reviews) */}
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-amber-400 text-base">⭐</span>
                   <span className="text-amber-400 font-black text-base">
                     {rating.toFixed(1)} Out of 5.0
                   </span>
                   <span className="text-neutral-400 text-xs font-medium ml-1">
-                    ({checkinsCount} check-ins)
+                    ({place.reviews_count !== undefined ? `${place.reviews_count} reviews` : `${checkinsCount} check-ins`})
                   </span>
+                  {typeof place.open_now === 'boolean' && (
+                    <span
+                      className={`ml-auto text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                        place.open_now
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                      }`}
+                    >
+                      {place.open_now ? 'Open Now' : 'Closed'}
+                    </span>
+                  )}
                 </div>
 
                 {/* Vibe Confidence row: 🛡️ Vibe Confidence: 92% (8 confirmations) */}
@@ -200,8 +211,7 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                     </span>
                   </div>
                   <p className="text-xs text-neutral-400 leading-relaxed pl-6">
-                    This location has been mapped on OpenStreetMap. You are currently located{' '}
-                    {distanceDisplay} away from this spot. Verified by VibeQuest community nodes.
+                    {distanceDisplay !== 'Unknown distance' ? `Located ${distanceDisplay} from your position.` : ''} Verified Google Places venue.
                   </p>
                 </div>
 

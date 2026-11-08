@@ -94,40 +94,13 @@ const EXCLUDED_TYPES = new Set([
 ]);
 
 const EXCLUDED_NAME_PATTERNS = [
-  /\bbank\b/i,
-  /\bbanque\b/i,
-  /\batm\b/i,
-  /\bschool\b/i,
-  /\bécole\b/i,
-  /\blycée\b/i,
-  /\bcollège\b/i,
-  /\buniversity\b/i,
-  /\buniversité\b/i,
-  /\bfaculté\b/i,
-  /\bhospital\b/i,
-  /\bhôpital\b/i,
-  /\bclinic\b/i,
-  /\bclinique\b/i,
-  /\bpharmacy\b/i,
-  /\bpharmacie\b/i,
-  /\bagence\b/i,
-  /\bagency\b/i,
-  /\bassurance\b/i,
-  /\binsurance\b/i,
-  /\bcabinet\b/i,
-  /\bnotaire\b/i,
-  /\bavocat\b/i,
-  /\blaw\b/i,
-  /\bpost\s*office\b/i,
-  /\bla\s*poste\b/i,
-  /\bpolice\b/i,
-  /\bgas\s*station\b/i,
-  /\bstation\s*service\b/i,
-  /\bsupermarket\b/i,
-  /\bsupérette\b/i,
-  /\bmonoprix\b/i,
-  /\bcarrefour\s*market\b/i,
-  /\bmagasin\s*général\b/i
+  /\b(school|école|ecole|lycée|lycee|collège|college|university|université|universite|faculté|faculte|institut|institute|académie|academie)\b/i,
+  /\b(hospital|hôpital|hopital|clinic|clinique|pharmacy|pharmacie|cabinet|médical|medical|santé|sante|dispensaire)\b/i,
+  /\b(police|protection\s*civile|civil\s*protection|gendarmerie|pompiers|municipalité|municipalite|commune|mairie|ministère|ministere|ambassade|consulat|tribunal)\b/i,
+  /\b(bank|banque|atm|assurance|insurance|notaire|avocat|courtier|finance)\b/i,
+  /\b(société|societe|ste\b|sté\b|sarl|s\.a\b|company|enterprise|entreprise|industrie|industry|manufactur|usine|holding|consulting|corporate|crown\s*maghreb|marquardt)\b/i,
+  /\b(supermarket|supérette|superette|monoprix|carrefour|magasin\s*général|épicerie|epicerie|station\s*service|totalenergies|shell|agil|ola\s*energy)\b/i,
+  /\b(post\s*office|la\s*poste|telecom|orange|ooredoo|tunisie\s*telecom)\b/i
 ];
 
 const CATEGORY_FALLBACK_IMAGES: Record<VibeCategory, string> = {
@@ -138,8 +111,28 @@ const CATEGORY_FALLBACK_IMAGES: Record<VibeCategory, string> = {
   'Night Owl': 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80'
 };
 
-function mapGoogleTypesToCategory(types: string[] = []): VibeCategory {
+function mapGoogleTypesToCategory(types: string[] = [], requestedCategory?: string): VibeCategory {
   const set = new Set(types);
+
+  if (requestedCategory && requestedCategory !== 'All') {
+    const cat = requestedCategory.toLowerCase();
+    if (cat.includes('food') && (set.has('restaurant') || set.has('cafe') || set.has('bakery') || set.has('meal_takeaway'))) {
+      return 'Food';
+    }
+    if ((cat.includes('night') || cat.includes('owl')) && (set.has('bar') || set.has('night_club') || set.has('lounge'))) {
+      return 'Night Owl';
+    }
+    if (cat.includes('art') && set.has('art_gallery')) {
+      return 'Art';
+    }
+    if (cat.includes('culture') && (set.has('museum') || set.has('movie_theater'))) {
+      return 'Culture';
+    }
+    if (cat.includes('spot') && (set.has('tourist_attraction') || set.has('park') || set.has('spa') || set.has('amusement_park') || set.has('bowling_alley'))) {
+      return 'Spots';
+    }
+  }
+
   if (set.has('bar') || set.has('night_club') || set.has('lounge')) {
     return 'Night Owl';
   }
@@ -159,24 +152,24 @@ function isStrictlyLeisurePlace(item: any): boolean {
   const types: string[] = Array.isArray(item?.types) ? item.types : [];
   const name: string = item?.name || '';
 
-  // 1. Reject if place has ANY excluded type
+  // 1. Must have at least one allowed leisure type
+  const hasAllowedLeisure = types.some((t) => ALLOWED_LEISURE_TYPES.has(t));
+  if (!hasAllowedLeisure) {
+    return false;
+  }
+
+  // 2. Reject if place has ANY excluded non-leisure type
   for (const t of types) {
     if (EXCLUDED_TYPES.has(t)) {
       return false;
     }
   }
 
-  // 2. Reject if name matches non-leisure entities
+  // 3. Reject if name matches non-leisure entities (schools, institutes, companies, hospitals, public offices)
   for (const pattern of EXCLUDED_NAME_PATTERNS) {
     if (pattern.test(name)) {
       return false;
     }
-  }
-
-  // 3. Must have at least one allowed leisure type
-  const hasAllowedLeisure = types.some((t) => ALLOWED_LEISURE_TYPES.has(t));
-  if (!hasAllowedLeisure) {
-    return false;
   }
 
   return true;
@@ -363,7 +356,7 @@ Deno.serve(async (request: Request) => {
           ? calculateHaversineMeters(lat, lng, pLat, pLng)
           : undefined;
 
-      const mappedCategory = mapGoogleTypesToCategory(item.types);
+      const mappedCategory = mapGoogleTypesToCategory(item.types, category);
       const photoRef = item.photos?.[0]?.photo_reference;
 
       const imageUrl =
@@ -378,6 +371,11 @@ Deno.serve(async (request: Request) => {
       const priceBands = ['Free', 'TND 1–10', 'TND 10–25', 'TND 25–50', 'TND 50+'];
       const priceBand =
         item.price_level !== undefined ? priceBands[item.price_level] || 'TND 10–30' : 'TND 10–30';
+
+      const openNow =
+        typeof item.opening_hours?.open_now === 'boolean'
+          ? item.opening_hours.open_now
+          : undefined;
 
       return {
         id: item.place_id,
@@ -400,9 +398,15 @@ Deno.serve(async (request: Request) => {
         confirmations_count: Math.min(50, Math.max(4, Math.round(reviewsCount / 10))),
         is_legendary: isLegendary,
         price_band: priceBand,
-        ai_match_score: Math.min(98, Math.max(65, Math.round(68 + (rating - 3) * 15)))
+        ai_match_score: Math.min(98, Math.max(65, Math.round(68 + (rating - 3) * 15))),
+        open_now: openNow
       };
     });
+
+    // If a specific category was requested, ensure returned places strictly match that category
+    if (category && category !== 'All') {
+      places = places.filter((p) => p.category === category);
+    }
 
     // Sort final results: distance (closest first), then by rating (highest first)
     places.sort((a, b) => {
