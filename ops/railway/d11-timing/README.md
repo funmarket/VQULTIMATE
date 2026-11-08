@@ -10,7 +10,7 @@
 
 ## Future staging service (separately approve before creating/deploying)
 
-1. Confirm the D11 migrations and event table exist in the target Supabase staging environment; verify permissions, event visibility and expiry with role-based tests. Existing D11 policies currently allow reads only after the start, so the normal frontend cannot yet discover events 60 minutes early; reconcile that policy separately before public release.
+1. Confirm the D11 migrations and event table exist in the target Supabase staging environment; verify permissions, event visibility and expiry with role-based tests. The D11 source migration now specifies visibility from 60 minutes before the start through the actual end time, but the migration is still unapplied and requires isolated authorization and timing tests before public release.
 2. Create a dedicated service inside the **existing** VQULTIMATE Railway project and staging environment. No new PostgreSQL/Redis required to run this probe.
 3. Provide server-only `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` and `D11_WORKER_ENABLED=true`. Never name secrets with `VITE_` and never copy service credentials into frontend source or logs.
 4. Configure `node worker.mjs` as start command with a working directory of `ops/railway/d11-timing`. Health, monitoring, cost and restart settings need an explicit release review. Run `npm test` first.
