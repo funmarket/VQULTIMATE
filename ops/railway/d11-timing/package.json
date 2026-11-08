@@ -1,0 +1,11 @@
+{
+  "name": "vqultimate-d11-railway-timing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node worker.mjs",
+    "test": "node --test *.test.mjs"
+  },
+  "engines": { "node": ">=20" }
+}
