@@ -180,8 +180,16 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
     }
   };
 
-  const handleCreateFlashEntry = () => {
-    if (canCreateFlash) {
+  const handleCreateFlashEntry = async () => {
+    // Always refresh server-backed rights at the action boundary: plans can expire or change.
+    let allowed = false;
+    try {
+      allowed = await canCreateFlashEvent();
+    } catch {
+      allowed = false;
+    }
+    setCanCreateFlash(allowed);
+    if (allowed) {
       setIsCreateFlashOpen(true);
     } else if (isProOrBusiness) {
       setFlashAccessNotice(true);
