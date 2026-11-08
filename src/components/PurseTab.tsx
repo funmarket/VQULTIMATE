@@ -54,7 +54,7 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
               <span>VQ Genesis Wallet</span>
             </span>
             <span className="text-[10px] bg-teal-500/20 text-teal-300 px-2.5 py-0.5 rounded-full border border-teal-500/30 font-semibold">
-              Supabase Verified
+              Profile Snapshot
             </span>
           </div>
 
@@ -68,7 +68,7 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
           <div className="grid grid-cols-2 gap-3 pt-2">
             <div className="rounded-2xl bg-neutral-950/60 border border-neutral-800 p-3">
               <span className="text-[10px] text-neutral-400">District Reputation</span>
-              <p className="text-lg font-bold text-teal-400 mt-0.5">{user?.reputation ?? 90}%</p>
+              <p className="text-lg font-bold text-teal-400 mt-0.5">{user?.reputation != null ? `${user.reputation}%` : '—'}</p>
             </div>
             <div className="rounded-2xl bg-neutral-950/60 border border-neutral-800 p-3">
               <span className="text-[10px] text-neutral-400">Network Tier</span>
