@@ -121,8 +121,14 @@ export const DriftMessageItem: React.FC<DriftMessageItemProps> = ({
             )
           )}
 
+          {msg.media_url?.startsWith('blob:') && (
+            <p className="text-xs text-amber-300" role="status">
+              This media was saved using a temporary browser link and is no longer available.
+            </p>
+          )}
+
           {/* Photo */}
-          {msg.media_type === 'photo' && msg.media_url && (
+          {msg.media_type === 'photo' && msg.media_url && !msg.media_url.startsWith('blob:') && (
             <div className="relative rounded-xl overflow-hidden border border-white/10 max-h-72">
               <img
                 src={msg.media_url}
@@ -136,7 +142,7 @@ export const DriftMessageItem: React.FC<DriftMessageItemProps> = ({
           )}
 
           {/* Voice Note */}
-          {msg.media_type === 'voice' && msg.media_url && (
+          {msg.media_type === 'voice' && msg.media_url && !msg.media_url.startsWith('blob:') && (
             <div className="flex items-center space-x-3 bg-black/40 p-2.5 rounded-xl border border-neutral-800">
               <button
                 onClick={() => onPlayVoice(msg.id, msg.media_url!)}
