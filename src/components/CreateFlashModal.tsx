@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { X, Zap, Clock, Shield, AlertCircle } from 'lucide-react';
 import { createFlashEvent } from '../domains/d11_events';
 import { UserProfile } from '../domains/d01_auth';
+import { VibePlace } from '../domains/d03_vibe_orbit';
 
 interface CreateFlashModalProps {
   user: UserProfile | null;
   canCreate: boolean;
+  places: VibePlace[];
   onClose: () => void;
   onCreated: () => void;
   onToast: (msg: string) => void;
@@ -14,6 +16,7 @@ interface CreateFlashModalProps {
 export const CreateFlashModal: React.FC<CreateFlashModalProps> = ({
   user,
   canCreate,
+  places,
   onClose,
   onCreated,
   onToast
@@ -22,6 +25,11 @@ export const CreateFlashModal: React.FC<CreateFlashModalProps> = ({
   const [description, setDescription] = useState('');
   const [kind, setKind] = useState('secret_party');
   const [durationMins, setDurationMins] = useState('120');
+  const [startsAtInput, setStartsAtInput] = useState(() => {
+    const local = new Date(Date.now() - new Date().getTimezoneOffset() * 60 * 1000);
+    return local.toISOString().slice(0, 16);
+  });
+  const [placeId, setPlaceId] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -40,14 +48,20 @@ export const CreateFlashModal: React.FC<CreateFlashModalProps> = ({
       return;
     }
 
+    const startDate = new Date(startsAtInput);
+    if (!Number.isFinite(startDate.getTime()) || startDate.getTime() < Date.now() - 120000) {
+      setErrorMsg('Choose a valid start time in the future.');
+      return;
+    }
     setLoading(true);
-    const startsAt = new Date().toISOString();
-    const endsAt = new Date(Date.now() + Number(durationMins) * 60 * 1000).toISOString();
+    const startsAt = startDate.toISOString();
+    const endsAt = new Date(startDate.getTime() + Number(durationMins) * 60 * 1000).toISOString();
 
     const res = await createFlashEvent({
       title: title.trim(),
       description: description.trim(),
       kind,
+      place_id: placeId || null,
       starts_at: startsAt,
       ends_at: endsAt,
       created_by: user?.id
@@ -55,7 +69,7 @@ export const CreateFlashModal: React.FC<CreateFlashModalProps> = ({
 
     setLoading(false);
     if (res.success) {
-      onToast('⚡ Flash Event successfully spawned on Home network!');
+      onToast('Flash Event saved. It becomes discoverable 60 minutes before its start.');
       onCreated();
       onClose();
     } else {
@@ -114,6 +128,24 @@ export const CreateFlashModal: React.FC<CreateFlashModalProps> = ({
               className="w-full px-4 py-3 rounded-2xl bg-neutral-950 border border-neutral-800 text-white text-sm focus:outline-none focus:border-orange-500 transition resize-none"
               required
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="flash-start" className="text-xs font-bold uppercase tracking-wider text-neutral-300">Event Start Time</label>
+            <input id="flash-start" type="datetime-local" value={startsAtInput}
+              onChange={e => setStartsAtInput(e.target.value)}
+              className="w-full px-4 py-3 rounded-2xl bg-neutral-950 border border-neutral-800 text-white text-sm"
+              required />
+            <p className="text-[11px] text-neutral-400">Scheduled events appear 60 minutes before their start and stay visible until they end.</p>
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="flash-place" className="text-xs font-bold uppercase tracking-wider text-neutral-300">Event Place (optional)</label>
+            <select id="flash-place" value={placeId} onChange={e => setPlaceId(e.target.value)}
+              className="w-full px-4 py-3 rounded-2xl bg-neutral-950 border border-neutral-800 text-white text-sm">
+              <option value="">No linked place</option>
+              {places.map(place => <option key={place.id} value={place.id}>{place.title}</option>)}
+            </select>
+            <p className="text-[11px] text-neutral-400">A linked place supplies real event location and available media.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
