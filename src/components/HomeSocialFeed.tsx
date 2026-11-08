@@ -141,10 +141,10 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onOpenComm
                 </div>
 
                 {/* Optional Image */}
-                {post.image_url && post.image_url.trim() !== '' && (
+                {post.image_url && post.image_url.trim() !== '' && !post.image_url.startsWith('blob:') && (
                   <div className="relative aspect-[4/5] bg-neutral-950">
                     <img src={post.image_url} alt="Scene" className="w-full h-full object-cover" />
-                    {post.selfie_url && (
+                    {post.selfie_url && !post.selfie_url.startsWith('blob:') && (
                       <div className="absolute top-3 left-3 w-20 h-28 rounded-2xl overflow-hidden border-2 border-orange-500 shadow-xl">
                         <img src={post.selfie_url} alt="Selfie" className="w-full h-full object-cover" />
                       </div>
