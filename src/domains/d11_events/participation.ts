@@ -41,9 +41,11 @@ export async function cancelFlashRsvp(eventId: string): Promise<{ success: boole
   const id = await currentAuthUserId();
   if (!id) return { success: false, error: 'Sign in to manage your RSVP.' };
   if (!eventId) return { success: false, error: 'Choose a Flash Event.' };
-  const { error } = await supabase.from('flash_event_rsvps')
-    .delete().eq('event_id', eventId).eq('auth_user_id', id);
-  return error ? { success: false, error: 'Could not cancel your RSVP.' } : { success: true };
+  const { data, error } = await supabase.from('flash_event_rsvps')
+    .delete().eq('event_id', eventId).eq('auth_user_id', id).select('id');
+  if (error) return { success: false, error: 'Could not cancel your RSVP.' };
+  if (!data?.length) return { success: false, error: 'No existing RSVP was found to cancel.' };
+  return { success: true };
 }
 
 export async function submitVibeSuggestion(params: {
