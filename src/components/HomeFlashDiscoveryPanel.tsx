@@ -32,7 +32,7 @@ export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = (
   const realCities = pulsesSummary.cities.filter(city => Boolean(city.imageUrl));
   const suggestions = [
     ...picturePlaces.map(place => ({ id: 'place:' + place.id, kind: 'place' as const, title: place.title, image: place.image_url, place })),
-    ...realCities.filter(city => !city.placeData).map(city => ({ id: 'city:' + city.id, kind: 'city' as const, title: city.city, image: city.imageUrl, city }))
+    ...realCities.map(city => ({ id: 'city:' + city.id, kind: 'city' as const, title: city.city, image: city.imageUrl, city }))
   ];
   const hero = suggestions[0];
   const more = suggestions.filter(item => item.id !== hero?.id).slice(0, 4);
@@ -42,6 +42,7 @@ export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = (
 
   const openSuggestion = (item: typeof suggestions[number]) => {
     if (item.kind === 'place') onSelectPlace(item.place);
+    else if (item.city.placeData) onSelectPlace(item.city.placeData);
     else onNavigateTab('explore');
   };
 
