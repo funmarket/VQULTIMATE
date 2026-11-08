@@ -13,6 +13,12 @@ interface HomeFlashDiscoveryPanelProps {
   onNavigateTab: (tab: 'explore' | 'vibe') => void;
   onSelectPlace: (place: VibePlace) => void;
   onNotify: (message: string) => void;
+  onSuggestVibe: () => void;
+  onRsvp: () => void;
+  rsvpEnabled: boolean;
+  suggestionEnabled: boolean;
+  rsvpJoined: boolean;
+  rsvpLoading: boolean;
 }
 
 const shell = 'rounded-[30px] border border-fuchsia-500/55 bg-gradient-to-br from-[#1b1920] via-[#19171e] to-[#17151c] p-4 sm:p-5 shadow-[0_10px_32px_rgba(0,0,0,0.45)] space-y-5 overflow-hidden';
@@ -25,7 +31,8 @@ function Photo({ src, alt, className = '' }: { src: string; alt: string; classNa
 }
 
 export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = ({
-  flashEvent, secondsLeft, places, pulsesSummary, onCreateFlash, onNavigateTab, onSelectPlace, onNotify
+  flashEvent, secondsLeft, places, pulsesSummary, onCreateFlash, onNavigateTab, onSelectPlace, onNotify,
+  onSuggestVibe, onRsvp, rsvpEnabled, suggestionEnabled, rsvpJoined, rsvpLoading
 }) => {
   const hasActiveFlash = Boolean(flashEvent && secondsLeft > 0);
   const picturePlaces = places.filter(place => Boolean(place.image_url));
@@ -80,10 +87,14 @@ export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = (
             <span className="block text-sm font-black text-amber-400">HUNT</span>
             <span className="mt-2 block border-t border-neutral-600 pt-2 text-[9px] font-bold text-neutral-200">JOIN THE QUEST</span>
           </button>
-          <div className="rounded-2xl border border-neutral-700 bg-[#27232c] px-1 py-3 text-center" aria-label="RSVP unavailable">
+          <button type="button" onClick={onRsvp} disabled={!rsvpEnabled || rsvpLoading}
+            aria-label={!rsvpEnabled ? 'RSVP unavailable' : rsvpJoined ? 'Cancel RSVP' : 'Save your spot'}
+            className="rounded-2xl border border-neutral-700 bg-[#27232c] px-1 py-3 text-center disabled:cursor-not-allowed disabled:opacity-75">
             <span className="block text-sm font-black text-cyan-400">RSVP</span>
-            <span className="mt-2 block border-t border-neutral-600 pt-2 text-[9px] font-bold text-neutral-400">Not available yet</span>
-          </div>
+            <span className="mt-2 block border-t border-neutral-600 pt-2 text-[9px] font-bold text-neutral-200">
+              {!rsvpEnabled ? 'Not available yet' : rsvpLoading ? 'PLEASE WAIT' : rsvpJoined ? 'CANCEL RSVP' : 'SAVE YOUR SPOT'}
+            </span>
+          </button>
           <div className="rounded-2xl border border-neutral-700 bg-[#27232c] px-1 py-3 text-center" aria-label="Rewards not configured">
             <span className="block text-sm font-black text-pink-400">REWARDS</span>
             <span className="mt-2 block border-t border-neutral-600 pt-2 text-[9px] font-bold text-neutral-400">Not configured</span>
@@ -124,7 +135,7 @@ export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = (
       {frameHeading('Vibe Suggestions', 'FOR YOU')}
       <div className="flex gap-2.5">
         <button type="button" onClick={() => onNavigateTab('explore')} className={whiteAction}>EXPLORE NOW! ↗</button>
-        <button type="button" onClick={() => onNotify('Suggestion submissions are not available yet.')} className={outlinedAction}>+ SUGGEST VIBE</button>
+        <button type="button" onClick={onSuggestVibe} disabled={!suggestionEnabled} aria-label={!suggestionEnabled ? 'Suggestion submissions are not available yet' : 'Suggest Vibe'} className={outlinedAction + ' disabled:opacity-60 disabled:cursor-not-allowed'}>+ SUGGEST VIBE</button>
       </div>
       <div className="space-y-1.5">
         <h3 className="text-lg font-black text-white">Curated for You</h3>
