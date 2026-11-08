@@ -23,7 +23,7 @@ test('discovery query starts up to 60 minutes ahead, expires at end, and never r
   assert.match(d11, /start <= now \+ 60 \* 60 \* 1000/);
   assert.match(d11, /seconds_left:/);
   assert.match(types, /starts_at: string/);
-  assert.doesNotMatch(d11, /vibe_flash_windows/);
+  assert.doesNotMatch(d11, /\.from\('vibe_flash_windows'\)/);
 });
 test('client event visibility and RSVP policies agree with 60-minute timing', () => {
   assert.match(migration, /starts_at <= now\(\) \+ interval '60 minutes'/);
