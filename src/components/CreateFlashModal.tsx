@@ -32,7 +32,7 @@ export const CreateFlashModal: React.FC<CreateFlashModalProps> = ({
     setErrorMsg(null);
 
     if (!isAdmin) {
-      setErrorMsg('Unauthorized: Only server-verified platform administrators can create Flash Events.');
+      setErrorMsg('Unauthorized: Only server-verified Pro, Business or App Admin accounts can create Flash Events.');
       return;
     }
     if (!title.trim() || !description.trim()) {
@@ -87,7 +87,7 @@ export const CreateFlashModal: React.FC<CreateFlashModalProps> = ({
         {!isAdmin && (
           <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center space-x-2">
             <Shield className="w-4 h-4 flex-shrink-0" />
-            <span>Only authorized platform administrators can create Flash Events.</span>
+            <span>Only verified Pro, Business or App Admin accounts can create Flash Events.</span>
           </div>
         )}
 
