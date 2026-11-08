@@ -13,7 +13,7 @@ test('entitlements are server identity bound, not profile account_type',()=>{
   assert.match(ent,/auth_user_id/);
   assert.match(ent,/expires_at/);
   assert.doesNotMatch(ent,/profiles.*account_type/);
-  assert.match(event,/from\('account_entitlements'\)/);
+  assert.match(event,/getVerifiedEventEntitlement\(\)/);
   assert.match(event,/canCreateFlashEvent/);
   assert.doesNotMatch(event,/row\.account_type/);
 });
