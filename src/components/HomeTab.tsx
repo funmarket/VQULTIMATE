@@ -15,6 +15,7 @@ import { GuardianDetailModal } from './GuardianDetailModal';
 import { CreateFlashModal } from './CreateFlashModal';
 import { HomeSocialFeed } from './HomeSocialFeed';
 import { VibePulsesCarousel } from './VibePulsesCarousel';
+import { HomeFlashDiscoveryPanel } from './HomeFlashDiscoveryPanel';
 
 interface HomeTabProps {
   user: UserProfile | null;
@@ -155,16 +156,6 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
     }
   };
 
-  const hasActiveFlash = Boolean(flashEvent && secondsLeft > 0);
-  const featuredPlace = places.find(place => Boolean(place.image_url));
-  const photoPlace = hasActiveFlash
-    ? places.find(place => place.id === flashEvent?.place_id && Boolean(place.image_url))
-    : featuredPlace;
-  // City-pulse photography is a genuine discovery fallback, never imagery for a live event.
-  const featuredCity = !hasActiveFlash && !photoPlace
-    ? pulsesSummary.cities.find(city => Boolean(city.imageUrl))
-    : undefined;
-  const photoSource = photoPlace ? 'place' : featuredCity ? 'city' : 'none';
   const accountType = (user?.accountType || user?.tier || 'vibe').toLowerCase();
   const isProOrBusiness = accountType === 'pro' || accountType === 'business';
 
@@ -202,8 +193,6 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
       setIsFlashUpgradeOpen(true);
     }
   };
-  const minutesLeft = Math.floor(secondsLeft / 60);
-
   return (
     <div className="space-y-6 pb-24 text-white max-w-md mx-auto box-border overflow-x-hidden relative">
       {/* Toast Notification */}
@@ -214,125 +203,17 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         </div>
       )}
 
-      {/* Flash Events slot retains its layout even when no event is active. */}
-      <div className="rounded-3xl bg-neutral-900 border border-purple-500/30 p-5 shadow-2xl space-y-4 animate-fadeIn relative overflow-hidden">
-        <div className="flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={handleCreateFlashEntry}
-            className="px-4 py-2.5 rounded-full border border-neutral-700 hover:border-neutral-500 bg-neutral-950 text-white font-bold text-xs tracking-wider transition cursor-pointer flex items-center space-x-1 shadow-md"
-          >
-            <span>+ CREATE EVENT</span>
-          </button>
-
-          {hasActiveFlash ? (
-            <button
-              type="button"
-              onClick={() => {
-                if (flashEvent?.place_id) {
-                  const found = places.find(p => p.id === flashEvent.place_id);
-                  if (found) onSelectPlace(found);
-                  else onNavigateTab('explore');
-                } else {
-                  onNavigateTab('explore');
-                }
-              }}
-              className="px-5 py-2.5 rounded-full bg-white hover:bg-neutral-200 text-neutral-950 font-black text-xs uppercase tracking-wider transition cursor-pointer flex items-center space-x-1.5 shadow-lg shadow-white/10 active:scale-95"
-            >
-              <span>HUNT NOW! 🏃</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => onNavigateTab('explore')}
-              className="px-5 py-2.5 rounded-full bg-white hover:bg-neutral-200 text-neutral-950 font-black text-xs uppercase tracking-wider transition cursor-pointer flex items-center space-x-1.5 shadow-lg shadow-white/10 active:scale-95"
-            >
-              <span>Explore Vibes</span>
-            </button>
-          )}
-        </div>
-
-        <div className="flex items-center space-x-2 text-sm">
-          <span className="text-orange-400">🎭</span>
-          <span className="font-bold text-white tracking-tight">Flash Alert</span>
-          <span className="text-neutral-500 font-light">|</span>
-          <span className="font-bold text-pink-500 tracking-tight">
-            {hasActiveFlash ? 'Happening Now' : 'Discover More'}
-          </span>
-        </div>
-
-        <div className="relative h-32 rounded-2xl overflow-hidden bg-gradient-to-br from-purple-950 via-neutral-900 to-orange-950 border border-neutral-800">
-          {photoPlace && (
-            <>
-              <img src={photoPlace.image_url} alt={photoPlace.title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-              <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/90 via-neutral-950/20 to-transparent" />
-              <button type="button" onClick={() => onSelectPlace(photoPlace)}
-                className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2 text-left text-xs text-white">
-                <span className="truncate font-bold">{photoPlace.title}</span>
-                <span className="shrink-0 text-[10px] font-bold text-amber-300 uppercase">{hasActiveFlash ? 'Event location' : 'Suggested place'}</span>
-              </button>
-            </>
-          )}
-          {photoSource === 'city' && featuredCity && (
-            <>
-              <img src={featuredCity.imageUrl} alt={`City discovery: ${featuredCity.city}`}
-                aria-label="City discovery image"
-                className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-              <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/90 via-neutral-950/20 to-transparent" />
-              <button type="button" onClick={() => onNavigateTab('explore')}
-                className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2 text-left text-xs text-white">
-                <span className="truncate font-bold">{featuredCity.city}</span>
-                <span className="shrink-0 text-[10px] font-bold text-amber-300 uppercase">City discovery</span>
-              </button>
-            </>
-          )}
-          {!photoPlace && !featuredCity && (
-            <div className="absolute inset-0 flex items-center justify-center gap-2 text-neutral-300/70">
-              <Sparkles className="h-5 w-5 text-purple-400" />
-              <span className="text-xs font-semibold tracking-wide">Explore local vibes</span>
-            </div>
-          )}
-        </div>
-
-        {hasActiveFlash ? (
-          <>
-            <div className="space-y-1.5">
-              <h3 className="font-bold text-base text-white tracking-tight">
-                {flashEvent?.title}
-              </h3>
-              <p className="text-xs text-neutral-300 leading-relaxed">
-                {flashEvent?.description}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between pt-2 border-t border-neutral-800 text-xs">
-              <div>
-                <span className="text-pink-500 font-bold">Live Flash Event</span>
-              </div>
-              <div className="flex items-center space-x-1 text-neutral-400 font-medium">
-                <Clock className="w-3.5 h-3.5 text-pink-500 animate-pulse" />
-                <span className="text-white font-bold">{minutesLeft}m left</span>
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="space-y-1.5 min-h-[54px]" role="status" aria-live="polite">
-              <h3 className="font-bold text-base text-white tracking-tight">
-                No Flash Events are active right now.
-              </h3>
-              <p className="text-xs text-neutral-300 leading-relaxed">
-                Check back for the next Flash Event.
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between gap-3 pt-2 border-t border-neutral-800 text-xs">
-              <span className="text-neutral-400 font-bold">No live event rewards</span>
-              <span className="text-neutral-400 font-medium text-right">Suggestions coming soon</span>
-            </div>
-          </>
-        )}
-      </div>
+      {/* Approved visual states: genuine D11 Flash Event or location-aware Vibe Suggestions. */}
+      <HomeFlashDiscoveryPanel
+        flashEvent={flashEvent}
+        secondsLeft={secondsLeft}
+        places={places}
+        pulsesSummary={pulsesSummary}
+        onCreateFlash={handleCreateFlashEntry}
+        onNavigateTab={onNavigateTab}
+        onSelectPlace={onSelectPlace}
+        onNotify={showToast}
+      />
 
       {/* Vibe Pulses — Exact Visual Reference & Genuine City Aggregation */}
       <VibePulsesCarousel
