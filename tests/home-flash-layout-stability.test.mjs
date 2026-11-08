@@ -1,21 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+const read = p => readFileSync(new URL('../'+p,import.meta.url),'utf8');
+const home = read('src/components/HomeTab.tsx');
+const panel = read('src/components/HomeFlashDiscoveryPanel.tsx');
 
-const home = readFileSync(new URL('../src/components/HomeTab.tsx', import.meta.url), 'utf8');
-
-test('Flash Events frame remains mounted even without an active event', () => {
-  assert.doesNotMatch(home, /\{flashEvent && secondsLeft > 0 && \(\s*<div className="rounded-3xl/);
-  assert.match(home, /<div className="rounded-3xl bg-neutral-900 border border-purple-500\/30 p-5 shadow-2xl space-y-4 animate-fadeIn relative overflow-hidden"/);
-  assert.match(home, /\{hasActiveFlash \? \(/);
-  assert.match(home, /No Flash Events are active right now\./);
+test('Home always mounts a single switchable visual card', () => {
+  assert.match(home, /<HomeFlashDiscoveryPanel/);
+  assert.match(panel, /if \(hasActiveFlash && flashEvent\)/);
+  assert.match(panel, /Vibe Suggestions/);
+  assert.match(panel, /Flash Event Alert!/);
+  assert.match(panel, /const shell = 'rounded-\[30px\]/);
 });
-
-test('non-live state has no fabricated event, reward or countdown', () => {
-  assert.match(home, /Explore Vibes/);
-  assert.match(home, /Check back for the next Flash Event\./);
-  assert.match(home, /\{flashEvent\?\.title\}/);
-  assert.match(home, /\{flashEvent\?\.description\}/);
-  assert.match(home, /\{minutesLeft\}m left/);
-  assert.doesNotMatch(home, /CANONICAL_FLASH_EVENT|Secret Pop-up Gallery/);
+test('no fabricated event, reward, RSVP or match in the fallback', () => {
+  assert.match(panel, /No suggestions available yet/);
+  assert.match(panel, /EXPLORE NOW!/);
+  assert.match(panel, /timeLeft/);
+  assert.doesNotMatch(panel, /Secret Pop-Up Gallery|Loca Haus|500 VIBE POINTS|92% MATCH/);
 });
