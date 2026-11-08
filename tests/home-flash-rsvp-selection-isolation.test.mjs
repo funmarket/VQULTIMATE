@@ -10,7 +10,8 @@ test('RSVP status check blocks RSVP actions until the selected event status is k
   assert.match(home, /setRsvpStatusLoading\(true\)/);
   assert.match(home, /setRsvpStatusLoading\(false\)/);
   assert.match(home, /if \(!rsvpEnabled \|\| !flashEvent \|\| secondsLeft <= 0 \|\| rsvpLoading \|\| rsvpStatusLoading\) return/);
-  assert.match(panel, /rsvpLoading=\{rsvpLoading \|\| rsvpStatusLoading/);
+  assert.match(home, /rsvpLoading=\\{rsvpLoading \\|\\| rsvpStatusLoading/);
+  assert.match(home, /rsvpEnabled=\\{rsvpEnabled && \\(!user \\|\\|/);
   assert.match(panel, /disabled=\{!rsvpEnabled \|\| rsvpLoading\}/);
   assert.match(detail, /disabled=\{!valid \|\| !rsvpEnabled \|\| rsvpLoading\}/);
 });
