@@ -36,7 +36,10 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user, onPostSuccess, initial
       const file = new File([capture], 'vibequest-' + mode + '-' + Date.now() + '.' + extension, { type: capture.type });
       
       const uploadRes = await uploadDriftMedia(file, mode === 'snap' ? 'voice' : 'photo');
-      const mediaUrl = uploadRes.success && uploadRes.url ? uploadRes.url : URL.createObjectURL(file);
+      if (!uploadRes.success || !uploadRes.url || !uploadRes.url.startsWith('https://')) {
+        throw new Error(uploadRes.error || 'Media could not be stored securely. Nothing was published.');
+      }
+      const mediaUrl = uploadRes.url;
 
       const moodText = categories.find(item => item.id === category)?.label;
       const finalCaption = [caption.trim(), moodText].filter(Boolean).join(' · ') || 'Captured moment via VibeShare.';
