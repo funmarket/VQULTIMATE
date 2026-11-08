@@ -10,8 +10,6 @@ interface PurseTabProps {
 export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
   const [transactions, setTransactions] = useState<VQTransaction[]>([]);
   const [historyError, setHistoryError] = useState<string | null>(null);
-  const [staked, setStaked] = useState(false);
-  const [stakeSuccess, setStakeSuccess] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,12 +40,6 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
 
     return () => { active = false; };
   }, [user?.id]);
-
-  const handleStake = () => {
-    setStaked(true);
-    setStakeSuccess(true);
-    setTimeout(() => setStakeSuccess(false), 3000);
-  };
 
   return (
     <div className="space-y-6 pb-24 text-white max-w-md mx-auto box-border overflow-x-hidden">
@@ -93,28 +85,19 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
             <TrendingUp className="w-4 h-4 text-teal-400" />
             <span>District Staking Pools</span>
           </h3>
-          <span className="text-xs font-bold text-emerald-400">+14.2% APY</span>
+          <span className="text-xs font-bold text-neutral-400">Unavailable</span>
         </div>
         <p className="text-xs text-neutral-400">
-          Stake VQ tokens to secure district exploration waypoints and earn weekly cultural dividends.
+          VQ staking requires an authorized on-chain or server-side contract and cannot be enabled from the browser alone.
         </p>
 
-        {stakeSuccess && (
-          <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-2.5 flex items-center space-x-2 text-xs text-emerald-400 font-semibold animate-fadeIn">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            <span>Staking pool synchronized with Supabase contract.</span>
-          </div>
-        )}
-
         <button
-          onClick={handleStake}
-          className={`w-full py-3 rounded-2xl font-bold text-xs shadow-lg transition flex items-center justify-center space-x-2 cursor-pointer ${
-            staked
-              ? 'bg-emerald-600/30 border border-emerald-500/50 text-emerald-300'
-              : 'bg-gradient-to-r from-orange-500 to-teal-500 text-white shadow-orange-500/20 hover:opacity-90'
-          }`}
+          type="button"
+          disabled
+          title="Staking requires a verified backend and approved reward policy"
+          className="w-full py-3 rounded-2xl font-bold text-xs shadow-lg bg-neutral-800 text-neutral-400 border border-neutral-700 cursor-not-allowed"
         >
-          <span>{staked ? 'Pool Active (+14.2% APY Yielding)' : 'Stake VQ Tokens'}</span>
+          Staking unavailable
         </button>
       </div>
 
