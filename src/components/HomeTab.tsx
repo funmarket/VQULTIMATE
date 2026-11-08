@@ -36,6 +36,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const [selectedTrail, setSelectedTrail] = useState<CulturalTrail | null>(null);
   const [selectedGuardian, setSelectedGuardian] = useState<VibeGuardian | null>(null);
   const [isCreateFlashOpen, setIsCreateFlashOpen] = useState(false);
+  const [isFlashUpgradeOpen, setIsFlashUpgradeOpen] = useState(false);
+  const [flashAccessNotice, setFlashAccessNotice] = useState(false);
   const [canCreateFlash, setCanCreateFlash] = useState(false);
   const [homeToast, setHomeToast] = useState<string | null>(null);
 
@@ -151,6 +153,19 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   };
 
   const hasActiveFlash = Boolean(flashEvent && secondsLeft > 0);
+  const featuredPlace = places.find(place => Boolean(place.image_url));
+  const accountType = (user?.accountType || user?.tier || 'vibe').toLowerCase();
+  const isProOrBusiness = accountType === 'pro' || accountType === 'business';
+
+  const handleCreateFlashEntry = () => {
+    if (canCreateFlash) {
+      setIsCreateFlashOpen(true);
+    } else if (isProOrBusiness) {
+      setFlashAccessNotice(true);
+    } else {
+      setIsFlashUpgradeOpen(true);
+    }
+  };
   const minutesLeft = Math.floor(secondsLeft / 60);
 
   return (
@@ -166,21 +181,15 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
       {/* Flash Events slot retains its layout even when no event is active. */}
       <div className="rounded-3xl bg-neutral-900 border border-purple-500/30 p-5 shadow-2xl space-y-4 animate-fadeIn relative overflow-hidden">
         <div className="flex items-center justify-between gap-3">
-          {canCreateFlash ? (
-            <button
-              type="button"
-              onClick={() => setIsCreateFlashOpen(true)}
-              className="px-4 py-2.5 rounded-full border border-neutral-700 hover:border-neutral-500 bg-neutral-950 text-white font-bold text-xs tracking-wider transition cursor-pointer flex items-center space-x-1 shadow-md"
-            >
-              <span>+ CREATE FLASH</span>
-            </button>
-          ) : (
-            <span aria-hidden="true" className="px-4 py-2.5 rounded-full border border-transparent bg-transparent text-xs font-bold tracking-wider invisible">
-              + CREATE FLASH
-            </span>
-          )}
+          <button
+            type="button"
+            onClick={handleCreateFlashEntry}
+            className="px-4 py-2.5 rounded-full border border-neutral-700 hover:border-neutral-500 bg-neutral-950 text-white font-bold text-xs tracking-wider transition cursor-pointer flex items-center space-x-1 shadow-md"
+          >
+            <span>+ CREATE FLASH</span>
+          </button>
 
-          {hasActiveFlash ? (
+                    {hasActiveFlash ? (
             <button
               type="button"
               onClick={() => {
@@ -239,6 +248,25 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
           </>
         ) : (
           <>
+            <div className="relative h-32 rounded-2xl overflow-hidden bg-gradient-to-br from-purple-950 via-neutral-900 to-orange-950 border border-neutral-800">
+              {featuredPlace && (
+                <>
+                  <img src={featuredPlace.image_url} alt={featuredPlace.title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/90 via-neutral-950/20 to-transparent" />
+                  <button type="button" onClick={() => onSelectPlace(featuredPlace)}
+                    className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2 text-left text-xs text-white">
+                    <span className="truncate font-bold">{featuredPlace.title}</span>
+                    <span className="shrink-0 text-[10px] font-bold text-amber-300 uppercase">Suggested place</span>
+                  </button>
+                </>
+              )}
+              {!featuredPlace && (
+                <div className="absolute inset-0 flex items-center justify-center gap-2 text-neutral-300/70">
+                  <Sparkles className="h-5 w-5 text-purple-400" />
+                  <span className="text-xs font-semibold tracking-wide">Explore local vibes</span>
+                </div>
+              )}
+            </div>
             <div className="space-y-1.5 min-h-[54px]" role="status" aria-live="polite">
               <h3 className="font-bold text-base text-white tracking-tight">
                 No Flash Events are active right now.
@@ -583,6 +611,47 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
           }}
           onToast={showToast}
         />
+      )}
+
+      {/* Upgrade entry: plan selection is informational until billing/entitlements exist. */}
+      {isFlashUpgradeOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm" role="presentation" onMouseDown={e => { if (e.target === e.currentTarget) setIsFlashUpgradeOpen(false); }}>
+          <div role="dialog" aria-modal="true" aria-labelledby="flash-upgrade-title"
+            className="w-full max-w-sm rounded-3xl border border-purple-500/40 bg-neutral-900 p-6 shadow-2xl space-y-4">
+            <div className="flex justify-between gap-3 items-start">
+              <div>
+                <h2 id="flash-upgrade-title" className="text-xl font-black text-white">Upgrade to Pro or Business</h2>
+                <p className="mt-2 text-xs text-neutral-300">Flash Event creation is intended for Pro, Business and App Admin accounts.</p>
+              </div>
+              <button type="button" aria-label="Close upgrade window" onClick={() => setIsFlashUpgradeOpen(false)} className="p-2 text-neutral-400 hover:text-white"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-purple-500/40 bg-purple-500/10 p-4">
+                <span className="font-bold text-white text-sm">Pro account</span>
+                <p className="mt-1 text-xs text-neutral-300">For creators organizing their own events.</p>
+              </div>
+              <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4">
+                <span className="font-bold text-white text-sm">Business account</span>
+                <p className="mt-1 text-xs text-neutral-300">For venues and businesses promoting events.</p>
+              </div>
+            </div>
+            <p className="text-xs text-amber-200">Upgrades are not available yet. No payment or account change will be made.</p>
+            <button type="button" onClick={() => setIsFlashUpgradeOpen(false)}
+              className="w-full rounded-xl bg-white py-3 text-xs font-black text-neutral-950">Got it</button>
+          </div>
+        </div>
+      )}
+
+      {flashAccessNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm" role="presentation">
+          <div role="alertdialog" aria-modal="true" aria-labelledby="flash-access-title"
+            className="w-full max-w-sm rounded-3xl border border-purple-500/40 bg-neutral-900 p-6 shadow-2xl space-y-4">
+            <h2 id="flash-access-title" className="text-lg font-black text-white">Flash Events access</h2>
+            <p className="text-sm text-neutral-300">Flash Event publishing is not yet enabled for this account. Your Pro or Business account must be verified by the server before creating events.</p>
+            <button type="button" onClick={() => setFlashAccessNotice(false)}
+              className="w-full rounded-xl bg-white py-3 text-xs font-black text-neutral-950">Close</button>
+          </div>
+        </div>
       )}
 
       {/* Create Flash Event Modal */}
