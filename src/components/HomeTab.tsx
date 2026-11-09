@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { fetchNearbyPlaces, VibePlace, getDeviceLocation } from '../domains/d03_vibe_orbit';
 import { fetchCulturalTrails, fetchVibeGuardians, CulturalTrail, VibeGuardian, TrailWaypoint } from '../domains/d07_trails';
-import { fetchActiveFlashEvent, fetchFlashEvents, submitVibeSuggestion, FlashEvent, SuggestionCategory } from '../domains/d11_events';
+import { fetchActiveFlashEvent, fetchFlashEvents, fetchFlashEventRsvp, setFlashEventRsvp, submitVibeSuggestion, FlashEvent, SuggestionCategory } from '../domains/d11_events';
 import { fetchCommentsForPost, addCommentToPost, VibeComment } from '../domains/d05_vibe';
 import { fetchCityPulses, VibePulsesSummary, CityPulse } from '../domains/d04_geo_presence';
 import { UserProfile } from '../domains/d01_auth';
@@ -45,7 +45,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const [selectedFlashEvent, setSelectedFlashEvent] = useState<FlashEvent | null>(null);
   const [isCreateFlashOpen, setIsCreateFlashOpen] = useState(false);
   const [isSuggestModalOpen, setIsSuggestModalOpen] = useState(false);
-  const [rsvpJoined, setRsvpJoined] = useState(false);
+  const [rsvpByEvent, setRsvpByEvent] = useState<Record<string, boolean>>({});
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [homeToast, setHomeToast] = useState<string | null>(null);
   const [showAllTrails, setShowAllTrails] = useState(false);
@@ -97,12 +97,38 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
     setTimeout(() => setHomeToast(null), 3000);
   };
 
-  const handleRsvp = async () => {
-    if (!flashEvent) return;
+  useEffect(() => {
+    const events = [flashEvent, selectedFlashEvent].filter((event): event is FlashEvent => Boolean(event));
+    let current = true;
+    events.forEach(async (event) => {
+      const result = await fetchFlashEventRsvp(event.id);
+      if (current && !result.error) {
+        setRsvpByEvent((previous) => ({ ...previous, [event.id]: result.joined }));
+      }
+    });
+    return () => { current = false; };
+  }, [user?.id, flashEvent?.id, selectedFlashEvent?.id]);
+
+  const handleRsvp = async (event: FlashEvent | null) => {
+    if (!event || rsvpLoading) return;
+    const previouslyJoined = Boolean(rsvpByEvent[event.id]);
     setRsvpLoading(true);
-    // Real D11 Events RSVP backend contract is not yet provisioned in Supabase (tables flash_events / flash_event_rsvps do not exist).
-    setRsvpLoading(false);
-    showToast('RSVP is unavailable: Flash Event backend is not yet provisioned in Supabase.');
+    try {
+      const result = await setFlashEventRsvp(event.id, !previouslyJoined);
+      if (!result.success) {
+        showToast(result.error || 'RSVP could not be saved.');
+        return;
+      }
+      const verified = await fetchFlashEventRsvp(event.id);
+      if (verified.error) {
+        showToast('RSVP saved, but its status could not be reloaded.');
+        return;
+      }
+      setRsvpByEvent((previous) => ({ ...previous, [event.id]: verified.joined }));
+      showToast(verified.joined ? 'RSVP saved successfully.' : 'RSVP cancelled.');
+    } finally {
+      setRsvpLoading(false);
+    }
   };
 
   const handleSuggestSubmit = async (value: { title: string; description: string; category: SuggestionCategory }) => {
@@ -239,10 +265,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         onSelectPlace={onSelectPlace}
         onNotify={showToast}
         onSuggestVibe={() => setIsSuggestModalOpen(true)}
-        onRsvp={handleRsvp}
-        rsvpEnabled={false}
+        onRsvp={() => void handleRsvp(flashEvent)}
+        rsvpEnabled={Boolean(flashEvent && user)}
         suggestionEnabled={true}
-        rsvpJoined={rsvpJoined}
+        rsvpJoined={Boolean(flashEvent && rsvpByEvent[flashEvent.id])}
         rsvpLoading={rsvpLoading}
       />
 
@@ -268,9 +294,9 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
             setSelectedFlashEvent(null);
             onSelectPlace(p);
           }}
-          onRsvp={handleRsvp}
-          rsvpEnabled={false}
-          rsvpJoined={rsvpJoined}
+          onRsvp={() => void handleRsvp(selectedFlashEvent)}
+          rsvpEnabled={Boolean(user)}
+          rsvpJoined={Boolean(rsvpByEvent[selectedFlashEvent.id])}
           rsvpLoading={rsvpLoading}
         />
       )}
