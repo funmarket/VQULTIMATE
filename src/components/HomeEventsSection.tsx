@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, Sparkles, MapPin, CheckCircle2, Bookmark, Navigation } from 'lucide-react';
 import { UserProfile } from '../domains/d01_auth';
+import { CreateEventModal } from './CreateEventModal';
 
 interface EventItem {
   id: string;
@@ -73,12 +74,14 @@ interface HomeEventsSectionProps {
 }
 
 export const HomeEventsSection: React.FC<HomeEventsSectionProps> = ({ user, onNavigateTab, onToast }) => {
+  const [events, setEvents] = useState<EventItem[]>(INITIAL_EVENTS);
   const [filter, setFilter] = useState<'live' | 'upcoming'>('live');
   const [showAll, setShowAll] = useState(false);
   const [rsvps, setRsvps] = useState<Set<string>>(new Set());
   const [saves, setSaves] = useState<Set<string>>(new Set());
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const filtered = INITIAL_EVENTS.filter(ev => filter === 'live' ? ev.isLive : !ev.isLive);
+  const filtered = events.filter(ev => filter === 'live' ? ev.isLive : !ev.isLive);
   const visible = showAll ? filtered : filtered.slice(0, 3);
 
   const handleRsvp = (id: string) => {
@@ -107,6 +110,15 @@ export const HomeEventsSection: React.FC<HomeEventsSectionProps> = ({ user, onNa
       }
       return next;
     });
+  };
+
+  const handleCreatedEvent = (newEvent: EventItem) => {
+    setEvents(prev => [newEvent, ...prev]);
+    if (newEvent.isLive) {
+      setFilter('live');
+    } else {
+      setFilter('upcoming');
+    }
   };
 
   return (
@@ -159,7 +171,7 @@ export const HomeEventsSection: React.FC<HomeEventsSectionProps> = ({ user, onNa
               onToast('Please sign in to create an event.');
               return;
             }
-            onToast('Event creator initiated. Feature governed by D11 entitlement protocol.');
+            setIsCreateOpen(true);
           }}
           className="px-4 py-2 rounded-full bg-gradient-to-r from-teal-500 to-cyan-600 text-neutral-950 font-black text-xs hover:opacity-95 transition cursor-pointer shadow-lg flex-shrink-0"
         >
@@ -251,7 +263,7 @@ export const HomeEventsSection: React.FC<HomeEventsSectionProps> = ({ user, onNa
           <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800 p-6 text-center space-y-2">
             <Calendar className="w-7 h-7 text-purple-400 mx-auto" />
             <h4 className="font-bold text-xs text-white">No {filter} events right now</h4>
-            <p className="text-[11px] text-neutral-400">Check back soon or spawn a new flash event.</p>
+            <p className="text-[11px] text-neutral-400">Check back soon or create a new event.</p>
           </div>
         )}
 
@@ -267,6 +279,15 @@ export const HomeEventsSection: React.FC<HomeEventsSectionProps> = ({ user, onNa
           </div>
         )}
       </div>
+
+      {isCreateOpen && (
+        <CreateEventModal
+          user={user}
+          onClose={() => setIsCreateOpen(false)}
+          onCreated={handleCreatedEvent}
+          onToast={onToast}
+        />
+      )}
     </div>
   );
 };

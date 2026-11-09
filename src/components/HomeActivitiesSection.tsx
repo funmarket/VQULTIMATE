@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Footprints, MapPin, Bookmark, Navigation, Sparkles } from 'lucide-react';
 import { UserProfile } from '../domains/d01_auth';
+import { CreateActivityModal } from './CreateActivityModal';
 
 interface ActivityItem {
   id: string;
@@ -68,11 +69,13 @@ interface HomeActivitiesSectionProps {
 }
 
 export const HomeActivitiesSection: React.FC<HomeActivitiesSectionProps> = ({ user, onNavigateTab, onToast }) => {
+  const [activities, setActivities] = useState<ActivityItem[]>(INITIAL_ACTIVITIES);
   const [filter, setFilter] = useState<'live' | 'upcoming'>('live');
   const [showAll, setShowAll] = useState(false);
   const [saves, setSaves] = useState<Set<string>>(new Set());
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const filtered = INITIAL_ACTIVITIES.filter(act => filter === 'live' ? act.isLive : !act.isLive);
+  const filtered = activities.filter(act => filter === 'live' ? act.isLive : !act.isLive);
   const visible = showAll ? filtered : filtered.slice(0, 3);
 
   const handleSave = (id: string) => {
@@ -87,6 +90,15 @@ export const HomeActivitiesSection: React.FC<HomeActivitiesSectionProps> = ({ us
       }
       return next;
     });
+  };
+
+  const handleCreatedActivity = (newAct: ActivityItem) => {
+    setActivities(prev => [newAct, ...prev]);
+    if (newAct.isLive) {
+      setFilter('live');
+    } else {
+      setFilter('upcoming');
+    }
   };
 
   return (
@@ -139,7 +151,7 @@ export const HomeActivitiesSection: React.FC<HomeActivitiesSectionProps> = ({ us
               onToast('Please sign in to create an activity.');
               return;
             }
-            onToast('Activity authoring initiated. Profile verification active.');
+            setIsCreateOpen(true);
           }}
           className="px-4 py-2 rounded-full bg-gradient-to-r from-teal-500 to-cyan-600 text-neutral-950 font-black text-xs hover:opacity-95 transition cursor-pointer shadow-lg flex-shrink-0"
         >
@@ -233,6 +245,15 @@ export const HomeActivitiesSection: React.FC<HomeActivitiesSectionProps> = ({ us
           </div>
         )}
       </div>
+
+      {isCreateOpen && (
+        <CreateActivityModal
+          user={user}
+          onClose={() => setIsCreateOpen(false)}
+          onCreated={handleCreatedActivity}
+          onToast={onToast}
+        />
+      )}
     </div>
   );
 };
