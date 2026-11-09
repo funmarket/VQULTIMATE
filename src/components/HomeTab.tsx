@@ -100,10 +100,9 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const handleRsvp = async () => {
     if (!flashEvent) return;
     setRsvpLoading(true);
-    await new Promise(r => setTimeout(r, 600));
-    setRsvpJoined(prev => !prev);
+    // Real D11 Events RSVP backend contract is not yet provisioned in Supabase (tables flash_events / flash_event_rsvps do not exist).
     setRsvpLoading(false);
-    showToast(rsvpJoined ? 'Cancelled RSVP for Flash Event.' : 'Saved your spot for Flash Event!');
+    showToast('RSVP is unavailable: Flash Event backend is not yet provisioned in Supabase.');
   };
 
   const handleSuggestSubmit = async (value: { title: string; description: string; category: SuggestionCategory }) => {
@@ -143,7 +142,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   };
 
   const handleWaypointCheckIn = (wp: TrailWaypoint, tr: CulturalTrail) => {
-    showToast(`Checked in at "${wp.title}" on ${tr.title}! Claimed +${wp.vq_reward} VQ.`);
+    showToast(`Checked in at "${wp.title}" on ${tr.title}. Reward verification is not yet available.`);
   };
 
   const handleOpenComments = async (postId: string) => {
@@ -241,7 +240,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         onNotify={showToast}
         onSuggestVibe={() => setIsSuggestModalOpen(true)}
         onRsvp={handleRsvp}
-        rsvpEnabled={true}
+        rsvpEnabled={false}
         suggestionEnabled={true}
         rsvpJoined={rsvpJoined}
         rsvpLoading={rsvpLoading}

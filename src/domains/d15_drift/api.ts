@@ -965,9 +965,7 @@ export async function uploadDriftMedia(
       });
 
     if (error) {
-      // Graceful fallback: create an object URL for local playback and delivery when Storage RLS is unprovisioned
-      const objectUrl = URL.createObjectURL(file);
-      return { success: true, url: objectUrl };
+      return { success: false, error: 'Media upload failed: ' + error.message };
     }
 
     const { data: publicUrlData } = supabase.storage
@@ -976,8 +974,7 @@ export async function uploadDriftMedia(
 
     return { success: true, url: publicUrlData.publicUrl };
   } catch (err: any) {
-    const objectUrl = URL.createObjectURL(file);
-    return { success: true, url: objectUrl };
+    return { success: false, error: err?.message || 'Media upload encountered an unexpected error.' };
   }
 }
 
