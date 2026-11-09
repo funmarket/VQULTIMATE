@@ -9,8 +9,9 @@ interface PurseTabProps {
 
 export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
   const [transactions, setTransactions] = useState<VQTransaction[]>([]);
-  const [accountBalance, setAccountBalance] = useState<number | number>(user?.vq_balance || 0);
+  const [accountBalance, setAccountBalance] = useState<number>(0);
   const [lockedBalance, setLockedBalance] = useState<number>(0);
+  const [isProvisioned, setIsProvisioned] = useState<boolean>(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -41,13 +42,16 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
     setLoading(true);
     setHistoryError(null);
 
-    // Fetch real vq_account balance
+    // Fetch real vq_account balance from vq_accounts table (never fallback to legacy profile points)
     const acct = await fetchVqAccount(user.id);
     if (acct) {
       setAccountBalance(Number(acct.available_balance));
       setLockedBalance(Number(acct.locked_balance));
+      setIsProvisioned(true);
     } else {
-      setAccountBalance(user.vq_balance || 0);
+      setAccountBalance(0);
+      setLockedBalance(0);
+      setIsProvisioned(false);
     }
 
     // Fetch real vq_transactions ledger history
@@ -126,8 +130,10 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
               <Coins className="w-4 h-4 text-amber-400" />
               <span>VQ Genesis Wallet</span>
             </span>
-            <span className="text-[10px] bg-teal-500/20 text-teal-300 px-2.5 py-0.5 rounded-full border border-teal-500/30 font-semibold">
-              Supabase Verified
+            <span className={`text-[10px] px-2.5 py-0.5 rounded-full border font-semibold ${
+              isProvisioned ? 'bg-teal-500/20 text-teal-300 border-teal-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30'
+            }`}>
+              {isProvisioned ? 'Supabase Verified' : 'Wallet Not Provisioned'}
             </span>
           </div>
 
@@ -136,6 +142,9 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
             <h1 className="text-4xl font-black tracking-tight text-amber-300 mt-1">
               {accountBalance} <span className="text-lg font-normal text-neutral-400">VQ</span>
             </h1>
+            {!isProvisioned && (
+              <p className="text-[11px] text-red-400 mt-1">No vq_accounts record found for this user account. Signup reward provisioning required.</p>
+            )}
             {lockedBalance > 0 && (
               <p className="text-[11px] text-neutral-400 mt-1">Locked (Staked/Pending): {lockedBalance} VQ</p>
             )}
