@@ -55,7 +55,7 @@ export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = (
   const startsInMinutes = Math.ceil(startsInSeconds / 60);
   const timeLeft = Math.max(0, Math.ceil(secondsLeft / 60));
   const galleryEvents = flashEvents.filter(event => event.id !== flashEvent?.id);
-  const galleryVisible = showAllFlashEvents ? galleryEvents : galleryEvents.slice(0, 4);
+  const galleryVisible = showAllFlashEvents ? galleryEvents : galleryEvents.slice(0, 3);
 
   const openSuggestion = (item: typeof suggestions[number]) => {
     if (item.kind === 'place') onSelectPlace(item.place);
@@ -122,12 +122,12 @@ export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = (
         </div>
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-black text-white">MORE FLASH EVENTS</h3>
-          {galleryEvents.length > 4 ? (
+          {galleryEvents.length > 3 ? (
             <button type="button" onClick={() => setShowAllFlashEvents(value => !value)}
-              className="text-xs font-bold text-cyan-400">{showAllFlashEvents ? 'SHOW LESS' : 'SEE ALL ›'}</button>
+              className="text-xs font-bold text-cyan-400">{showAllFlashEvents ? 'SHOW LESS' : `View All (${galleryEvents.length}) ›`}</button>
           ) : <span className="text-xs font-bold text-neutral-400">{galleryEvents.length} AVAILABLE</span>}
         </div>
-        <div className="grid grid-cols-4 gap-2" aria-label={galleryEvents.length ? 'More Flash Events' : 'More Flash Events are not available yet'}>
+        <div className="grid grid-cols-3 gap-2" aria-label={galleryEvents.length ? 'More Flash Events' : 'More Flash Events are not available yet'}>
           {galleryVisible.map(event => {
             const place = places.find(place => place.id === event.place_id);
             return (
@@ -140,7 +140,7 @@ export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = (
               </button>
             );
           })}
-          {Array.from({ length: Math.max(0, 4 - galleryVisible.length) }, (_, i) => (
+          {Array.from({ length: Math.max(0, 3 - galleryVisible.length) }, (_, i) => (
             <div key={'empty-flash-' + i} className={thumbnail} aria-hidden="true">
               <div className="flex h-full items-center justify-center"><Sparkles className="h-4 w-4 text-neutral-600" /></div>
             </div>

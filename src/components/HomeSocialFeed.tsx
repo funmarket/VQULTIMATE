@@ -16,6 +16,11 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast })
   const [posts, setPosts] = useState<VibePostItem[]>([]);
   const [networkUserIds, setNetworkUserIds] = useState<Set<string>>(new Set());
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [showAllSocial, setShowAllSocial] = useState(false);
+
+  useEffect(() => {
+    setShowAllSocial(false);
+  }, [activeTab]);
 
   // Inline comments state
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
@@ -174,7 +179,7 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast })
       {/* Feed Posts List */}
       <div className="space-y-3.5">
         {filteredPosts.length > 0 ? (
-          filteredPosts.map((post) => {
+          (showAllSocial ? filteredPosts : filteredPosts.slice(0, 3)).map((post) => {
             const isLiked = likedPosts.has(post.id);
             const likesCount = post.reactions_count + (isLiked ? 1 : 0);
             const isExpanded = expandedPostId === post.id;
@@ -319,6 +324,17 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast })
             <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
               Follow explorers into your Orbit or publish a Vibe post to populate your network feed.
             </p>
+          </div>
+        )}
+        {filteredPosts.length > 3 && (
+          <div className="text-center pt-2 pb-2">
+            <button
+              type="button"
+              onClick={() => setShowAllSocial(v => !v)}
+              className="px-5 py-2.5 rounded-2xl bg-neutral-900 border border-neutral-700 text-xs font-bold text-teal-400 hover:bg-neutral-800 transition cursor-pointer shadow-lg"
+            >
+              {showAllSocial ? 'Show Less' : `View All (${filteredPosts.length})`}
+            </button>
           </div>
         )}
       </div>

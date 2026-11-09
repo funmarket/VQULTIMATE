@@ -45,6 +45,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const [rsvpJoined, setRsvpJoined] = useState(false);
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [homeToast, setHomeToast] = useState<string | null>(null);
+  const [showAllTrails, setShowAllTrails] = useState(false);
+  const [showAllGuardians, setShowAllGuardians] = useState(false);
 
   const currentVibe = user?.interests?.[0] || null;
   const lastCheckin: string | null = null;
@@ -289,7 +291,16 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
             </h2>
             <p className="text-[11px] text-neutral-400">Curated multi-stop circuits & pro guided expeditions</p>
           </div>
-          <div className="flex items-center space-x-1.5">
+          <div className="flex items-center space-x-3">
+            {trails.length > 3 && (
+              <button
+                type="button"
+                onClick={() => setShowAllTrails(v => !v)}
+                className="text-xs font-bold text-teal-400 hover:underline cursor-pointer"
+              >
+                {showAllTrails ? 'Show Less' : `View All (${trails.length})`}
+              </button>
+            )}
             <span className="text-xs text-neutral-400 font-semibold">{trails.length} Total</span>
             <div className="flex items-center space-x-1 pl-2">
               <button
@@ -315,7 +326,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
             ref={trailsScrollRef}
             className="flex items-center space-x-3.5 overflow-x-auto pb-3 scrollbar-none px-1"
           >
-            {trails.map((t) => (
+            {(showAllTrails ? trails : trails.slice(0, 3)).map((t) => (
               <div
                 key={t.id}
                 onClick={() => setSelectedTrail(t)}
@@ -408,7 +419,16 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
             </h2>
             <p className="text-[11px] text-neutral-400">Verified human guides & friendly neighborhood sentinels</p>
           </div>
-          <div className="flex items-center space-x-1.5">
+          <div className="flex items-center space-x-3">
+            {guardians.length > 3 && (
+              <button
+                type="button"
+                onClick={() => setShowAllGuardians(v => !v)}
+                className="text-xs font-bold text-teal-400 hover:underline cursor-pointer"
+              >
+                {showAllGuardians ? 'Show Less' : `View All (${guardians.length})`}
+              </button>
+            )}
             <span className="text-xs text-neutral-400 font-semibold">{guardians.length} On Duty</span>
             <div className="flex items-center space-x-1 pl-2">
               <button
@@ -434,7 +454,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
             ref={guardiansScrollRef}
             className="flex items-center space-x-3.5 overflow-x-auto pb-3 scrollbar-none px-1"
           >
-            {guardians.map((g) => {
+            {(showAllGuardians ? guardians : guardians.slice(0, 3)).map((g) => {
               const isPro = g.type === 'pro';
               return (
                 <div
