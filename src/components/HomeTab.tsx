@@ -45,8 +45,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const [selectedFlashEvent, setSelectedFlashEvent] = useState<FlashEvent | null>(null);
   const [isCreateFlashOpen, setIsCreateFlashOpen] = useState(false);
   const [isSuggestModalOpen, setIsSuggestModalOpen] = useState(false);
-  const [rsvpJoined, setRsvpJoined] = useState(false);
-  const [rsvpLoading, setRsvpLoading] = useState(false);
+  const rsvpJoined = false;
+  const rsvpLoading = false;
   const [homeToast, setHomeToast] = useState<string | null>(null);
   const [showAllTrails, setShowAllTrails] = useState(false);
   const [showAllGuardians, setShowAllGuardians] = useState(false);
@@ -98,12 +98,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   };
 
   const handleRsvp = async () => {
-    if (!flashEvent) return;
-    setRsvpLoading(true);
-    await new Promise(r => setTimeout(r, 600));
-    setRsvpJoined(prev => !prev);
-    setRsvpLoading(false);
-    showToast(rsvpJoined ? 'Cancelled RSVP for Flash Event.' : 'Saved your spot for Flash Event!');
+    showToast('Flash Event RSVP is unavailable until the event backend is provisioned. No RSVP was saved.');
   };
 
   const handleSuggestSubmit = async (value: { title: string; description: string; category: SuggestionCategory }) => {
@@ -143,7 +138,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   };
 
   const handleWaypointCheckIn = (wp: TrailWaypoint, tr: CulturalTrail) => {
-    showToast(`Checked in at "${wp.title}" on ${tr.title}! Claimed +${wp.vq_reward} VQ.`);
+    showToast(`Check-in rewards for "${wp.title}" are unavailable until verified wallet posting is connected. No VQ was credited.`);
   };
 
   const handleOpenComments = async (postId: string) => {
@@ -241,7 +236,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         onNotify={showToast}
         onSuggestVibe={() => setIsSuggestModalOpen(true)}
         onRsvp={handleRsvp}
-        rsvpEnabled={true}
+        rsvpEnabled={false}
         suggestionEnabled={true}
         rsvpJoined={rsvpJoined}
         rsvpLoading={rsvpLoading}
@@ -270,7 +265,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
             onSelectPlace(p);
           }}
           onRsvp={handleRsvp}
-          rsvpEnabled={true}
+          rsvpEnabled={false}
           rsvpJoined={rsvpJoined}
           rsvpLoading={rsvpLoading}
         />
