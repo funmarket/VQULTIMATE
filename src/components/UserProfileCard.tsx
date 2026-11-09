@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Award, Shield, Coins, MapPin, Check, AlertCircle } from 'lucide-react';
+import { X, Award, Shield, Coins, MapPin, Check, AlertCircle, Send } from 'lucide-react';
 import { UserProfile } from '../domains/d02_users';
 import { followUser, unfollowUser, checkIsFollowing } from '../domains/d03_social_graph';
 import { sendConnectionPull } from '../domains/d17_matching';
+import { executeVqTransfer } from '../domains/d06_purse';
 
 interface UserProfileCardProps {
   profile: UserProfile;
@@ -23,6 +24,13 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
   const [pullPending, setPullPending] = useState(false);
   const [loading, setLoading] = useState(false);
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
+
+  // Send VQ modal state
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
+  const [transferAmount, setTransferAmount] = useState('50');
+  const [transferMsg, setTransferMsg] = useState('');
+  const [transferLoading, setTransferLoading] = useState(false);
+  const [transferError, setTransferError] = useState<string | null>(null);
 
   const isSelf = currentUser?.id === profile.id || (currentUser?.username && currentUser.username === profile.username);
 
@@ -88,6 +96,45 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
     setLoading(false);
   };
 
+  const handleSendVqSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTransferError(null);
+    if (!currentUser) {
+      if (onRequireAuth) onRequireAuth();
+      setTransferError('Guests must authenticate before transferring VQ.');
+      return;
+    }
+    if (isSelf) {
+      setTransferError('You cannot send VQ to yourself.');
+      return;
+    }
+    const amt = Number(transferAmount);
+    if (isNaN(amt) || amt <= 0) {
+      setTransferError('Please enter a valid positive VQ amount.');
+      return;
+    }
+
+    setTransferLoading(true);
+    const result = await executeVqTransfer({
+      toUserId: profile.id,
+      amount: amt,
+      type: 'tip',
+      description: transferMsg ? `Tip to @${profile.username}: ${transferMsg}` : `Tip to @${profile.username}`
+    });
+    setTransferLoading(false);
+
+    if (!result.success) {
+      setTransferError(result.error || 'Transfer failed.');
+      return;
+    }
+
+    if (onToast) onToast(`Successfully sent ${amt} VQ to @${profile.username}!`);
+    setIsTransferOpen(false);
+    setTransferAmount('50');
+    setTransferMsg('');
+    onClose();
+  };
+
   const avatar = profile.avatar_url;
 
   return (
@@ -138,11 +185,32 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
 
         {/* Profile Details */}
         <div className="p-5 space-y-4">
+          {/* VQ Balance Badge & Send VQ Button row */}
           <div className="flex items-center justify-between text-xs">
-            <span className="text-[11px] text-amber-300 font-bold flex items-center space-x-1.5 bg-amber-500/10 px-3 py-1 rounded-xl border border-amber-500/30">
-              <Coins className="w-3.5 h-3.5 text-amber-400" />
-              <span>{profile.vq_balance} VQ</span>
-            </span>
+            <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+              <span className="text-[11px] text-amber-300 font-bold flex items-center space-x-1.5 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/30">
+                <Coins className="w-3.5 h-3.5 text-amber-400" />
+                <span>{profile.vq_balance} VQ</span>
+              </span>
+
+              {!isSelf && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!currentUser) {
+                      if (onRequireAuth) onRequireAuth();
+                      return;
+                    }
+                    setIsTransferOpen(true);
+                  }}
+                  className="px-3 py-1.5 rounded-full bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/50 font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Send VQ</span>
+                </button>
+              )}
+            </div>
+
             {typeof profile.trust_score === 'number' && (
               <span className="text-[11px] text-teal-300 font-bold flex items-center space-x-1 bg-teal-500/10 px-3 py-1 rounded-xl border border-teal-500/30">
                 <Award className="w-3.5 h-3.5 text-teal-400" />
@@ -195,7 +263,7 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
                 disabled={loading}
                 className={`flex-1 font-mono text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
                   isFollowing
-                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.2)]'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
                     : 'border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10'
                 }`}
                 title="ECHO: One-way follow into your Orbit. Does not grant DMs."
@@ -234,6 +302,73 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
           )}
         </div>
       </div>
+
+      {/* Send VQ Sub-Modal */}
+      {isTransferOpen && (
+        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="w-full max-w-xs bg-neutral-900 border border-neutral-800 rounded-3xl p-5 space-y-4 shadow-2xl text-white">
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+              <h3 className="font-bold text-sm flex items-center space-x-2">
+                <Send className="w-4 h-4 text-teal-400" />
+                <span>Send VQ to @{profile.username}</span>
+              </h3>
+              <button onClick={() => setIsTransferOpen(false)} className="p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSendVqSubmit} className="space-y-3">
+              {transferError && (
+                <div className="p-2 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-center space-x-1.5">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{transferError}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-300 mb-1">Amount (VQ) *</label>
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(e.target.value)}
+                  placeholder="e.g. 50"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-300 mb-1">Optional Message</label>
+                <input
+                  type="text"
+                  value={transferMsg}
+                  onChange={(e) => setTransferMsg(e.target.value)}
+                  placeholder="Great exploration vibe!"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsTransferOpen(false)}
+                  className="px-3.5 py-2 rounded-xl bg-neutral-800 text-xs font-bold text-neutral-300 hover:text-white cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={transferLoading}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-600 text-neutral-950 font-black text-xs hover:opacity-95 transition cursor-pointer shadow-lg disabled:opacity-50"
+                >
+                  {transferLoading ? 'Transferring...' : 'Send VQ'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
