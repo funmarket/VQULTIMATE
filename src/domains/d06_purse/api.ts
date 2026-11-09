@@ -8,10 +8,13 @@ export interface VQTransactionHistory {
 
 export async function fetchVqAccount(userId: string): Promise<VqAccount | null> {
   try {
+    const authUuid = await resolveAuthUuid(userId);
+    if (!authUuid) return null;
+
     const { data, error } = await supabase
       .from('vq_accounts')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', authUuid)
       .maybeSingle();
 
     if (error || !data) return null;
@@ -23,10 +26,15 @@ export async function fetchVqAccount(userId: string): Promise<VqAccount | null> 
 
 export async function fetchUserTransactions(userId: string): Promise<VQTransactionHistory> {
   try {
+    const authUuid = await resolveAuthUuid(userId);
+    if (!authUuid) {
+      return { transactions: [], error: 'User identity could not be resolved to Auth UUID.' };
+    }
+
     const { data, error } = await supabase
       .from('vq_transactions')
       .select('*')
-      .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
+      .or(`from_user_id.eq.${authUuid},to_user_id.eq.${authUuid}`)
       .order('created_at', { ascending: false });
 
     if (error) {
