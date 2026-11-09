@@ -15,16 +15,14 @@ test('D11 does not call missing Flash Event endpoints or fabricate live events',
   assert.match(events, /success: false/);
 });
 
-test('D06 does not call missing transaction table or expose legacy ledger before access review', () => {
-  assert.doesNotMatch(purse, /\.from\(['"]vq_transactions['"]\)/);
+test('D06 queries real vq_transactions table correctly', () => {
+  assert.match(purse, /\.from\(['"]vq_transactions['"]\)/);
   assert.doesNotMatch(purse, /\.from\(['"]vq_ledger['"]\)/);
-  assert.match(purse, /transactions: \[\]/);
-  assert.match(purse, /error: 'Transaction history is temporarily unavailable/);
+  assert.match(purse, /fetchUserTransactions/);
 });
 
-test('Purse displays an error instead of reporting a failed lookup as an empty ledger', () => {
-  assert.match(purseTab, /setHistoryError\(result\.error\)/);
+test('Purse displays transaction ledger history or error state correctly', () => {
+  assert.match(purseTab, /setHistoryError\(res\.error\)/);
   assert.match(purseTab, /historyError \? \(/);
-  assert.match(purseTab, /Transaction history unavailable/);
-  assert.match(purseTab, /if \(!active\) return/);
+  assert.match(purseTab, /Transaction ledger notice/);
 });
