@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   Sparkles, MapPin, Shield, Compass, ChevronRight, ChevronLeft, Flame, Award,
-  Users, Zap, Clock, Route, GitFork, CheckCircle2, Send, X
+  Users, Zap, Clock, Route, GitFork, CheckCircle2, Send, X, CalendarCheck
 } from 'lucide-react';
 import { fetchNearbyPlaces, VibePlace, getDeviceLocation } from '../domains/d03_vibe_orbit';
 import { fetchCulturalTrails, fetchVibeGuardians, CulturalTrail, VibeGuardian, TrailWaypoint } from '../domains/d07_trails';
@@ -45,6 +45,9 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const [rsvpJoined, setRsvpJoined] = useState(false);
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [homeToast, setHomeToast] = useState<string | null>(null);
+
+  const [currentVibe] = useState(() => localStorage.getItem('vq_current_vibe') || 'Cozy');
+  const [lastCheckin] = useState(() => localStorage.getItem('vq_last_checkin') || 'Loca Haus');
 
   // Social feed comments modal state
   const [activePostId, setActivePostId] = useState<string | null>(null);
@@ -169,6 +172,51 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
           <span>{homeToast}</span>
         </div>
       )}
+
+      {/* Home Header: Location and Username (Clean, unboxed) */}
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center space-x-1.5 text-xs font-semibold text-neutral-300">
+          <MapPin className="w-4 h-4 text-amber-400 flex-shrink-0" />
+          <span className="truncate">{user?.city || user?.district || 'Local Discovery Avenue'}</span>
+        </div>
+        <div className="text-xs font-bold text-white tracking-wide truncate">
+          {user?.full_name || user?.username || 'Explorer'}
+        </div>
+      </div>
+
+      {/* VIBE CHECK-INS Section (Matching Reference 2) */}
+      <div className="space-y-3">
+        <div className="flex items-center space-x-2">
+          <div className="p-1.5 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/40">
+            <CalendarCheck className="w-4 h-4" />
+          </div>
+          <h2 className="text-sm font-black tracking-wider uppercase text-white">VIBE CHECK-INS</h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Current Vibe Card */}
+          <div className="rounded-3xl border border-fuchsia-500/40 bg-gradient-to-br from-[#1e1924] via-[#16131c] to-[#121017] p-4 flex items-center space-x-3.5 shadow-lg">
+            <div className="w-11 h-11 rounded-2xl bg-neutral-950/80 border border-neutral-800 flex items-center justify-center flex-shrink-0 shadow-inner">
+              <Flame className="w-5 h-5 text-orange-500 animate-pulse" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-neutral-300 font-medium">Current Vibe:</div>
+              <div className="text-base font-black text-orange-400 truncate mt-0.5">{currentVibe}</div>
+            </div>
+          </div>
+
+          {/* Last Check-in Card */}
+          <div className="rounded-3xl border border-fuchsia-500/40 bg-gradient-to-br from-[#1e1924] via-[#16131c] to-[#121017] p-4 flex items-center space-x-3.5 shadow-lg">
+            <div className="w-11 h-11 rounded-2xl bg-neutral-950/80 border border-neutral-800 flex items-center justify-center flex-shrink-0 shadow-inner">
+              <MapPin className="w-5 h-5 text-amber-400" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs text-neutral-300 font-medium">Last Check-in:</div>
+              <div className="text-base font-bold text-white truncate mt-0.5">{lastCheckin}</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Canonical Home Flash & Suggestions Discovery Panel */}
       <HomeFlashDiscoveryPanel

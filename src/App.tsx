@@ -145,6 +145,7 @@ export default function App() {
           onClose={() => setSelectedPlace(null)}
           onCheckIn={(place) => {
             showToast(`Checked in at ${place.title}! Claimed +${place.vq_reward} VQ.`);
+            localStorage.setItem('vq_last_checkin', place.title);
             if (user) {
               const updatedUser = { ...user, vq_balance: user.vq_balance + place.vq_reward };
               setUser(updatedUser);
