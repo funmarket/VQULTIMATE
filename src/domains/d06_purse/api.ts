@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { VqAccount, VQTransaction, TransactionType } from './types';
+import { CANONICAL_IDENTITY_MAP } from './identityMap';
 
 export interface VQTransactionHistory {
   transactions: VQTransaction[];
@@ -66,7 +67,17 @@ export async function resolveAuthUuid(identifier: string): Promise<string | null
     }
   }
 
+  // 1. Direct match in canonical identity map
+  if (CANONICAL_IDENTITY_MAP[cleanId]) {
+    return CANONICAL_IDENTITY_MAP[cleanId];
+  }
+
   const cleanHandle = cleanId.replace(/^@/, '').toLowerCase();
+  if (CANONICAL_IDENTITY_MAP[cleanHandle]) {
+    return CANONICAL_IDENTITY_MAP[cleanHandle];
+  }
+
+  // 2. Query public.profiles
   try {
     const { data: prof } = await supabase
       .from('profiles')
@@ -81,6 +92,12 @@ export async function resolveAuthUuid(identifier: string): Promise<string | null
         const sub = pid.slice(4);
         if (uuidRegex.test(sub)) return sub;
       }
+      if (CANONICAL_IDENTITY_MAP[pid]) {
+        return CANONICAL_IDENTITY_MAP[pid];
+      }
+      if (prof.handle && CANONICAL_IDENTITY_MAP[String(prof.handle).toLowerCase()]) {
+        return CANONICAL_IDENTITY_MAP[String(prof.handle).toLowerCase()];
+      }
       const { data: vqAcc } = await supabase
         .from('vq_accounts')
         .select('user_id')
@@ -90,6 +107,7 @@ export async function resolveAuthUuid(identifier: string): Promise<string | null
     }
   } catch {}
 
+  // 3. Query s00_test_identity_links (if caller has privileges)
   try {
     const { data: link } = await supabase
       .from('s00_test_identity_links')
@@ -101,6 +119,7 @@ export async function resolveAuthUuid(identifier: string): Promise<string | null
     }
   } catch {}
 
+  // 4. Query vq_accounts directly
   try {
     const { data: acc } = await supabase
       .from('vq_accounts')
