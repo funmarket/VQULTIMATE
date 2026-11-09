@@ -269,7 +269,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
             onSelectPlace(p);
           }}
           onRsvp={handleRsvp}
-          rsvpEnabled={true}
+          rsvpEnabled={false}
           rsvpJoined={rsvpJoined}
           rsvpLoading={rsvpLoading}
         />
