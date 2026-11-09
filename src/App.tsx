@@ -144,12 +144,7 @@ export default function App() {
           place={selectedPlace}
           onClose={() => setSelectedPlace(null)}
           onCheckIn={(place) => {
-            showToast(`Checked in at ${place.title}! Claimed +${place.vq_reward} VQ.`);
-            localStorage.setItem('vq_last_checkin', place.title);
-            if (user) {
-              const updatedUser = { ...user, vq_balance: user.vq_balance + place.vq_reward };
-              setUser(updatedUser);
-            }
+            showToast(`Checked in at ${place.title}. Reward ledger unverified (backend pending).`);
           }}
           onViewMap={() => {
             setSelectedPlace(null);

@@ -46,8 +46,8 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [homeToast, setHomeToast] = useState<string | null>(null);
 
-  const [currentVibe] = useState(() => localStorage.getItem('vq_current_vibe') || 'Cozy');
-  const [lastCheckin] = useState(() => localStorage.getItem('vq_last_checkin') || 'Loca Haus');
+  const currentVibe = user?.interests?.[0] || null;
+  const lastCheckin: string | null = null;
 
   // Social feed comments modal state
   const [activePostId, setActivePostId] = useState<string | null>(null);
@@ -177,7 +177,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center space-x-1.5 text-xs font-semibold text-neutral-300">
           <MapPin className="w-4 h-4 text-amber-400 flex-shrink-0" />
-          <span className="truncate">{user?.city || user?.district || 'Local Discovery Avenue'}</span>
+          <span className="truncate">{user?.city || user?.district || 'Location unavailable'}</span>
         </div>
         <div className="text-xs font-bold text-white tracking-wide truncate">
           {user?.full_name || user?.username || 'Explorer'}
@@ -193,26 +193,30 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
           <h2 className="text-sm font-black tracking-wider uppercase text-white">VIBE CHECK-INS</h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {/* Current Vibe Card */}
-          <div className="rounded-3xl border border-fuchsia-500/40 bg-gradient-to-br from-[#1e1924] via-[#16131c] to-[#121017] p-4 flex items-center space-x-3.5 shadow-lg">
-            <div className="w-11 h-11 rounded-2xl bg-neutral-950/80 border border-neutral-800 flex items-center justify-center flex-shrink-0 shadow-inner">
-              <Flame className="w-5 h-5 text-orange-500 animate-pulse" />
+          <div className="rounded-3xl border border-fuchsia-500/40 bg-gradient-to-br from-[#1e1924] via-[#16131c] to-[#121017] p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-lg min-w-0">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-neutral-950/80 border border-neutral-800 flex items-center justify-center flex-shrink-0 shadow-inner">
+              <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 animate-pulse" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs text-neutral-300 font-medium">Current Vibe:</div>
-              <div className="text-base font-black text-orange-400 truncate mt-0.5">{currentVibe}</div>
+              <div className="text-[11px] sm:text-xs text-neutral-300 font-medium truncate">Current Vibe:</div>
+              <div className={`text-sm sm:text-base truncate mt-0.5 ${currentVibe ? 'font-black text-orange-400' : 'text-neutral-500 italic text-[11px]'}`}>
+                {currentVibe || 'No vibe set'}
+              </div>
             </div>
           </div>
 
           {/* Last Check-in Card */}
-          <div className="rounded-3xl border border-fuchsia-500/40 bg-gradient-to-br from-[#1e1924] via-[#16131c] to-[#121017] p-4 flex items-center space-x-3.5 shadow-lg">
-            <div className="w-11 h-11 rounded-2xl bg-neutral-950/80 border border-neutral-800 flex items-center justify-center flex-shrink-0 shadow-inner">
-              <MapPin className="w-5 h-5 text-amber-400" />
+          <div className="rounded-3xl border border-fuchsia-500/40 bg-gradient-to-br from-[#1e1924] via-[#16131c] to-[#121017] p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-lg min-w-0">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-neutral-950/80 border border-neutral-800 flex items-center justify-center flex-shrink-0 shadow-inner">
+              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs text-neutral-300 font-medium">Last Check-in:</div>
-              <div className="text-base font-bold text-white truncate mt-0.5">{lastCheckin}</div>
+              <div className="text-[11px] sm:text-xs text-neutral-300 font-medium truncate">Last Check-in:</div>
+              <div className={`text-sm sm:text-base truncate mt-0.5 ${lastCheckin ? 'font-bold text-white' : 'text-neutral-500 italic text-[11px]'}`}>
+                {lastCheckin || 'No check-ins'}
+              </div>
             </div>
           </div>
         </div>
