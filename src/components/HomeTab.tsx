@@ -17,6 +17,8 @@ import { FlashEventDetailModal } from './FlashEventDetailModal';
 import { HomeFlashDiscoveryPanel } from './HomeFlashDiscoveryPanel';
 import { HomeSocialFeed } from './HomeSocialFeed';
 import { VibePulsesCarousel } from './VibePulsesCarousel';
+import { HomeEventsSection } from './HomeEventsSection';
+import { HomeActivitiesSection } from './HomeActivitiesSection';
 
 interface HomeTabProps {
   user: UserProfile | null;
@@ -525,9 +527,23 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
         )}
       </div>
 
+      {/* Home Events Section */}
+      <HomeEventsSection
+        user={user}
+        onNavigateTab={onNavigateTab}
+        onToast={showToast}
+      />
+
+      {/* Home Activities Section */}
+      <HomeActivitiesSection
+        user={user}
+        onNavigateTab={onNavigateTab}
+        onToast={showToast}
+      />
+
       {/* ========================================================
           SOCIAL FEED: MY NETWORK | LOCAL VIBES | FOR YOU
-          Placed right after Active Guardians
+          Placed right after Activities
          ======================================================== */}
       <HomeSocialFeed user={user} onOpenComments={handleOpenComments} onToast={showToast} />
 
