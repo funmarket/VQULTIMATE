@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Wallet, Coins, ArrowUpRight, ArrowDownLeft, Shield, Sparkles, TrendingUp, CheckCircle2, Send, QrCode, PlusCircle, X } from 'lucide-react';
-import { fetchUserTransactions, VQTransaction } from '../domains/d06_purse';
+import { Wallet, Coins, ArrowUpRight, ArrowDownLeft, Shield, Sparkles, TrendingUp, CheckCircle2, Send, QrCode, PlusCircle, X, AlertCircle } from 'lucide-react';
+import { fetchUserTransactions, fetchVqAccount, executeVqTransfer, lookupUserByHandle, VQTransaction } from '../domains/d06_purse';
 import { UserProfile } from '../domains/d01_auth';
 
 interface PurseTabProps {
@@ -9,9 +9,9 @@ interface PurseTabProps {
 
 export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
   const [transactions, setTransactions] = useState<VQTransaction[]>([]);
+  const [accountBalance, setAccountBalance] = useState<number | number>(user?.vq_balance || 0);
+  const [lockedBalance, setLockedBalance] = useState<number>(0);
   const [historyError, setHistoryError] = useState<string | null>(null);
-  const [staked, setStaked] = useState(false);
-  const [stakeSuccess, setStakeSuccess] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Modal states for Send, Receive, Buy VQ
@@ -20,9 +20,12 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
   const [isBuyOpen, setIsBuyOpen] = useState(false);
 
   // Send form state
-  const [recipient, setRecipient] = useState('');
+  const [recipientHandle, setRecipientHandle] = useState('');
   const [sendAmount, setSendAmount] = useState('');
   const [sendMsg, setSendMsg] = useState('');
+  const [transferLoading, setTransferLoading] = useState(false);
+  const [transferError, setTransferError] = useState<string | null>(null);
+
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -30,76 +33,77 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
     setTimeout(() => setToastMsg(null), 3000);
   };
 
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    setTransactions([]);
-    setHistoryError(null);
-
+  const loadWalletData = async () => {
     if (!user) {
       setLoading(false);
-      return () => { active = false; };
-    }
-
-    fetchUserTransactions(user.id)
-      .then((result) => {
-        if (!active) return;
-        setTransactions(result.transactions);
-        setHistoryError(result.error);
-      })
-      .catch((error) => {
-        if (!active) return;
-        setTransactions([]);
-        setHistoryError(error instanceof Error ? error.message : 'Transaction history could not be loaded.');
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-
-    return () => { active = false; };
-  }, [user?.id]);
-
-  const handleStake = () => {
-    setStaked(true);
-    setStakeSuccess(true);
-    setTimeout(() => setStakeSuccess(false), 3000);
-  };
-
-  const handleSendSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const amt = Number(sendAmount);
-    if (!recipient.trim() || isNaN(amt) || amt <= 0) {
-      showToast('Please enter a valid recipient and VQ amount.');
       return;
     }
-    const newTx: VQTransaction = {
-      id: `tx-send-${Date.now()}`,
-      user_id: user?.id || 'guest',
-      type: 'spent',
-      amount: -amt,
-      description: `Sent VQ to @${recipient.replace(/^@/, '')} ${sendMsg ? `(${sendMsg})` : ''}`,
-      created_at: new Date().toISOString()
-    };
-    setTransactions(prev => [newTx, ...prev]);
-    setIsSendOpen(false);
-    setRecipient('');
-    setSendAmount('');
-    setSendMsg('');
-    showToast(`Successfully transferred ${amt} VQ tokens!`);
+    setLoading(true);
+    setHistoryError(null);
+
+    // Fetch real vq_account balance
+    const acct = await fetchVqAccount(user.id);
+    if (acct) {
+      setAccountBalance(Number(acct.available_balance));
+      setLockedBalance(Number(acct.locked_balance));
+    } else {
+      setAccountBalance(user.vq_balance || 0);
+    }
+
+    // Fetch real vq_transactions ledger history
+    const res = await fetchUserTransactions(user.id);
+    setTransactions(res.transactions);
+    setHistoryError(res.error);
+    setLoading(false);
   };
 
-  const handleBuyVq = (pkgAmount: number) => {
-    const newTx: VQTransaction = {
-      id: `tx-buy-${Date.now()}`,
-      user_id: user?.id || 'guest',
-      type: 'reward',
-      amount: pkgAmount,
-      description: `Purchased VQ Genesis Package (${pkgAmount} VQ)`,
-      created_at: new Date().toISOString()
-    };
-    setTransactions(prev => [newTx, ...prev]);
-    setIsBuyOpen(false);
-    showToast(`Successfully minted +${pkgAmount} VQ to your balance!`);
+  useEffect(() => {
+    void loadWalletData();
+  }, [user?.id]);
+
+  const handleSendSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTransferError(null);
+    const amt = Number(sendAmount);
+    if (!recipientHandle.trim() || isNaN(amt) || amt <= 0) {
+      setTransferError('Please enter a valid recipient handle and amount.');
+      return;
+    }
+
+    setTransferLoading(true);
+    const recipient = await lookupUserByHandle(recipientHandle);
+    if (!recipient) {
+      setTransferError(`Recipient @${recipientHandle.replace(/^@/, '')} not found in Supabase profiles.`);
+      setTransferLoading(false);
+      return;
+    }
+
+    if (recipient.id === user?.id) {
+      setTransferError('You cannot transfer VQ tokens to yourself.');
+      setTransferLoading(false);
+      return;
+    }
+
+    const result = await executeVqTransfer({
+      toUserId: recipient.id,
+      amount: amt,
+      type: 'transfer',
+      description: sendMsg ? `Transfer to @${recipient.username}: ${sendMsg}` : `Transfer to @${recipient.username}`
+    });
+
+    setTransferLoading(false);
+
+    if (!result.success) {
+      setTransferError(result.error || 'Transfer failed.');
+      return;
+    }
+
+    showToast(`Successfully transferred ${amt} VQ to @${recipient.username}!`);
+    setIsSendOpen(false);
+    setRecipientHandle('');
+    setSendAmount('');
+    setSendMsg('');
+    await loadWalletData();
   };
 
   return (
@@ -130,14 +134,17 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
           <div>
             <p className="text-xs text-neutral-400">Total VQ Token Balance</p>
             <h1 className="text-4xl font-black tracking-tight text-amber-300 mt-1">
-              {user ? user.vq_balance : 0} <span className="text-lg font-normal text-neutral-400">VQ</span>
+              {accountBalance} <span className="text-lg font-normal text-neutral-400">VQ</span>
             </h1>
+            {lockedBalance > 0 && (
+              <p className="text-[11px] text-neutral-400 mt-1">Locked (Staked/Pending): {lockedBalance} VQ</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3 pt-2">
             <div className="rounded-2xl bg-neutral-950/60 border border-neutral-800 p-3">
-              <span className="text-[10px] text-neutral-400">District Reputation</span>
-              <p className="text-lg font-bold text-teal-400 mt-0.5">{user?.reputation ?? 90}%</p>
+              <span className="text-[10px] text-neutral-400">Signup Reward</span>
+              <p className="text-lg font-bold text-teal-400 mt-0.5">1,000 VQ</p>
             </div>
             <div className="rounded-2xl bg-neutral-950/60 border border-neutral-800 p-3">
               <span className="text-[10px] text-neutral-400">Network Tier</span>
@@ -186,81 +193,80 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
         </button>
       </div>
 
-      {/* Staking Banner */}
+      {/* Staking Banner (Truthful unavailable state without authorized backend) */}
       <div className="rounded-3xl bg-neutral-900 border border-neutral-800 p-5 space-y-3 shadow-xl">
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-sm flex items-center space-x-2">
             <TrendingUp className="w-4 h-4 text-teal-400" />
             <span>District Staking Pools</span>
           </h3>
-          <span className="text-xs font-bold text-emerald-400">+14.2% APY</span>
+          <span className="text-xs font-bold text-neutral-500">Backend Pending</span>
         </div>
         <p className="text-xs text-neutral-400">
-          Stake VQ tokens to secure district exploration waypoints and earn weekly cultural dividends.
+          Staking contract execution requires deployed Supabase D06 staking RPC functions.
         </p>
-
-        {stakeSuccess && (
-          <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-2.5 flex items-center space-x-2 text-xs text-emerald-400 font-semibold animate-fadeIn">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            <span>Staking pool synchronized with Supabase contract.</span>
-          </div>
-        )}
-
         <button
-          onClick={handleStake}
-          className={`w-full py-3 rounded-2xl font-bold text-xs shadow-lg transition flex items-center justify-center space-x-2 cursor-pointer ${
-            staked
-              ? 'bg-emerald-600/30 border border-emerald-500/50 text-emerald-300'
-              : 'bg-gradient-to-r from-orange-500 to-teal-500 text-white shadow-orange-500/20 hover:opacity-90'
-          }`}
+          disabled
+          className="w-full py-3 rounded-2xl font-bold text-xs bg-neutral-800 text-neutral-500 border border-neutral-700 cursor-not-allowed"
         >
-          <span>{staked ? 'Pool Active (+14.2% APY Yielding)' : 'Stake VQ Tokens'}</span>
+          Staking Unavailable (Backend Pending)
         </button>
       </div>
 
       {/* Transactions History Visual Ledger */}
       <div className="space-y-3">
-        <h3 className="text-base font-bold flex items-center space-x-2">
-          <Wallet className="w-4 h-4 text-orange-400" />
-          <span>Transaction Ledger</span>
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-bold flex items-center space-x-2">
+            <Wallet className="w-4 h-4 text-orange-400" />
+            <span>Transaction Ledger</span>
+          </h3>
+          <button
+            onClick={() => loadWalletData()}
+            className="text-xs text-teal-400 font-semibold hover:underline cursor-pointer"
+          >
+            Refresh
+          </button>
+        </div>
 
         {loading ? (
           <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800 p-6 text-center text-xs text-neutral-400">
-            Loading transaction history...
+            Loading ledger from Supabase...
           </div>
         ) : historyError ? (
           <div role="alert" className="rounded-2xl bg-amber-500/10 border border-amber-500/30 p-6 text-center space-y-2">
-            <h4 className="font-bold text-xs text-amber-300">Transaction history unavailable</h4>
+            <h4 className="font-bold text-xs text-amber-300">Transaction ledger notice</h4>
             <p className="text-[11px] text-neutral-300">{historyError}</p>
           </div>
         ) : transactions.length > 0 ? (
           <div className="space-y-2">
-            {transactions.map((tx) => (
-              <div key={tx.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                    tx.amount > 0 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                  }`}>
-                    {tx.amount > 0 ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
+            {transactions.map((tx) => {
+              const isCredit = tx.to_user_id === user?.id || tx.amount > 0;
+              return (
+                <div key={tx.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                      isCredit ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                    }`}>
+                      {isCredit ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-xs text-white">{tx.description || `${tx.type} transaction`}</h4>
+                      <p className="text-[10px] text-neutral-500">{new Date(tx.created_at).toLocaleString()}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-xs text-white">{tx.description}</h4>
-                    <p className="text-[10px] text-neutral-500">{new Date(tx.created_at).toLocaleDateString()}</p>
-                  </div>
+                  <span className={`font-black text-sm ${isCredit ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {isCredit ? `+${tx.amount}` : `-${tx.amount}`} VQ
+                  </span>
                 </div>
-                <span className={`font-black text-sm ${tx.amount > 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                  {tx.amount > 0 ? `+${tx.amount}` : tx.amount} VQ
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800/80 p-6 text-center space-y-2">
             <Coins className="w-8 h-8 text-amber-400/60 mx-auto" />
             <h4 className="font-bold text-xs text-white">No transactions recorded yet</h4>
             <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
-              Check in at Vibe Orbit waypoints or complete cultural trails to earn your first VQ tokens.
+              Your signup allocation and transfers will appear here once recorded in Supabase.
             </p>
           </div>
         )}
@@ -281,14 +287,21 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
             </div>
 
             <form onSubmit={handleSendSubmit} className="space-y-3">
+              {transferError && (
+                <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-center space-x-1.5">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{transferError}</span>
+                </div>
+              )}
+
               <div>
-                <label className="block text-xs font-bold text-neutral-300 mb-1">Recipient Handle *</label>
+                <label className="block text-xs font-bold text-neutral-300 mb-1">Recipient @Username *</label>
                 <input
                   type="text"
                   required
-                  value={recipient}
-                  onChange={(e) => setRecipient(e.target.value)}
-                  placeholder="@username"
+                  value={recipientHandle}
+                  onChange={(e) => setRecipientHandle(e.target.value)}
+                  placeholder="e.g. tariq"
                   className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
                 />
               </div>
@@ -327,9 +340,10 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-600 text-neutral-950 font-black text-xs hover:opacity-95 transition cursor-pointer shadow-lg"
+                  disabled={transferLoading}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-600 text-neutral-950 font-black text-xs hover:opacity-95 transition cursor-pointer shadow-lg disabled:opacity-50"
                 >
-                  Transfer VQ
+                  {transferLoading ? 'Executing RPC...' : 'Transfer VQ'}
                 </button>
               </div>
             </form>
@@ -375,7 +389,7 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
         </div>
       )}
 
-      {/* Buy VQ Modal */}
+      {/* Buy VQ Modal (Truthful unavailable state without payment gateway backend) */}
       {isBuyOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
           <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-6 space-y-4 shadow-2xl text-white">
@@ -389,30 +403,16 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
               </button>
             </div>
 
-            <div className="space-y-3">
-              <div onClick={() => handleBuyVq(100)} className="rounded-2xl bg-neutral-950 border border-neutral-800 hover:border-amber-500 p-4 flex items-center justify-between cursor-pointer transition">
-                <div>
-                  <h4 className="font-bold text-sm text-white">100 VQ Starter Pack</h4>
-                  <p className="text-[10px] text-neutral-400">Instant off-chain minting</p>
-                </div>
-                <span className="font-black text-amber-300 text-sm">$0.99</span>
-              </div>
-
-              <div onClick={() => handleBuyVq(500)} className="rounded-2xl bg-neutral-950 border border-neutral-800 hover:border-amber-500 p-4 flex items-center justify-between cursor-pointer transition">
-                <div>
-                  <h4 className="font-bold text-sm text-white">500 VQ Explorer Pack</h4>
-                  <p className="text-[10px] text-neutral-400">Most popular choice</p>
-                </div>
-                <span className="font-black text-amber-300 text-sm">$4.99</span>
-              </div>
-
-              <div onClick={() => handleBuyVq(1200)} className="rounded-2xl bg-neutral-950 border border-neutral-800 hover:border-amber-500 p-4 flex items-center justify-between cursor-pointer transition">
-                <div>
-                  <h4 className="font-bold text-sm text-white">1,200 VQ Legend Pack</h4>
-                  <p className="text-[10px] text-neutral-400">Best value (+20% bonus)</p>
-                </div>
-                <span className="font-black text-amber-300 text-sm">$9.99</span>
-              </div>
+            <div className="space-y-3 text-center py-4">
+              <p className="text-xs text-neutral-300">
+                Payment gateway and fiat purchase webhooks require authorized backend integration.
+              </p>
+              <button
+                onClick={() => setIsBuyOpen(false)}
+                className="w-full py-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs transition cursor-pointer"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
