@@ -203,7 +203,11 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
     return () => {
       if (mapInstance.current) {
-        mapInstance.current.remove();
+        try {
+          mapInstance.current.remove();
+        } catch {
+          // Ignore AbortError / tile cancellation on unmount
+        }
         mapInstance.current = null;
       }
     };
@@ -239,7 +243,11 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     if (!map || !maplibregl) return;
 
     // Remove previous place markers
-    markersRef.current.forEach((m) => m.remove());
+    markersRef.current.forEach((m) => {
+      try {
+        m.remove();
+      } catch {}
+    });
     markersRef.current = [];
 
     // Add or update User location beacon marker
@@ -322,7 +330,11 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     });
 
     return () => {
-      markersRef.current.forEach((m) => m.remove());
+      markersRef.current.forEach((m) => {
+        try {
+          m.remove();
+        } catch {}
+      });
       markersRef.current = [];
     };
   }, [places, locationState.coords]);

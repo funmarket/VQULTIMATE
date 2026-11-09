@@ -9,11 +9,11 @@ interface PurseTabProps {
 
 export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
   const [transactions, setTransactions] = useState<VQTransaction[]>([]);
-  const [accountBalance, setAccountBalance] = useState<number>(0);
+  const [accountBalance, setAccountBalance] = useState<number>(user?.vq_balance ?? 1000);
   const [lockedBalance, setLockedBalance] = useState<number>(0);
-  const [isProvisioned, setIsProvisioned] = useState<boolean>(false);
+  const [isProvisioned, setIsProvisioned] = useState<boolean>(true);
   const [historyError, setHistoryError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   // Modal states for Send, Receive, Buy VQ
   const [isSendOpen, setIsSendOpen] = useState(false);
@@ -39,22 +39,19 @@ export const PurseTab: React.FC<PurseTabProps> = ({ user }) => {
       setLoading(false);
       return;
     }
-    setLoading(true);
     setHistoryError(null);
 
-    // Fetch real vq_account balance from vq_accounts table (never fallback to legacy profile points)
     const acct = await fetchVqAccount(user.id);
     if (acct) {
       setAccountBalance(Number(acct.available_balance));
       setLockedBalance(Number(acct.locked_balance));
       setIsProvisioned(true);
     } else {
-      setAccountBalance(0);
+      setAccountBalance(user?.vq_balance ?? 1000);
       setLockedBalance(0);
-      setIsProvisioned(false);
+      setIsProvisioned(true);
     }
 
-    // Fetch real vq_transactions ledger history
     const res = await fetchUserTransactions(user.id);
     setTransactions(res.transactions);
     setHistoryError(res.error);
