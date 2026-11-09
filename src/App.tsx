@@ -14,6 +14,7 @@ import { AdminModal } from './components/AdminModal';
 import { subscribeAuthProfile, UserProfile } from './domains/d01_auth';
 import { VibePlace } from './domains/d03_vibe_orbit';
 import { CheckCircle2 } from 'lucide-react';
+import { UserProfileCard } from './components/UserProfileCard';
 import { AnimatePresence } from 'motion/react';
 import { useTheme } from './lib/theme';
 import { useProfileSettings } from './features/profile/hooks/useProfileSettings';
@@ -32,6 +33,7 @@ export default function App() {
   const [isMessagesOpen, setIsMessagesOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<VibePlace | null>(null);
+  const [inspectedProfile, setInspectedProfile] = useState<UserProfile | null>(null);
   const [appToast, setAppToast] = useState<string | null>(null);
 
   useEffect(() => subscribeAuthProfile(setUser), []);
@@ -87,6 +89,7 @@ export default function App() {
             user={user}
             onNavigateTab={setActiveTab}
             onSelectPlace={(place) => setSelectedPlace(place)}
+            onInspectUser={(profile) => setInspectedProfile(profile)}
           />
         )}
         {activeTab === 'explore' && (
@@ -150,6 +153,16 @@ export default function App() {
             setSelectedPlace(null);
             setActiveTab('explore');
           }}
+        />
+      )}
+
+      {inspectedProfile && (
+        <UserProfileCard
+          profile={inspectedProfile}
+          currentUser={user}
+          onClose={() => setInspectedProfile(null)}
+          onRequireAuth={() => setIsProfileOpen(true)}
+          onToast={showToast}
         />
       )}
     </div>

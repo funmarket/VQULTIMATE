@@ -24,9 +24,10 @@ interface HomeTabProps {
   user: UserProfile | null;
   onNavigateTab: (tab: any) => void;
   onSelectPlace: (place: VibePlace) => void;
+  onInspectUser?: (profile: UserProfile) => void;
 }
 
-export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectPlace }) => {
+export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectPlace, onInspectUser }) => {
   const [guardians, setGuardians] = useState<VibeGuardian[]>([]);
   const [places, setPlaces] = useState<VibePlace[]>([]);
   const [trails, setTrails] = useState<CulturalTrail[]>([]);
@@ -545,7 +546,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
           SOCIAL FEED: MY NETWORK | LOCAL VIBES | FOR YOU
           Placed right after Activities
          ======================================================== */}
-      <HomeSocialFeed user={user} onOpenComments={handleOpenComments} onToast={showToast} />
+      <HomeSocialFeed user={user} onOpenComments={handleOpenComments} onToast={showToast} onInspectUser={onInspectUser} />
 
       {/* Comments Modal for Social Feed */}
       {activePostId && (

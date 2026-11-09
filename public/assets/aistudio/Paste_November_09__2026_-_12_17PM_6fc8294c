@@ -1,0 +1,489 @@
+To ensure Gemini generates precise, production-ready code that adheres strictly to your architecture without taking shortcuts ("fake implementation"), you need a highly structured, context-aware prompt.
+Below is the Master Prompt to send to Gemini for the application logic, followed by the Supabase SQL Editor Prompt to set up your database schema.
+
+🛠️ Part 1: The Master Prompt for Gemini (App Logic)
+
+Copy and paste the text below into your session with Gemini once you fill in the bracketed [...] information.
+text
+You are an expert software engineer specializing in clean architecture and domain-driven design. Your task is to implement a new feature: VQ Rewards. 
+
+You must write production-ready, fully fleshed-out code. Do not use placeholders, "// TODO", or write truncated "mock" implementations. Respect domain ownership and our existing app structure.
+
+### 1. The Core Idea & Requirements:
+[INSERT YOUR DETAILED VQ REWARDS IDEA HERE. e.g., "Users earn 10 VQ points every time they complete a daily quiz. They can redeem 100 points for a $5 voucher."]
+
+### 2. Technical Architecture & Constraints:
+- Domain Ownership: Keep all business logic isolated within the VQ/Rewards domain layer. Do not leak database or UI concerns into the domain models.
+- State Management / Data Flow: Follow the existing app pattern ([e.g., Repository Pattern / BLoC / Redux / Services]). Data must flow from Data Sources -> Repositories -> Use Cases/Services.
+- Safety: Ensure all point transactions are validated (e.g., users cannot spend points they don't have, inputs must be positive integers).
+
+### 3. Expected Outputs:
+Provide the full code implementation for the following files matching our file naming conventions:
+1. Domain Entity/Model: The core VQ Reward data structure.
+2. Repository Interface & Concrete Implementation: Methods for fetching balance, adding points, and redeeming rewards.
+3. Service / Use Case Layer: The business logic handling the rules of the reward system.
+4. Controller / API Route: The entry point exposed to the app front-end.
+
+Write complete code blocks for each. Do not skip any lines.
+Use code with caution.
+
+🗄️ Part 2: The Supabase SQL Editor Prompt
+
+Run this prompt in a separate Gemini window or sequence to generate the exact SQL migration script needed for your Supabase backend.
+text
+Act as a Senior Database Administrator. Write a clean, optimized SQL script to be executed in the Supabase SQL Editor to support a "VQ Rewards" system. 
+
+### Requirements:
+1. Tables: 
+   - A `user_vq_balances` table tracking each user's current `current_points` and `total_earned_points`. Link this via a foreign key to the existing Supabase `auth.users` table (`user_id`).
+   - A `vq_point_ledger` table to log every transaction (audit trail) with fields: `id`, `user_id`, `amount` (can be positive or negative), `transaction_type` (e.g., 'earn', 'redeem'), `description`, and `created_at`.
+
+2. Security & Constraints:
+   - Add a check constraint to ensure `current_points` in `user_vq_balances` never drops below 0.
+   - Enable Row Level Security (RLS) on both tables. 
+   - Create RLS policies allowing users to only read their own balances and ledger history.
+
+3. Database Automation (Triggers):
+   - Write a PostgreSQL function and an AFTER INSERT trigger on the `vq_point_ledger` table that automatically updates (increments/decrements) the `current_points` and `total_earned_points` in the `user_vq_balances` table whenever a new ledger entry is made.
+
+Provide the pure, copy-pasteable SQL block. Do not include markdown text inside the code block.
+Use code with caution.
+To make these prompts work perfectly for your project, please let me know:
+• What programming language and framework is your app built with (e.g., Flutter/Dart, React Native/TypeScript, Node.js)?
+• What is the exact business logic for your VQ rewards (how do users earn them, and what can they redeem them for)?
+Providing these details allows me to customize the prompts specifically to your codebase structure.
+
+High-Level Model (Recommended)textPhase 1 (Now) — Pure Off-Chain VQ (Telegram Stars style)
+  • Users buy VQ with fiat or crypto
+  • Users send / tip / spend VQ instantly with zero gas
+  • Full double-entry ledger in Supabase
+  • Purse UI designed like a modern wallet (Phantom-like features)
+
+Phase 2 (Later) — On-Chain Bridge
+  • Redeem in-app VQ → real SPL $VQ token
+  • Optional: Deposit on-chain $VQ → in-app credit (auto-deduct model)This matches how Telegram Stars, Discord Nitro credits, and most successful in-app currencies work. You get speed, zero friction, and full control before introducing blockchain complexity.Detailed Off-Chain System Spec (for Gemini / implementation)1. Database (Supabase) — Double-Entry LedgerCreate these tables (or equivalent):
+vq_accounts
+user_id (primary key, references profiles)
+available_balance (numeric, never negative)
+locked_balance (for pending stakes, redemptions, etc.)
+updated_at
+
+vq_transactions (immutable log)
+id (uuid)
+idempotency_key (unique)
+from_user_id (nullable for system mints / purchases)
+to_user_id (nullable for burns / spends)
+amount (always positive)
+type (purchase | tip | transfer | reward | spend | stake | unstake | redemption)
+status (pending | completed | failed)
+description / metadata (jsonb)
+created_at
+
+All balance changes must go through a single Supabase RPC or Edge Function that runs an atomic transaction:
+Check sufficient available_balance.
+Debit sender + credit receiver.
+Insert immutable transaction rows.
+Use the idempotency key to prevent double-processing.
+2. Core Features to Implement Now
+Buy VQ (Purse page)
+Fiat (Stripe / Whop / etc.) or crypto payment.
+On successful payment webhook → mint VQ to the user’s account (system → user transfer).
+
+Send / Tip VQ
+User selects another user (by handle or from recent interactions).
+Instant off-chain transfer with confirmation.
+Optional tip presets (like Telegram Stars).
+
+Spend VQ in-app
+Book a trail, tip a Guardian, unlock features, stake in a district pool, etc.
+Each spend is a transfer from user → system or user → Guardian.
+
+Transaction history
+Full ledger view in Purse (incoming / outgoing, filters by type).
+
+Balance display
+Available + locked, with real-time updates (Supabase realtime).
+
+3. Purse Page Design (Phantom-like, future-proof)Design the Purse tab so it already feels like a real wallet, even though everything is off-chain:
+Large balance card (Available VQ + optional locked).
+Quick actions row: Send, Receive (show handle/QR for tips), Buy, History.
+Recent transactions list (with icons, amounts, timestamps, status).
+“Connected Wallet” section (placeholder for now) that will later show the linked Solana address and on-chain $VQ balance.
+Staking / District pools section (can stay visual for now or be made real with the ledger).
+Clear labels: “In-app VQ” vs future “On-chain $VQ”.
+This way the UI does not need a redesign when you add the real Solana bridge.4. Auto-Deduct from Real Solana Token (Later Phase)This is doable, but choose one of these models later:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ModelHow it worksRecommendationDeposit model (easiest)User sends on-chain $VQ to a treasury address → backend credits in-app balance. Spending is pure off-chain.Best starting point for “auto-deduct”.Custodial hot walletApp holds the tokens; in-app balance is just a claim.Simple but higher trust/security burden.User-signed every spendApp asks for signature on every tip/spend.Terrible UX — avoid.Embedded wallet + session keys (advanced)Privy/embedded wallet with limited permissions.Possible later, more complex.For the first version, do not try to auto-deduct from an external Phantom wallet on every action. Keep everything pure off-chain. Add a “Deposit $VQ” and “Redeem to Solana” flow later.Implementation Priority (tell Gemini this order)
+Proper double-entry ledger tables + atomic RPC/Edge Function for transfers.
+Update PurseTab UI to the wallet-style layout (balance, Send, Buy, History, Receive).
+Buy VQ flow (payment → mint to ledger).
+Send / Tip between users.
+Real transaction history (replace the currently disabled d06_purse API).
+Wire existing reward sources (check-ins, trails, etc.) to the new ledger.
+Placeholder “Connect Solana Wallet” button for future bridge.
+Security & Practical Notes
+Never expose private keys or Solana signing in the frontend.
+All balance mutations go through backend functions with RLS protection.
+Use idempotency keys on every purchase and transfer.
+Start with one-way (in-app only). Redemption and deposit can be Phase 2.
+This design gives you a complete, usable Telegram Stars-style economy immediately, with a Purse UI that is already prepared for the real Solana $VQ token later. The auto-deduct feature is feasible as a deposit-based system once the off-chain ledger is solid. here is the prompt "You are implementing the off-chain VQ reward system (Telegram Stars style) for the existing VQULTIMATE / VibeQuest React + Vite + TypeScript + Supabase app (repo: funmarket/VQULTIMATE).GoalBuild a complete, production-ready in-app VQ economy that works entirely off-chain for now. Users must be able to:
+Buy VQ
+Send / tip VQ to other users
+Spend VQ inside the app
+See full transaction history
+Have a clean, Phantom-like Purse wallet UI
+The system must be designed so that a future on-chain Solana $VQ SPL token redemption + deposit bridge can be added later without rewriting the core.Current State (do not break)
+Five-tab mobile-first shell (Home, Explore, Share, Vibe, Purse)
+User profile already has vq_balance: number
+src/components/PurseTab.tsx exists but is incomplete (fake staking, disabled history)
+src/domains/d06_purse exists but its API is currently disabled pending a proper ledger
+Auth is Supabase-based (d01_auth)
+Architecture Rules
+Pure off-chain double-entry ledger in Supabase.
+All balance changes must be atomic (use a Supabase RPC or Edge Function).
+Never allow negative balances.
+Every mutation must use an idempotency key.
+Users can only read their own transactions (strict RLS).
+Writes to the ledger only happen through trusted backend functions (not direct client inserts).
+Keep the existing domain structure (src/domains/d06_purse or a new d20_vq_ledger if cleaner).
+Required Database SchemaCreate (or migrate to) these tables:vq_accounts
+user_id uuid primary key (references profiles.id)
+available_balance numeric(18,4) default 0 not null check (>= 0)
+locked_balance numeric(18,4) default 0 not null check (>= 0)
+updated_at timestamptz
+vq_transactions (immutable)
+id uuid primary key
+idempotency_key text unique not null
+from_user_id uuid nullable (null = system mint / purchase)
+to_user_id uuid nullable (null = system burn / spend)
+amount numeric(18,4) not null check (> 0)
+type text not null check (in 'purchase','reward','tip','transfer','spend','stake','unstake','redemption')
+status text not null default 'completed' check (in 'pending','completed','failed')
+description text
+metadata jsonb
+created_at timestamptz default now()
+Atomic transfer function (Supabase RPC or Edge Function):SQL-- Pseudocode of required logic
+BEGIN
+  -- Check idempotency
+  -- Lock rows
+  -- Verify sender available_balance >= amount
+  -- Debit sender available_balance
+  -- Credit receiver available_balance
+  -- Insert two ledger rows (or one with from/to) + one transaction log
+  -- Commit
+ENDFeatures to Implement
+Buy VQ
+Button in Purse → payment flow (Stripe, Whop, or simple mock for now)
+On success webhook / confirmation → call ledger function to mint VQ (system → user)
+
+Send / Tip VQ
+Search user by handle or select from recent
+Amount input + optional message
+Instant transfer via the atomic function
+Success toast + updated balance
+
+Spend VQ
+Hook into existing features (check-ins, trail booking, Guardian tips, etc.)
+Each spend = user → system or user → Guardian transfer
+
+Transaction History
+Full list in Purse (incoming green, outgoing amber/orange)
+Show type, amount, counterpart, date, status
+Realtime updates preferred
+
+Receive
+Show user’s handle + QR or copyable address for tips
+
+Balance display
+Available + Locked
+Realtime via Supabase subscription if possible
+
+Purse UI Requirements (Phantom-like design)Redesign PurseTab.tsx to feel like a modern crypto wal
+
+High-Level Model (Recommended)textPhase 1 (Now) — Pure Off-Chain VQ (Telegram Stars style)
+ • Users buy VQ with fiat or crypto
+ • Users send / tip / spend VQ instantly with zero gas
+ • Full double-entry ledger in Supabase
+ • Purse UI designed like a modern wallet (Phantom-like features)
+
+Phase 2 (Later) — On-Chain Bridge
+ • Redeem in-app VQ → real SPL $VQ token
+ • Optional: Deposit on-chain $VQ → in-app credit (auto-deduct model)This matches how Telegram Stars, Discord Nitro credits, and most successful in-app currencies work. You get speed, zero friction, and full control before introducing blockchain complexity.Detailed Off-Chain System Spec (for Gemini / implementation)1. Database (Supabase) — Double-Entry LedgerCreate these tables (or equivalent):
+vq_accounts
+user_id (primary key, references profiles)
+available_balance (numeric, never negative)
+locked_balance (for pending stakes, redemptions, etc.)
+updated_at
+
+vq_transactions (immutable log)
+id (uuid)
+idempotency_key (unique)
+from_user_id (nullable for system mints / purchases)
+to_user_id (nullable for burns / spends)
+amount (always positive)
+type (purchase | tip | transfer | reward | spend | stake | unstake | redemption)
+status (pending | completed | failed)
+description / metadata (jsonb)
+created_at
+
+All balance changes must go through a single Supabase RPC or Edge Function that runs an atomic transaction:
+Check sufficient available_balance.
+Debit sender + credit receiver.
+Insert immutable transaction rows.
+Use the idempotency key to prevent double-processing.
+2. Core Features to Implement Now
+Buy VQ (Purse page)
+Fiat (Stripe / Whop / etc.) or crypto payment.
+On successful payment webhook → mint VQ to the user’s account (system → user transfer).
+
+Send / Tip VQ
+User selects another user (by handle or from recent interactions).
+Instant off-chain transfer with confirmation.
+Optional tip presets (like Telegram Stars).
+
+Spend VQ in-app
+Book a trail, tip a Guardian, unlock features, stake in a district pool, etc.
+Each spend is a transfer from user → system or user → Guardian.
+
+Transaction history
+Full ledger view in Purse (incoming / outgoing, filters by type).
+
+Balance display
+Available + locked, with real-time updates (Supabase realtime).
+
+3. Purse Page Design (Phantom-like, future-proof)Design the Purse tab so it already feels like a real wallet, even though everything is off-chain:
+Large balance card (Available VQ + optional locked).
+Quick actions row: Send, Receive (show handle/QR for tips), Buy, History.
+Recent transactions list (with icons, amounts, timestamps, status).
+“Connected Wallet” section (placeholder for now) that will later show the linked Solana address and on-chain $VQ balance.
+Staking / District pools section (can stay visual for now or be made real with the ledger).
+Clear labels: “In-app VQ” vs future “On-chain $VQ”.
+This way the UI does not need a redesign when you add the real Solana bridge.4. Auto-Deduct from Real Solana Token (Later Phase)This is doable, but choose one of these models later:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ModelHow it worksRecommendationDeposit model (easiest)User sends on-chain $VQ to a treasury address → backend credits in-app balance. Spending is pure off-chain.Best starting point for “auto-deduct”.Custodial hot walletApp holds the tokens; in-app balance is just a claim.Simple but higher trust/security burden.User-signed every spendApp asks for signature on every tip/spend.Terrible UX — avoid.Embedded wallet + session keys (advanced)Privy/embedded wallet with limited permissions.Possible later, more complex.For the first version, do not try to auto-deduct from an external Phantom wallet on every action. Keep everything pure off-chain. Add a “Deposit $VQ” and “Redeem to Solana” flow later.Implementation Priority (tell Gemini this order)
+Proper double-entry ledger tables + atomic RPC/Edge Function for transfers.
+Update PurseTab UI to the wallet-style layout (balance, Send, Buy, History, Receive).
+Buy VQ flow (payment → mint to ledger).
+Send / Tip between users.
+Real transaction history (replace the currently disabled d06_purse API).
+Wire existing reward sources (check-ins, trails, etc.) to the new ledger.
+Placeholder “Connect Solana Wallet” button for future bridge.
+Security & Practical Notes
+Never expose private keys or Solana signing in the frontend.
+All balance mutations go through backend functions with RLS protection.
+Use idempotency keys on every purchase and transfer.
+Start with one-way (in-app only). Redemption and deposit can be Phase 2.
+This design gives you a complete, usable Telegram Stars-style economy immediately, with a Purse UI that is already prepared for the real Solana $VQ token later. The auto-deduct feature is feasible as a deposit-based system once the off-chain ledger is solid. here is the prompt "You are implementing the off-chain VQ reward system (Telegram Stars style) for the existing VQULTIMATE / VibeQuest React + Vite + TypeScript + Supabase app (repo: funmarket/VQULTIMATE).GoalBuild a complete, production-ready in-app VQ economy that works entirely off-chain for now. Users must be able to:
+Buy VQ
+Send / tip VQ to other users
+Spend VQ inside the app
+See full transaction history
+Have a clean, Phantom-like Purse wallet UI
+The system must be designed so that a future on-chain Solana $VQ SPL token redemption + deposit bridge can be added later without rewriting the core.Current State (do not break)
+Five-tab mobile-first shell (Home, Explore, Share, Vibe, Purse)
+User profile already has vq_balance: number
+src/components/PurseTab.tsx exists but is incomplete (fake staking, disabled history)
+src/domains/d06_purse exists but its API is currently disabled pending a proper ledger
+Auth is Supabase-based (d01_auth)
+Architecture Rules
+Pure off-chain double-entry ledger in Supabase.
+All balance changes must be atomic (use a Supabase RPC or Edge Function).
+Never allow negative balances.
+Every mutation must use an idempotency key.
+Users can only read their own transactions (strict RLS).
+Writes to the ledger only happen through trusted backend functions (not direct client inserts).
+Keep the existing domain structure (src/domains/d06_purse or a new d20_vq_ledger if cleaner).
+Required Database SchemaCreate (or migrate to) these tables:vq_accounts
+user_id uuid primary key (references profiles.id)
+available_balance numeric(18,4) default 0 not null check (>= 0)
+locked_balance numeric(18,4) default 0 not null check (>= 0)
+updated_at timestamptz
+vq_transactions (immutable)
+id uuid primary key
+idempotency_key text unique not null
+from_user_id uuid nullable (null = system mint / purchase)
+to_user_id uuid nullable (null = system burn / spend)
+amount numeric(18,4) not null check (> 0)
+type text not null check (in 'purchase','reward','tip','transfer','spend','stake','unstake','redemption')
+status text not null default 'completed' check (in 'pending','completed','failed')
+description text
+metadata jsonb
+created_at timestamptz default now()
+Atomic transfer function (Supabase RPC or Edge Function):SQL-- Pseudocode of required logic
+BEGIN
+ -- Check idempotency
+ -- Lock rows
+ -- Verify sender available_balance >= amount
+ -- Debit sender available_balance
+ -- Credit receiver available_balance
+ -- Insert two ledger rows (or one with from/to) + one transaction log
+ -- Commit
+ENDFeatures to Implement
+Buy VQ
+Button in Purse → payment flow (Stripe, Whop, or simple mock for now)
+On success webhook / confirmation → call ledger function to mint VQ (system → user)
+
+Send / Tip VQ
+Search user by handle or select from recent
+Amount input + optional message
+Instant transfer via the atomic function
+Success toast + updated balance
+
+Spend VQ
+Hook into existing features (check-ins, trail booking, Guardian tips, etc.)
+Each spend = user → system or user → Guardian transfer
+
+Transaction History
+Full list in Purse (incoming green, outgoing amber/orange)
+Show type, amount, counterpart, date, status
+Realtime updates preferred
+
+Receive
+Show user’s handle + QR or copyable address for tips
+
+Balance display
+Available + Locked
+Realtime via Supabase subscription if possible
+
+Purse UI Requirements (Phantom-like design)Redesign PurseTab.tsx to feel like a modern crypto wal
+Here are the two highly structured, production-ready prompts optimized for Gemini to process your detailed spec exactly as intended without shortcuts.
+
+🛠️ Part 1: The Master Prompt for Gemini (App Logic & UI)
+
+Copy and paste the exact block below into your main Gemini window to generate your React + TypeScript implementation.
+text
+You are an expert Principal Frontend & Full-Stack Engineer working on the codebase repository `funmarket/VQULTIMATE` (React, Vite, TypeScript, Tailwind CSS, and Supabase). 
+
+Your task is to fully implement the Phase 1 Off-Chain VQ Reward System (Telegram Stars style) matching the strict spec below. You must write complete, production-ready, highly typed TypeScript code. Do not use shortcuts, "// TODO" placeholders, or truncate code arrays/components.
+
+### 1. Context & Architecture Ground Rules:
+- Current State: The app uses a 5-tab mobile-first shell. `src/components/PurseTab.tsx` is currently incomplete with fake layout data. The `src/domains/d06_purse` domain contains code that needs to be refactored or completely replaced with a clean implementation matching our new architecture.
+- Domain Isolation: Place all clean business logic inside `src/domains/d06_purse`. Data must flow through clear Service/Repository patterns, separating network/Supabase calls from UI presentation.
+- Idempotency & Safety: Every balance-altering operation must generate and pass a client-side generated UUID as an `idempotency_key`. 
+
+### 2. File Implementation Deliverables:
+Provide the full, unabridged code for the following files:
+
+#### File A: `src/domains/d06_purse/types.ts`
+- Strong TypeScript interfaces matching the Supabase schema: `VqAccount` (user_id, available_balance, locked_balance, updated_at) and `VqTransaction` (id, idempotency_key, from_user_id, to_user_id, amount, type, status, description, metadata, created_at).
+- Explicit enums/types for `TransactionType` ('purchase','reward','tip','transfer','spend','stake','unstake','redemption') and `TransactionStatus` ('pending','completed','failed').
+
+#### File B: `src/domains/d06_purse/vqService.ts`
+- Implement a class or clean modular functions containing all API actions using the `@supabase/supabase-js` client.
+- `fetchBalances(userId: string): Promise<VqAccount>`
+- `fetchTransactionHistory(userId: string): Promise<VqTransaction[]>`
+- `executeTransfer(params: { idempotencyKey: string; toUserId: string; amount: number; type: TransactionType; description?: string }): Promise<void>` -> Must invoke the database atomic RPC function `rpc('execute_vq_transfer', ...)`.
+- `subscribeToBalanceUpdates(userId: string, onUpdate: (balance: VqAccount) => void): () => void` -> Implements real-time Supabase subscriptions channel listening to changes on `vq_accounts` for the current user.
+
+#### File C: `src/components/PurseTab.tsx`
+- Redesign this component from scratch into a premium, modern Web3 wallet UI inspired by Phantom wallet aesthetics. Use standard Tailwind CSS.
+- **Top Card:** Large typography displaying `available_balance` and `locked_balance` with real-time reactive updates.
+- **Quick Action Row:** Modern icon-buttons for:
+  - **Send:** Opens an interactive modal allowing selecting/typing a user handle, an amount input, and execution with a success toast.
+  - **Receive:** Displays the logged-in user's handle alongside a visual mockup representation of a QR code/copyable layout.
+  - **Buy:** Opens a mock payment modal (simulating Stripe/Whop webhooks) that calls a system-mint function.
+- **Transaction History List:** Renders incoming amounts in green (plus sign) and outgoing amounts in amber/orange (minus sign). Parses dates cleanly, demonstrates explicit transaction type icons, and reads full ledger data without mocks.
+- **Future-Proof Bridge Placeholders:** Visual, non-functional "Connect Solana Wallet" section and "Staking Pools" area explicitly separating "In-app VQ" from future "On-chain $VQ" tokens.
+
+Provide the exact copy-pasteable files sequentially. Write every single line of code completely.
+Use code with caution.
+
+🗄️ Part 2: The Supabase SQL Editor Prompt
+
+Run this prompt in your Supabase SQL Editor window (or a code generation thread) to generate the database script.
+text
+Act as a Senior Database Architect specializing in PostgreSQL and Supabase. Write a highly optimized, bulletproof, migration-ready SQL script to set up a double-entry off-chain ledger system for "VQ Rewards".
+
+### 1. Database Schema Design:
+- Create `vq_accounts` table:
+  - `user_id` uuid primary key (references existing `auth.users(id)` or `profiles(id)` via ON DELETE CASCADE).
+  - `available_balance` numeric(18,4) not null default 0. Add a check constraint preventing values less than 0.
+  - `locked_balance` numeric(18,4) not null default 0. Add a check constraint preventing values less than 0.
+  - `updated_at` timestamptz default now().
+- Create `vq_transactions` table:
+  - `id` uuid primary key default gen_random_uuid().
+  - `idempotency_key` text unique not null.
+  - `from_user_id` uuid references profiles(id) or auth.users(id) nullable (null represents system mints/purchases).
+  - `to_user_id` uuid references profiles(id) or auth.users(id) nullable (null represents system burns/spends).
+  - `amount` numeric(18,4) not null check (amount > 0).
+  - `type` text not null check (type in ('purchase','reward','tip','transfer','spend','stake','unstake','redemption')).
+  - `status` text not null default 'completed' check (status in ('pending','completed','failed')).
+  - `description` text layout.
+  - `metadata` jsonb default '{}'::jsonb.
+  - `created_at` timestamptz default now().
+
+### 2. Security & RLS Policies:
+- Enable Row Level Security (RLS) on both `vq_accounts` and `vq_transactions`.
+- Create Select policies: Users can only read rows where `auth.uid() = user_id` for balances, and where `auth.uid() = from_user_id` OR `auth.uid() = to_user_id` for transactions.
+- Deny direct Insert/Update modifications to these tables from the client app. All state modifications must happen via the security-definer RPC function below.
+
+### 3. Atomic Database Transfer Function (RPC):
+Write a PostgreSQL function named `execute_vq_transfer` utilizing `SECURITY DEFINER` logic to execute atomic mutations safely:
+- Input parameters: `p_idempotency_key text`, `p_to_user_id uuid`, `p_amount numeric`, `p_type text`, `p_description text`.
+- Context parameters: Sender is evaluated dynamically inside the function using `auth.uid()`.
+- Implementation Logic:
+  1. Check if the provided `p_idempotency_key` already exists in `vq_transactions`. If it does, exit immediately without error to guarantee idempotency.
+  2. Implement row-level locking via `SELECT FOR UPDATE` on the sender's balance row within `vq_accounts`.
+  3. Assert that the sender has an `available_balance` greater than or equal to `p_amount`. Raise an explicit custom exception if funds are insufficient.
+  4. Perform an atomic debit change on the sender's row.
+  5. Perform an atomic credit update on the receiver's row (if the row doesn't exist yet, insert a default zeroed record first).
+  6. Append a single ledger record entry inside `vq_transactions`.
+  7. Wrap the entire operational block inside a native `BEGIN ... EXCEPTION ... END;` transaction context block.
+
+Output only the clean, copy-pasteable pure SQL script ready for the Supabase SQL editor 

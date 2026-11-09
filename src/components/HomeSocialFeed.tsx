@@ -7,11 +7,12 @@ import { UserProfile } from '../domains/d01_auth';
 
 interface HomeSocialFeedProps {
   user: UserProfile | null;
-  onOpenComments: (postId: string) => void; // kept for backwards compatibility if needed
+  onOpenComments: (postId: string) => void;
   onToast: (msg: string) => void;
+  onInspectUser?: (profile: UserProfile) => void;
 }
 
-export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast }) => {
+export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, onInspectUser }) => {
   const [activeTab, setActiveTab] = useState<'network' | 'local' | 'for_you'>('network');
   const [posts, setPosts] = useState<VibePostItem[]>([]);
   const [networkUserIds, setNetworkUserIds] = useState<Set<string>>(new Set());
@@ -124,6 +125,20 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast })
     }
   };
 
+  const handleInspectAuthor = (userId: string, username: string, avatarUrl?: string, createdAt?: string) => {
+    if (!onInspectUser) return;
+    onInspectUser({
+      id: userId,
+      username: username,
+      full_name: username,
+      avatar_url: avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+      vq_balance: 500,
+      reputation: 90,
+      role: 'explorer',
+      created_at: createdAt || new Date().toISOString()
+    });
+  };
+
   const filteredPosts = posts.filter(p => {
     if (activeTab === 'network') {
       if (networkUserIds.size === 0) return true;
@@ -192,11 +207,10 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast })
 
             return (
               <div key={post.id} className="rounded-3xl bg-[#131116] border border-neutral-800 overflow-hidden shadow-xl p-4 space-y-3.5">
-                {/* 1. Media Section (aspect-[4/3] at top) */}
+                {/* 1. Media Section */}
                 {post.image_url && post.image_url.trim() !== '' ? (
                   <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-950">
                     <img src={post.image_url} alt="Scene" className="w-full h-full object-cover" />
-                    {/* Mood Badge overlay at bottom-left */}
                     <div className="absolute bottom-3 left-3 bg-neutral-950/90 text-white font-bold text-xs px-3 py-1.5 rounded-full flex items-center space-x-1.5 border border-neutral-800 shadow">
                       <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
                       <span>COZY</span>
@@ -213,16 +227,19 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast })
                   </div>
                 )}
 
-                {/* 2. Author Row (Below Image) */}
-                <div className="flex items-center justify-between pt-1">
+                {/* 2. Author Row (Clickable to open UserProfileCard) */}
+                <div
+                  onClick={() => handleInspectAuthor(post.user_id, post.username, post.avatar_url, post.created_at)}
+                  className="flex items-center justify-between pt-1 cursor-pointer group"
+                >
                   <div className="flex items-center space-x-3">
                     <img
                       src={post.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
                       alt={post.username}
-                      className="w-10 h-10 rounded-full object-cover border border-amber-500/40 shadow"
+                      className="w-10 h-10 rounded-full object-cover border border-amber-500/40 shadow group-hover:scale-105 transition"
                     />
                     <div>
-                      <h4 className="font-bold text-sm text-amber-300">@{post.username}</h4>
+                      <h4 className="font-bold text-sm text-amber-300 group-hover:underline">@{post.username}</h4>
                       <p className="text-[11px] text-neutral-400">{formattedDate}</p>
                     </div>
                   </div>
@@ -238,40 +255,45 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast })
                   </p>
                 )}
 
-                {/* 4. Social Action Row (Compact Footer) */}
-                <div className="flex items-center justify-between pt-3 border-t border-neutral-800/80 text-xs text-neutral-400">
+                {/* 4. Action Row */}
+                <div className="pt-3 border-t border-neutral-800 flex items-center justify-between text-neutral-400 text-xs">
                   <button
+                    type="button"
                     onClick={() => handleToggleLike(post.id)}
-                    className="flex items-center space-x-1.5 hover:text-rose-400 transition cursor-pointer"
+                    className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl transition cursor-pointer ${
+                      isLiked ? 'text-rose-500 bg-rose-500/10' : 'hover:text-white hover:bg-neutral-800'
+                    }`}
                   >
-                    <Heart className={`w-4 h-4 ${isLiked ? 'text-rose-500 fill-rose-500' : 'text-neutral-400'}`} />
-                    <span className="font-bold text-white">{likesCount}</span>
+                    <Heart className={`w-4 h-4 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
+                    <span className="font-bold">{likesCount}</span>
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => handleToggleComments(post.id)}
-                    className="flex items-center space-x-1.5 hover:text-teal-400 transition cursor-pointer"
+                    className="flex items-center space-x-1.5 px-3 py-2 rounded-xl hover:text-white hover:bg-neutral-800 transition cursor-pointer"
                   >
-                    <MessageCircle className="w-4 h-4 text-neutral-400" />
-                    <span className="font-bold text-white">{post.comments_count} Comments</span>
+                    <MessageCircle className="w-4 h-4" />
+                    <span className="font-bold">{post.comments_count}</span>
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => handleShare(post)}
-                    className="flex items-center space-x-1.5 hover:text-white transition cursor-pointer"
+                    className="flex items-center space-x-1.5 px-3 py-2 rounded-xl hover:text-white hover:bg-neutral-800 transition cursor-pointer"
                   >
-                    <Share2 className="w-4 h-4 text-neutral-400" />
-                    <span className="font-bold text-white">Share</span>
+                    <Share2 className="w-4 h-4" />
+                    <span>Share</span>
                   </button>
                 </div>
 
-                {/* 5. Facebook-Style Inline Comment Section */}
+                {/* 5. Expanded Inline Comments Section */}
                 {isExpanded && (
-                  <div className="pt-3 border-t border-neutral-800 space-y-3 animate-fadeIn">
-                    <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                  <div className="pt-3 border-t border-neutral-800/80 space-y-3 animate-fadeIn">
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
                       {commentsList.length > 0 ? (
-                        commentsList.map((comm) => (
-                          <div key={comm.id} className="flex space-x-2.5 items-start bg-neutral-950/70 p-2.5 rounded-2xl border border-neutral-800/80">
+                        commentsList.map(comm => (
+                          <div key={comm.id} className="flex space-x-2.5 items-start bg-neutral-950 p-2.5 rounded-2xl border border-neutral-800/80">
                             <img
                               src={comm.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'}
                               alt={comm.username}
@@ -279,23 +301,28 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast })
                             />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
-                                <span className="font-bold text-xs text-amber-300">@{comm.username}</span>
-                                <span className="text-[10px] text-neutral-500">
+                                <span
+                                  onClick={() => handleInspectAuthor('u-comm-' + comm.id, comm.username, comm.avatar_url, comm.created_at)}
+                                  className="font-bold text-xs text-amber-300 cursor-pointer hover:underline"
+                                >
+                                  @{comm.username}
+                                </span>
+                                <span className="text-[9px] text-neutral-500">
                                   {new Date(comm.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               </div>
-                              <p className="text-xs text-neutral-300 mt-0.5 leading-relaxed">{comm.content}</p>
+                              <p className="text-xs text-neutral-300 mt-0.5">{comm.content}</p>
                             </div>
                           </div>
                         ))
                       ) : (
-                        <div className="py-3 text-center text-xs text-neutral-500 italic">
-                          No comments yet. Be the first to reply!
+                        <div className="text-center py-3 text-xs text-neutral-500 italic">
+                          No comments yet. Join the conversation!
                         </div>
                       )}
                     </div>
 
-                    <form onSubmit={(e) => handleSendComment(e, post.id)} className="flex items-center space-x-2 pt-1">
+                    <form onSubmit={(e) => handleSendComment(e, post.id)} className="flex items-center space-x-2">
                       <input
                         type="text"
                         value={commentInputs[post.id] || ''}
@@ -306,8 +333,7 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast })
                       <button
                         type="submit"
                         disabled={commentLoading[post.id]}
-                        className="p-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-neutral-950 font-bold transition cursor-pointer disabled:opacity-50"
-                        title="Send comment"
+                        className="p-2 rounded-xl bg-gradient-to-r from-orange-500 to-teal-500 text-white hover:opacity-90 transition cursor-pointer disabled:opacity-50"
                       >
                         <Send className="w-3.5 h-3.5" />
                       </button>
@@ -318,20 +344,19 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast })
             );
           })
         ) : (
-          <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800 p-8 text-center space-y-2">
-            <Sparkles className="w-8 h-8 text-amber-400/60 mx-auto" />
-            <h4 className="font-bold text-xs text-white">No posts in this feed yet</h4>
-            <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
-              Follow explorers into your Orbit or publish a Vibe post to populate your network feed.
-            </p>
+          <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800 p-6 text-center space-y-2">
+            <Sparkles className="w-7 h-7 text-amber-400 mx-auto" />
+            <h4 className="font-bold text-xs text-white">No posts in {activeTab.replace('_', ' ')} feed</h4>
+            <p className="text-[11px] text-neutral-400">Share your district moment or follow explorers in Orbit.</p>
           </div>
         )}
+
         {filteredPosts.length > 3 && (
-          <div className="text-center pt-2 pb-2">
+          <div className="text-center pt-1 pb-2">
             <button
               type="button"
               onClick={() => setShowAllSocial(v => !v)}
-              className="px-5 py-2.5 rounded-2xl bg-neutral-900 border border-neutral-700 text-xs font-bold text-teal-400 hover:bg-neutral-800 transition cursor-pointer shadow-lg"
+              className="px-5 py-2.5 rounded-2xl bg-neutral-900 border border-neutral-700 text-xs font-bold text-amber-400 hover:bg-neutral-800 transition cursor-pointer shadow-lg"
             >
               {showAllSocial ? 'Show Less' : `View All (${filteredPosts.length})`}
             </button>
@@ -341,5 +366,3 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast })
     </div>
   );
 };
-
-
