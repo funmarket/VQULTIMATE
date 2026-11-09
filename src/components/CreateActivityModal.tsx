@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Footprints, X, Upload, MapPin, CheckCircle2, Image as ImageIcon } from 'lucide-react';
+import { Footprints, X, Upload, MapPin, CheckCircle2, Image as ImageIcon, Flame } from 'lucide-react';
 import { UserProfile } from '../domains/d01_auth';
 
 interface CreateActivityModalProps {
@@ -15,6 +15,7 @@ export const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ user, 
   const [location, setLocation] = useState(user?.city || 'Sidi Bou Said');
   const [isLive, setIsLive] = useState(true);
   const [tagline, setTagline] = useState('Casual walk • LIVE');
+  const [isVibeFlash, setIsVibeFlash] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -61,19 +62,20 @@ export const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ user, 
     const activityItem = {
       id: `act-${Date.now()}`,
       title: title.trim(),
-      category: category.toUpperCase(),
+      category: isVibeFlash ? 'VIBEFLASH' : category.toUpperCase(),
       badge: isLive ? 'LIVE' : 'UPCOMING',
       location: location.trim(),
       author: user?.full_name || user?.username || 'District Explorer',
-      tagline: isLive ? 'Casual gathering • LIVE' : tagline,
+      tagline: isVibeFlash ? '⚡ VibeFlash Spontaneous Gathering' : (isLive ? 'Casual gathering • LIVE' : tagline),
       isLive,
+      is_vibeflash: isVibeFlash,
       image: photos[0] || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80',
       gallery: photos
     };
 
     onCreated(activityItem);
     setIsSubmitting(false);
-    onToast('Activity successfully posted to district feed!');
+    onToast(isVibeFlash ? 'VibeFlash spontaneous gathering posted successfully!' : 'Activity successfully posted to district feed!');
     onClose();
   };
 
@@ -85,7 +87,7 @@ export const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ user, 
             <div className="p-2 rounded-2xl bg-teal-500/20 text-teal-400 border border-teal-500/40">
               <Footprints className="w-5 h-5 text-teal-400" />
             </div>
-            <h3 className="font-black text-lg tracking-wide">Create Activity</h3>
+            <h3 className="font-black text-lg tracking-wide">Create Activity & VibeFlash</h3>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white cursor-pointer">
             <X className="w-4 h-4" />
@@ -100,7 +102,7 @@ export const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ user, 
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Sunset Coastal Walk"
+              placeholder="e.g. Sunset Coastal Walk or Spontaneous Poker Night"
               className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
             />
           </div>
@@ -111,7 +113,8 @@ export const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ user, 
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-3 text-xs text-white focus:outline-none focus:border-teal-500"
+                disabled={isVibeFlash}
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-3 text-xs text-white focus:outline-none focus:border-teal-500 disabled:opacity-50"
               >
                 <option value="OUTDOORS">Outdoors</option>
                 <option value="CREATIVE">Creative</option>
@@ -150,7 +153,7 @@ export const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ user, 
             />
           </div>
 
-          {!isLive && (
+          {!isLive && !isVibeFlash && (
             <div>
               <label className="block text-xs font-bold text-neutral-300 mb-1">Schedule / Tagline</label>
               <input
@@ -162,6 +165,25 @@ export const CreateActivityModal: React.FC<CreateActivityModalProps> = ({ user, 
               />
             </div>
           )}
+
+          {/* ACME V8: VibeFlash Spontaneous Activity Option (Separate from Event Flash Alerts) */}
+          <div className="rounded-2xl border border-teal-500/40 bg-teal-950/20 p-3.5 flex items-center justify-between">
+            <div className="flex items-center space-x-2.5">
+              <div className="p-2 rounded-xl bg-teal-500/20 text-teal-400">
+                <Flame className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="font-bold text-xs text-white">Post as VibeFlash (Spontaneous Meetup)</h4>
+                <p className="text-[10px] text-neutral-400">For casual gatherings, school parties, and spontaneous meetups</p>
+              </div>
+            </div>
+            <input
+              type="checkbox"
+              checked={isVibeFlash}
+              onChange={(e) => setIsVibeFlash(e.target.checked)}
+              className="w-4 h-4 rounded accent-teal-500 cursor-pointer"
+            />
+          </div>
 
           {/* Add Photos Section */}
           <div className="space-y-2">

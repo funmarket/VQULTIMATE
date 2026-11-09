@@ -599,53 +599,59 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                   <div
                     key={place.id}
                     onClick={() => onSelectPlace(place)}
-                    className="rounded-3xl bg-neutral-900 border border-neutral-800 hover:border-cyan-500/40 transition cursor-pointer p-4 sm:p-5 flex items-center space-x-4 group shadow-xl relative"
+                    className="rounded-3xl bg-neutral-900 border border-neutral-800 hover:border-cyan-500/40 transition cursor-pointer p-4 sm:p-5 flex flex-col space-y-4 group shadow-xl relative"
                   >
-                    <div className="relative w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 bg-neutral-950">
+                    {/* TOP: Badges & Full-width Title */}
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2 flex-wrap gap-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-teal-300 bg-teal-950/60 border border-teal-500/30 px-2.5 py-0.5 rounded">
+                          {place.category || 'SPOTS'}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-950/60 border border-amber-500/40 px-2.5 py-0.5 rounded">
+                          {tier}
+                        </span>
+                        <span className="text-[10px] font-bold text-purple-300 bg-purple-950/60 border border-purple-500/30 px-2.5 py-0.5 rounded flex items-center space-x-1">
+                          <span>✨</span>
+                          <span>73% MATCH</span>
+                        </span>
+                      </div>
+                      <h4 className="font-black text-lg sm:text-xl text-white tracking-tight leading-snug">
+                        {place.title}
+                      </h4>
+                    </div>
+
+                    {/* MIDDLE: Large Hero Photo spanning full card width */}
+                    <div className="relative w-full h-48 sm:h-56 rounded-2xl overflow-hidden bg-neutral-950 border border-neutral-800 shadow-lg">
                       <img
-                        src={place.image_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=300&q=80'}
+                        src={place.image_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80'}
                         alt={place.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                       />
-                      <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-lg bg-neutral-950/85 text-amber-400 text-xs font-black flex items-center space-x-1 border border-neutral-800 shadow">
+                      <div className="absolute bottom-3 left-3 px-3 py-1 rounded-xl bg-neutral-950/90 text-amber-400 text-xs font-black flex items-center space-x-1.5 border border-neutral-800 shadow-md">
                         <span>★</span>
                         <span>{rating}</span>
                       </div>
                     </div>
 
-                    <div className="flex-1 min-w-0 space-y-1.5">
-                      <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-teal-300 bg-teal-950/60 border border-teal-500/30 px-2 py-0.5 rounded">
-                          {place.category}
-                        </span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-950/60 border border-amber-500/40 px-2 py-0.5 rounded">
-                          {tier}
-                        </span>
-                        <span className="text-[10px] font-bold text-purple-300 bg-purple-950/60 border border-purple-500/30 px-2 py-0.5 rounded flex items-center space-x-1">
-                          <span>✨</span>
-                          <span>73% MATCH</span>
-                        </span>
-                      </div>
+                    {/* BELOW PHOTO: Address */}
+                    <div className="text-xs text-neutral-300 flex items-center space-x-1.5">
+                      <MapPin className="w-4 h-4 text-orange-400 flex-shrink-0" />
+                      <span>{place.address}</span>
+                    </div>
 
-                      <h4 className="font-bold text-base sm:text-lg text-white truncate">{place.title}</h4>
-                      <p className="text-xs text-neutral-400 truncate flex items-center space-x-1">
-                        <MapPin className="w-3.5 h-3.5 text-orange-400 flex-shrink-0" />
-                        <span className="truncate">{place.address}</span>
-                      </p>
-
-                      <div className="flex items-center justify-between text-xs text-neutral-400 pt-1">
-                        <span className="font-medium text-teal-300">
-                          {place.distance_km !== undefined ? `${place.distance_km} km` : '0.3 km'} • {visits} visits
+                    {/* BOTTOM: Distance, visits & reward actions */}
+                    <div className="pt-3 border-t border-neutral-800/80 flex items-center justify-between text-xs">
+                      <span className="font-semibold text-teal-300">
+                        {place.distance_km !== undefined ? `${place.distance_km} km` : '0.3 km'} • {visits} visits
+                      </span>
+                      <div className="flex items-center space-x-2">
+                        <span className="px-3.5 py-2 rounded-xl bg-neutral-800/80 text-neutral-400 border border-neutral-700/60 text-xs font-bold flex items-center space-x-1 shadow">
+                          <span className="text-[10px]">🔒</span>
+                          <span>Locked</span>
                         </span>
-                        <div className="flex items-center space-x-2">
-                          <span className="px-3 py-1.5 rounded-xl bg-neutral-800/80 text-neutral-400 border border-neutral-700/60 text-xs font-bold flex items-center space-x-1 shadow">
-                            <span className="text-[10px]">🔒</span>
-                            <span>Locked</span>
-                          </span>
-                          <span className="px-3 py-1.5 rounded-xl bg-teal-950/60 text-emerald-400 border border-teal-500/30 text-xs font-bold shadow">
-                            +{place.vq_reward} PTS
-                          </span>
-                        </div>
+                        <span className="px-3.5 py-2 rounded-xl bg-teal-950/60 text-emerald-400 border border-teal-500/30 text-xs font-bold shadow">
+                          +{place.vq_reward} PTS
+                        </span>
                       </div>
                     </div>
                   </div>

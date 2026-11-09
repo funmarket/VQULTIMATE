@@ -27,7 +27,7 @@ const INITIAL_EVENTS: EventItem[] = [
     location: 'Downtown Tunis',
     timeStatus: 'LIVE NOW',
     isLive: true,
-    image: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=600&q=80'
+    image: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=800&q=80'
   },
   {
     id: 'ev-2',
@@ -39,7 +39,7 @@ const INITIAL_EVENTS: EventItem[] = [
     location: 'La Marsa',
     timeStatus: 'Tomorrow, 8:00 PM',
     isLive: false,
-    image: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=600&q=80'
+    image: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=800&q=80'
   },
   {
     id: 'ev-3',
@@ -51,7 +51,7 @@ const INITIAL_EVENTS: EventItem[] = [
     location: 'District 4',
     timeStatus: 'LIVE NOW',
     isLive: true,
-    image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=600&q=80'
+    image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80'
   },
   {
     id: 'ev-4',
@@ -63,7 +63,7 @@ const INITIAL_EVENTS: EventItem[] = [
     location: 'Gammarth',
     timeStatus: 'Saturday, 6:30 PM',
     isLive: false,
-    image: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=600&q=80'
+    image: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=800&q=80'
   }
 ];
 
@@ -179,68 +179,77 @@ export const HomeEventsSection: React.FC<HomeEventsSectionProps> = ({ user, onNa
         </button>
       </div>
 
-      {/* Cards List */}
-      <div className="space-y-3.5">
+      {/* Photo-First Vertical Cards List (ACME V9) */}
+      <div className="space-y-4">
         {visible.length > 0 ? (
           visible.map(ev => {
             const isRsvped = rsvps.has(ev.id);
             const isSaved = saves.has(ev.id);
             return (
-              <div key={ev.id} className="rounded-3xl border border-fuchsia-500/40 bg-gradient-to-br from-[#1b1721] via-[#141219] to-[#0e0c12] p-4 shadow-xl space-y-3.5">
-                <div className="flex items-start space-x-3.5">
-                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-neutral-950 flex-shrink-0 border border-neutral-800 shadow">
-                    <img src={ev.image} alt={ev.title} className="w-full h-full object-cover" />
-                    {ev.isLive && (
-                      <div className="absolute bottom-2 left-2 bg-rose-950/90 text-rose-300 font-black text-[9px] px-2 py-0.5 rounded-full border border-rose-500/50 flex items-center space-x-1 shadow">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                        <span>LIVE</span>
-                      </div>
-                    )}
+              <div key={ev.id} className="rounded-3xl border border-fuchsia-500/40 bg-gradient-to-br from-[#1b1721] via-[#141219] to-[#0e0c12] p-4 sm:p-5 shadow-xl space-y-4">
+                
+                {/* TOP: Badges & Full-width Title */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 flex-wrap gap-1">
+                    <span className="text-[10px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-md bg-purple-950 text-purple-300 border border-purple-500/40">
+                      EVENT
+                    </span>
+                    <span className="text-[10px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-md bg-neutral-900 text-neutral-300 border border-neutral-800">
+                      {ev.category}
+                    </span>
                   </div>
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-center space-x-2 flex-wrap gap-1">
-                      <span className="text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md bg-purple-950 text-purple-300 border border-purple-500/40">
-                        EVENT
-                      </span>
-                      <span className="text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md bg-neutral-900 text-neutral-300 border border-neutral-800">
-                        {ev.category}
-                      </span>
+                  <h3 className="text-lg sm:text-xl font-black text-white tracking-tight leading-snug">
+                    {ev.title}
+                  </h3>
+                </div>
+
+                {/* MIDDLE: Large Hero Photo spanning full width */}
+                <div className="relative w-full h-48 sm:h-56 rounded-2xl overflow-hidden bg-neutral-950 border border-neutral-800 shadow-lg">
+                  <img src={ev.image} alt={ev.title} className="w-full h-full object-cover" />
+                  {ev.isLive && (
+                    <div className="absolute bottom-3 left-3 bg-rose-950/90 text-rose-300 font-black text-[10px] px-3 py-1 rounded-full border border-rose-500/50 flex items-center space-x-1.5 shadow-md">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                      <span>LIVE</span>
                     </div>
-                    <h3 className="text-base font-black text-white truncate tracking-tight">{ev.title}</h3>
-                    <p className="text-xs text-neutral-300 truncate">
-                      🏢 {ev.venue} • Host: {ev.host}
-                    </p>
-                    <p className="text-xs text-neutral-400 flex items-center space-x-1">
-                      <MapPin className="w-3.5 h-3.5 text-pink-400 flex-shrink-0" />
-                      <span className="truncate">{ev.location} • <span className={ev.isLive ? 'text-teal-400 font-bold' : 'text-amber-400 font-bold'}>{ev.timeStatus}</span></span>
-                    </p>
+                  )}
+                </div>
+
+                {/* BELOW PHOTO: Venue, Host, Location, Time Status */}
+                <div className="space-y-1.5 text-xs text-neutral-300">
+                  <div className="font-semibold text-neutral-200">
+                    🏢 {ev.venue} • Host: {ev.host}
+                  </div>
+                  <div className="flex items-center space-x-1.5 text-neutral-400">
+                    <MapPin className="w-4 h-4 text-pink-400 flex-shrink-0" />
+                    <span>{ev.location} • <span className={ev.isLive ? 'text-teal-400 font-bold' : 'text-amber-400 font-bold'}>{ev.timeStatus}</span></span>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-neutral-800/80 flex items-center gap-2">
+                {/* BOTTOM: Action Row */}
+                <div className="pt-3 border-t border-neutral-800/80 flex items-center gap-2.5">
                   <button
                     type="button"
                     onClick={() => handleRsvp(ev.id)}
-                    className={`flex-1 py-2.5 px-3 rounded-xl font-black text-xs transition cursor-pointer shadow flex items-center justify-center space-x-1.5 ${
+                    className={`flex-1 py-3 px-3 rounded-xl font-black text-xs transition cursor-pointer shadow flex items-center justify-center space-x-1.5 ${
                       isRsvped
                         ? 'bg-teal-500 text-neutral-950 border border-teal-300'
                         : 'bg-teal-500/20 hover:bg-teal-500/30 text-teal-300 border border-teal-500/50'
                     }`}
                   >
-                    {isRsvped ? <CheckCircle2 className="w-3.5 h-3.5" /> : null}
+                    {isRsvped ? <CheckCircle2 className="w-4 h-4" /> : null}
                     <span>{isRsvped ? 'RSVP Confirmed' : 'RSVP'}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => handleSave(ev.id)}
-                    className={`py-2.5 px-4 rounded-xl font-bold text-xs transition cursor-pointer border flex items-center space-x-1.5 ${
+                    className={`py-3 px-4 rounded-xl font-bold text-xs transition cursor-pointer border flex items-center space-x-1.5 ${
                       isSaved
                         ? 'bg-purple-900/60 text-purple-200 border-purple-500'
                         : 'bg-neutral-900 text-neutral-300 border-neutral-700 hover:bg-neutral-800'
                     }`}
                   >
-                    <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-purple-300' : ''}`} />
+                    <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-purple-300' : ''}`} />
                     <span>{isSaved ? 'Saved' : 'Save'}</span>
                   </button>
 
@@ -250,9 +259,9 @@ export const HomeEventsSection: React.FC<HomeEventsSectionProps> = ({ user, onNa
                       onToast(`Opening directions to ${ev.venue}...`);
                       onNavigateTab('explore');
                     }}
-                    className="py-2.5 px-4 rounded-xl font-bold text-xs bg-neutral-900 hover:bg-neutral-800 text-cyan-300 border border-neutral-700 transition cursor-pointer flex items-center space-x-1.5 shadow"
+                    className="py-3 px-4 rounded-xl font-bold text-xs bg-neutral-900 hover:bg-neutral-800 text-cyan-300 border border-neutral-700 transition cursor-pointer flex items-center space-x-1.5 shadow"
                   >
-                    <Navigation className="w-3.5 h-3.5" />
+                    <Navigation className="w-4 h-4" />
                     <span>Directions</span>
                   </button>
                 </div>

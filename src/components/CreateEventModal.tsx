@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, X, Upload, MapPin, CheckCircle2, Image as ImageIcon } from 'lucide-react';
+import { Calendar, X, Upload, MapPin, CheckCircle2, Image as ImageIcon, Zap } from 'lucide-react';
 import { UserProfile } from '../domains/d01_auth';
 
 interface CreateEventModalProps {
@@ -15,10 +15,19 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ user, onClos
   const [category, setCategory] = useState('MUSIC');
   const [venue, setVenue] = useState('');
   const [location, setLocation] = useState(user?.city || 'Downtown Tunis');
-  const [isLive, setIsLive] = useState(true);
-  const [timeStatus, setTimeStatus] = useState('LIVE NOW');
+  
+  // Timing for ACME V8 automatic 60-min Flash Alert eligibility
+  const defaultStarts = new Date(Date.now() + 30 * 60 * 1000).toISOString().slice(0, 16);
+  const defaultEnds = new Date(Date.now() + 150 * 60 * 1000).toISOString().slice(0, 16);
+  
+  const [startsAt, setStartsAt] = useState(defaultStarts);
+  const [endsAt, setEndsAt] = useState(defaultEnds);
+  const [isFlashPromoted, setIsFlashPromoted] = useState(false);
+  
   const [photos, setPhotos] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const canPromoteFlash = Boolean(user?.role === 'admin' || user?.tier === 'pro' || user?.tier === 'business' || user?.accountType === 'pro');
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -57,27 +66,42 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ user, onClos
       onToast('Please enter event title and venue.');
       return;
     }
+    const startMs = new Date(startsAt).getTime();
+    const endMs = new Date(endsAt).getTime();
+    if (isNaN(startMs) || isNaN(endMs) || startMs >= endMs) {
+      onToast('Event end time must be after start time.');
+      return;
+    }
+
     setIsSubmitting(true);
     await new Promise(r => setTimeout(r, 800));
+
+    const now = Date.now();
+    const isLiveNow = startMs <= now && endMs > now;
+    const isSoon = startMs - now <= 60 * 60 * 1000 && startMs > now;
+    const timeStatusStr = isLiveNow ? 'LIVE NOW' : isSoon ? `Starts in ${Math.ceil((startMs - now)/60000)}m` : new Date(startMs).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     const eventItem = {
       id: `ev-${Date.now()}`,
       title: title.trim(),
       description: description.trim() || 'Community district gathering and cultural showcase.',
       category: category.toUpperCase(),
-      badge: isLive ? 'LIVE' : 'UPCOMING',
+      badge: isLiveNow ? 'LIVE' : 'UPCOMING',
       venue: venue.trim(),
       host: user?.full_name || user?.username || 'District Host',
       location: location.trim(),
-      timeStatus: isLive ? 'LIVE NOW' : timeStatus,
-      isLive,
+      timeStatus: timeStatusStr,
+      isLive: isLiveNow || isSoon,
+      starts_at: new Date(startMs).toISOString(),
+      ends_at: new Date(endMs).toISOString(),
+      is_flash_promoted: isFlashPromoted,
       image: photos[0] || 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=600&q=80',
       gallery: photos
     };
 
     onCreated(eventItem);
     setIsSubmitting(false);
-    onToast('Event successfully published to district feed!');
+    onToast(isFlashPromoted ? 'Event published & promoted as Flash Alert!' : 'Event successfully published to district feed!');
     onClose();
   };
 
@@ -89,7 +113,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ user, onClos
             <div className="p-2 rounded-2xl bg-purple-500/20 text-purple-400 border border-purple-500/40">
               <Calendar className="w-5 h-5 text-purple-400" />
             </div>
-            <h3 className="font-black text-lg tracking-wide">Create Event</h3>
+            <h3 className="font-black text-lg tracking-wide">Create Event & Flash Promotion</h3>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white cursor-pointer">
             <X className="w-4 h-4" />
@@ -126,24 +150,6 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ user, onClos
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-neutral-300 mb-1">Status</label>
-              <select
-                value={isLive ? 'live' : 'upcoming'}
-                onChange={(e) => {
-                  const live = e.target.value === 'live';
-                  setIsLive(live);
-                  if (live) setTimeStatus('LIVE NOW');
-                }}
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-3 text-xs text-white focus:outline-none focus:border-teal-500"
-              >
-                <option value="live">Live Now</option>
-                <option value="upcoming">Upcoming</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
               <label className="block text-xs font-bold text-neutral-300 mb-1">Venue Name *</label>
               <input
                 type="text"
@@ -151,33 +157,44 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ user, onClos
                 value={venue}
                 onChange={(e) => setVenue(e.target.value)}
                 placeholder="e.g. The Atlas Rooftop"
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-neutral-300 mb-1">Location / District</label>
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Downtown Tunis"
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
               />
             </div>
           </div>
 
-          {!isLive && (
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-neutral-300 mb-1">Schedule / Time Status</label>
+              <label className="block text-xs font-bold text-neutral-300 mb-1">Start Date & Time *</label>
               <input
-                type="text"
-                value={timeStatus}
-                onChange={(e) => setTimeStatus(e.target.value)}
-                placeholder="e.g. Tomorrow, 8:00 PM"
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
+                type="datetime-local"
+                required
+                value={startsAt}
+                onChange={(e) => setStartsAt(e.target.value)}
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-3 text-xs text-white focus:outline-none focus:border-teal-500"
               />
             </div>
-          )}
+            <div>
+              <label className="block text-xs font-bold text-neutral-300 mb-1">End Date & Time *</label>
+              <input
+                type="datetime-local"
+                required
+                value={endsAt}
+                onChange={(e) => setEndsAt(e.target.value)}
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-3 text-xs text-white focus:outline-none focus:border-teal-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-neutral-300 mb-1">Location / District</label>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="e.g. Downtown Tunis"
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
+            />
+          </div>
 
           <div>
             <label className="block text-xs font-bold text-neutral-300 mb-1">Description</label>
@@ -187,6 +204,25 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ user, onClos
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the event ambiance, highlights, and entry details..."
               className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500 resize-none"
+            />
+          </div>
+
+          {/* ACME V8: Explicit Flash Alert Promotion Option for organizers */}
+          <div className="rounded-2xl border border-fuchsia-500/40 bg-purple-950/20 p-3.5 flex items-center justify-between">
+            <div className="flex items-center space-x-2.5">
+              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
+                <Zap className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="font-bold text-xs text-white">Promote as Flash Alert</h4>
+                <p className="text-[10px] text-neutral-400">Auto-triggers Home banner when within 60m of start or live</p>
+              </div>
+            </div>
+            <input
+              type="checkbox"
+              checked={isFlashPromoted}
+              onChange={(e) => setIsFlashPromoted(e.target.checked)}
+              className="w-4 h-4 rounded accent-teal-500 cursor-pointer"
             />
           </div>
 

@@ -25,7 +25,7 @@ const INITIAL_ACTIVITIES: ActivityItem[] = [
     author: 'VibeQuest Explorers',
     tagline: 'Casual walk • LIVE',
     isLive: true,
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80'
+    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80'
   },
   {
     id: 'act-2',
@@ -36,7 +36,7 @@ const INITIAL_ACTIVITIES: ActivityItem[] = [
     author: 'Artisans Hub',
     tagline: 'Hands-on • Now, 4:00 PM',
     isLive: false,
-    image: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=600&q=80'
+    image: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=800&q=80'
   },
   {
     id: 'act-3',
@@ -47,7 +47,7 @@ const INITIAL_ACTIVITIES: ActivityItem[] = [
     author: 'NightLens',
     tagline: 'Urban exploration • LIVE',
     isLive: true,
-    image: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=600&q=80'
+    image: 'https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=800&q=80'
   },
   {
     id: 'act-4',
@@ -58,7 +58,7 @@ const INITIAL_ACTIVITIES: ActivityItem[] = [
     author: 'Form & Code',
     tagline: 'Saturday, 2:00 PM',
     isLive: false,
-    image: 'https://images.unsplash.com/photo-1493106819501-66d381c46541?auto=format&fit=crop&w=600&q=80'
+    image: 'https://images.unsplash.com/photo-1493106819501-66d381c46541?auto=format&fit=crop&w=800&q=80'
   }
 ];
 
@@ -159,54 +159,63 @@ export const HomeActivitiesSection: React.FC<HomeActivitiesSectionProps> = ({ us
         </button>
       </div>
 
-      {/* Cards List */}
-      <div className="space-y-3.5">
+      {/* Photo-First Vertical Cards List (ACME V9) */}
+      <div className="space-y-4">
         {visible.length > 0 ? (
           visible.map(act => {
             const isSaved = saves.has(act.id);
             return (
-              <div key={act.id} className="rounded-3xl border border-fuchsia-500/40 bg-gradient-to-br from-[#1b1721] via-[#141219] to-[#0e0c12] p-4 shadow-xl space-y-3.5">
-                <div className="flex items-start space-x-3.5">
-                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-neutral-950 flex-shrink-0 border border-neutral-800 shadow">
-                    <img src={act.image} alt={act.title} className="w-full h-full object-cover" />
-                    {act.isLive && (
-                      <div className="absolute bottom-2 left-2 bg-teal-950/90 text-teal-300 font-black text-[9px] px-2 py-0.5 rounded-full border border-teal-500/50 flex items-center space-x-1 shadow">
-                        <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-                        <span>LIVE</span>
-                      </div>
-                    )}
+              <div key={act.id} className="rounded-3xl border border-fuchsia-500/40 bg-gradient-to-br from-[#1b1721] via-[#141219] to-[#0e0c12] p-4 sm:p-5 shadow-xl space-y-4">
+                
+                {/* TOP: Badges & Full-width Title */}
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2 flex-wrap gap-1">
+                    <span className="text-[10px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-md bg-teal-950 text-teal-300 border border-teal-500/40">
+                      ACTIVITY
+                    </span>
+                    <span className="text-[10px] font-black tracking-wider uppercase px-2.5 py-0.5 rounded-md bg-neutral-900 text-neutral-300 border border-neutral-800">
+                      {act.category}
+                    </span>
                   </div>
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-center space-x-2 flex-wrap gap-1">
-                      <span className="text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md bg-teal-950 text-teal-300 border border-teal-500/40">
-                        ACTIVITY
-                      </span>
-                      <span className="text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md bg-neutral-900 text-neutral-300 border border-neutral-800">
-                        {act.category}
-                      </span>
+                  <h3 className="text-lg sm:text-xl font-black text-white tracking-tight leading-snug">
+                    {act.title}
+                  </h3>
+                </div>
+
+                {/* MIDDLE: Large Hero Photo spanning full width */}
+                <div className="relative w-full h-48 sm:h-56 rounded-2xl overflow-hidden bg-neutral-950 border border-neutral-800 shadow-lg">
+                  <img src={act.image} alt={act.title} className="w-full h-full object-cover" />
+                  {act.isLive && (
+                    <div className="absolute bottom-3 left-3 bg-teal-950/90 text-teal-300 font-black text-[10px] px-3 py-1 rounded-full border border-teal-500/50 flex items-center space-x-1.5 shadow-md">
+                      <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
+                      <span>LIVE</span>
                     </div>
-                    <h3 className="text-base font-black text-white truncate tracking-tight">{act.title}</h3>
-                    <p className="text-xs text-neutral-300 flex items-center space-x-1">
-                      <MapPin className="w-3.5 h-3.5 text-pink-400 flex-shrink-0" />
-                      <span className="truncate">{act.location} • By: {act.author}</span>
-                    </p>
-                    <p className="text-xs text-neutral-400">
-                      👥 <span className={act.isLive ? 'text-teal-400 font-bold' : 'text-amber-400 font-bold'}>{act.tagline}</span>
-                    </p>
+                  )}
+                </div>
+
+                {/* BELOW PHOTO: Location, Author, Tagline */}
+                <div className="space-y-1.5 text-xs text-neutral-300">
+                  <div className="flex items-center space-x-1.5 text-neutral-200">
+                    <MapPin className="w-4 h-4 text-pink-400 flex-shrink-0" />
+                    <span>{act.location} • By: {act.author}</span>
+                  </div>
+                  <div className="font-semibold text-neutral-400">
+                    👥 <span className={act.isLive ? 'text-teal-400 font-bold' : 'text-amber-400 font-bold'}>{act.tagline}</span>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-neutral-800/80 flex items-center gap-2">
+                {/* BOTTOM: Action Row */}
+                <div className="pt-3 border-t border-neutral-800/80 flex items-center gap-2.5">
                   <button
                     type="button"
                     onClick={() => handleSave(act.id)}
-                    className={`flex-1 py-2.5 px-4 rounded-xl font-bold text-xs transition cursor-pointer border flex items-center justify-center space-x-1.5 shadow ${
+                    className={`flex-1 py-3 px-4 rounded-xl font-bold text-xs transition cursor-pointer border flex items-center justify-center space-x-1.5 shadow ${
                       isSaved
                         ? 'bg-purple-900/60 text-purple-200 border-purple-500'
                         : 'bg-neutral-900 text-neutral-300 border-neutral-700 hover:bg-neutral-800'
                     }`}
                   >
-                    <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-purple-300' : ''}`} />
+                    <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-purple-300' : ''}`} />
                     <span>{isSaved ? 'Saved' : 'Save'}</span>
                   </button>
 
@@ -216,9 +225,9 @@ export const HomeActivitiesSection: React.FC<HomeActivitiesSectionProps> = ({ us
                       onToast(`Opening directions to ${act.location}...`);
                       onNavigateTab('explore');
                     }}
-                    className="flex-1 py-2.5 px-4 rounded-xl font-bold text-xs bg-neutral-900 hover:bg-neutral-800 text-cyan-300 border border-neutral-700 transition cursor-pointer flex items-center justify-center space-x-1.5 shadow"
+                    className="flex-1 py-3 px-4 rounded-xl font-bold text-xs bg-neutral-900 hover:bg-neutral-800 text-cyan-300 border border-neutral-700 transition cursor-pointer flex items-center justify-center space-x-1.5 shadow"
                   >
-                    <Navigation className="w-3.5 h-3.5" />
+                    <Navigation className="w-4 h-4" />
                     <span>Directions</span>
                   </button>
                 </div>
