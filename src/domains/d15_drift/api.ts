@@ -421,33 +421,6 @@ export async function sendRoomMessage(payload: {
 
     if (error) {
       console.warn('sendRoomMessage error:', error);
-      if (error.code === 'PGRST205' || error.message?.includes('schema cache') || error.message?.includes('drift_messages')) {
-        const fallbackMsg: DriftMessage = {
-          id: `ephemeral_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-          room_id: payload.roomId,
-          alias_id: payload.aliasId,
-          alias_handle: payload.aliasHandle,
-          avatar_color: payload.avatarColor || '#14b8a6',
-          sender_user_id: payload.senderUserId,
-          gender: payload.gender || 'M',
-          content: payload.content,
-          media_url: payload.mediaUrl,
-          media_type: payload.mediaType,
-          voice_duration: payload.voiceDuration,
-          reply_to_id: payload.replyToId,
-          reply_to_handle: payload.replyToHandle,
-          reply_to_snippet: payload.replyToSnippet,
-          is_pinned: false,
-          created_at: new Date().toISOString(),
-          expires_at: expiresAt,
-          reactions: {}
-        };
-        return {
-          success: true,
-          message: fallbackMsg,
-          error: 'PGRST205: Table drift_messages is pending execution in Supabase SQL editor.'
-        };
-      }
       return { success: false, error: error.message };
     }
 
@@ -544,14 +517,8 @@ export async function castDriftBottle(payload: {
       .single();
 
     if (error) {
-      console.warn('castDriftBottle Supabase notice, using local fallback:', error.message);
-      return {
-        success: true,
-        bottle: {
-          id: `bottle_${Date.now()}`,
-          ...newBottleData
-        } as DriftBottle
-      };
+      console.warn('castDriftBottle Supabase error:', error.message);
+      return { success: false, error: error.message };
     }
     return { success: true, bottle: data as DriftBottle };
   } catch (err: any) {
