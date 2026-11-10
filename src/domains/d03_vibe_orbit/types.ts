@@ -23,6 +23,7 @@ export interface VibePlace {
   id: string;
   title: string;
   category: VibeCategory;
+  types?: string[]; // Original Google Places types, for category transparency
   description: string;
   image_url: string;
   lat: number;
