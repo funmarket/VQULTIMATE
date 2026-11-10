@@ -27,7 +27,6 @@ const ALLOWED_LEISURE_TYPES = new Set([
   'bar',
   'night_club',
   'lounge',
-  'meal_takeaway',
   'bakery',
   'art_gallery',
   'museum',
@@ -36,7 +35,6 @@ const ALLOWED_LEISURE_TYPES = new Set([
   'park',
   'amusement_park',
   'spa',
-  'bowling_alley'
 ]);
 
 const EXCLUDED_TYPES = new Set([
@@ -100,57 +98,31 @@ const EXCLUDED_NAME_PATTERNS = [
   /\b(bank|banque|atm|assurance|insurance|notaire|avocat|courtier|finance)\b/i,
   /\b(société|societe|ste\b|sté\b|sarl|s\.a\b|company|enterprise|entreprise|industrie|industry|manufactur|usine|holding|consulting|corporate|crown\s*maghreb|marquardt)\b/i,
   /\b(supermarket|supérette|superette|monoprix|carrefour|magasin\s*général|épicerie|epicerie|station\s*service|totalenergies|shell|agil|ola\s*energy)\b/i,
-  /\b(post\s*office|la\s*poste|telecom|orange|ooredoo|tunisie\s*telecom)\b/i
+  /\b(post\s*office|la\s*poste|telecom|orange|ooredoo|tunisie\s*telecom)\b/i,
+  /\b(secondary|primary|civil|protection|bureau|office|suite|immeuble|immueble|magasin|entreprise|societe|société|college|lycee|lycée|universite|université|faculte|faculté|hospital|pharmacy)\b/i
 ];
 
-const CATEGORY_FALLBACK_IMAGES: Record<VibeCategory, string> = {
-  Food: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-  Spots: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80',
-  Culture: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80',
-  Art: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=800&q=80',
-  'Night Owl': 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80'
+const QUERY_TYPES: Record<VibeCategory | 'All', readonly string[]> = {
+  All: ['restaurant', 'cafe', 'bar', 'night_club', 'lounge', 'bakery', 'art_gallery', 'museum', 'movie_theater', 'tourist_attraction', 'park', 'spa', 'amusement_park'],
+  Food: ['restaurant', 'cafe', 'bakery'],
+  'Night Owl': ['bar', 'night_club'],
+  Art: ['art_gallery'],
+  Culture: ['museum', 'movie_theater'],
+  Spots: ['tourist_attraction', 'park', 'spa']
 };
 
-function mapGoogleTypesToCategory(types: string[] = [], requestedCategory?: string): VibeCategory {
-  const set = new Set(types);
-
-  if (requestedCategory && requestedCategory !== 'All') {
-    const cat = requestedCategory.toLowerCase();
-    if (cat.includes('food') && (set.has('restaurant') || set.has('cafe') || set.has('bakery') || set.has('meal_takeaway'))) {
-      return 'Food';
-    }
-    if ((cat.includes('night') || cat.includes('owl')) && (set.has('bar') || set.has('night_club') || set.has('lounge'))) {
-      return 'Night Owl';
-    }
-    if (cat.includes('art') && set.has('art_gallery')) {
-      return 'Art';
-    }
-    if (cat.includes('culture') && (set.has('museum') || set.has('movie_theater'))) {
-      return 'Culture';
-    }
-    if (cat.includes('spot') && (set.has('tourist_attraction') || set.has('park') || set.has('spa') || set.has('amusement_park') || set.has('bowling_alley'))) {
-      return 'Spots';
-    }
-  }
-
-  if (set.has('bar') || set.has('night_club') || set.has('lounge')) {
-    return 'Night Owl';
-  }
-  if (set.has('restaurant') || set.has('cafe') || set.has('bakery') || set.has('meal_takeaway')) {
-    return 'Food';
-  }
-  if (set.has('art_gallery')) {
-    return 'Art';
-  }
-  if (set.has('museum') || set.has('movie_theater')) {
-    return 'Culture';
+function mapGoogleTypesToCategory(types: string[], requested: VibeCategory | 'All'): VibeCategory {
+  if (requested !== 'All') return requested;
+  for (const category of ['Food', 'Night Owl', 'Art', 'Culture', 'Spots'] as VibeCategory[]) {
+    if (QUERY_TYPES[category].some((type) => types.includes(type))) return category;
   }
   return 'Spots';
 }
 
 function isStrictlyLeisurePlace(item: any): boolean {
   const types: string[] = Array.isArray(item?.types) ? item.types : [];
-  const name: string = item?.name || '';
+  const name: string = typeof item?.name === 'string' ? item.name : '';
+  if (!name.trim() || !Number.isFinite(item?.geometry?.location?.lat) || !Number.isFinite(item?.geometry?.location?.lng)) return false;
 
   // 1. Must have at least one allowed leisure type
   const hasAllowedLeisure = types.some((t) => ALLOWED_LEISURE_TYPES.has(t));
@@ -275,7 +247,7 @@ Deno.serve(async (request: Request) => {
     const radius = Number(body?.radius) || 23000;
     const category = body?.category;
 
-    if (isNaN(lat) || isNaN(lng)) {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
       return new Response(JSON.stringify({ places: [] }), {
         status: 200,
         headers: { ...cors, 'Content-Type': 'application/json' }
@@ -298,35 +270,12 @@ Deno.serve(async (request: Request) => {
 
     const radiusMeters = Math.min(50000, Math.max(500, radius));
 
-    // Determine leisure types to query based on requested category
-    let typesToQuery: string[] = [];
-
-    if (!category || category === 'All') {
-      // Query major leisure categories in parallel and merge results
-      typesToQuery = [
-        'restaurant',
-        'cafe',
-        'bar',
-        'night_club',
-        'tourist_attraction',
-        'art_gallery',
-        'museum',
-        'park'
-      ];
-    } else {
-      const cat = String(category).toLowerCase();
-      if (cat.includes('food')) {
-        typesToQuery = ['restaurant', 'cafe', 'bakery', 'meal_takeaway'];
-      } else if (cat.includes('night') || cat.includes('owl')) {
-        typesToQuery = ['bar', 'night_club'];
-      } else if (cat.includes('art')) {
-        typesToQuery = ['art_gallery', 'museum'];
-      } else if (cat.includes('culture')) {
-        typesToQuery = ['museum', 'tourist_attraction'];
-      } else {
-        typesToQuery = ['tourist_attraction', 'park', 'spa', 'amusement_park', 'bowling_alley'];
-      }
-    }
+    // Exact category selection; invalid categories never broaden to a new type.
+    const requestedCategory: VibeCategory | 'All' =
+      typeof category === 'string' && Object.prototype.hasOwnProperty.call(QUERY_TYPES, category)
+        ? category as VibeCategory | 'All'
+        : 'All';
+    const typesToQuery = QUERY_TYPES[requestedCategory];
 
     // Run parallel queries across allowed leisure types
     const queryResults = await Promise.all(
@@ -344,7 +293,10 @@ Deno.serve(async (request: Request) => {
     }
 
     // Apply strict leisure filtering (exclude banks, schools, hospitals, offices, etc.)
-    const strictlyLeisureItems = Array.from(placeMap.values()).filter(isStrictlyLeisurePlace);
+    const strictlyLeisureItems = Array.from(placeMap.values()).filter((item) =>
+      isStrictlyLeisurePlace(item) && Array.isArray(item.types) &&
+      typesToQuery.some((type) => item.types.includes(type))
+    );
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 
@@ -356,21 +308,18 @@ Deno.serve(async (request: Request) => {
           ? calculateHaversineMeters(lat, lng, pLat, pLng)
           : undefined;
 
-      const mappedCategory = mapGoogleTypesToCategory(item.types, category);
+      const mappedCategory = mapGoogleTypesToCategory(item.types, requestedCategory);
       const photoRef = item.photos?.[0]?.photo_reference;
 
       const imageUrl =
         photoRef && supabaseUrl
           ? `${supabaseUrl}/functions/v1/nearby-places?photo_reference=${encodeURIComponent(photoRef)}`
-          : CATEGORY_FALLBACK_IMAGES[mappedCategory];
+          : '';
 
-      const rating = typeof item.rating === 'number' ? item.rating : 4.5;
-      const reviewsCount = typeof item.user_ratings_total === 'number' ? item.user_ratings_total : 0;
-      const isLegendary = rating >= 4.5 && reviewsCount >= 40;
-
+      const rating = typeof item.rating === 'number' && Number.isFinite(item.rating) ? item.rating : undefined;
+      const reviewsCount = typeof item.user_ratings_total === 'number' ? item.user_ratings_total : undefined;
       const priceBands = ['Free', 'TND 1–10', 'TND 10–25', 'TND 25–50', 'TND 50+'];
-      const priceBand =
-        item.price_level !== undefined ? priceBands[item.price_level] || 'TND 10–30' : 'TND 10–30';
+      const priceBand = Number.isInteger(item.price_level) ? priceBands[item.price_level] : undefined;
 
       const openNow =
         typeof item.opening_hours?.open_now === 'boolean'
@@ -379,33 +328,27 @@ Deno.serve(async (request: Request) => {
 
       return {
         id: item.place_id,
-        title: item.name || 'Leisure Spot',
+        title: item.name,
+        types: item.types,
         category: mappedCategory,
-        description: item.vicinity ? `Leisure spot in ${item.vicinity}.` : 'Verified local leisure destination.',
+        description: item.vicinity ? 'Located in ' + item.vicinity + '.' : '',
         image_url: imageUrl,
         lat: pLat,
         lng: pLng,
-        address: item.vicinity || item.formatted_address || 'Nearby Spot',
+        address: item.vicinity || item.formatted_address || '',
         distance_meters: distMeters,
         distance_km: distMeters !== undefined ? Number((distMeters / 1000).toFixed(2)) : undefined,
-        rating: Number(rating.toFixed(1)),
-        reviews_count: reviewsCount,
-        checkins_count: Math.max(12, Math.round(reviewsCount * 0.4)),
-        pulse_intensity: Math.min(10, Math.max(6, Math.round(rating * 2))),
-        vq_reward: 500,
+        ...(rating !== undefined ? { rating: Number(rating.toFixed(1)) } : {}),
+        ...(reviewsCount !== undefined ? { reviews_count: reviewsCount } : {}),
         created_by: 'google_places',
-        vibe_confidence: Math.min(99, Math.max(72, Math.round(rating * 20))),
-        confirmations_count: Math.min(50, Math.max(4, Math.round(reviewsCount / 10))),
-        is_legendary: isLegendary,
-        price_band: priceBand,
-        ai_match_score: Math.min(98, Math.max(65, Math.round(68 + (rating - 3) * 15))),
+        ...(priceBand !== undefined ? { price_band: priceBand } : {}),
         open_now: openNow
       };
     });
 
     // If a specific category was requested, ensure returned places strictly match that category
-    if (category && category !== 'All') {
-      places = places.filter((p) => p.category === category);
+    if (requestedCategory !== 'All') {
+      places = places.filter((p) => p.category === requestedCategory);
     }
 
     // Sort final results: distance (closest first), then by rating (highest first)
@@ -413,7 +356,7 @@ Deno.serve(async (request: Request) => {
       const distA = a.distance_meters ?? 999999;
       const distB = b.distance_meters ?? 999999;
       const distDiff = distA - distB;
-      if (Math.abs(distDiff) > 200) {
+      if (distDiff !== 0) {
         return distDiff;
       }
       return (b.rating ?? 0) - (a.rating ?? 0);
