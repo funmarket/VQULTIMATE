@@ -34,7 +34,7 @@ test('non-leisure names rejected even when Google includes a leisure type', () =
   for (const name of [
     'Ibn Abi Dhiaf Secondary School', 'Institute of Press and Information',
     'Société CROWN MAGHREB', 'Manouba Civil Protection', 'Marquardt Tunisia',
-    'École primaire', 'Immeuble Central', 'Company Office', 'Hospital Pharmacy'
+    'École primaire', 'Immeuble Central', 'Company Office', 'Hospital Pharmacy', 'HAKING TELEWIN co'
   ]) {
     assert.equal(isStrictlyLeisurePlace(venue(name, ['tourist_attraction','point_of_interest'])), false, name);
   }
