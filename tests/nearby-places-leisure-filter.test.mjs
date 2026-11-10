@@ -2,16 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
-import ts from 'typescript';
+import { transformSync } from 'esbuild';
 
 const edgeSource = readFileSync(new URL('../supabase/functions/nearby-places/index.ts', import.meta.url), 'utf8');
 const begin = edgeSource.indexOf('const ALLOWED_LEISURE_TYPES');
 const end = edgeSource.indexOf('function calculateHaversineMeters', begin);
 assert.ok(begin >= 0 && end > begin, 'leisure filtering code must remain testable');
 const snippet = edgeSource.slice(begin, end);
-const compiled = ts.transpileModule(snippet, {
-  compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None }
-}).outputText;
+const compiled = transformSync(snippet, { loader: 'ts', target: 'es2022' }).code;
 const { QUERY_TYPES, isStrictlyLeisurePlace, mapGoogleTypesToCategory } =
   vm.runInNewContext(compiled + '\n({ QUERY_TYPES, isStrictlyLeisurePlace, mapGoogleTypesToCategory })');
 
