@@ -236,7 +236,7 @@ export const VibePulsesCarousel: React.FC<VibePulsesCarouselProps> = ({
               >
                 {/* City Photographic Background */}
                 <img
-                  src={city.imageUrl}
+                  src={city.imageUrl && city.imageUrl.trim() !== '' ? city.imageUrl : 'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=800&q=80'}
                   alt={city.city}
                   className="w-full h-full object-cover"
                   loading="lazy"

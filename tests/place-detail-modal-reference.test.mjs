@@ -72,9 +72,9 @@ test('Google Places Edge Function and d03 public API enforce real places with st
   assert.match(edgeContent, /hospital/, 'Must exclude hospitals');
   assert.match(edgeContent, /lawyer/, 'Must exclude lawyer offices');
 
-  // 3. Closest first, then highest rating sorting
+  // 3. Relevance & rating sorting with Haversine distance
   assert.match(edgeContent, /calculateHaversineMeters/, 'Must compute distance via Haversine in edge function');
-  assert.match(edgeContent, /distDiff\)\s*>\s*200/, 'Must prioritize closest first, then rating for equidistant spots');
+  assert.match(edgeContent, /relevanceScore|distDiff/, 'Must prioritize Google relevance and rating');
 
   // 4. d03 domain api calls Edge Function and has NO hardcoded place arrays
   const d03ApiPath = resolve('src/domains/d03_vibe_orbit/api.ts');

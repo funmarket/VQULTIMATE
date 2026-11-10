@@ -135,7 +135,7 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
     onClose();
   };
 
-  const avatar = profile.avatar_url;
+  const avatar = profile.avatar_url && profile.avatar_url.trim() !== '' ? profile.avatar_url.trim() : null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">

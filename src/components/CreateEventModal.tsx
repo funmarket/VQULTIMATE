@@ -237,7 +237,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({ user, onClos
             </div>
 
             <div className="grid grid-cols-4 gap-2">
-              {photos.map((p, idx) => (
+              {photos.filter(p => Boolean(p && p.trim())).map((p, idx) => (
                 <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-neutral-700 bg-neutral-950 group">
                   <img src={p} alt="Upload preview" className="w-full h-full object-cover" />
                   <button

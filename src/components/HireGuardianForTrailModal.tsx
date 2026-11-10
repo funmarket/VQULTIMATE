@@ -87,7 +87,7 @@ export const HireGuardianForTrailModal: React.FC<HireGuardianForTrailModalProps>
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-purple-500/40 bg-zinc-900">
-                      <img src={pro.avatarUrl} alt={pro.name} className="w-full h-full object-cover" />
+                      <img src={pro.avatarUrl && pro.avatarUrl.trim() !== '' ? pro.avatarUrl : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'} alt={pro.name} className="w-full h-full object-cover" />
                       <div className="absolute bottom-0 inset-x-0 bg-black/80 py-0.2 text-center text-[7.5px] font-mono font-bold text-emerald-400">
                         LIVE
                       </div>

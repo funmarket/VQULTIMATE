@@ -205,7 +205,7 @@ export const HomeEventsSection: React.FC<HomeEventsSectionProps> = ({ user, onNa
 
                 {/* MIDDLE: Large Hero Photo spanning full width */}
                 <div className="relative w-full h-48 sm:h-56 rounded-2xl overflow-hidden bg-neutral-950 border border-neutral-800 shadow-lg">
-                  <img src={ev.image} alt={ev.title} className="w-full h-full object-cover" />
+                  <img src={ev.image && ev.image.trim() !== '' ? ev.image : 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80'} alt={ev.title} className="w-full h-full object-cover" />
                   {ev.isLive && (
                     <div className="absolute bottom-3 left-3 bg-rose-950/90 text-rose-300 font-black text-[10px] px-3 py-1 rounded-full border border-rose-500/50 flex items-center space-x-1.5 shadow-md">
                       <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />

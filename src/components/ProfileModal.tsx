@@ -153,7 +153,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full border-2 border-emerald-500 p-0.5 bg-black flex items-center justify-center overflow-hidden">
                 <div className="w-full h-full rounded-full bg-zinc-950 flex items-center justify-center text-zinc-500 relative overflow-hidden">
-                  {profile?.photoUrl ? (
+                  {profile?.photoUrl && profile.photoUrl.trim() !== '' ? (
                     <img
                       src={profile.photoUrl}
                       alt={profile.displayName || profile.handle || 'Profile photo'}

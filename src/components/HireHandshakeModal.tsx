@@ -65,7 +65,7 @@ export const HireHandshakeModal: React.FC<HireHandshakeModalProps> = ({
           <div className="flex items-center space-x-4 p-4 rounded-2xl bg-neutral-950 border border-neutral-800 text-left">
             <div className="relative">
               <img
-                src={guardian.avatarUrl || guardian.avatar_url}
+                src={(guardian.avatarUrl && guardian.avatarUrl.trim()) || (guardian.avatar_url && guardian.avatar_url.trim()) || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'}
                 alt={guardian.name}
                 className="w-14 h-14 rounded-2xl object-cover border border-amber-500/40"
               />

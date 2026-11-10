@@ -6,7 +6,7 @@ import {
   UserCoordinates
 } from './types';
 
-export const DISCOVERY_RADIUS_METERS = 23000; // 23 km scope
+export const DISCOVERY_RADIUS_METERS = 8000; // 8 km leisure discovery scope
 
 /**
  * Calculates great-circle distance between two coordinates in meters (Haversine formula).
@@ -152,7 +152,9 @@ export function watchDeviceLocation(
  * Rules:
  * - Real data only. No mocks. No hardcoded place arrays.
  * - If Google returns nothing or fails, returns an empty array [].
- * - Sorts places ascending by distance (closest first).
+ * - Uses the returned photo URL. Do not invent ratings.
+ * - Preserves server's Google Relevance/Rating-first, Distance-second sort order.
+ * - In-app checkins_count and confirmations_count are never aliased from Google reviews_count.
  */
 export async function fetchNearbyPlaces(
   coords: UserCoordinates | null,
@@ -174,12 +176,13 @@ export async function fetchNearbyPlaces(
   }
 
   try {
+    const selectedCategory = category || 'All';
     const { data, error } = await supabase.functions.invoke('nearby-places', {
       body: {
         lat: targetCoords.lat,
         lng: targetCoords.lng,
         radius: DISCOVERY_RADIUS_METERS,
-        category: category && category !== 'All' ? category : undefined
+        category: selectedCategory
       }
     });
 
@@ -190,17 +193,22 @@ export async function fetchNearbyPlaces(
       return [];
     }
 
+    // Preserve the server's Google Relevance/Rating-first, Distance-second sort order.
+    // Keep in-app checkins_count / confirmations_count strictly separate from Google reviews_count.
     const places: VibePlace[] = data.places.map((p: any) => {
-      const dist = calculateDistanceMeters(targetCoords!.lat, targetCoords!.lng, p.lat, p.lng);
+      const dist =
+        typeof p.distance_meters === 'number'
+          ? p.distance_meters
+          : calculateDistanceMeters(targetCoords!.lat, targetCoords!.lng, p.lat, p.lng);
       return {
         ...p,
         distance_meters: dist,
-        distance_km: Number((dist / 1000).toFixed(2))
+        distance_km: Number((dist / 1000).toFixed(2)),
+        reviews_count: typeof p.reviews_count === 'number' ? p.reviews_count : undefined,
+        checkins_count: typeof p.checkins_count === 'number' ? p.checkins_count : undefined,
+        confirmations_count: typeof p.confirmations_count === 'number' ? p.confirmations_count : undefined
       };
     });
-
-    // Sort ascending: closest first
-    places.sort((a, b) => (a.distance_meters ?? 999999) - (b.distance_meters ?? 999999));
 
     return places;
   } catch (err) {

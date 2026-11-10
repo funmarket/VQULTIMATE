@@ -56,7 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           className="p-1 rounded-xl bg-gradient-to-tr from-neutral-800 to-neutral-900 border border-neutral-700 hover:border-teal-500/50 transition flex items-center space-x-1.5 shadow-lg"
           title="Profile Console & Settings"
         >
-          {user?.avatar_url ? (
+          {user?.avatar_url && user.avatar_url.trim() !== '' ? (
             <img src={user.avatar_url} alt="Your profile photo" className="w-7 h-7 rounded-lg object-cover"
               onError={event => { event.currentTarget.style.display = 'none'; }} />
           ) : (

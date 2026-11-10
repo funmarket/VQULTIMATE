@@ -184,7 +184,7 @@ export const HomeActivitiesSection: React.FC<HomeActivitiesSectionProps> = ({ us
 
                 {/* MIDDLE: Large Hero Photo spanning full width */}
                 <div className="relative w-full h-48 sm:h-56 rounded-2xl overflow-hidden bg-neutral-950 border border-neutral-800 shadow-lg">
-                  <img src={act.image} alt={act.title} className="w-full h-full object-cover" />
+                  <img src={act.image && act.image.trim() !== '' ? act.image : 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80'} alt={act.title} className="w-full h-full object-cover" />
                   {act.isLive && (
                     <div className="absolute bottom-3 left-3 bg-teal-950/90 text-teal-300 font-black text-[10px] px-3 py-1 rounded-full border border-teal-500/50 flex items-center space-x-1.5 shadow-md">
                       <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />

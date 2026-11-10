@@ -606,8 +606,9 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
             <div className="grid grid-cols-1 gap-3.5">
               {places.slice(0, visibleWaypointsCount).map((place, idx) => {
                 const tier = idx === 0 ? 'LEGENDARY' : idx === 1 ? 'LEGENDARY' : 'RARE';
-                const rating = place.distance_km !== undefined ? (5.0 - place.distance_km * 0.4).toFixed(1) : '4.8';
-                const visits = 44 + (idx * 22) % 60;
+                const rating = place.rating !== undefined ? place.rating.toFixed(1) : undefined;
+                const googleReviewsCount = typeof place.reviews_count === 'number' ? place.reviews_count : undefined;
+                const appCheckinsCount = typeof place.checkins_count === 'number' && place.checkins_count > 0 ? place.checkins_count : undefined;
                 return (
                   <div
                     key={place.id}
@@ -640,10 +641,12 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                         alt={place.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                       />
-                      <div className="absolute bottom-3 left-3 px-3 py-1 rounded-xl bg-neutral-950/90 text-amber-400 text-xs font-black flex items-center space-x-1.5 border border-neutral-800 shadow-md">
-                        <span>★</span>
-                        <span>{rating}</span>
-                      </div>
+                      {rating && (
+                        <div className="absolute bottom-3 left-3 px-3 py-1 rounded-xl bg-neutral-950/90 text-amber-400 text-xs font-black flex items-center space-x-1.5 border border-neutral-800 shadow-md">
+                          <span>★</span>
+                          <span>{rating}</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* BELOW PHOTO: Address */}
@@ -655,7 +658,9 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                     {/* BOTTOM: Distance, visits & reward actions */}
                     <div className="pt-3 border-t border-neutral-800/80 flex items-center justify-between text-xs">
                       <span className="font-semibold text-teal-300">
-                        {place.distance_km !== undefined ? `${place.distance_km} km` : '0.3 km'} • {visits} visits
+                        {place.distance_km !== undefined ? `${place.distance_km} km` : 'Nearby'}
+                        {googleReviewsCount !== undefined ? ` • ${googleReviewsCount} reviews` : ''}
+                        {appCheckinsCount !== undefined ? ` • ${appCheckinsCount} check-ins` : ''}
                       </span>
                       <div className="flex items-center space-x-2">
                         <span className="px-3.5 py-2 rounded-xl bg-neutral-800/80 text-neutral-400 border border-neutral-700/60 text-xs font-bold flex items-center space-x-1 shadow">
@@ -962,17 +967,18 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           {/* Top Avatars Preview: "3 online +12" */}
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center -space-x-2">
-              {guardians.filter(isGuardianFresh).slice(0, 3).map((g, i) =>
-                g.avatarUrl || g.avatar_url ? (
-                  <img key={g.id || i} src={g.avatarUrl || g.avatar_url} alt={g.name}
+              {guardians.filter(isGuardianFresh).slice(0, 3).map((g, i) => {
+                const avatar = (g.avatarUrl && g.avatarUrl.trim()) || (g.avatar_url && g.avatar_url.trim()) || null;
+                return avatar ? (
+                  <img key={g.id || i} src={avatar} alt={g.name}
                     className="w-8 h-8 rounded-full object-cover border-2 border-neutral-950 ring-1 ring-purple-500/40" />
                 ) : (
                   <span key={g.id || i} aria-label={g.name}
                     className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-800 border-2 border-neutral-950">
                     <Shield className="w-4 h-4 text-neutral-400" />
                   </span>
-                )
-              )}
+                );
+              })}
               <div className="w-8 h-8 rounded-full bg-purple-900 border-2 border-neutral-950 flex items-center justify-center text-[10px] font-bold text-purple-200">
                 +{Math.max(0, guardians.filter(isGuardianFresh).length - 3)}
               </div>
@@ -1113,8 +1119,8 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                     <div className="flex items-start space-x-3.5">
                       {/* Avatar with Live Indicator */}
                       <div className="relative flex-shrink-0">
-                        {g.avatarUrl || g.avatar_url ? (
-                          <img src={g.avatarUrl || g.avatar_url} alt={g.name}
+                        {((g.avatarUrl && g.avatarUrl.trim()) || (g.avatar_url && g.avatar_url.trim())) ? (
+                          <img src={(g.avatarUrl && g.avatarUrl.trim()) || (g.avatar_url && g.avatar_url.trim())} alt={g.name}
                             className="w-16 h-16 rounded-2xl object-cover border-2 border-neutral-800" />
                         ) : (
                           <span aria-label={g.name} className="w-16 h-16 rounded-2xl bg-neutral-900 border-2 border-neutral-800 flex items-center justify-center">

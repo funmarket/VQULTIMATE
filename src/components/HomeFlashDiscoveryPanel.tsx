@@ -29,8 +29,9 @@ const whiteAction = 'min-w-0 flex-1 rounded-[22px] bg-white px-3 py-3.5 text-xs 
 const outlinedAction = 'min-w-0 flex-1 rounded-[22px] border border-neutral-500 bg-[#26232b] px-3 py-3.5 text-xs sm:text-sm font-black text-neutral-200 hover:bg-neutral-700/50 active:scale-[0.98] transition';
 const thumbnail = 'relative aspect-square min-w-0 overflow-hidden rounded-2xl border border-fuchsia-500/50 bg-gradient-to-br from-[#302139] to-[#18151e]';
 
-function Photo({ src, alt, className = '' }: { src: string; alt: string; className?: string }) {
-  return <img src={src} alt={alt} loading="lazy" className={`absolute inset-0 h-full w-full object-cover ${className}`} />;
+function Photo({ src, alt, className = '' }: { src?: string | null; alt: string; className?: string }) {
+  if (!src || typeof src !== 'string' || !src.trim()) return null;
+  return <img src={src.trim()} alt={alt} loading="lazy" className={`absolute inset-0 h-full w-full object-cover ${className}`} />;
 }
 
 export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = ({
@@ -40,8 +41,8 @@ export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = (
   const [showAllFlashEvents, setShowAllFlashEvents] = useState(false);
   const [showFlashDetail, setShowFlashDetail] = useState(false);
   const hasActiveFlash = Boolean(flashEvent && secondsLeft > 0);
-  const picturePlaces = places.filter(place => Boolean(place.image_url));
-  const realCities = pulsesSummary.cities.filter(city => Boolean(city.imageUrl));
+  const picturePlaces = places.filter(place => Boolean(place.image_url && place.image_url.trim() !== ''));
+  const realCities = pulsesSummary.cities.filter(city => Boolean(city.imageUrl && city.imageUrl.trim() !== ''));
   const suggestions = [
     ...picturePlaces.map(place => ({ id: 'place:' + place.id, kind: 'place' as const, title: place.title, image: place.image_url, place })),
     ...realCities.map(city => ({ id: 'city:' + city.id, kind: 'city' as const, title: city.city, image: city.imageUrl, city }))
@@ -49,7 +50,7 @@ export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = (
   const hero = suggestions[0];
   const more = suggestions.filter(item => item.id !== hero?.id).slice(0, 4);
   const eventPlace = hasActiveFlash ? places.find(place => place.id === flashEvent?.place_id) : undefined;
-  const eventPhoto = eventPlace?.image_url || '';
+  const eventPhoto = eventPlace?.image_url && eventPlace.image_url.trim() !== '' ? eventPlace.image_url : '';
   const now = Date.now();
   const startsInSeconds = flashEvent?.starts_at ? Math.max(0, Math.ceil((Date.parse(flashEvent.starts_at) - now) / 1000)) : 0;
   const startsInMinutes = Math.ceil(startsInSeconds / 60);
@@ -133,7 +134,7 @@ export const HomeFlashDiscoveryPanel: React.FC<HomeFlashDiscoveryPanelProps> = (
             return (
               <button type="button" key={event.id} onClick={() => onSelectFlashEvent(event)}
                 className={thumbnail} aria-label={`View Flash Event: ${event.title}`}>
-                {place?.image_url ? <Photo src={place.image_url} alt={event.title} /> : (
+                {place?.image_url && place.image_url.trim() !== '' ? <Photo src={place.image_url} alt={event.title} /> : (
                   <div className="flex h-full items-center justify-center"><Sparkles className="h-4 w-4 text-fuchsia-300" /></div>
                 )}
                 <span className="absolute inset-x-0 bottom-0 bg-black/75 p-1 text-left text-[9px] font-bold text-white line-clamp-2">{event.title}</span>

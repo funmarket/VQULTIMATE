@@ -34,7 +34,7 @@ export const FlashEventDetailModal: React.FC<FlashEventDetailModalProps> = ({
             className="rounded-xl border border-neutral-700 p-2 hover:bg-neutral-700"><X className="h-5 w-5" /></button>
         </div>
         <div className="relative h-44 overflow-hidden rounded-2xl border border-fuchsia-500/50 bg-gradient-to-br from-fuchsia-950 to-indigo-950">
-          {place?.image_url ? <img alt={place.title} src={place.image_url} className="h-full w-full object-cover" /> :
+          {place?.image_url && place.image_url.trim() !== '' ? <img alt={place.title} src={place.image_url} className="h-full w-full object-cover" /> :
             <div className="flex h-full items-center justify-center text-xs font-semibold text-neutral-400">Event photo unavailable</div>}
         </div>
         <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-200">{event.description || 'Event details have not been provided.'}</p>

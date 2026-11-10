@@ -78,7 +78,7 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
           {/* 1. Hero Image Banner */}
           <div className="relative h-56 sm:h-60 w-full shrink-0">
             <img
-              src={place.image_url}
+              src={place.image_url && place.image_url.trim() !== '' ? place.image_url : 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80'}
               alt={place.title}
               className="w-full h-full object-cover"
             />

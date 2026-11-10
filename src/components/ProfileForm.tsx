@@ -287,9 +287,9 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
           <div className="relative shrink-0">
             <div className="absolute inset-0 bg-vibe-primary/5 blur-xl rounded-full" />
             <div className="relative w-20 h-20 rounded-full border border-white/20 p-1 bg-black flex items-center justify-center overflow-hidden">
-              {(avatarPreview || photoUrl) ? (
+              {((avatarPreview && avatarPreview.trim()) || (photoUrl && photoUrl.trim())) ? (
                 <img 
-                  src={avatarPreview || photoUrl} 
+                  src={((avatarPreview && avatarPreview.trim()) || (photoUrl && photoUrl.trim())) as string} 
                   alt="Live Preview" 
                   referrerPolicy="no-referrer"
                   className="w-full h-full rounded-full object-cover"

@@ -446,9 +446,9 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user, onPostSuccess, initial
             <div className="relative flex min-h-[260px] flex-1 items-center justify-center overflow-hidden rounded-2xl border border-neutral-700 bg-black aspect-[4/5] max-h-[58dvh]">
               {(stage === 'camera' || stage === 'selfie')
                 ? <video ref={liveVideo} muted playsInline autoPlay className={facing === 'user' ? 'h-full w-full scale-x-[-1] object-cover' : 'h-full w-full object-cover'} aria-label="Live camera preview" />
-                : preview && (mode === 'snap'
+                : (preview && preview.trim() !== '' ? (mode === 'snap'
                   ? <video src={preview} controls playsInline className="h-full w-full object-contain" aria-label="Recorded Vibe Snap preview" />
-                  : <img src={preview} alt="Captured photo preview" className="h-full w-full object-contain" />)}
+                  : <img src={preview} alt="Captured photo preview" className="h-full w-full object-contain" />) : null)}
               {(stage === 'camera' || stage === 'selfie') && !ready && !error && <span className="absolute inset-0 flex items-center justify-center bg-black/65 text-sm text-neutral-300">Opening camera…</span>}
               {mode === 'snap' && recording && <span className="absolute left-3 top-3 rounded-full bg-red-600 px-3 py-1 text-xs font-bold">● REC {seconds}/10s</span>}
             </div>

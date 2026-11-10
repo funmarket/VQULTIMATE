@@ -1,16 +1,14 @@
 /**
  * Supabase Edge Function: nearby-places
- * Calls Google Places API Nearby Search securely server-side using GOOGLE_PLACES_API_KEY.
+ * Calls Google Places API Text Search securely server-side using GOOGLE_PLACES_API_KEY.
  *
- * Strict Leisure-Only Rules:
- * - Includes: restaurant, cafe, bar, night_club, lounge, meal_takeaway, bakery,
- *             art_gallery, museum, movie_theater, tourist_attraction, park,
- *             amusement_park, spa, bowling_alley.
- * - Explicitly excludes: banks, schools, universities, hospitals, pharmacies, stores,
- *                        supermarkets, gas stations, offices, accounting, lawyer, etc.
- * - Queries multiple leisure types and merges results when no category is requested.
- * - Sorts final results by distance (closest first), then by rating (highest first).
- * - Proxies place photos on GET requests so the API key is never exposed to the client.
+ * Rules enforced:
+ * - Uses https://maps.googleapis.com/maps/api/place/textsearch/json with location + 8km radius bias and 15km hard cutoff.
+ * - Maps categories to exact leisure search queries.
+ * - Strictly excludes non-leisure types and names (schools, companies, societies, banks, hospitals, utilities, offices).
+ * - Sorts by Google relevance & Bayesian rating first, then distance.
+ * - Never aliases Google reviews_count into in-app checkins_count or confirmations_count.
+ * - Proxies place photos via GET ?photo_reference=... so GOOGLE_PLACES_API_KEY never reaches the client.
  */
 
 const cors = {
@@ -21,22 +19,37 @@ const cors = {
 
 type VibeCategory = 'Food' | 'Art' | 'Spots' | 'Culture' | 'Night Owl';
 
+const CATEGORY_QUERY_MAP: Record<string, string> = {
+  All: 'restaurant cafe bar lounge museum night club art gallery',
+  Food: 'restaurant cafe bakery',
+  'Night Owl': 'bar night club lounge',
+  Art: 'art gallery',
+  Culture: 'museum theatre',
+  Spots: 'tourist attraction park viewpoint'
+};
+
 const ALLOWED_LEISURE_TYPES = new Set([
   'restaurant',
   'cafe',
   'bar',
   'night_club',
-  'lounge',
   'meal_takeaway',
+  'meal_delivery',
   'bakery',
   'art_gallery',
   'museum',
+  'performing_arts_theater',
   'movie_theater',
+  'cultural_center',
   'tourist_attraction',
   'park',
+  'natural_feature',
   'amusement_park',
+  'aquarium',
+  'zoo',
   'spa',
-  'bowling_alley'
+  'bowling_alley',
+  'casino'
 ]);
 
 const EXCLUDED_TYPES = new Set([
@@ -49,12 +62,15 @@ const EXCLUDED_TYPES = new Set([
   'university',
   'secondary_school',
   'primary_school',
+  'preschool',
   'hospital',
   'doctor',
   'dentist',
   'health',
   'pharmacy',
   'drugstore',
+  'physiotherapist',
+  'veterinary_care',
   'store',
   'supermarket',
   'grocery_or_supermarket',
@@ -71,6 +87,11 @@ const EXCLUDED_TYPES = new Set([
   'car_dealer',
   'car_repair',
   'car_wash',
+  'parking',
+  'transit_station',
+  'bus_station',
+  'train_station',
+  'subway_station',
   'hardware_store',
   'convenience_store',
   'department_store',
@@ -78,101 +99,153 @@ const EXCLUDED_TYPES = new Set([
   'shoe_store',
   'electronics_store',
   'home_goods_store',
+  'furniture_store',
   'jewelry_store',
   'pet_store',
   'storage',
   'cemetery',
   'funeral_home',
   'laundry',
+  'hair_care',
+  'beauty_salon',
   'locksmith',
   'moving_company',
   'plumber',
   'electrician',
   'roofing_contractor',
+  'general_contractor',
+  'painter',
   'travel_agency',
-  'veterinary_care'
+  'place_of_worship',
+  'mosque',
+  'church',
+  'synagogue'
 ]);
 
 const EXCLUDED_NAME_PATTERNS = [
-  /\b(school|école|ecole|lycée|lycee|collège|college|university|université|universite|faculté|faculte|institut|institute|académie|academie)\b/i,
-  /\b(hospital|hôpital|hopital|clinic|clinique|pharmacy|pharmacie|cabinet|médical|medical|santé|sante|dispensaire)\b/i,
-  /\b(police|protection\s*civile|civil\s*protection|gendarmerie|pompiers|municipalité|municipalite|commune|mairie|ministère|ministere|ambassade|consulat|tribunal)\b/i,
-  /\b(bank|banque|atm|assurance|insurance|notaire|avocat|courtier|finance)\b/i,
-  /\b(société|societe|ste\b|sté\b|sarl|s\.a\b|company|enterprise|entreprise|industrie|industry|manufactur|usine|holding|consulting|corporate|crown\s*maghreb|marquardt)\b/i,
-  /\b(supermarket|supérette|superette|monoprix|carrefour|magasin\s*général|épicerie|epicerie|station\s*service|totalenergies|shell|agil|ola\s*energy)\b/i,
-  /\b(post\s*office|la\s*poste|telecom|orange|ooredoo|tunisie\s*telecom)\b/i
+  /\b(school|école|ecole|lycée|lycee|collège|college|university|université|universite|faculté|faculte|institut|institute|académie|academie|training|formation|éducation|education|enseignement)\b/i,
+  /\b(jardin\s*d['’]?enfants|crèche|creche|garderie|maternelle|primaire|préparatoire|preparatoire|scolaire|campus|iset|isg|insat|esprit|fst|enit|ihec)\b/i,
+  /\b(hospital|hôpital|hopital|clinic|clinique|pharmacy|pharmacie|cabinet|médical|medical|santé|sante|dispensaire|laboratoire|laboratory|polyclinique|dentaire|dentiste|optique|opticien|kiné|kine)\b/i,
+  /\b(police|protection\s*civile|civil\s*protection|civil|gendarmerie|pompiers|municipalité|municipalite|commune|mairie|ministère|ministere|ambassade|consulat|tribunal|gouvernorat|délégation|delegation|recette\s*des\s*finances|cnss|cnam|steg|sonede|onàs|onas)\b/i,
+  /\b(bank|banque|atm|biat|bna|stb|bh\b|amen\s*bank|attijari|zitouna|uib|ubci|btk|tsb|wifak|assurance|insurance|gat|star|comar|maghrébia|lloyd|mae|notaire|avocat|courtier|finance|leasing|microfinance|endatamweel)\b/i,
+  /\b(société|societe|ste\b|sté\b|sarl|suarl|s\.a\.r\.l|s\.a\b|company|enterprise|entreprise|industrie|industry|industrial|manufactur|usine|holding|groupe|group|consulting|conseil|corporate|siège|siege|direction\s*générale|centre\s*d['’]?affaires|business\s*center|bureau|office|agence|agency|imprimerie|travaux|batiment|bâtiment|immobilier|immobilière|promotion|construction|logistique|logistics|transport|import|export|distribution|commerce|commercial|crown\s*maghreb|marquardt)\b/i,
+  /\b(supermarket|supérette|superette|monoprix|carrefour|magasin\s*général|mg\b|aziza|épicerie|epicerie|station\s*service|totalenergies|shell|agil|ola\s*energy|kiosque|lavage)\b/i,
+  /\b(post\s*office|la\s*poste|rapid\s*poste|telecom|télécom|orange|ooredoo|tunisie\s*telecom|topnet|globalnet)\b/i
 ];
 
-const CATEGORY_FALLBACK_IMAGES: Record<VibeCategory, string> = {
-  Food: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-  Spots: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80',
-  Culture: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=800&q=80',
-  Art: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=800&q=80',
-  'Night Owl': 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80'
-};
+const LOUNGE_NIGHT_REGEX = /\b(lounge|bar|pub|club|night\s*club|disco|discothèque|discotheque|rooftop|tapas|bistro|bistrot|brasserie|cabaret|speakeasy|hookah|shisha|chicha)\b/i;
+const CULTURE_REGEX = /\b(museum|musée|musee|theatre|théâtre|theater|opéra|opera|cinéma|cinema|galerie|gallery|centre\s*culturel|cultural\s*center|palais|medina|médina|conservatoire)\b/i;
+const SPOTS_REGEX = /\b(park|parc|viewpoint|belvédère|belvedere|plage|beach|corniche|marina|port|monument|ruines|ruins|archéologique|archaeological|fort|kasbah|citadelle|attraction|lac|lake|colline)\b/i;
 
-function mapGoogleTypesToCategory(types: string[] = [], requestedCategory?: string): VibeCategory {
-  const set = new Set(types);
-
-  if (requestedCategory && requestedCategory !== 'All') {
-    const cat = requestedCategory.toLowerCase();
-    if (cat.includes('food') && (set.has('restaurant') || set.has('cafe') || set.has('bakery') || set.has('meal_takeaway'))) {
-      return 'Food';
-    }
-    if ((cat.includes('night') || cat.includes('owl')) && (set.has('bar') || set.has('night_club') || set.has('lounge'))) {
-      return 'Night Owl';
-    }
-    if (cat.includes('art') && set.has('art_gallery')) {
-      return 'Art';
-    }
-    if (cat.includes('culture') && (set.has('museum') || set.has('movie_theater'))) {
-      return 'Culture';
-    }
-    if (cat.includes('spot') && (set.has('tourist_attraction') || set.has('park') || set.has('spa') || set.has('amusement_park') || set.has('bowling_alley'))) {
-      return 'Spots';
-    }
-  }
-
-  if (set.has('bar') || set.has('night_club') || set.has('lounge')) {
-    return 'Night Owl';
-  }
-  if (set.has('restaurant') || set.has('cafe') || set.has('bakery') || set.has('meal_takeaway')) {
-    return 'Food';
-  }
-  if (set.has('art_gallery')) {
-    return 'Art';
-  }
-  if (set.has('museum') || set.has('movie_theater')) {
-    return 'Culture';
-  }
-  return 'Spots';
+function normalizeCategory(raw?: string): 'All' | VibeCategory {
+  if (!raw) return 'All';
+  const c = raw.trim().toLowerCase();
+  if (c === 'food') return 'Food';
+  if (c === 'night owl' || c === 'night_owl' || c === 'nightowl') return 'Night Owl';
+  if (c === 'art') return 'Art';
+  if (c === 'culture') return 'Culture';
+  if (c === 'spots' || c === 'spot') return 'Spots';
+  return 'All';
 }
 
-function isStrictlyLeisurePlace(item: any): boolean {
+function isStrictlyLeisurePlace(item: any, requestedCategory: 'All' | VibeCategory): boolean {
   const types: string[] = Array.isArray(item?.types) ? item.types : [];
-  const name: string = item?.name || '';
+  const name: string = (item?.name || '').trim();
+  const address: string = (item?.formatted_address || item?.vicinity || '').trim();
 
-  // 1. Must have at least one allowed leisure type
-  const hasAllowedLeisure = types.some((t) => ALLOWED_LEISURE_TYPES.has(t));
-  if (!hasAllowedLeisure) {
-    return false;
-  }
+  if (!name) return false;
 
-  // 2. Reject if place has ANY excluded non-leisure type
   for (const t of types) {
     if (EXCLUDED_TYPES.has(t)) {
       return false;
     }
   }
 
-  // 3. Reject if name matches non-leisure entities (schools, institutes, companies, hospitals, public offices)
   for (const pattern of EXCLUDED_NAME_PATTERNS) {
     if (pattern.test(name)) {
       return false;
     }
   }
 
-  return true;
+  if (
+    /\b(zone\s*industrielle|z\.i\b|technopole|pôle\s*technologique|immeuble\s*bureau)\b/i.test(address) &&
+    !types.includes('restaurant') &&
+    !types.includes('cafe') &&
+    !types.includes('bar') &&
+    !types.includes('night_club')
+  ) {
+    return false;
+  }
+
+  const hasAllowedLeisureType = types.some((t) => ALLOWED_LEISURE_TYPES.has(t));
+  if (hasAllowedLeisureType) {
+    return true;
+  }
+
+  if (requestedCategory === 'Night Owl' || requestedCategory === 'All') {
+    if (LOUNGE_NIGHT_REGEX.test(name)) return true;
+  }
+  if (requestedCategory === 'Culture' || requestedCategory === 'All') {
+    if (CULTURE_REGEX.test(name)) return true;
+  }
+  if (requestedCategory === 'Spots' || requestedCategory === 'All') {
+    if (SPOTS_REGEX.test(name)) return true;
+  }
+
+  return false;
+}
+
+function mapPlaceToCategory(
+  types: string[] = [],
+  name: string = '',
+  requestedCategory: 'All' | VibeCategory = 'All'
+): VibeCategory | null {
+  const set = new Set(types);
+
+  const isFood =
+    set.has('restaurant') ||
+    set.has('cafe') ||
+    set.has('bakery') ||
+    set.has('meal_takeaway') ||
+    set.has('meal_delivery');
+  const isNightOwl =
+    set.has('bar') ||
+    set.has('night_club') ||
+    set.has('casino') ||
+    LOUNGE_NIGHT_REGEX.test(name);
+  const isArt =
+    set.has('art_gallery') ||
+    /\b(galerie|gallery|atelier\s*d['’]?art|art\s*space)\b/i.test(name);
+  const isCulture =
+    set.has('museum') ||
+    set.has('performing_arts_theater') ||
+    set.has('movie_theater') ||
+    set.has('cultural_center') ||
+    CULTURE_REGEX.test(name);
+  const isSpot =
+    set.has('tourist_attraction') ||
+    set.has('park') ||
+    set.has('natural_feature') ||
+    set.has('amusement_park') ||
+    set.has('aquarium') ||
+    set.has('zoo') ||
+    set.has('spa') ||
+    set.has('bowling_alley') ||
+    SPOTS_REGEX.test(name);
+
+  if (requestedCategory === 'Food') return isFood ? 'Food' : null;
+  if (requestedCategory === 'Night Owl') return isNightOwl ? 'Night Owl' : null;
+  if (requestedCategory === 'Art') return isArt ? 'Art' : null;
+  if (requestedCategory === 'Culture') return isCulture ? 'Culture' : null;
+  if (requestedCategory === 'Spots') return isSpot ? 'Spots' : null;
+
+  if (isNightOwl && !set.has('bakery')) return 'Night Owl';
+  if (isArt) return 'Art';
+  if (isCulture) return 'Culture';
+  if (isFood) return 'Food';
+  if (isSpot) return 'Spots';
+
+  return null;
 }
 
 function calculateHaversineMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -188,21 +261,30 @@ function calculateHaversineMeters(lat1: number, lon1: number, lat2: number, lon2
   return Math.round(R * c);
 }
 
-async function queryGooglePlacesByType(
+async function queryGooglePlacesTextSearch(
   lat: number,
   lng: number,
   radius: number,
-  type: string,
+  query: string,
   apiKey: string
-): Promise<any[]> {
-  const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${encodeURIComponent(type)}&key=${apiKey}`;
+): Promise<{ status: string; results: any[]; error_message?: string }> {
+  const url = new URL('https://maps.googleapis.com/maps/api/place/textsearch/json');
+  url.searchParams.set('query', query);
+  url.searchParams.set('location', `${lat},${lng}`);
+  url.searchParams.set('radius', String(radius));
+  url.searchParams.set('key', apiKey);
+
   try {
-    const res = await fetch(url);
-    if (!res.ok) return [];
+    const res = await fetch(url.toString());
+    if (!res.ok) return { status: `HTTP_${res.status}`, results: [] };
     const data = await res.json();
-    return data.status === 'OK' && Array.isArray(data.results) ? data.results : [];
-  } catch {
-    return [];
+    return {
+      status: data.status || 'UNKNOWN',
+      results: Array.isArray(data.results) ? data.results : [],
+      error_message: data.error_message
+    };
+  } catch (err: any) {
+    return { status: 'FETCH_ERROR', results: [], error_message: err?.message };
   }
 }
 
@@ -212,11 +294,11 @@ Deno.serve(async (request: Request) => {
   }
 
   const apiKey = Deno.env.get('GOOGLE_PLACES_API_KEY');
+  const reqUrl = new URL(request.url);
 
   // Handle Photo Proxy GET request: /functions/v1/nearby-places?photo_reference=...
   if (request.method === 'GET') {
-    const url = new URL(request.url);
-    const photoReference = url.searchParams.get('photo_reference');
+    const photoReference = reqUrl.searchParams.get('photo_reference');
 
     if (!photoReference) {
       return new Response(JSON.stringify({ error: 'Missing photo_reference' }), {
@@ -233,8 +315,8 @@ Deno.serve(async (request: Request) => {
     }
 
     try {
-      const maxwidth = url.searchParams.get('maxwidth') || '800';
-      const googlePhotoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxwidth}&photoreference=${encodeURIComponent(photoReference)}&key=${apiKey}`;
+      const maxwidth = reqUrl.searchParams.get('maxwidth') || '800';
+      const googlePhotoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${encodeURIComponent(maxwidth)}&photoreference=${encodeURIComponent(photoReference)}&key=${apiKey}`;
       const photoRes = await fetch(googlePhotoUrl, { redirect: 'follow' });
 
       if (!photoRes.ok) {
@@ -272,161 +354,148 @@ Deno.serve(async (request: Request) => {
     const body = await request.json().catch(() => ({}));
     const lat = Number(body?.lat);
     const lng = Number(body?.lng);
-    const radius = Number(body?.radius) || 23000;
-    const category = body?.category;
+    const requestedCategory = normalizeCategory(body?.category);
 
-    if (isNaN(lat) || isNaN(lng)) {
-      return new Response(JSON.stringify({ places: [] }), {
-        status: 200,
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return new Response(JSON.stringify({ places: [], error: 'Valid lat and lng required' }), {
+        status: 400,
         headers: { ...cors, 'Content-Type': 'application/json' }
       });
     }
 
     if (!apiKey) {
-      console.warn('GOOGLE_PLACES_API_KEY is not set in Supabase Edge Function secrets.');
       return new Response(
         JSON.stringify({
           error: 'GOOGLE_PLACES_API_KEY is not configured in Supabase secrets.',
           places: []
         }),
         {
-          status: 200,
+          status: 500,
           headers: { ...cors, 'Content-Type': 'application/json' }
         }
       );
     }
 
-    const radiusMeters = Math.min(50000, Math.max(500, radius));
+    // Bias search with user's real lat/lng and 8 km radius (5-10 km range)
+    const radiusMeters = 8000;
+    // Hard maximum distance cutoff (15 km) so Google Text Search soft radius does not leak distant cities
+    const maxCutoffMeters = 15000;
 
-    // Determine leisure types to query based on requested category
-    let typesToQuery: string[] = [];
+    const searchQuery = CATEGORY_QUERY_MAP[requestedCategory] || CATEGORY_QUERY_MAP['All'];
 
-    if (!category || category === 'All') {
-      // Query major leisure categories in parallel and merge results
-      typesToQuery = [
-        'restaurant',
-        'cafe',
-        'bar',
-        'night_club',
-        'tourist_attraction',
-        'art_gallery',
-        'museum',
-        'park'
-      ];
-    } else {
-      const cat = String(category).toLowerCase();
-      if (cat.includes('food')) {
-        typesToQuery = ['restaurant', 'cafe', 'bakery', 'meal_takeaway'];
-      } else if (cat.includes('night') || cat.includes('owl')) {
-        typesToQuery = ['bar', 'night_club'];
-      } else if (cat.includes('art')) {
-        typesToQuery = ['art_gallery', 'museum'];
-      } else if (cat.includes('culture')) {
-        typesToQuery = ['museum', 'tourist_attraction'];
-      } else {
-        typesToQuery = ['tourist_attraction', 'park', 'spa', 'amusement_park', 'bowling_alley'];
-      }
-    }
-
-    // Run parallel queries across allowed leisure types
-    const queryResults = await Promise.all(
-      typesToQuery.map((t) => queryGooglePlacesByType(lat, lng, radiusMeters, t, apiKey))
+    const { status: googleStatus, results: rawResults, error_message } = await queryGooglePlacesTextSearch(
+      lat,
+      lng,
+      radiusMeters,
+      searchQuery,
+      apiKey
     );
 
-    // Merge and deduplicate by place_id
-    const placeMap = new Map<string, any>();
-    for (const batch of queryResults) {
-      for (const item of batch) {
-        if (item?.place_id && !placeMap.has(item.place_id)) {
-          placeMap.set(item.place_id, item);
-        }
-      }
-    }
+    const supabaseUrl = (Deno.env.get('SUPABASE_URL') || reqUrl.origin).replace(/\/$/, '');
 
-    // Apply strict leisure filtering (exclude banks, schools, hospitals, offices, etc.)
-    const strictlyLeisureItems = Array.from(placeMap.values()).filter(isStrictlyLeisurePlace);
+    const places = rawResults
+      .map((item: any, googleIndex: number) => {
+        const pLat = item.geometry?.location?.lat;
+        const pLng = item.geometry?.location?.lng;
+        if (typeof pLat !== 'number' || typeof pLng !== 'number') return null;
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+        const distMeters = calculateHaversineMeters(lat, lng, pLat, pLng);
+        if (distMeters > maxCutoffMeters) return null;
 
-    let places = strictlyLeisureItems.map((item: any) => {
-      const pLat = item.geometry?.location?.lat;
-      const pLng = item.geometry?.location?.lng;
-      const distMeters =
-        typeof pLat === 'number' && typeof pLng === 'number'
-          ? calculateHaversineMeters(lat, lng, pLat, pLng)
-          : undefined;
+        // 1. Strictly filter out non-leisure places
+        if (!isStrictlyLeisurePlace(item, requestedCategory)) return null;
 
-      const mappedCategory = mapGoogleTypesToCategory(item.types, category);
-      const photoRef = item.photos?.[0]?.photo_reference;
+        // 2. Map and verify category match
+        const mappedCategory = mapPlaceToCategory(item.types, item.name, requestedCategory);
+        if (!mappedCategory) return null;
 
-      const imageUrl =
-        photoRef && supabaseUrl
-          ? `${supabaseUrl}/functions/v1/nearby-places?photo_reference=${encodeURIComponent(photoRef)}`
-          : CATEGORY_FALLBACK_IMAGES[mappedCategory];
+        const photoRef = item.photos?.[0]?.photo_reference;
+        const imageUrl =
+          photoRef
+            ? `${supabaseUrl}/functions/v1/nearby-places?photo_reference=${encodeURIComponent(photoRef)}&maxwidth=800`
+            : undefined;
 
-      const rating = typeof item.rating === 'number' ? item.rating : 4.5;
-      const reviewsCount = typeof item.user_ratings_total === 'number' ? item.user_ratings_total : 0;
-      const isLegendary = rating >= 4.5 && reviewsCount >= 40;
+        // Real Google ratings & review counts only.
+        // STRICT RULE: Never alias Google reviews_count into checkins_count or confirmations_count!
+        const rating = typeof item.rating === 'number' ? Number(item.rating.toFixed(1)) : undefined;
+        const reviewsCount = typeof item.user_ratings_total === 'number' ? item.user_ratings_total : undefined;
+        const isLegendary = Boolean(rating !== undefined && rating >= 4.5 && (reviewsCount ?? 0) >= 40);
 
-      const priceBands = ['Free', 'TND 1–10', 'TND 10–25', 'TND 25–50', 'TND 50+'];
-      const priceBand =
-        item.price_level !== undefined ? priceBands[item.price_level] || 'TND 10–30' : 'TND 10–30';
+        const priceBands = ['Free', 'TND 1–10', 'TND 10–25', 'TND 25–50', 'TND 50+'];
+        const priceBand =
+          typeof item.price_level === 'number' ? priceBands[item.price_level] : undefined;
 
-      const openNow =
-        typeof item.opening_hours?.open_now === 'boolean'
-          ? item.opening_hours.open_now
-          : undefined;
+        const openNow =
+          typeof item.opening_hours?.open_now === 'boolean'
+            ? item.opening_hours.open_now
+            : undefined;
 
-      return {
-        id: item.place_id,
-        title: item.name || 'Leisure Spot',
-        category: mappedCategory,
-        description: item.vicinity ? `Leisure spot in ${item.vicinity}.` : 'Verified local leisure destination.',
-        image_url: imageUrl,
-        lat: pLat,
-        lng: pLng,
-        address: item.vicinity || item.formatted_address || 'Nearby Spot',
-        distance_meters: distMeters,
-        distance_km: distMeters !== undefined ? Number((distMeters / 1000).toFixed(2)) : undefined,
-        rating: Number(rating.toFixed(1)),
-        reviews_count: reviewsCount,
-        checkins_count: Math.max(12, Math.round(reviewsCount * 0.4)),
-        pulse_intensity: Math.min(10, Math.max(6, Math.round(rating * 2))),
-        vq_reward: 500,
-        created_by: 'google_places',
-        vibe_confidence: Math.min(99, Math.max(72, Math.round(rating * 20))),
-        confirmations_count: Math.min(50, Math.max(4, Math.round(reviewsCount / 10))),
-        is_legendary: isLegendary,
-        price_band: priceBand,
-        ai_match_score: Math.min(98, Math.max(65, Math.round(68 + (rating - 3) * 15))),
-        open_now: openNow
-      };
-    });
+        return {
+          id: item.place_id,
+          place_id: item.place_id,
+          title: item.name,
+          name: item.name,
+          types: Array.isArray(item.types) ? item.types : [],
+          category: mappedCategory,
+          description: item.formatted_address || item.vicinity || '',
+          image_url: imageUrl,
+          lat: pLat,
+          lng: pLng,
+          address: item.formatted_address || item.vicinity || '',
+          distance_meters: distMeters,
+          distance_km: Number((distMeters / 1000).toFixed(2)),
+          rating: rating,
+          reviews_count: reviewsCount,
+          // In-app metrics must NOT be faked or aliased from Google review counts:
+          checkins_count: undefined,
+          confirmations_count: undefined,
+          created_by: 'google_places',
+          is_legendary: isLegendary,
+          price_band: priceBand,
+          open_now: openNow,
+          _googleRank: googleIndex
+        };
+      })
+      .filter((p): p is NonNullable<typeof p> => p !== null);
 
-    // If a specific category was requested, ensure returned places strictly match that category
-    if (category && category !== 'All') {
-      places = places.filter((p) => p.category === category);
-    }
-
-    // Sort final results: distance (closest first), then by rating (highest first)
+    // Sort by Google relevance & rating first, then distance
     places.sort((a, b) => {
-      const distA = a.distance_meters ?? 999999;
-      const distB = b.distance_meters ?? 999999;
-      const distDiff = distA - distB;
-      if (Math.abs(distDiff) > 200) {
-        return distDiff;
+      const ratingA = a.rating ?? 0;
+      const ratingB = b.rating ?? 0;
+      const reviewsA = a.reviews_count ?? 0;
+      const reviewsB = b.reviews_count ?? 0;
+
+      const relevanceScoreA = ratingA * Math.log10(reviewsA + 10) - a._googleRank * 0.12;
+      const relevanceScoreB = ratingB * Math.log10(reviewsB + 10) - b._googleRank * 0.12;
+
+      if (Math.abs(relevanceScoreB - relevanceScoreA) > 0.3) {
+        return relevanceScoreB - relevanceScoreA;
       }
-      return (b.rating ?? 0) - (a.rating ?? 0);
+
+      return (a.distance_meters ?? 999999) - (b.distance_meters ?? 999999);
     });
 
-    return new Response(JSON.stringify({ places }), {
-      status: 200,
-      headers: { ...cors, 'Content-Type': 'application/json' }
-    });
+    const cleanPlaces = places.map(({ _googleRank, ...rest }) => rest);
+
+    return new Response(
+      JSON.stringify({
+        endpoint: 'https://maps.googleapis.com/maps/api/place/textsearch/json',
+        google_status: googleStatus,
+        google_error: error_message || null,
+        requested_category: requestedCategory,
+        query_used: searchQuery,
+        count: cleanPlaces.length,
+        places: cleanPlaces
+      }),
+      {
+        status: 200,
+        headers: { ...cors, 'Content-Type': 'application/json' }
+      }
+    );
   } catch (err: any) {
     console.error('nearby-places edge function error:', err);
     return new Response(JSON.stringify({ places: [], error: err?.message || 'Server error' }), {
-      status: 200,
+      status: 500,
       headers: { ...cors, 'Content-Type': 'application/json' }
     });
   }

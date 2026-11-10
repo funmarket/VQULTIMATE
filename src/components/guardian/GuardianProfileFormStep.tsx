@@ -61,7 +61,7 @@ export const GuardianProfileFormStep: React.FC<GuardianProfileFormStepProps> = (
       {/* Selfie Verified Header */}
       <div className="flex items-center gap-3 bg-zinc-950 p-3 rounded-2xl border border-white/5">
         <img
-          src={capturedPhotoUrl}
+          src={capturedPhotoUrl && capturedPhotoUrl.trim() !== '' ? capturedPhotoUrl : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
           alt="Captured In-App Selfie"
           className="w-14 h-14 rounded-full object-cover border-2 border-emerald-400"
         />

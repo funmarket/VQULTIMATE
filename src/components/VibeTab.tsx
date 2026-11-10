@@ -787,7 +787,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                   id: partnerId,
                   name: v.partner_profile?.full_name || 'Matched Explorer',
                   handle: v.partner_profile?.username || 'explorer',
-                  avatar: v.partner_profile?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'
+                  avatar: (v.partner_profile?.avatar_url && v.partner_profile.avatar_url.trim() !== '') ? v.partner_profile.avatar_url : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'
                 };
                 return (
                   <div key={v.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
@@ -963,6 +963,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                   full_name: 'District Voyager',
                   avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80'
                 };
+                const senderAvatar = (sender.avatar_url && sender.avatar_url.trim() !== '') ? sender.avatar_url : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80';
                 return (
                   <div key={p.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 space-y-3">
                     <div className="flex items-center justify-between">
@@ -973,7 +974,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                         }}
                         className="flex items-center space-x-3 cursor-pointer group"
                       >
-                        <img src={sender.avatar_url} alt={sender.full_name} className="w-12 h-12 rounded-full object-cover border border-amber-500/40 group-hover:border-teal-400 transition" />
+                        <img src={senderAvatar} alt={sender.full_name} className="w-12 h-12 rounded-full object-cover border border-amber-500/40 group-hover:border-teal-400 transition" />
                         <div>
                           <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition">{sender.full_name}</h4>
                           <p className="text-xs text-neutral-400">@{sender.username}</p>
@@ -1025,7 +1026,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
           <div className="w-full sm:max-w-md bg-neutral-900 border border-neutral-800 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[85vh] flex flex-col shadow-2xl text-white">
             <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
               <div className="flex items-center space-x-3">
-                <img src={activeChatUser.avatar} alt={activeChatUser.name} className="w-9 h-9 rounded-full object-cover border border-teal-500/40" />
+                <img src={activeChatUser.avatar && activeChatUser.avatar.trim() !== '' ? activeChatUser.avatar : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'} alt={activeChatUser.name} className="w-9 h-9 rounded-full object-cover border border-teal-500/40" />
                 <div>
                   <h4 className="font-bold text-sm text-white">{activeChatUser.name}</h4>
                   <p className="text-[10px] text-teal-400">@{activeChatUser.handle} • SOC-002 Encrypted</p>
