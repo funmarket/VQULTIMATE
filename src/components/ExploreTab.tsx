@@ -192,7 +192,9 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         center: initialCenter,
         zoom: initialZoom,
         pitch: locationState.coords ? 45 : 0,
-        bearing: -17
+        bearing: -17,
+        // Keep attribution as an info icon; users can expand the required credits.
+        attributionControl: { compact: true }
       });
 
       map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
@@ -460,7 +462,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           <h1 className="text-xl font-black tracking-tight flex items-center space-x-2">
             <Compass className="w-6 h-6 text-orange-400 animate-spin-slow" />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-neutral-200 to-orange-300">
-              Vibe Orbit & Discovery Pulse
+              Vibe Orbit
             </span>
           </h1>
           <p className="text-xs text-neutral-400">23 km real device location radar & organic concentric rings</p>
