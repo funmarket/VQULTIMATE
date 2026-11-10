@@ -135,6 +135,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setPlaces([]); // Do not display orbs from an older GPS/category request
 
     Promise.allSettled([
       fetchNearbyPlaces(locationState.coords, selectedCategory),
@@ -311,11 +312,13 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
       orbEl.innerHTML = `
         <div class="px-2.5 py-1 rounded-xl bg-gradient-to-br ${orbBg} backdrop-blur-md border ${orbBorder} text-[10px] font-bold text-white shadow-xl flex items-center space-x-1.5 transition-transform duration-300 group-hover:scale-110" style="box-shadow: 0 4px 14px ${orbGlow}">
           <span class="w-2 h-2 rounded-full ${dotBg} animate-pulse"></span>
-          <span class="truncate max-w-[110px]">${place.title}</span>
-          <span class="text-amber-300 font-bold">+${place.vq_reward}</span>
+          <span class="orb-place-name truncate max-w-[110px]"></span>
         </div>
         <div class="w-3.5 h-3.5 rounded-full ${dotBg} ring-4 ring-white/20 mt-1 shadow-lg transition-transform group-hover:scale-125"></div>
       `;
+
+      const nameEl = orbEl.querySelector('.orb-place-name');
+      if (nameEl) nameEl.textContent = place.title; // Google data is text, never HTML
 
       orbEl.onclick = (e) => {
         e.stopPropagation();
@@ -603,10 +606,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         {places.length > 0 ? (
           <div className="space-y-3.5">
             <div className="grid grid-cols-1 gap-3.5">
-              {places.slice(0, visibleWaypointsCount).map((place, idx) => {
-                const tier = idx === 0 ? 'LEGENDARY' : idx === 1 ? 'LEGENDARY' : 'RARE';
-                const rating = place.distance_km !== undefined ? (5.0 - place.distance_km * 0.4).toFixed(1) : '4.8';
-                const visits = 44 + (idx * 22) % 60;
+              {places.slice(0, visibleWaypointsCount).map((place) => {
                 return (
                   <div
                     key={place.id}
@@ -619,13 +619,6 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                         <span className="text-[10px] font-bold uppercase tracking-wider text-teal-300 bg-teal-950/60 border border-teal-500/30 px-2.5 py-0.5 rounded">
                           {place.category || 'SPOTS'}
                         </span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-950/60 border border-amber-500/40 px-2.5 py-0.5 rounded">
-                          {tier}
-                        </span>
-                        <span className="text-[10px] font-bold text-purple-300 bg-purple-950/60 border border-purple-500/30 px-2.5 py-0.5 rounded flex items-center space-x-1">
-                          <span>✨</span>
-                          <span>73% MATCH</span>
-                        </span>
                       </div>
                       <h4 className="font-black text-lg sm:text-xl text-white tracking-tight leading-snug">
                         {place.title}
@@ -634,15 +627,14 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
                     {/* MIDDLE: Large Hero Photo spanning full card width */}
                     <div className="relative w-full h-48 sm:h-56 rounded-2xl overflow-hidden bg-neutral-950 border border-neutral-800 shadow-lg">
-                      <img
-                        src={place.image_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80'}
-                        alt={place.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                      />
-                      <div className="absolute bottom-3 left-3 px-3 py-1 rounded-xl bg-neutral-950/90 text-amber-400 text-xs font-black flex items-center space-x-1.5 border border-neutral-800 shadow-md">
-                        <span>★</span>
-                        <span>{rating}</span>
-                      </div>
+                      {place.image_url ? (
+                        <img src={place.image_url} alt={place.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-neutral-500 text-sm">No venue photo available</div>
+                      )}
+                      {typeof place.rating === 'number' && (
+                        <div className="absolute bottom-3 left-3 px-3 py-1 rounded-xl bg-neutral-950/90 text-amber-400 text-xs font-black flex items-center space-x-1.5 border border-neutral-800 shadow-md">★ {place.rating.toFixed(1)}</div>
+                      )}
                     </div>
 
                     {/* BELOW PHOTO: Address */}
@@ -654,16 +646,14 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                     {/* BOTTOM: Distance, visits & reward actions */}
                     <div className="pt-3 border-t border-neutral-800/80 flex items-center justify-between text-xs">
                       <span className="font-semibold text-teal-300">
-                        {place.distance_km !== undefined ? `${place.distance_km} km` : '0.3 km'} • {visits} visits
+                        {place.distance_km !== undefined ? `${place.distance_km} km` : 'Distance unavailable'}
                       </span>
                       <div className="flex items-center space-x-2">
                         <span className="px-3.5 py-2 rounded-xl bg-neutral-800/80 text-neutral-400 border border-neutral-700/60 text-xs font-bold flex items-center space-x-1 shadow">
                           <span className="text-[10px]">🔒</span>
                           <span>Locked</span>
                         </span>
-                        <span className="px-3.5 py-2 rounded-xl bg-teal-950/60 text-emerald-400 border border-teal-500/30 text-xs font-bold shadow">
-                          +{place.vq_reward} PTS
-                        </span>
+
                       </div>
                     </div>
                   </div>
