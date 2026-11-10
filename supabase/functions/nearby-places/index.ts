@@ -99,7 +99,8 @@ const EXCLUDED_NAME_PATTERNS = [
   /\b(société|societe|ste\b|sté\b|sarl|s\.a\b|company|enterprise|entreprise|industrie|industry|manufactur|usine|holding|consulting|corporate|crown\s*maghreb|marquardt)\b/i,
   /\b(supermarket|supérette|superette|monoprix|carrefour|magasin\s*général|épicerie|epicerie|station\s*service|totalenergies|shell|agil|ola\s*energy)\b/i,
   /\b(post\s*office|la\s*poste|telecom|orange|ooredoo|tunisie\s*telecom)\b/i,
-  /\b(secondary|primary|civil|protection|bureau|office|suite|immeuble|immueble|magasin|entreprise|societe|société|college|lycee|lycée|universite|université|faculte|faculté|hospital|pharmacy)\b/i
+  /\b(secondary|primary|civil|protection|bureau|office|suite|immeuble|immueble|magasin|entreprise|societe|société|college|lycee|lycée|universite|université|faculte|faculté|hospital|pharmacy)\b/i,
+  /\bco\.?$/i
 ];
 
 const QUERY_TYPES: Record<VibeCategory | 'All', readonly string[]> = {
