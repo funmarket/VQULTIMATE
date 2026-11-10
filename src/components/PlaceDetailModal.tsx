@@ -23,7 +23,7 @@ function getCategoryIcon(category: string) {
   if (cat.includes('food') || cat.includes('restaurant')) return <Utensils className="w-4 h-4 text-amber-400" />;
   if (cat.includes('culture') || cat.includes('history')) return <Landmark className="w-4 h-4 text-purple-400" />;
   if (cat.includes('night') || cat.includes('owl')) return <Moon className="w-4 h-4 text-indigo-400" />;
-  if (cat.includes('spot') || cat.includes('café') || cat.includes('cafe')) return <Coffee className="w-4 h-4 text-amber-400" />;
+  if (cat.includes('spot')) return <Compass className="w-4 h-4 text-purple-400" />;
   return <Compass className="w-4 h-4 text-teal-400" />;
 }
 
@@ -34,27 +34,18 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
   onViewMap
 }) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('info');
-  const [isCheckedIn, setIsCheckedIn] = useState(false);
 
-  // Reference visual values
-  const rating = place.rating ?? 4.6;
-  const checkinsCount = (place.checkins_count ?? 31) + (isCheckedIn ? 1 : 0);
-  const vibeConfidence = place.vibe_confidence ?? 92;
-  const confirmationsCount = place.confirmations_count ?? 8;
+  const rating = place.rating;
   const distanceDisplay =
     place.distance_km !== undefined
       ? `${place.distance_km} km`
       : place.distance_meters !== undefined
       ? `${(place.distance_meters / 1000).toFixed(2)} km`
-      : '0.38 km';
-  const matchScore = place.ai_match_score ?? 73;
+      : 'Unknown distance';
   const categoryLabel = place.category.toUpperCase();
 
   const handleCheckInClick = () => {
-    if (!isCheckedIn) {
-      setIsCheckedIn(true);
-      onCheckIn(place);
-    }
+    onCheckIn(place);
   };
 
   const handleViewMapClick = () => {
@@ -77,11 +68,11 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
         <div className="overflow-y-auto overflow-x-hidden flex-1 overscroll-contain">
           {/* 1. Hero Image Banner */}
           <div className="relative h-56 sm:h-60 w-full shrink-0">
-            <img
-              src={place.image_url}
-              alt={place.title}
-              className="w-full h-full object-cover"
-            />
+            {place.image_url ? (
+              <img src={place.image_url} alt={place.title} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-neutral-500">No venue photo available</div>
+            )}
             {/* Top-right close button */}
             <button
               type="button"
@@ -111,9 +102,7 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                 <span className="w-6 h-6 rounded-full bg-neutral-800/80 flex items-center justify-center text-sm shadow-inner">
                   {getCategoryIcon(place.category)}
                 </span>
-                <span className="px-2.5 py-0.5 rounded-md bg-[#13233c] text-[#60a5fa] border border-[#2563eb]/40 font-extrabold text-[11px] tracking-wider uppercase">
-                  LEGENDARY SPOT
-                </span>
+                {place.is_legendary && <span className="px-2.5 py-0.5 rounded-md bg-[#13233c] text-[#60a5fa] border border-[#2563eb]/40 font-extrabold text-[11px] tracking-wider uppercase">LEGENDARY SPOT</span>}
               </div>
               <h2 className="text-2xl font-black text-white tracking-tight leading-tight">
                 {place.title}
@@ -171,36 +160,13 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
             {/* 4. Tab 1: Info (Exact visual reference replication) */}
             {activeTab === 'info' && (
               <div className="space-y-4 pt-1">
-                {/* Rating row: ⭐ 4.6 Out of 5.0 (31 reviews) */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-amber-400 text-base">⭐</span>
-                  <span className="text-amber-400 font-black text-base">
-                    {rating.toFixed(1)} Out of 5.0
-                  </span>
-                  <span className="text-neutral-400 text-xs font-medium ml-1">
-                    ({place.reviews_count !== undefined ? `${place.reviews_count} reviews` : `${checkinsCount} check-ins`})
-                  </span>
-                  {typeof place.open_now === 'boolean' && (
-                    <span
-                      className={`ml-auto text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
-                        place.open_now
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                          : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                      }`}
-                    >
-                      {place.open_now ? 'Open Now' : 'Closed'}
-                    </span>
-                  )}
-                </div>
-
-                {/* Vibe Confidence row: 🛡️ Vibe Confidence: 92% (8 confirmations) */}
-                <div className="flex items-center gap-2 text-xs sm:text-sm">
-                  <span className="text-blue-400">🛡️</span>
-                  <span className="text-white font-semibold">Vibe Confidence:</span>
-                  <span className="text-[#00e5a3] font-mono font-bold">
-                    {vibeConfidence}% ({confirmationsCount} confirmations)
-                  </span>
-                </div>
+                {typeof rating === 'number' && (
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-amber-400">★ {rating.toFixed(1)} out of 5</span>
+                    {typeof place.reviews_count === 'number' && <span className="text-neutral-400 text-xs">({place.reviews_count} Google reviews)</span>}
+                    {typeof place.open_now === 'boolean' && <span className="text-neutral-400 text-xs">{place.open_now ? 'Open now' : 'Closed'}</span>}
+                  </div>
+                )}
 
                 {/* Address row: 📍 15 Local Discovery Avenue */}
                 <div className="space-y-1">
@@ -211,79 +177,16 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                     </span>
                   </div>
                   <p className="text-xs text-neutral-400 leading-relaxed pl-6">
-                    {distanceDisplay !== 'Unknown distance' ? `Located ${distanceDisplay} from your position.` : ''} Verified Google Places venue.
-                  </p>
-                </div>
-
-                {/* 5. AI VIBE MATCH SCORE Card matching Reference */}
-                <div className="rounded-2xl bg-[#111726]/90 border border-neutral-800/90 p-4 space-y-3 shadow-inner">
-                  {/* Card Header: ✨ AI VIBE MATCH SCORE ... 73% Match */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-fuchsia-400 font-black text-xs tracking-wider uppercase">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>AI VIBE MATCH SCORE</span>
-                    </div>
-                    <span className="text-fuchsia-300 font-black text-sm">
-                      {matchScore}% Match
-                    </span>
-                  </div>
-
-                  {/* Gradient Progress Bar */}
-                  <div className="w-full h-2 rounded-full bg-neutral-800/80 overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-fuchsia-500 via-purple-500 to-indigo-400 rounded-full transition-all duration-700 ease-out"
-                      style={{ width: `${Math.min(100, Math.max(10, matchScore))}%` }}
-                    />
-                  </div>
-
-                  {/* Match Relevance Breakdown */}
-                  <div className="space-y-1.5 pt-1">
-                    <div className="text-[10px] font-bold text-neutral-400 tracking-wider uppercase">
-                      MATCH RELEVANCE BREAKDOWN:
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5 text-neutral-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-400" />
-                        <span>Interest Alignment</span>
-                      </div>
-                      <span className="text-neutral-300 font-bold">+15%</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-1.5 text-neutral-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-400" />
-                        <span>Stable Base Signal</span>
-                      </div>
-                      <span className="text-neutral-300 font-bold">+3%</span>
-                    </div>
-                  </div>
-
-                  {/* Italic Engine Disclaimer */}
-                  <p className="text-[11px] text-neutral-400 italic leading-snug pt-1">
-                    Based on interests, active community circles, recent check-ins, and local lifestyle sync. Offline-resilient engine active.
+                    {distanceDisplay !== 'Unknown distance' ? `Located ${distanceDisplay} from your position.` : ''}
                   </p>
                 </div>
 
                 {/* 6. Four Approved Action Buttons matching Reference */}
                 <div className="space-y-2.5 pt-2">
                   {/* Button 1: Check-in to Gain +500 PTS */}
-                  <button
-                    type="button"
-                    onClick={handleCheckInClick}
-                    disabled={isCheckedIn}
-                    className={`w-full py-3.5 px-4 rounded-full font-black text-sm text-center transition cursor-pointer active:scale-98 shadow-sm flex items-center justify-center gap-2 ${
-                      isCheckedIn
-                        ? 'border border-emerald-500/60 bg-emerald-900/50 text-emerald-300 cursor-default'
-                        : 'border border-emerald-500/40 bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-400'
-                    }`}
-                  >
-                    {isCheckedIn ? (
-                      <>
-                        <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-                        <span>Checked In! (+{place.vq_reward || 500} PTS Claimed)</span>
-                      </>
-                    ) : (
-                      <span>Check-in to Gain +{place.vq_reward || 500} PTS</span>
-                    )}
+                  <button type="button" onClick={handleCheckInClick}
+                    className="w-full py-3.5 px-4 rounded-full font-black text-sm text-center transition cursor-pointer bg-emerald-950/40 text-emerald-400 border border-emerald-500/40">
+                    Check in
                   </button>
 
                   {/* Button 2: Vibe Validate (Locked) */}
@@ -321,45 +224,8 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
             {/* Tab 2: Mayor & Badges */}
             {activeTab === 'mayor' && (
               <div className="space-y-4 pt-1">
-                <div className="rounded-2xl bg-neutral-900/70 border border-neutral-800 p-4 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-xl shadow-md">
-                      👑
-                    </div>
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-amber-400 font-bold">
-                        District Sentinel / Mayor
-                      </div>
-                      <div className="text-base font-black text-white">
-                        @{place.created_by || 'zen_stroller'}
-                      </div>
-                      <div className="text-xs text-neutral-400">
-                        Top check-in frequency (14 visits this cycle)
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-                    Earnable Spot Badges
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-xl bg-neutral-900/60 border border-neutral-800/80 p-3 flex items-center gap-2.5">
-                      <span className="text-xl">☕</span>
-                      <div>
-                        <div className="text-xs font-bold text-white">Caffeine Pioneer</div>
-                        <div className="text-[10px] text-neutral-400">3 check-ins required</div>
-                      </div>
-                    </div>
-                    <div className="rounded-xl bg-neutral-900/60 border border-neutral-800/80 p-3 flex items-center gap-2.5">
-                      <span className="text-xl">🛡️</span>
-                      <div>
-                        <div className="text-xs font-bold text-white">Vibe Validator</div>
-                        <div className="text-[10px] text-neutral-400">Verify spot hours</div>
-                      </div>
-                    </div>
-                  </div>
+                <div className="rounded-2xl bg-neutral-900/70 border border-neutral-800 p-4 text-sm text-neutral-400">
+                  Community mayor and badge information is not available for this location.
                 </div>
 
                 <button
