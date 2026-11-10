@@ -122,6 +122,7 @@ function mapGoogleTypesToCategory(types: string[], requested: VibeCategory | 'Al
 function isStrictlyLeisurePlace(item: any): boolean {
   const types: string[] = Array.isArray(item?.types) ? item.types : [];
   const name: string = typeof item?.name === 'string' ? item.name : '';
+  const normalizedName = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   if (!name.trim() || !Number.isFinite(item?.geometry?.location?.lat) || !Number.isFinite(item?.geometry?.location?.lng)) return false;
 
   // 1. Must have at least one allowed leisure type
@@ -139,7 +140,7 @@ function isStrictlyLeisurePlace(item: any): boolean {
 
   // 3. Reject if name matches non-leisure entities (schools, institutes, companies, hospitals, public offices)
   for (const pattern of EXCLUDED_NAME_PATTERNS) {
-    if (pattern.test(name)) {
+    if (pattern.test(normalizedName)) {
       return false;
     }
   }
