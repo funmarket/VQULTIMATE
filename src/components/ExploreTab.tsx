@@ -193,8 +193,8 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         zoom: initialZoom,
         pitch: locationState.coords ? 45 : 0,
         bearing: -17,
-        // Keep attribution as an info icon; users can expand the required credits.
-        attributionControl: { compact: true }
+        // Render mandatory map credits below the map, away from the GPS readout.
+        attributionControl: false
       });
 
       map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
@@ -465,7 +465,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
               Vibe Orbit
             </span>
           </h1>
-          <p className="text-xs text-neutral-400">23 km real device location radar & organic concentric rings</p>
+          <p className="text-xs text-neutral-400">23km : trust your instincts</p>
         </div>
         <div className="flex items-center space-x-2">
           <button
@@ -475,14 +475,6 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           >
             <Navigation className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">My Location</span>
-          </button>
-          <button
-            onClick={handleManualCalibrate}
-            className="p-2.5 rounded-xl bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 transition text-orange-400 flex items-center space-x-1 text-xs font-semibold cursor-pointer"
-            title="Calibrate Real GPS"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${locationState.status === 'requesting' ? 'animate-spin' : ''}`} />
-            <span className="hidden sm:inline">Calibrate GPS</span>
           </button>
           <button
             onClick={() => setIsFullScreen(!isFullScreen)}
@@ -520,7 +512,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
             onClick={handleManualCalibrate}
             className="px-3 py-1 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-bold text-xs whitespace-nowrap ml-2 cursor-pointer"
           >
-            Calibrate GPS
+            Retry GPS
           </button>
         </div>
       )}
@@ -579,13 +571,20 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                 ? `GPS Active: ${locationState.coords.lat.toFixed(4)}, ${locationState.coords.lng.toFixed(4)}`
                 : locationState.status === 'requesting'
                 ? 'Acquiring GPS Signal...'
-                : 'GPS Offline (Tap Calibrate)'}
+                : 'GPS Offline'}
             </span>
           </div>
           <span className="text-[11px] text-neutral-400 font-medium">
             {places.length} Places in 23 km
           </span>
         </div>
+      </div>
+
+      <div className="text-[10px] text-neutral-500 flex flex-wrap justify-end gap-x-1 px-2 -mt-4" aria-label="Map attribution">
+        <span>MapLibre |</span>
+        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-300">© OpenStreetMap contributors</a>
+        <span>©</span>
+        <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-300">CARTO</a>
       </div>
 
       {/* Nearby Vibe Waypoints (23 km Discovery Scope) */}
