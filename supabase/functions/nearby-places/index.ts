@@ -1,17 +1,4 @@
-/**
- * Supabase Edge Function: nearby-places
- * Calls Google Places API Text Search securely server-side using GOOGLE_PLACES_API_KEY.
- *
- * Rules enforced:
- * - Uses https://maps.googleapis.com/maps/api/place/textsearch/json with location + 8km radius bias and 15km hard cutoff.
- * - Maps categories to exact leisure search queries.
- * - Strictly excludes non-leisure types and names (schools, companies, societies, banks, hospitals, utilities, offices).
- * - Sorts by Google relevance & Bayesian rating first, then distance.
- * - Never aliases Google reviews_count into in-app checkins_count or confirmations_count.
- * - Proxies place photos via GET ?photo_reference=... so GOOGLE_PLACES_API_KEY never reaches the client.
- */
-
-const cors = {
+﻿const cors = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -20,11 +7,11 @@ const cors = {
 type VibeCategory = 'Food' | 'Art' | 'Spots' | 'Culture' | 'Night Owl';
 
 const CATEGORY_QUERY_MAP: Record<string, string> = {
-  All: 'restaurant cafe bar lounge museum night club art gallery',
+  All: 'restaurant cafe bar lounge museum night club art gallery park',
   Food: 'restaurant cafe bakery',
   'Night Owl': 'bar night club lounge',
   Art: 'art gallery',
-  Culture: 'museum theatre',
+  Culture: 'museum theatre cultural center',
   Spots: 'tourist attraction park viewpoint'
 };
 
@@ -47,12 +34,20 @@ const ALLOWED_LEISURE_TYPES = new Set([
   'amusement_park',
   'aquarium',
   'zoo',
-  'spa',
   'bowling_alley',
   'casino'
 ]);
 
 const EXCLUDED_TYPES = new Set([
+  'lodging',
+  'locality',
+  'political',
+  'administrative_area_level_1',
+  'administrative_area_level_2',
+  'country',
+  'neighborhood',
+  'sublocality',
+  'route',
   'bank',
   'atm',
   'finance',
@@ -123,12 +118,13 @@ const EXCLUDED_TYPES = new Set([
 ]);
 
 const EXCLUDED_NAME_PATTERNS = [
+  /\b(hotel|hôtel|motel|hostel|auberge|aparthotel|résidence|residence)\b/i,
   /\b(school|école|ecole|lycée|lycee|collège|college|university|université|universite|faculté|faculte|institut|institute|académie|academie|training|formation|éducation|education|enseignement)\b/i,
   /\b(jardin\s*d['’]?enfants|crèche|creche|garderie|maternelle|primaire|préparatoire|preparatoire|scolaire|campus|iset|isg|insat|esprit|fst|enit|ihec)\b/i,
   /\b(hospital|hôpital|hopital|clinic|clinique|pharmacy|pharmacie|cabinet|médical|medical|santé|sante|dispensaire|laboratoire|laboratory|polyclinique|dentaire|dentiste|optique|opticien|kiné|kine)\b/i,
   /\b(police|protection\s*civile|civil\s*protection|civil|gendarmerie|pompiers|municipalité|municipalite|commune|mairie|ministère|ministere|ambassade|consulat|tribunal|gouvernorat|délégation|delegation|recette\s*des\s*finances|cnss|cnam|steg|sonede|onàs|onas)\b/i,
   /\b(bank|banque|atm|biat|bna|stb|bh\b|amen\s*bank|attijari|zitouna|uib|ubci|btk|tsb|wifak|assurance|insurance|gat|star|comar|maghrébia|lloyd|mae|notaire|avocat|courtier|finance|leasing|microfinance|endatamweel)\b/i,
-  /\b(société|societe|ste\b|sté\b|sarl|suarl|s\.a\.r\.l|s\.a\b|company|enterprise|entreprise|industrie|industry|industrial|manufactur|usine|holding|groupe|group|consulting|conseil|corporate|siège|siege|direction\s*générale|centre\s*d['’]?affaires|business\s*center|bureau|office|agence|agency|imprimerie|travaux|batiment|bâtiment|immobilier|immobilière|promotion|construction|logistique|logistics|transport|import|export|distribution|commerce|commercial|crown\s*maghreb|marquardt)\b/i,
+  /\b(société|societe|ste\b|sté\b|sarl|suarl|s\.a\.r\.l|s\.a\b|company|enterprise|entreprise|industrie|industry|industrial|manufactur|usine|holding|groupe|group|consulting|conseil|corporate|siège|siege|direction\s*générale|centre\s*d['’]?affaires|business\s*center|bureau|office|agence|agency|imprimerie|impression|plv\b|publicité|publicite|travaux|batiment|bâtiment|immobilier|immobilière|promotion|construction|logistique|logistics|transport|import|export|distribution|commerce|commercial|crown\s*maghreb|marquardt)\b/i,
   /\b(supermarket|supérette|superette|monoprix|carrefour|magasin\s*général|mg\b|aziza|épicerie|epicerie|station\s*service|totalenergies|shell|agil|ola\s*energy|kiosque|lavage)\b/i,
   /\b(post\s*office|la\s*poste|rapid\s*poste|telecom|télécom|orange|ooredoo|tunisie\s*telecom|topnet|globalnet)\b/i
 ];
@@ -153,7 +149,7 @@ function isStrictlyLeisurePlace(item: any, requestedCategory: 'All' | VibeCatego
   const name: string = (item?.name || '').trim();
   const address: string = (item?.formatted_address || item?.vicinity || '').trim();
 
-  if (!name) return false;
+  if (!name || name.toLowerCase() === 'tunis') return false;
 
   for (const t of types) {
     if (EXCLUDED_TYPES.has(t)) {
@@ -229,7 +225,6 @@ function mapPlaceToCategory(
     set.has('amusement_park') ||
     set.has('aquarium') ||
     set.has('zoo') ||
-    set.has('spa') ||
     set.has('bowling_alley') ||
     SPOTS_REGEX.test(name);
 
@@ -296,36 +291,29 @@ Deno.serve(async (request: Request) => {
   const apiKey = Deno.env.get('GOOGLE_PLACES_API_KEY');
   const reqUrl = new URL(request.url);
 
-  // Handle Photo Proxy GET request: /functions/v1/nearby-places?photo_reference=...
   if (request.method === 'GET') {
     const photoReference = reqUrl.searchParams.get('photo_reference');
-
     if (!photoReference) {
       return new Response(JSON.stringify({ error: 'Missing photo_reference' }), {
         status: 400,
         headers: { ...cors, 'Content-Type': 'application/json' }
       });
     }
-
     if (!apiKey) {
       return new Response(JSON.stringify({ error: 'GOOGLE_PLACES_API_KEY is not configured in Supabase secrets.' }), {
         status: 500,
         headers: { ...cors, 'Content-Type': 'application/json' }
       });
     }
-
     try {
       const maxwidth = reqUrl.searchParams.get('maxwidth') || '800';
       const googlePhotoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${encodeURIComponent(maxwidth)}&photoreference=${encodeURIComponent(photoReference)}&key=${apiKey}`;
       const photoRes = await fetch(googlePhotoUrl, { redirect: 'follow' });
-
       if (!photoRes.ok) {
         return new Response(null, { status: photoRes.status, headers: cors });
       }
-
       const contentType = photoRes.headers.get('content-type') || 'image/jpeg';
       const imageBuffer = await photoRes.arrayBuffer();
-
       return new Response(imageBuffer, {
         status: 200,
         headers: {
@@ -342,7 +330,6 @@ Deno.serve(async (request: Request) => {
     }
   }
 
-  // Handle Places Search POST request
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed.' }), {
       status: 405,
@@ -369,18 +356,12 @@ Deno.serve(async (request: Request) => {
           error: 'GOOGLE_PLACES_API_KEY is not configured in Supabase secrets.',
           places: []
         }),
-        {
-          status: 500,
-          headers: { ...cors, 'Content-Type': 'application/json' }
-        }
+        { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Bias search with user's real lat/lng and 8 km radius (5-10 km range)
     const radiusMeters = 8000;
-    // Hard maximum distance cutoff (15 km) so Google Text Search soft radius does not leak distant cities
     const maxCutoffMeters = 15000;
-
     const searchQuery = CATEGORY_QUERY_MAP[requestedCategory] || CATEGORY_QUERY_MAP['All'];
 
     const { status: googleStatus, results: rawResults, error_message } = await queryGooglePlacesTextSearch(
@@ -402,10 +383,8 @@ Deno.serve(async (request: Request) => {
         const distMeters = calculateHaversineMeters(lat, lng, pLat, pLng);
         if (distMeters > maxCutoffMeters) return null;
 
-        // 1. Strictly filter out non-leisure places
         if (!isStrictlyLeisurePlace(item, requestedCategory)) return null;
 
-        // 2. Map and verify category match
         const mappedCategory = mapPlaceToCategory(item.types, item.name, requestedCategory);
         if (!mappedCategory) return null;
 
@@ -415,8 +394,6 @@ Deno.serve(async (request: Request) => {
             ? `${supabaseUrl}/functions/v1/nearby-places?photo_reference=${encodeURIComponent(photoRef)}&maxwidth=800`
             : undefined;
 
-        // Real Google ratings & review counts only.
-        // STRICT RULE: Never alias Google reviews_count into checkins_count or confirmations_count!
         const rating = typeof item.rating === 'number' ? Number(item.rating.toFixed(1)) : undefined;
         const reviewsCount = typeof item.user_ratings_total === 'number' ? item.user_ratings_total : undefined;
         const isLegendary = Boolean(rating !== undefined && rating >= 4.5 && (reviewsCount ?? 0) >= 40);
@@ -446,7 +423,6 @@ Deno.serve(async (request: Request) => {
           distance_km: Number((distMeters / 1000).toFixed(2)),
           rating: rating,
           reviews_count: reviewsCount,
-          // In-app metrics must NOT be faked or aliased from Google review counts:
           checkins_count: undefined,
           confirmations_count: undefined,
           created_by: 'google_places',
@@ -458,7 +434,6 @@ Deno.serve(async (request: Request) => {
       })
       .filter((p): p is NonNullable<typeof p> => p !== null);
 
-    // Sort by Google relevance & rating first, then distance
     places.sort((a, b) => {
       const ratingA = a.rating ?? 0;
       const ratingB = b.rating ?? 0;
@@ -487,10 +462,7 @@ Deno.serve(async (request: Request) => {
         count: cleanPlaces.length,
         places: cleanPlaces
       }),
-      {
-        status: 200,
-        headers: { ...cors, 'Content-Type': 'application/json' }
-      }
+      { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } }
     );
   } catch (err: any) {
     console.error('nearby-places edge function error:', err);
