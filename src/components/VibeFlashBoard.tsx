@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Zap, MapPin, ChevronRight, Plus, Sparkles, ChevronLeft, Camera } from 'lucide-react';
+import { Zap, MapPin, ChevronRight, Plus, Sparkles, ChevronLeft } from 'lucide-react';
 import { VibeFlashItem } from '../domains/d13_vibe_flash/types';
 import { fetchActiveVibeFlashes, subscribeToVibeFlashes } from '../domains/d13_vibe_flash/api';
 import { VibeFlashDetailModal } from './VibeFlashDetailModal';
@@ -79,9 +79,9 @@ export const VibeFlashBoard: React.FC<VibeFlashBoardProps> = ({
   };
 
   return (
-    <div className="space-y-4 overflow-hidden rounded-[28px] border border-fuchsia-500/45 bg-[radial-gradient(ellipse_at_95%_0%,#321337_0%,#1b1023_48%,#120e19_100%)] p-4 text-white shadow-[0_12px_36px_rgba(0,0,0,0.5)] sm:p-5">
+    <div className="space-y-4 overflow-hidden rounded-[28px] border border-fuchsia-500/45 bg-[radial-gradient(ellipse_at_95%_0%,#321337_0%,#1b1023_48%,#120e19_100%)] px-[0.1px] pb-[0.1px] pt-4 text-white shadow-[0_12px_36px_rgba(0,0,0,0.5)] sm:pt-5">
       {/* Keep the active count attached to the board title on all screen sizes. */}
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-2 px-4 sm:px-5">
         <div className="flex min-w-0 items-center gap-2.5">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-fuchsia-500/40 bg-fuchsia-500/20 text-fuchsia-300">
             <Zap className="h-5 w-5 fill-fuchsia-400" />
@@ -97,7 +97,7 @@ export const VibeFlashBoard: React.FC<VibeFlashBoardProps> = ({
       </div>
 
       {/* Existing Create Flash action and authentication flow remain unchanged. */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 px-4 sm:px-5">
         <button
           type="button"
           onClick={handleCreateClick}
@@ -147,11 +147,11 @@ export const VibeFlashBoard: React.FC<VibeFlashBoardProps> = ({
           </div>
         </div>
       ) : (
-        <div className="space-y-2">
-          {/* Exactly two cards visible; keep the existing horizontal swipe carousel. */}
+        <div className="space-y-[0.1px]">
+          {/* Single Flash fills the available width; two or more keep the swipe carousel. */}
           <div
             ref={scrollContainerRef}
-            className="flex snap-x snap-mandatory flex-nowrap gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-fuchsia-500/30"
+            className="flex snap-x snap-mandatory flex-nowrap gap-3 overflow-x-auto pb-[0.1px] scrollbar-thin scrollbar-track-transparent scrollbar-thumb-fuchsia-500/30"
             style={{ scrollbarWidth: 'thin' }}
           >
             {flashes.map((item) => {
@@ -167,7 +167,7 @@ export const VibeFlashBoard: React.FC<VibeFlashBoardProps> = ({
                   key={item.id}
                   onClick={() => setSelectedFlash(item)}
                   aria-label={'View Flash: ' + item.title}
-                  className="group flex w-[calc(50%-6px)] min-w-[calc(50%-6px)] max-w-[calc(50%-6px)] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-neutral-700/80 bg-[#161219] text-left shadow-md transition hover:border-fuchsia-400/65 focus-visible:outline focus-visible:outline-2 focus-visible:outline-fuchsia-400"
+                  className={`group flex shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-neutral-700/80 bg-[#161219] text-left shadow-md transition hover:border-fuchsia-400/65 focus-visible:outline focus-visible:outline-2 focus-visible:outline-fuchsia-400 ${flashes.length === 1 ? "w-full min-w-full max-w-full" : "w-[calc(50%-6px)] min-w-[calc(50%-6px)] max-w-[calc(50%-6px)]"}`}
                 >
                   <div className="relative h-[104px] w-full overflow-hidden bg-gradient-to-br from-fuchsia-800/75 via-[#2b1640] to-[#17121e] sm:h-[128px]">
                     {image ? (
@@ -197,18 +197,13 @@ export const VibeFlashBoard: React.FC<VibeFlashBoardProps> = ({
                       </svg>
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10" />
-                    <div className="absolute left-2 top-2 right-2 flex flex-wrap items-start gap-1">
+                    <div className="absolute inset-x-2 top-2 flex items-start justify-between gap-1">
                       <span className={isMeetup
-                        ? 'max-w-full truncate rounded-md border border-sky-500/50 bg-sky-950/90 px-1.5 py-1 text-[9px] font-black uppercase text-sky-200'
-                        : 'max-w-full truncate rounded-md border border-fuchsia-500/50 bg-fuchsia-950/90 px-1.5 py-1 text-[9px] font-black uppercase text-fuchsia-200'
+                        ? 'max-w-[55%] truncate rounded-md border border-sky-500/50 bg-sky-950/90 px-1.5 py-1 text-[9px] font-black uppercase text-sky-200'
+                        : 'max-w-[55%] truncate rounded-md border border-fuchsia-500/50 bg-fuchsia-950/90 px-1.5 py-1 text-[9px] font-black uppercase text-fuchsia-200'
                       }>
                         {isMeetup ? '👥 VENUE MEETUP' : item.vibe_type}
                       </span>
-                      {image && (
-                        <span className="flex items-center gap-1 rounded-md bg-neutral-950/80 px-1.5 py-1 text-[9px] font-bold text-neutral-200">
-                          <Camera className="h-3 w-3" /> Photo
-                        </span>
-                      )}
                       <span className={isLive
                         ? 'rounded-md border border-emerald-500/40 bg-emerald-950/90 px-1.5 py-1 text-[9px] font-black text-emerald-300'
                         : 'rounded-md bg-neutral-950/85 px-1.5 py-1 text-[9px] font-black text-neutral-200'
@@ -217,11 +212,11 @@ export const VibeFlashBoard: React.FC<VibeFlashBoardProps> = ({
                       </span>
                     </div>
                   </div>
-                  <div className="flex w-full min-w-0 flex-1 flex-col gap-3 p-3">
+                  <div className="flex w-full min-w-0 flex-1 flex-col gap-1.5 px-2 pb-[0.1px] pt-2">
                     <h4 className="line-clamp-2 min-h-[1.25em] text-sm font-black leading-tight text-white transition group-hover:text-fuchsia-200 sm:text-base">
                       {item.title}
                     </h4>
-                    <div className="mt-auto flex min-w-0 items-center justify-between gap-1 border-t border-neutral-800 pt-2 text-[10px] sm:text-[11px]">
+                    <div className="mt-auto flex min-w-0 items-center justify-between gap-1 border-t border-neutral-800 pt-1 text-[10px] sm:text-[11px]">
                       <span className="flex min-w-0 items-center gap-1 text-neutral-400">
                         <MapPin className="h-3.5 w-3.5 shrink-0 text-amber-400" />
                         <span className="truncate">{item.venue_name}</span>
