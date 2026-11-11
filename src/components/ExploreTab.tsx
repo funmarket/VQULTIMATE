@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import {
   Compass, Maximize2, Minimize2, Sparkles, Navigation, Flame,
   MapPin, Shield, Route, Clock, Award, ChevronLeft, ChevronRight,
-  AlertCircle, RefreshCw, Radio, Plus, Heart, Camera, Handshake,
-  MessageCircle, CheckCircle2, Bookmark, Check
+  AlertCircle, Radio, Plus, Heart, Camera, Handshake, MessageCircle
 } from 'lucide-react';
 import {
   fetchNearbyPlaces,
@@ -12,7 +13,6 @@ import {
   VibePlace,
   VibeCategory,
   DeviceLocationState,
-  DISCOVERY_RADIUS_METERS,
   recordCategoryClick,
   computeAiVibeMatch,
   fetchActivePromotions
@@ -46,21 +46,45 @@ interface ExploreTabProps {
   onRequireAuth?: () => void;
 }
 
+// Fallback raster dark style if external Carto vector style fails
+const FALLBACK_DARK_STYLE: any = {
+  version: 8,
+  sources: {
+    'carto-dark': {
+      type: 'raster',
+      tiles: [
+        'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+        'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+        'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
+      ],
+      tileSize: 256,
+      attribution: '© OpenStreetMap contributors, © CARTO'
+    }
+  },
+  layers: [
+    {
+      id: 'carto-dark-layer',
+      type: 'raster',
+      source: 'carto-dark',
+      minzoom: 0,
+      maxzoom: 20
+    }
+  ]
+};
+
 export const ExploreTab: React.FC<ExploreTabProps> = ({
   user = null,
   onSelectPlace,
   onRequireAuth
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<any>(null);
-  const markersRef = useRef<any[]>([]);
-  const userMarkerRef = useRef<any>(null);
+  const mapInstance = useRef<maplibregl.Map | null>(null);
+  const markersRef = useRef<maplibregl.Marker[]>([]);
+  const userMarkerRef = useRef<maplibregl.Marker | null>(null);
   const hasInitiallyCenteredRef = useRef<boolean>(false);
 
   const trailsScrollRef = useRef<HTMLDivElement>(null);
-  const guardiansScrollRef = useRef<HTMLDivElement>(null);
 
-  // Real Geolocation State (Zero hardcoded Dubai)
   const [locationState, setLocationState] = useState<DeviceLocationState>({
     status: 'requesting',
     coords: null
@@ -77,14 +101,12 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
   }, [selectedCategory]);
 
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
-  // Community Curations & Local Knowledge Hub Sub-tab controls
   const [trailSubTab, setTrailSubTab] = useState<'trails' | 'tours'>('trails');
   const [guardianFilter, setGuardianFilter] = useState<'top' | 'pro' | 'local'>('top');
   const [savedTrailIds, setSavedTrailIds] = useState<Set<string>>(new Set());
 
-  // Active Modals & Toast State
   const [selectedTrail, setSelectedTrail] = useState<CommunityTrail | null>(null);
   const [selectedGuardian, setSelectedGuardian] = useState<VibeGuardian | null>(null);
   const [selectedHireGuardian, setSelectedHireGuardian] = useState<VibeGuardian | null>(null);
@@ -95,18 +117,19 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
   const [isCurateOpen, setIsCurateOpen] = useState(false);
   const [isSelfieModalOpen, setIsSelfieModalOpen] = useState(false);
   const [guardianRegistrationType, setGuardianRegistrationType] = useState<'local' | 'pro' | undefined>();
+
   const openGuardianRegistration = (type?: 'local' | 'pro') => {
     if (!user) { onRequireAuth?.(); return; }
     const existing = guardians.find(guardian => guardian.id === user.id);
     if (type === 'local' && existing?.type === 'pro') {
-      showToast('This account is already a Pro Guardian. Creating a Local Legend would replace that role.');
+      showToast('This account is already a Pro Guardian.');
       return;
     }
     setGuardianRegistrationType(type);
     setIsSelfieModalOpen(true);
   };
-  const [exploreToast, setExploreToast] = useState<string | null>(null);
 
+  const [exploreToast, setExploreToast] = useState<string | null>(null);
   const categories: (VibeCategory | 'All')[] = ['All', 'Food', 'Art', 'Spots', 'Culture', 'Night Owl'];
 
   const showToast = (msg: string) => {
@@ -118,10 +141,9 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
   const prevCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
 
-  // 1. Acquire real device location via watchPosition / getCurrentPosition
+  // 1. Geolocation acquisition
   useEffect(() => {
     let unwatch: (() => void) | null = null;
-
     setLocationState({ status: 'requesting', coords: null });
 
     getDeviceLocation().then((initialState) => {
@@ -130,7 +152,6 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         prevCoordsRef.current = { lat: initialState.coords.lat, lng: initialState.coords.lng };
       }
 
-      // Start continuous GPS watch (filtered by >= 20m movement)
       unwatch = watchDeviceLocation((updatedState) => {
         if (updatedState.coords) {
           const prev = prevCoordsRef.current;
@@ -154,12 +175,10 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     });
   }, []);
 
-  // 2. Query each real directory independently. A failing gallery must not hide Guardians.
+  // 2. Data fetching
   useEffect(() => {
     let cancelled = false;
-    if (places.length === 0) {
-      setLoading(true);
-    }
+    if (places.length === 0) setLoading(true);
 
     Promise.allSettled([
       fetchNearbyPlaces(locationState.coords, selectedCategory),
@@ -177,70 +196,74 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         setSavedTrailIds(new Set(trailsData.filter(t => t.savedBy?.some(id => aliases.includes(id))).map(t => t.id)));
       }
       if (guardiansResult.status === 'fulfilled') setGuardians(guardiansResult.value);
-
-      const failures = [placesResult, trailsResult, guardiansResult, authResult]
-        .filter((result): result is PromiseRejectedResult => result.status === 'rejected');
-      if (failures.length > 0) {
-        const first = failures[0].reason;
-        showToast(first instanceof Error ? first.message : 'Some Explore data could not be loaded.');
-      }
       setLoading(false);
     });
+
     return () => { cancelled = true; };
   }, [locationState.coords?.lat, locationState.coords?.lng, selectedCategory, user?.id]);
 
-  // 3. Initialize MapLibre GL dark-matter map (Neutral world center until device location arrives)
+  // 3. Initialize MapLibre directly using bundled NPM package
   useEffect(() => {
     if (!mapContainer.current) return;
     if (mapInstance.current) return;
 
-    const maplibregl = (window as any).maplibregl;
-    if (!maplibregl) {
-      console.warn('MapLibre GL CDN not loaded yet');
-      return;
-    }
-
     try {
-      // Use real coordinates if already available; otherwise neutral view (NO hardcoded Dubai)
-      const hasCoords = !!locationState.coords;
-      if (hasCoords) {
-        hasInitiallyCenteredRef.current = true;
-      }
       const initialCenter: [number, number] = locationState.coords
         ? [locationState.coords.lng, locationState.coords.lat]
-        : [0, 20];
-      const initialZoom = locationState.coords ? 13.5 : 2;
+        : [10.1815, 36.8065]; // Tunis center fallback
 
       const map = new maplibregl.Map({
         container: mapContainer.current,
         style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
         center: initialCenter,
-        zoom: initialZoom,
-        pitch: locationState.coords ? 45 : 0,
+        zoom: locationState.coords ? 13 : 11,
+        pitch: 45,
         bearing: -17,
-        // Render mandatory map credits below the map, away from the GPS readout.
         attributionControl: false
       });
 
-      map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
-      mapInstance.current = map;
-    } catch (err) {
-      console.warn('MapLibre init error:', err);
-    }
-
-    return () => {
-      if (mapInstance.current) {
-        try {
-          mapInstance.current.remove();
-        } catch {
-          // Ignore AbortError / tile cancellation on unmount
+      // Handle style load failure with reliable raster fallback
+      map.on('error', (e) => {
+        if (e && e.error && (e.error.message?.includes('style') || e.error.status === 404)) {
+          console.warn('Vector style unavailable, switching to fallback raster dark style.');
+          try {
+            map.setStyle(FALLBACK_DARK_STYLE);
+          } catch {}
         }
+      });
+
+      map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+
+      // Ensure proper canvas layout sizing
+      map.on('load', () => {
+        map.resize();
+      });
+
+      mapInstance.current = map;
+
+      // Delayed resize to ensure layout settlement
+      const resizeTimer = setTimeout(() => {
+        if (mapInstance.current) mapInstance.current.resize();
+      }, 300);
+
+      return () => {
+        clearTimeout(resizeTimer);
+        map.remove();
         mapInstance.current = null;
-      }
-    };
+      };
+    } catch (err) {
+      console.error('MapLibre init error:', err);
+    }
   }, []);
 
-  // 4. Center MapLibre ONCE on initial real device coordinates, then preserve user pan/zoom freedom
+  // Trigger resize whenever fullscreen is toggled
+  useEffect(() => {
+    if (mapInstance.current) {
+      setTimeout(() => mapInstance.current?.resize(), 150);
+    }
+  }, [isFullScreen]);
+
+  // 4. Center map once device coordinates resolve
   useEffect(() => {
     if (
       !hasInitiallyCenteredRef.current &&
@@ -258,26 +281,22 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           essential: true
         });
       } catch (err) {
-        console.warn('Error initially centering map on user location:', err);
+        console.warn('Center flyTo error:', err);
       }
     }
   }, [locationState.status, locationState.coords]);
 
-  // 5. Update MapLibre markers: User location beacon + Cultural orbs colored by category
+  // 5. Update user and place markers
   useEffect(() => {
     const map = mapInstance.current;
-    const maplibregl = (window as any).maplibregl;
-    if (!map || !maplibregl) return;
+    if (!map) return;
 
-    // Remove previous place markers
     markersRef.current.forEach((m) => {
-      try {
-        m.remove();
-      } catch {}
+      try { m.remove(); } catch {}
     });
     markersRef.current = [];
 
-    // Add or update User location beacon marker
+    // User location beacon
     if (locationState.coords) {
       if (userMarkerRef.current) {
         userMarkerRef.current.setLngLat([locationState.coords.lng, locationState.coords.lat]);
@@ -295,14 +314,13 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
       }
     }
 
-    // Add cultural orb markers for places within 23 km
+    // Place markers
     places.forEach((place) => {
       if (!place.lng || !place.lat || isNaN(place.lng) || isNaN(place.lat)) return;
 
       const orbEl = document.createElement('div');
       orbEl.className = 'cursor-pointer group flex flex-col items-center select-none';
 
-      // Category color mapping matching reference artwork (0DvcX_6bc6cde4.jpg)
       let orbGlow = 'rgba(6, 182, 212, 0.4)';
       let orbBorder = 'border-cyan-400/60';
       let orbBg = 'from-cyan-500/30 via-neutral-950/90 to-cyan-950/80';
@@ -359,15 +377,6 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
       markersRef.current.push(marker);
     });
-
-    return () => {
-      markersRef.current.forEach((m) => {
-        try {
-          m.remove();
-        } catch {}
-      });
-      markersRef.current = [];
-    };
   }, [places, locationState.coords]);
 
   const handleSaveTrail = async (trailId: string) => {
@@ -382,16 +391,10 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         else next.delete(trailId);
         return next;
       });
-      showToast(saved.savedBy?.includes(user.id) ? 'Trail saved to your account.' : 'Trail removed from bookmarks.');
+      showToast(saved.savedBy?.includes(user.id) ? 'Trail saved.' : 'Trail removed from bookmarks.');
     } catch (error) {
-      showToast(error instanceof Error ? error.message : 'Could not update Trail save.');
+      showToast(error instanceof Error ? error.message : 'Could not save Trail.');
     }
-  };
-  const openAdoptEditor = (source: CommunityTrail) => {
-    if (!user) { onRequireAuth?.(); return; }
-    setSelectedTrail(null);
-    setAdoptingTrail(source);
-    setIsCurateOpen(true);
   };
 
   const handleRecenterUser = () => {
@@ -404,7 +407,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           bearing: -17,
           essential: true
         });
-        showToast('Map centered on your current location.');
+        showToast('Centered on current location.');
       } catch (err) {
         console.warn('Recenter error:', err);
       }
@@ -418,22 +421,14 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     getDeviceLocation().then((res) => {
       setLocationState(res);
       if (res.status === 'granted' && res.coords) {
-        if (mapInstance.current) {
-          try {
-            mapInstance.current.flyTo({
-              center: [res.coords.lng, res.coords.lat],
-              zoom: 14,
-              pitch: 45,
-              bearing: -17,
-              essential: true
-            });
-          } catch (err) {
-            console.warn('Map flyTo error:', err);
-          }
-        }
-        showToast(`GPS Calibrated! Lat: ${res.coords.lat.toFixed(4)}, Lng: ${res.coords.lng.toFixed(4)}`);
-      } else if (res.status === 'denied') {
-        showToast('Location permission denied. Please allow GPS in browser settings.');
+        mapInstance.current?.flyTo({
+          center: [res.coords.lng, res.coords.lat],
+          zoom: 14,
+          pitch: 45,
+          bearing: -17,
+          essential: true
+        });
+        showToast(`GPS Calibrated: ${res.coords.lat.toFixed(4)}, ${res.coords.lng.toFixed(4)}`);
       } else {
         showToast('Unable to acquire GPS signal. Check device location services.');
       }
@@ -447,37 +442,25 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     }
   };
 
-  const handleScrollGuardians = (direction: 'left' | 'right') => {
-    if (guardiansScrollRef.current) {
-      const scrollAmount = direction === 'left' ? -280 : 280;
-      guardiansScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
-  };
-
   const handleLocateGuardian = (g: VibeGuardian) => {
     setSelectedGuardian(null);
     if (g.lng && g.lat && mapInstance.current) {
-      try {
-        mapInstance.current.flyTo({
-          center: [g.lng, g.lat],
-          zoom: 15.5,
-          pitch: 50,
-          essential: true
-        });
-      } catch (err) {
-        console.warn('Map fly error:', err);
-      }
+      mapInstance.current.flyTo({
+        center: [g.lng, g.lat],
+        zoom: 15.5,
+        pitch: 50,
+        essential: true
+      });
     }
-    showToast(g.lng !== undefined && g.lat !== undefined ? `Located registered Guardian ${g.name} on the map.` : 'This Guardian has not shared a mapped location.');
+    showToast(g.lng !== undefined && g.lat !== undefined ? `Located ${g.name} on the map.` : 'Location unavailable for this guardian.');
   };
 
   const handleWaypointCheckIn = (wp: TrailWaypoint, trail: CulturalTrail) => {
-    showToast(`Opened waypoint "${wp.title || wp.name}" in Trail "${trail.title}". Reward verification is not yet available.`);
+    showToast(`Opened waypoint "${wp.title || wp.name}" on ${trail.title}.`);
   };
 
   return (
     <div className={`space-y-6 pb-24 text-white transition-all duration-300 ${isFullScreen ? 'fixed inset-0 z-50 bg-neutral-950 p-4 overflow-y-auto' : ''}`}>
-      {/* Toast Notification */}
       {exploreToast && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-neutral-900/95 border border-teal-500/50 text-teal-300 px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-bold flex items-center space-x-2 animate-fadeIn pointer-events-none">
           <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
@@ -485,7 +468,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         </div>
       )}
 
-      {/* Header & Fullscreen Toggle */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-black tracking-tight flex items-center space-x-2">
@@ -515,15 +498,13 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         </div>
       </div>
 
-      {/* Vibe Flash Board (Top of Explore Tab) */}
       <VibeFlashBoard userCoords={locationState.coords ? { lat: locationState.coords.lat, lng: locationState.coords.lng } : undefined} onToast={showToast} />
 
-      {/* Geolocation Status / Permission Warning Banner */}
       {locationState.status === 'denied' && (
         <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between animate-fadeIn">
           <div className="flex items-center space-x-2.5">
             <AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-400" />
-            <span>Location permission was denied. Please allow browser location access to scan the 23 km discovery orbit around your device.</span>
+            <span>Location permission was denied. Please allow browser location access.</span>
           </div>
           <button
             onClick={handleManualCalibrate}
@@ -534,22 +515,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         </div>
       )}
 
-      {locationState.status === 'unavailable' && (
-        <div className="p-3.5 rounded-2xl bg-neutral-900 border border-neutral-800 text-neutral-400 text-xs flex items-center justify-between animate-fadeIn">
-          <div className="flex items-center space-x-2.5">
-            <Radio className="w-4 h-4 flex-shrink-0 text-neutral-500" />
-            <span>GPS sensor is unavailable or timed out. Re-calibrating radar...</span>
-          </div>
-          <button
-            onClick={handleManualCalibrate}
-            className="px-3 py-1 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-bold text-xs whitespace-nowrap ml-2 cursor-pointer"
-          >
-            Retry GPS
-          </button>
-        </div>
-      )}
-
-      {/* Category Chips */}
+      {/* Category Filter Chips */}
       <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-none">
         {categories.map((cat) => (
           <button
@@ -569,21 +535,16 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         ))}
       </div>
 
-      {/* Vibe Orbit Radar Container / Map View */}
+      {/* MapLibre Canvas Container */}
       <div className={`relative rounded-3xl overflow-hidden border border-neutral-800 bg-neutral-900 shadow-2xl ${isFullScreen ? 'h-[70vh]' : 'h-[380px]'}`}>
-        {/* MapLibre Container (Real device coordinates center) */}
-        <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
+        <div ref={mapContainer} className="absolute inset-0 w-full h-full" style={{ minHeight: '380px' }} />
 
-        {/* Soft Organic Concentric Rings Visual Overlay (Matches Reference 0DvcX_6bc6cde4.jpg) */}
+        {/* Radar concentric ring overlay */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden">
-          {/* Outer ring */}
           <div className="absolute w-[320px] h-[320px] rounded-full border border-purple-500/20 animate-pulse" style={{ animationDuration: '6s' }} />
-          {/* Middle ring */}
           <div className="absolute w-56 h-56 rounded-full border border-teal-500/25" />
-          {/* Inner ring */}
           <div className="absolute w-36 h-36 rounded-full border border-orange-500/30 animate-pulse" style={{ animationDuration: '3s' }} />
 
-          {/* Central Compass Rose Emblem */}
           <div className="absolute flex flex-col items-center justify-center text-center pointer-events-none opacity-80">
             <span className="text-[9px] uppercase tracking-[0.25em] text-amber-200/90 font-bold">
               ✦ VIBE ORBIT ✦
@@ -597,7 +558,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           </div>
         </div>
 
-        {/* Bottom Legend Overlay with Real Device Coordinates */}
+        {/* Bottom Legend Overlay */}
         <div className="absolute bottom-3 left-3 right-3 bg-neutral-950/85 backdrop-blur-xl border border-neutral-800 rounded-2xl p-3 flex items-center justify-between text-xs">
           <div className="flex items-center space-x-2">
             <span className={`w-2 h-2 rounded-full ${locationState.status === 'granted' ? 'bg-cyan-400 animate-pulse' : 'bg-neutral-500'}`} />
@@ -617,12 +578,12 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
       <div className="text-[10px] text-neutral-500 flex flex-wrap justify-end gap-x-1 px-2 -mt-4" aria-label="Map attribution">
         <span>MapLibre |</span>
-        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-300">© OpenStreetMap contributors</a>
+        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-300">© OpenStreetMap</a>
         <span>©</span>
         <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-300">CARTO</a>
       </div>
 
-      {/* Nearby Vibe Waypoints (23 km Discovery Scope) */}
+      {/* Nearby Vibe Waypoints Cards */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-bold flex items-center space-x-2">
@@ -649,13 +610,13 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                 const promo = activePromos.find(p => p.place_id === place.id && p.is_active && p.remaining_pool > 0);
                 const isPromoted = Boolean(place.is_promoted || (promo && promo.remaining_pool > 0));
                 const vqReward = promo ? promo.reward_per_checkin : place.vq_reward;
+
                 return (
                   <div
                     key={place.id}
                     onClick={() => onSelectPlace(place)}
                     className="rounded-3xl bg-neutral-900 border border-neutral-800 hover:border-cyan-500/40 transition cursor-pointer p-4 sm:p-5 flex flex-col space-y-4 group shadow-xl relative"
                   >
-                    {/* TOP: Badges & Full-width Title */}
                     <div className="space-y-2">
                       <div className="flex items-center space-x-2 flex-wrap gap-1">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-teal-300 bg-teal-950/60 border border-teal-500/30 px-2.5 py-0.5 rounded">
@@ -674,7 +635,6 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                       </h4>
                     </div>
 
-                    {/* MIDDLE: Large Hero Photo spanning full card width */}
                     <div className="relative w-full h-48 sm:h-56 rounded-2xl overflow-hidden bg-neutral-950 border border-neutral-800 shadow-lg">
                       <img
                         src={place.image_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80'}
@@ -689,13 +649,11 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                       )}
                     </div>
 
-                    {/* BELOW PHOTO: Address */}
                     <div className="text-xs text-neutral-300 flex items-center space-x-1.5">
                       <MapPin className="w-4 h-4 text-orange-400 flex-shrink-0" />
                       <span>{place.address}</span>
                     </div>
 
-                    {/* BOTTOM: Distance, visits & reward actions */}
                     <div className="pt-3 border-t border-neutral-800/80 flex items-center justify-between text-xs">
                       <span className="font-semibold text-teal-300">
                         {place.distance_km !== undefined ? `${place.distance_km} km` : 'Nearby'}
@@ -703,10 +661,6 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                         {appCheckinsCount !== undefined ? ` • ${appCheckinsCount} check-ins` : ''}
                       </span>
                       <div className="flex items-center space-x-2">
-                        <span className="px-3.5 py-2 rounded-xl bg-neutral-800/80 text-neutral-400 border border-neutral-700/60 text-xs font-bold flex items-center space-x-1 shadow">
-                          <span className="text-[10px]">🔒</span>
-                          <span>Locked</span>
-                        </span>
                         {isPromoted && vqReward ? (
                           <span className="px-3.5 py-2 rounded-xl bg-teal-950/60 text-emerald-400 border border-teal-500/30 text-xs font-bold shadow flex items-center space-x-1">
                             <span>🚀</span>
@@ -742,16 +696,15 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
             <h4 className="font-bold text-sm text-white">No cultural waypoints within 23 km</h4>
             <p className="text-xs text-neutral-400 max-w-sm mx-auto">
               {locationState.coords
-                ? `No certified places or secrets were returned in your 23 km discovery orbit (${locationState.coords.lat.toFixed(4)}, ${locationState.coords.lng.toFixed(4)}). Zero mock fallback is active.`
-                : 'Awaiting device location coordinates to scan for nearby cultural waypoints.'}
+                ? `No certified places found in your 23 km discovery orbit (${locationState.coords.lat.toFixed(4)}, ${locationState.coords.lng.toFixed(4)}).`
+                : 'Awaiting device location coordinates to scan.'}
             </p>
           </div>
         )}
       </div>
 
-      {/* Part 1 & Part 2: Community Curations - Cultural Vibes Trails */}
+      {/* Community Curations: Cultural Vibes Trails */}
       <div className="space-y-4 pt-4 border-t border-neutral-800">
-        {/* Section Header with Neon Green Typography */}
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
             <span className="w-2 h-2 rounded-full bg-[#00e599] animate-pulse" />
@@ -780,12 +733,9 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
               </button>
             </div>
           </div>
-          <p className="text-xs text-neutral-400 leading-normal">
-            Community-curated multi-stop itineraries & commercial pro-guided tour offerings.
-          </p>
         </div>
 
-        {/* Control Bar: Sub-tabs & + Curate Trail Action */}
+        {/* Control Bar: Sub-tabs & Curate */}
         <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1">
           <div className="flex items-center space-x-2">
             <button
@@ -832,7 +782,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           </button>
         </div>
 
-        {/* Part 2: Vibe Trails & Vibe Tours Display Cards (matching exact reference image_00d13d9c.png) */}
+        {/* Trails Horizontal Carousel */}
         {(() => {
           const displayedTrails = trailSubTab === 'tours'
             ? trails.filter((t) => t.isTour)
@@ -842,16 +792,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
             return (
               <div className="rounded-3xl bg-neutral-900/60 border border-neutral-800/80 p-6 text-center space-y-2">
                 <Compass className="w-8 h-8 text-[#00e599]/60 mx-auto" />
-                <h4 className="font-bold text-sm text-white">No {trailSubTab === 'tours' ? 'Vibe Tours' : 'Vibe Trails'} available in this filter</h4>
-                <p className="text-xs text-neutral-400 max-w-sm mx-auto">
-                  Be the first pathfinder to curate an itinerary for this district sector.
-                </p>
-                <button
-                  onClick={() => setIsCurateOpen(true)}
-                  className="mt-2 px-4 py-2 rounded-xl bg-[#00e599] text-neutral-950 font-bold text-xs"
-                >
-                  + Curate First Trail
-                </button>
+                <h4 className="font-bold text-sm text-white">No {trailSubTab === 'tours' ? 'Vibe Tours' : 'Vibe Trails'} available</h4>
               </div>
             );
           }
@@ -872,7 +813,6 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                     onClick={() => setSelectedTrail(trail)}
                     className="w-[min(300px,calc(100vw-2rem))] sm:w-[330px] flex-shrink-0 snap-start rounded-3xl bg-neutral-950 border border-neutral-800/90 hover:border-[#00e599]/60 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col justify-between group shadow-2xl relative"
                   >
-                    {/* Media Banner Section with Top Header Overlays */}
                     <div className="relative h-44 w-full overflow-hidden bg-neutral-900">
                       <img
                         src={trail.imageUrl || trail.image_url || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80'}
@@ -881,17 +821,10 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/20 to-neutral-950/70" />
 
-                      {/* Top Header Row on Image: Category Badge + City + Bookmark Action */}
                       <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-                        <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
-                          <span className="text-[10px] font-black uppercase tracking-wider bg-black/70 text-pink-400 px-2.5 py-1 rounded-full border border-pink-500/30 backdrop-blur-md">
-                            📍 {trail.category || 'FULL DAY CIRCUIT'}
-                          </span>
-                          <span className="text-[10px] font-bold text-neutral-300 bg-neutral-950/80 px-2.5 py-1 rounded-full border border-white/10 backdrop-blur-md truncate max-w-[120px]">
-                            {trail.city || trail.district || 'Tunis, Tunisia'}
-                          </span>
-                        </div>
-
+                        <span className="text-[10px] font-black uppercase tracking-wider bg-black/70 text-pink-400 px-2.5 py-1 rounded-full border border-pink-500/30 backdrop-blur-md">
+                          📍 {trail.category || 'CIRCUIT'}
+                        </span>
                         <button
                           type="button"
                           onClick={(e) => {
@@ -908,59 +841,30 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                         </button>
                       </div>
 
-                      {/* Media Banner Bottom Overlays: Duration Pill & Stop Count Tag */}
                       <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between z-10">
                         <span className="text-[10px] font-bold text-amber-300 bg-black/75 px-2.5 py-1 rounded-xl border border-amber-500/30 backdrop-blur-md flex items-center space-x-1">
                           <Clock className="w-3 h-3 text-amber-400" />
                           <span>⏱ {durationLabel}</span>
                         </span>
-
                         <span className="text-[10px] font-bold text-[#00e599] bg-emerald-950/80 px-2.5 py-1 rounded-xl border border-[#00e599]/40 backdrop-blur-md">
                           {stopCount} Stops Circuit
                         </span>
                       </div>
                     </div>
 
-                    {/* Card Content Body matching image_00d13d9c.png */}
                     <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-                      {/* Time Flow Indicator */}
-                      <div className="flex items-center space-x-1 text-xs font-mono font-bold text-neutral-300">
-                        <span className="text-neutral-400 text-[11px]">FLOW:</span>
-                        <span className="text-white">
-                          {trail.flowSequence && trail.flowSequence.length > 0
-                            ? trail.flowSequence.join(' -> ')
-                            : '🌅 -> 🌆 -> 🌙'}
-                        </span>
-                      </div>
+                      <h4 className="font-bold text-white text-base group-hover:text-[#00e599] transition line-clamp-2 leading-snug">
+                        {trail.title}
+                      </h4>
+                      <p className="text-xs text-neutral-400 line-clamp-2 font-light">
+                        {trail.story || trail.description}
+                      </p>
 
-                      {/* Title & Story */}
-                      <div className="space-y-1">
-                        <h4 className="font-bold text-white text-base group-hover:text-[#00e599] transition line-clamp-2 leading-snug">
-                          {trail.title}
-                        </h4>
-                        <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed font-light">
-                          &ldquo;{trail.story || trail.description}&rdquo;
-                        </p>
-                      </div>
-
-                      {/* Vibe Tags */}
-                      <div className="flex items-center space-x-1.5 overflow-hidden flex-wrap gap-y-1 pt-1">
-                        {(trail.vibeTags && trail.vibeTags.length > 0 ? trail.vibeTags : ['tunis', 'culture', 'sunset']).map((tag) => (
-                          <span
-                            key={tag}
-                            className="text-[10px] font-semibold text-teal-300 bg-teal-950/40 px-2 py-0.5 rounded-lg border border-teal-500/30"
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-
-                      {/* Card Footer: Author + Hire + Explore now button */}
                       <div className="pt-3 border-t border-neutral-800/80 flex items-center justify-between gap-2">
                         <div className="flex items-center space-x-2 min-w-0 flex-1">
                           <img
                             src={trail.authorAvatarUrl || trail.guardian_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
-                            alt={trail.authorName || trail.guardian_name || 'Curator'}
+                            alt="Curator"
                             className="w-6 h-6 rounded-full object-cover border border-[#00e599]/40 flex-shrink-0"
                           />
                           <span className="text-xs font-bold text-white truncate">
@@ -968,303 +872,17 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                           </span>
                         </div>
 
-                        <div className="flex items-center space-x-2 flex-shrink-0">
-                          {/* Hire Button */}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setHireTrail(trail);
-                            }}
-                            className="px-2.5 py-1.5 rounded-xl border border-purple-500/50 hover:border-purple-400 bg-purple-950/40 text-purple-300 text-[11px] font-bold transition flex items-center space-x-1 cursor-pointer"
-                          >
-                            <Handshake className="w-3 h-3 text-purple-400" />
-                            <span>Hire</span>
-                          </button>
-
-                          {/* Explore Now Button (Solid Neon Green) */}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedTrail(trail);
-                            }}
-                            className="px-3.5 py-1.5 rounded-xl bg-[#00e599] hover:bg-[#00c985] text-neutral-950 text-[11px] font-black transition cursor-pointer shadow-md shadow-emerald-500/20 active:scale-95"
-                          >
-                            <span>Explore now</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })()}
-      </div>
-
-      {/* Part 3: Vibe Guardians & Local Legends (matching exact reference images: image_a6756c21.png, image_27dd8064.png, image_52948d57.png) */}
-      <div className="space-y-4 pt-4 border-t border-neutral-800">
-        {/* Master Header Container with World Map Backdrop */}
-        <div className="relative rounded-3xl overflow-hidden bg-neutral-950 border border-neutral-800 p-6 shadow-2xl space-y-4">
-          {/* Subtle World Map Backdrop Effect */}
-          <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(#8b2cf5_1px,transparent_1px)] [background-size:16px_16px]" />
-          <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-
-          {/* Top Avatars Preview: "3 online +12" */}
-          <div className="relative z-10 flex items-center justify-between">
-            <div className="flex items-center -space-x-2">
-              {guardians.filter(isGuardianFresh).slice(0, 3).map((g, i) => {
-                const avatar = (g.avatarUrl && g.avatarUrl.trim()) || (g.avatar_url && g.avatar_url.trim()) || null;
-                return avatar ? (
-                  <img key={g.id || i} src={avatar} alt={g.name}
-                    className="w-8 h-8 rounded-full object-cover border-2 border-neutral-950 ring-1 ring-purple-500/40" />
-                ) : (
-                  <span key={g.id || i} aria-label={g.name}
-                    className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-800 border-2 border-neutral-950">
-                    <Shield className="w-4 h-4 text-neutral-400" />
-                  </span>
-                );
-              })}
-              <div className="w-8 h-8 rounded-full bg-purple-900 border-2 border-neutral-950 flex items-center justify-center text-[10px] font-bold text-purple-200">
-                +{Math.max(0, guardians.filter(isGuardianFresh).length - 3)}
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-1.5 text-[11px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>{guardians.filter(isGuardianFresh).length} Fresh Selfies</span>
-            </div>
-          </div>
-
-          {/* Verification Badges Stack */}
-          <div className="relative z-10 flex flex-wrap gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-purple-950/60 text-purple-300 px-2.5 py-1 rounded-xl border border-purple-500/30 flex items-center space-x-1">
-              <Shield className="w-3 h-3 text-purple-400" />
-              <span>REAL GUIDES & LOCALS DIRECTORY (D07)</span>
-            </span>
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-950/60 text-emerald-300 px-2.5 py-1 rounded-xl border border-emerald-500/30 flex items-center space-x-1">
-              <Clock className="w-3 h-3 text-emerald-400" />
-              <span>Seven-Day Selfie Freshness</span>
-            </span>
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-950/60 text-amber-300 px-2.5 py-1 rounded-xl border border-amber-500/30 flex items-center space-x-1">
-              <Handshake className="w-3 h-3 text-amber-400" />
-              <span>Handshake Integration Pending</span>
-            </span>
-          </div>
-
-          {/* Title & Subtitle */}
-          <div className="relative z-10 space-y-1">
-            <h2 className="text-2xl font-black text-white tracking-tight">
-              Vibe Guardians
-            </h2>
-            <p className="text-xs text-neutral-300 leading-relaxed font-light">
-              Connect with verified tour guides and friendly locals. Pro Guardians show advance upfront rates; Local Legends offer free hangouts. Registration and selfie renewal are available now. Handshake and rewards integration comes later.
-            </p>
-          </div>
-
-          {/* Primary Action Buttons: BECOME A GUARDIAN / IN-APP SELFIE & 7D Hidden Badge */}
-          <div className="relative z-10 flex items-center space-x-2 pt-1 flex-wrap gap-y-2">
-            <button
-              onClick={() => openGuardianRegistration()}
-              className="px-4 py-3 rounded-2xl bg-[#8b2cf5] hover:bg-[#7823d6] text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-600/30 transition flex items-center space-x-2 cursor-pointer active:scale-98"
-            >
-              <Camera className="w-4 h-4" />
-              <span>BECOME A GUARDIAN / IN-APP SELFIE</span>
-            </button>
-
-            <div className="px-3 py-2.5 rounded-2xl bg-neutral-900 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center space-x-1.5">
-              <Clock className="w-3.5 h-3.5 text-amber-400" />
-              <span>{countExpiredGuardians(guardians)} Hidden (Selfie &gt; 7d)</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Filter Tabs: TOP VIBES, PRO GUIDES, LOCAL LEGENDS */}
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            onClick={() => setGuardianFilter('top')}
-            className={`py-2.5 px-2 rounded-2xl font-black text-xs transition flex items-center justify-center space-x-1.5 cursor-pointer border ${
-              guardianFilter === 'top'
-                ? 'bg-purple-900/60 text-purple-200 border-purple-500 shadow-md shadow-purple-900/20'
-                : 'bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white'
-            }`}
-          >
-            <span>⚡ TOP VIBES</span>
-          </button>
-
-          <button
-            onClick={() => setGuardianFilter('pro')}
-            className={`py-2.5 px-2 rounded-2xl font-black text-xs transition flex items-center justify-center space-x-1.5 cursor-pointer border ${
-              guardianFilter === 'pro'
-                ? 'bg-blue-900/60 text-blue-200 border-blue-500 shadow-md shadow-blue-900/20'
-                : 'bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white'
-            }`}
-          >
-            <Shield className="w-3.5 h-3.5 text-blue-400" />
-            <span>PRO GUIDES</span>
-          </button>
-
-          <button
-            onClick={() => setGuardianFilter('local')}
-            className={`py-2.5 px-2 rounded-2xl font-black text-xs transition flex items-center justify-center space-x-1.5 cursor-pointer border ${
-              guardianFilter === 'local'
-                ? 'bg-amber-900/60 text-amber-200 border-amber-500 shadow-md shadow-amber-900/20'
-                : 'bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>LOCAL LEGENDS</span>
-          </button>
-        </div>
-
-        {guardianFilter === 'local' && (
-          <button
-            type="button"
-            onClick={() => openGuardianRegistration('local')}
-            className="w-full rounded-2xl border border-amber-500/50 bg-amber-500/15 px-4 py-3 text-xs font-black text-amber-200 transition hover:bg-amber-500/25 flex items-center justify-center gap-2"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            <span>{guardians.some(guardian => guardian.id === user?.id && guardian.type === 'local')
-              ? 'Renew Local Legend' : 'Create Local Legend'}</span>
-          </button>
-        )}
-
-        {/* Guardian Profile Cards (matching image_a6756c21.png and image_52948d57.png) */}
-        {(() => {
-          const filtered = guardians.filter(isGuardianFresh).filter(g =>
-            guardianFilter === 'pro' ? g.type === 'pro'
-              : guardianFilter === 'local' ? g.type === 'local'
-                : true
-          );
-
-          if (filtered.length === 0) {
-            return (
-              <div className="rounded-3xl bg-neutral-950 border border-neutral-800 p-6 text-center space-y-2">
-                <Shield className="w-8 h-8 text-purple-400/60 mx-auto" />
-                <h4 className="font-bold text-sm text-white">No active guardians found in this category</h4>
-                <p className="text-xs text-neutral-400">
-                  New guardians sync when live in-app selfies are updated.
-                </p>
-              </div>
-            );
-          }
-
-          return (
-            <div className="space-y-3">
-              {filtered.map((g) => {
-                const isPro = g.type === 'pro';
-                return (
-                  <div
-                    key={g.id}
-                    onClick={() => setSelectedGuardian(g)}
-                    onKeyDown={event => { if (event.key === 'Enter') setSelectedGuardian(g); }}
-                    role="button" tabIndex={0}
-                    className="rounded-3xl bg-neutral-950 border border-neutral-800/90 p-5 shadow-2xl space-y-4 hover:border-purple-500/40 transition duration-300 cursor-pointer"
-                  >
-                    {/* Top Identity Row */}
-                    <div className="flex items-start space-x-3.5">
-                      {/* Avatar with Live Indicator */}
-                      <div className="relative flex-shrink-0">
-                        {((g.avatarUrl && g.avatarUrl.trim()) || (g.avatar_url && g.avatar_url.trim())) ? (
-                          <img src={(g.avatarUrl && g.avatarUrl.trim()) || (g.avatar_url && g.avatar_url.trim())} alt={g.name}
-                            className="w-16 h-16 rounded-2xl object-cover border-2 border-neutral-800" />
-                        ) : (
-                          <span aria-label={g.name} className="w-16 h-16 rounded-2xl bg-neutral-900 border-2 border-neutral-800 flex items-center justify-center">
-                            <Shield className="w-7 h-7 text-neutral-500" />
-                          </span>
-                        )}
-                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/90 border border-emerald-500/50 text-[9px] font-black text-emerald-400 flex items-center space-x-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          <span>SELFIE</span>
-                        </div>
-                      </div>
-
-                      {/* Info & Badges */}
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <h3 className="font-black text-base text-white truncate">{g.name}</h3>
-                          <Shield className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-md border uppercase tracking-wider ${
-                            isPro
-                              ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
-                              : 'bg-teal-500/10 text-teal-300 border-teal-500/30'
-                          }`}>
-                            {isPro ? 'PRO GUIDE' : 'LOCAL LEGEND'}
-                          </span>
-                        </div>
-
-                        <p className="text-xs text-neutral-400 truncate flex items-center space-x-1">
-                          <MapPin className="w-3 h-3 text-neutral-500 flex-shrink-0" />
-                          <span>{g.city || g.district}</span>
-                        </p>
-
-                        {/* Pricing & Endorsement Pills */}
-                        <div className="flex items-center space-x-2 pt-0.5 flex-wrap gap-y-1">
-                          <span className="px-2.5 py-0.5 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-bold flex items-center space-x-1">
-                            <span>💰</span>
-                            <span>{g.type === 'local' ? 'Free Hangout' : g.pricingType === 'flat' ? `${g.flatRate} flat tour` : `${g.hourlyRate} / hr`}</span>
-                          </span>
-
-
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Bio Description Snippet */}
-                    <p className="text-xs text-neutral-300 leading-relaxed font-light">
-                      {g.bio}
-                    </p>
-
-                    {/* Offered Vibe Trails Sub-card */}
-                    {g.offeredTrailId && trails.some(trail => trail.id === g.offeredTrailId) && (
-                      <div className="p-3 rounded-2xl bg-neutral-900 border border-neutral-800 space-y-1.5">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 font-mono">
-                          OFFERED VIBE TRAILS (1/5):
-                        </span>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-white truncate max-w-[200px]">
-                            {trails.find(trail => trail.id === g.offeredTrailId)?.title}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const found = trails.find((t) => t.id === g.offeredTrailId);
-                              if (found) setSelectedTrail(found);
-                            }}
-                            className="px-3 py-1 rounded-xl bg-[#00e599] hover:bg-[#00c985] text-neutral-950 font-black text-[10px] uppercase tracking-wider cursor-pointer"
-                          >
-                            EXPLORE NOW
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Card Footer: HIRE button + Hire Counter + MESSAGE trigger */}
-                    <div className="pt-2 border-t border-neutral-800 flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
                         <button
                           type="button"
-                          disabled title="Hiring will be enabled in the deferred D22 Handshake checkpoint"
-                          className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-xs uppercase tracking-wider flex items-center space-x-1.5 cursor-pointer shadow-md shadow-amber-500/20 active:scale-95"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedTrail(trail);
+                          }}
+                          className="px-3.5 py-1.5 rounded-xl bg-[#00e599] hover:bg-[#00c985] text-neutral-950 text-[11px] font-black transition cursor-pointer shadow-md shadow-emerald-500/20 active:scale-95"
                         >
-                          <Handshake className="w-3.5 h-3.5" />
-                          <span>HIRE</span>
+                          Explore now
                         </button>
-                        <span className="text-xs font-bold text-neutral-400 font-mono">
-                          Hiring pending
-                        </span>
                       </div>
-
-                      <button
-                        type="button"
-                        disabled title="Messaging is not wired in this Explore checkpoint"
-                        className="px-4 py-2 rounded-xl bg-[#8b2cf5] hover:bg-[#7823d6] text-white font-black text-xs uppercase tracking-wider flex items-center space-x-1.5 cursor-pointer shadow-md shadow-purple-600/20 active:scale-95"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        <span>MESSAGE</span>
-                      </button>
                     </div>
                   </div>
                 );
@@ -1274,21 +892,27 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         })()}
       </div>
 
-      {/* Trail Detail Modal */}
+      {/* Modals */}
       {selectedTrail && (
         <TrailDetailModal
           trail={selectedTrail}
           onClose={() => setSelectedTrail(null)}
           onCheckInWaypoint={handleWaypointCheckIn}
           onToast={showToast}
-          onAdoptTrail={openAdoptEditor}
-          onReserveTour={tour => {setSelectedTrail(null);setReservationTour(tour);}}
+          onAdoptTrail={(source) => {
+            setSelectedTrail(null);
+            setAdoptingTrail(source);
+            setIsCurateOpen(true);
+          }}
+          onReserveTour={(tour) => {
+            setSelectedTrail(null);
+            setReservationTour(tour);
+          }}
           onToggleSave={handleSaveTrail}
           isSaved={savedTrailIds.has(selectedTrail.id)}
         />
       )}
 
-      {/* Guardian Detail Modal */}
       {selectedGuardian && (
         <GuardianDetailModal
           guardian={selectedGuardian}
@@ -1313,7 +937,6 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         />
       )}
 
-      {/* Curate Trail Modal */}
       {isCurateOpen && (
         <CurateTrailModal
           user={user}
@@ -1324,14 +947,13 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           onCreated={(newTrail) => {
             setTrails((prev) => [newTrail, ...prev]);
             setAdoptingTrail(null);
-            showToast(`Curated trail "${newTrail.title}" is now active in directory!`);
+            showToast(`Curated trail "${newTrail.title}" is now active!`);
           }}
           onToast={showToast}
           onRequireSignIn={() => onRequireAuth?.()}
         />
       )}
 
-      {/* Live 7-Day In-App Selfie Verification Modal */}
       {isSelfieModalOpen && (
         <LiveSelfieModal
           key={guardianRegistrationType || 'guardian-default'}
@@ -1339,26 +961,25 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           user={user}
           onClose={() => setIsSelfieModalOpen(false)}
           onVerified={() => {
-            void fetchVibeGuardians().then(setGuardians).catch(error =>
-              showToast(error instanceof Error ? error.message : 'Guardian directory refresh failed.')
-            );
+            fetchVibeGuardians().then(setGuardians);
           }}
-          availableTrails={trails.filter(trail => !trail.isTour).map(trail => ({id:trail.id,title:trail.title}))}
-          onGuardianSaved={guardian => {
+          availableTrails={trails.filter(trail => !trail.isTour).map(trail => ({ id: trail.id, title: trail.title }))}
+          onGuardianSaved={(guardian) => {
             setGuardians(prev => [guardian, ...prev.filter(g => g.id !== guardian.id)]);
           }}
           onToast={showToast}
         />
       )}
 
-      {reservationTour && <TourReservationModal
-        tour={reservationTour}
-        onClose={()=>setReservationTour(null)}
-        onRequireAuth={()=>onRequireAuth?.()}
-        onToast={showToast}
-      />}
+      {reservationTour && (
+        <TourReservationModal
+          tour={reservationTour}
+          onClose={() => setReservationTour(null)}
+          onRequireAuth={() => onRequireAuth?.()}
+          onToast={showToast}
+        />
+      )}
 
-      {/* Selected Trail -> real fresh Pro Guardian directory, without arbitrary selection */}
       <HireGuardianForTrailModal
         trail={hireTrail}
         guardians={guardians}
@@ -1371,7 +992,6 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         }}
       />
 
-      {/* Hire & Vibe Handshake Proof Modal */}
       {selectedHireGuardian && (
         <HireHandshakeModal
           guardian={selectedHireGuardian}
@@ -1389,4 +1009,3 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     </div>
   );
 };
-
