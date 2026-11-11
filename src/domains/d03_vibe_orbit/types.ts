@@ -28,7 +28,7 @@ export interface VibePlace {
   lat: number;
   lng: number;
   pulse_intensity: number; // 1 to 10
-  vq_reward: number;
+  vq_reward?: number;
   created_by: string;
   address: string;
   distance_meters?: number;
@@ -43,5 +43,9 @@ export interface VibePlace {
   phone?: string;
   price_band?: string;
   ai_match_score?: number;
+  ai_match_breakdown?: { label: string; delta: string; points: number }[];
+  is_promoted?: boolean;
+  promotion_pool?: number;
+  vibe_validations_count?: number;
   open_now?: boolean;
 }

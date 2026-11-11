@@ -12,8 +12,12 @@ import {
   VibePlace,
   VibeCategory,
   DeviceLocationState,
-  DISCOVERY_RADIUS_METERS
+  DISCOVERY_RADIUS_METERS,
+  recordCategoryClick,
+  computeAiVibeMatch,
+  fetchActivePromotions
 } from '../domains/d03_vibe_orbit';
+import { calculateDistanceMeters } from '../domains/d03_vibe_orbit/presenceVerifier';
 import {
   fetchCulturalTrails,
   fetchVibeGuardians,
@@ -30,6 +34,7 @@ import { supabase } from '../lib/supabase';
 import { TrailDetailModal } from './TrailDetailModal';
 import { GuardianDetailModal } from './GuardianDetailModal';
 import { CurateTrailModal } from './CurateTrailModal';
+import { VibeFlashBoard } from './VibeFlashBoard';
 import { LiveSelfieModal } from './LiveSelfieModal';
 import { HireHandshakeModal } from './HireHandshakeModal';
 import { HireGuardianForTrailModal } from './HireGuardianForTrailModal';
@@ -111,6 +116,8 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     }, 3500);
   };
 
+  const prevCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
+
   // 1. Acquire real device location via watchPosition / getCurrentPosition
   useEffect(() => {
     let unwatch: (() => void) | null = null;
@@ -119,10 +126,19 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
     getDeviceLocation().then((initialState) => {
       setLocationState(initialState);
+      if (initialState.coords) {
+        prevCoordsRef.current = { lat: initialState.coords.lat, lng: initialState.coords.lng };
+      }
 
-      // Start continuous GPS watch
+      // Start continuous GPS watch (filtered by >= 20m movement)
       unwatch = watchDeviceLocation((updatedState) => {
-        setLocationState(updatedState);
+        if (updatedState.coords) {
+          const prev = prevCoordsRef.current;
+          if (!prev || calculateDistanceMeters(prev.lat, prev.lng, updatedState.coords.lat, updatedState.coords.lng) >= 20) {
+            prevCoordsRef.current = { lat: updatedState.coords.lat, lng: updatedState.coords.lng };
+            setLocationState(updatedState);
+          }
+        }
       });
     });
 
@@ -131,10 +147,19 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     };
   }, []);
 
+  const [activePromos, setActivePromos] = useState<any[]>([]);
+  useEffect(() => {
+    fetchActivePromotions().then(map => {
+      setActivePromos(map ? Object.values(map) : []);
+    });
+  }, []);
+
   // 2. Query each real directory independently. A failing gallery must not hide Guardians.
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
+    if (places.length === 0) {
+      setLoading(true);
+    }
 
     Promise.allSettled([
       fetchNearbyPlaces(locationState.coords, selectedCategory),
@@ -310,11 +335,15 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         dotBg = 'bg-pink-400';
       }
 
+      const rewardBadge = place.is_promoted && place.vq_reward
+        ? `<span class="text-amber-300 font-bold">+${place.vq_reward} PTS</span>`
+        : `<span class="text-amber-400/90 font-medium text-[9px]">📍 Spot</span>`;
+
       orbEl.innerHTML = `
         <div class="px-2.5 py-1 rounded-xl bg-gradient-to-br ${orbBg} backdrop-blur-md border ${orbBorder} text-[10px] font-bold text-white shadow-xl flex items-center space-x-1.5 transition-transform duration-300 group-hover:scale-110" style="box-shadow: 0 4px 14px ${orbGlow}">
           <span class="w-2 h-2 rounded-full ${dotBg} animate-pulse"></span>
           <span class="truncate max-w-[110px]">${place.title}</span>
-          <span class="text-amber-300 font-bold">+${place.vq_reward}</span>
+          ${rewardBadge}
         </div>
         <div class="w-3.5 h-3.5 rounded-full ${dotBg} ring-4 ring-white/20 mt-1 shadow-lg transition-transform group-hover:scale-125"></div>
       `;
@@ -486,6 +515,9 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         </div>
       </div>
 
+      {/* Vibe Flash Board (Top of Explore Tab) */}
+      <VibeFlashBoard userCoords={locationState.coords ? { lat: locationState.coords.lat, lng: locationState.coords.lng } : undefined} onToast={showToast} />
+
       {/* Geolocation Status / Permission Warning Banner */}
       {locationState.status === 'denied' && (
         <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between animate-fadeIn">
@@ -522,7 +554,10 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         {categories.map((cat) => (
           <button
             key={cat}
-            onClick={() => setSelectedCategory(cat)}
+            onClick={() => {
+              setSelectedCategory(cat);
+              recordCategoryClick(cat);
+            }}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 cursor-pointer ${
               selectedCategory === cat
                 ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-lg shadow-orange-500/30 border border-orange-400/50'
@@ -609,6 +644,11 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                 const rating = place.rating !== undefined ? place.rating.toFixed(1) : undefined;
                 const googleReviewsCount = typeof place.reviews_count === 'number' ? place.reviews_count : undefined;
                 const appCheckinsCount = typeof place.checkins_count === 'number' && place.checkins_count > 0 ? place.checkins_count : undefined;
+                const dynamicMatch = computeAiVibeMatch(place, user);
+                const matchScore = place.ai_match_score ?? dynamicMatch.score;
+                const promo = activePromos.find(p => p.place_id === place.id && p.is_active && p.remaining_pool > 0);
+                const isPromoted = Boolean(place.is_promoted || (promo && promo.remaining_pool > 0));
+                const vqReward = promo ? promo.reward_per_checkin : place.vq_reward;
                 return (
                   <div
                     key={place.id}
@@ -626,7 +666,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                         </span>
                         <span className="text-[10px] font-bold text-purple-300 bg-purple-950/60 border border-purple-500/30 px-2.5 py-0.5 rounded flex items-center space-x-1">
                           <span>✨</span>
-                          <span>73% MATCH</span>
+                          <span>{matchScore}% MATCH</span>
                         </span>
                       </div>
                       <h4 className="font-black text-lg sm:text-xl text-white tracking-tight leading-snug">
@@ -667,9 +707,17 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                           <span className="text-[10px]">🔒</span>
                           <span>Locked</span>
                         </span>
-                        <span className="px-3.5 py-2 rounded-xl bg-teal-950/60 text-emerald-400 border border-teal-500/30 text-xs font-bold shadow">
-                          +{place.vq_reward} PTS
-                        </span>
+                        {isPromoted && vqReward ? (
+                          <span className="px-3.5 py-2 rounded-xl bg-teal-950/60 text-emerald-400 border border-teal-500/30 text-xs font-bold shadow flex items-center space-x-1">
+                            <span>🚀</span>
+                            <span>+{vqReward} PTS</span>
+                          </span>
+                        ) : (
+                          <span className="px-3.5 py-2 rounded-xl bg-amber-950/40 text-amber-400 border border-amber-500/30 text-xs font-bold shadow flex items-center space-x-1">
+                            <span>🚀</span>
+                            <span>Promote Spot</span>
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

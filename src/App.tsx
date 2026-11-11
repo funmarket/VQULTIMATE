@@ -153,6 +153,7 @@ export default function App() {
             setSelectedPlace(null);
             setActiveTab('explore');
           }}
+          onRequireAuth={() => setIsProfileOpen(true)}
         />
       )}
 

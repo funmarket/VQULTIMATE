@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Heart, MessageCircle, Share2, Sparkles, Send } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Sparkles, Send, Users } from 'lucide-react';
 import { fetchVibePosts, VibePostItem, addReactionToPost, fetchCommentsForPost, addCommentToPost, VibeComment } from '../domains/d05_vibe';
 import { fetchOrbitProfiles } from '../domains/d03_social_graph';
 import { fetchConfirmedVibes } from '../domains/d17_matching';
 import { UserProfile } from '../domains/d01_auth';
+import { fetchAllMeetups, subscribeToMeetupUpdates } from '../domains/d12_meetups';
+import { PlaceMeetup } from '../domains/d12_meetups/types';
+import { MeetupCard } from './MeetupCard';
+import { VibeFlashBoard } from './VibeFlashBoard';
 
 interface HomeSocialFeedProps {
   user: UserProfile | null;
@@ -15,6 +19,7 @@ interface HomeSocialFeedProps {
 export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, onInspectUser }) => {
   const [activeTab, setActiveTab] = useState<'network' | 'local' | 'for_you'>('network');
   const [posts, setPosts] = useState<VibePostItem[]>([]);
+  const [meetups, setMeetups] = useState<PlaceMeetup[]>([]);
   const [networkUserIds, setNetworkUserIds] = useState<Set<string>>(new Set());
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [showAllSocial, setShowAllSocial] = useState(false);
@@ -31,6 +36,12 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, o
 
   useEffect(() => {
     fetchVibePosts().then(setPosts);
+    fetchAllMeetups().then(setMeetups);
+
+    const unsub = subscribeToMeetupUpdates(() => {
+      fetchAllMeetups().then(setMeetups);
+    });
+
     if (user?.id) {
       Promise.all([
         fetchOrbitProfiles(user.id),
@@ -46,6 +57,8 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, o
         setNetworkUserIds(ids);
       });
     }
+
+    return () => unsub();
   }, [user]);
 
   const handleToggleLike = async (postId: string) => {
@@ -152,6 +165,9 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, o
 
   return (
     <div className="space-y-4 pt-2">
+      {/* Vibe Flash Board (Top of Home Feed) */}
+      <VibeFlashBoard onToast={onToast} />
+
       {/* Social Feed Tabs matching reference image */}
       <div className="border-b border-neutral-800 pb-1 flex items-center space-x-6 text-sm">
         <button
@@ -191,8 +207,38 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, o
         </button>
       </div>
 
-      {/* Feed Posts List */}
+      {/* Feed Posts & Spot Meetups */}
       <div className="space-y-3.5">
+        {/* Active Spot Meetups Cross-Feed Propagation */}
+        {activeTab !== 'for_you' && meetups.length > 0 && (
+          <div className="space-y-2.5 pb-1">
+            <div className="flex items-center justify-between text-xs font-bold text-neutral-400 uppercase tracking-wider px-1">
+              <span className="flex items-center gap-1.5 text-blue-400 font-black">
+                <Users className="w-3.5 h-3.5" />
+                <span>Active Spot Meetups ({meetups.length})</span>
+              </span>
+            </div>
+            <div className="grid grid-cols-1 gap-2.5">
+              {meetups
+                .filter(m => {
+                  if (activeTab === 'network') {
+                    if (networkUserIds.size === 0) return true;
+                    return (
+                      m.host_user_id === user?.id ||
+                      (user?.id && m.attendee_ids.includes(user.id)) ||
+                      networkUserIds.has(m.host_user_id)
+                    );
+                  }
+                  return true;
+                })
+                .slice(0, 2)
+                .map(m => (
+                  <MeetupCard key={m.id} meetup={m} currentUser={user} />
+                ))}
+            </div>
+          </div>
+        )}
+
         {filteredPosts.length > 0 ? (
           (showAllSocial ? filteredPosts : filteredPosts.slice(0, 3)).map((post) => {
             const isLiked = likedPosts.has(post.id);

@@ -46,11 +46,12 @@ test('PlaceDetailModal component satisfies reference visual and behavioral contr
   assert.match(modalContent, /\+3%/, 'Must show +3% stable base signal score');
   assert.match(modalContent, /Offline-resilient engine active/, 'Must display offline-resilient engine disclaimer');
 
-  // 7. Four exact action buttons
-  assert.match(modalContent, /Check-in to Gain \+.*PTS/, 'Must have Check-in to Gain PTS action button');
-  assert.match(modalContent, /Vibe Validate \(Locked - Check-in or be within 200m\)/, 'Must render locked Vibe Validate button');
+  // 7. Four exact action buttons & live status
+  assert.match(modalContent, /Check-in & Vibe Validate/, 'Must have Check-in & Vibe Validate action button');
+  assert.match(modalContent, /Promote This Business \(Fund Check-in Rewards\)/, 'Must have Promote This Business button');
   assert.match(modalContent, /View Map & Directions/, 'Must render View Map & Directions button');
   assert.match(modalContent, /Close Spot Details/, 'Must render Close Spot Details button');
+  assert.equal(/Unlocked — Submit Live Status/.test(modalContent), false, 'Old Unlocked string must not exist');
 });
 
 test('Google Places Edge Function and d03 public API enforce real places with strict leisure filter', () => {

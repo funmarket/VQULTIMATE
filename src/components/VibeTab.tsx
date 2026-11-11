@@ -22,6 +22,9 @@ import { DriftRoomView } from './drift/DriftRoomView';
 import { DriftEmojiPicker } from './drift/DriftEmojiPicker';
 import { UserProfileCard } from './UserProfileCard';
 import { ShareTab } from './ShareTab';
+import { fetchAllMeetups, subscribeToMeetupUpdates } from '../domains/d12_meetups';
+import { PlaceMeetup } from '../domains/d12_meetups/types';
+import { MeetupCard } from './MeetupCard';
 
 interface VibeTabProps {
   user: UserProfile | null;
@@ -36,6 +39,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
   const [echoProfiles, setEchoProfiles] = useState<UserProfile[]>([]);
   const [pendingPulls, setPendingPulls] = useState<ConnectionPull[]>([]);
   const [confirmedVibes, setConfirmedVibes] = useState<ConfirmedVibe[]>([]);
+  const [spotMeetups, setSpotMeetups] = useState<PlaceMeetup[]>([]);
   
   const [activePostId, setActivePostId] = useState<string | null>(null);
   const [comments, setComments] = useState<VibeComment[]>([]);
@@ -125,6 +129,11 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
   };
 
   useEffect(() => {
+    fetchAllMeetups().then(setSpotMeetups);
+    const unsub = subscribeToMeetupUpdates(() => {
+      fetchAllMeetups().then(setSpotMeetups);
+    });
+
     if (user?.id) {
       fetchOrbitProfiles(user.id).then(setOrbitProfiles);
       fetchEchoProfiles(user.id).then(setEchoProfiles);
@@ -136,6 +145,8 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
       setPendingPulls([]);
       setConfirmedVibes([]);
     }
+
+    return () => unsub();
   }, [user]);
 
   const showToast = (msg: string) => {
@@ -576,6 +587,23 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
               <span>LIVE NETWORK</span>
             </span>
           </div>
+
+          {/* Active Spot Meetups Cross-Feed Propagation */}
+          {spotMeetups.length > 0 && (
+            <div className="space-y-2.5 pb-2">
+              <div className="flex items-center justify-between text-xs font-bold text-neutral-400 uppercase tracking-wider px-1">
+                <span className="flex items-center gap-1.5 text-blue-400 font-black">
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Spot Meetups & Circles ({spotMeetups.length})</span>
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-2.5">
+                {spotMeetups.slice(0, 2).map((m) => (
+                  <MeetupCard key={m.id} meetup={m} currentUser={user} />
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Posts List or Clean Empty State */}
           {posts.length > 0 ? (

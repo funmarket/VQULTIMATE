@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { X, Award, Shield, Coins, MapPin, Check, AlertCircle, Send } from 'lucide-react';
+import { X, Award, Shield, Coins, MapPin, Check, AlertCircle, Send, Users } from 'lucide-react';
 import { UserProfile } from '../domains/d02_users';
 import { followUser, unfollowUser, checkIsFollowing } from '../domains/d03_social_graph';
 import { sendConnectionPull } from '../domains/d17_matching';
 import { executeVqTransfer } from '../domains/d06_purse';
+import { fetchMeetupsByUser } from '../domains/d12_meetups/api';
+import { PlaceMeetup } from '../domains/d12_meetups/types';
+import { MeetupCard } from './MeetupCard';
 
 interface UserProfileCardProps {
   profile: UserProfile;
@@ -32,6 +35,8 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
   const [transferLoading, setTransferLoading] = useState(false);
   const [transferError, setTransferError] = useState<string | null>(null);
 
+  const [userMeetups, setUserMeetups] = useState<PlaceMeetup[]>([]);
+
   const isSelf = currentUser?.id === profile.id || (currentUser?.username && currentUser.username === profile.username);
 
   useEffect(() => {
@@ -39,6 +44,12 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
       checkIsFollowing(currentUser.id, profile.id).then(setIsFollowing);
     }
   }, [currentUser, profile.id, isSelf]);
+
+  useEffect(() => {
+    if (profile.id) {
+      fetchMeetupsByUser(profile.id).then(setUserMeetups);
+    }
+  }, [profile.id]);
 
   const handleEcho = async () => {
     setFeedbackError(null);
@@ -247,6 +258,23 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
             <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-center space-x-1.5 animate-fadeIn">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{feedbackError}</span>
+            </div>
+          )}
+
+          {/* Active & Upcoming Spot Meetups */}
+          {userMeetups.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-neutral-800/80">
+              <div className="flex items-center justify-between text-xs font-bold text-neutral-400 uppercase tracking-wider px-0.5">
+                <span className="flex items-center gap-1.5 text-blue-400 font-black">
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Spot Gatherings ({userMeetups.length})</span>
+                </span>
+              </div>
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {userMeetups.map((m) => (
+                  <MeetupCard key={m.id} meetup={m} currentUser={currentUser} compact />
+                ))}
+              </div>
             </div>
           )}
 
