@@ -6,13 +6,13 @@
 
 type VibeCategory = 'Food' | 'Art' | 'Spots' | 'Culture' | 'Night Owl';
 
-const CATEGORY_QUERY_MAP: Record<string, string> = {
-  All: 'restaurant cafe bar lounge museum night club art gallery park',
-  Food: 'restaurant cafe bakery',
-  'Night Owl': 'bar night club lounge',
-  Art: 'art gallery',
-  Culture: 'museum theatre cultural center',
-  Spots: 'tourist attraction park viewpoint'
+const CATEGORY_QUERY_MAP: Record<string, string[]> = {
+  All: ['restaurant cafe salon de the', 'lounge bar pub rooftop', 'musee galerie parc attraction'],
+  Food: ['restaurant bistro pizzeria', 'cafe salon de the patisserie'],
+  'Night Owl': ['lounge bar pub', 'night club rooftop'],
+  Art: ['art gallery galerie d art', 'centre d art exposition'],
+  Culture: ['museum musee cite de la culture', 'theatre cinema centre culturel', 'medina palais monument'],
+  Spots: ['tourist attraction viewpoint belvedere', 'parc park jardin plage marina', 'monument site archeologique']
 };
 
 const ALLOWED_LEISURE_TYPES = new Set([
@@ -38,7 +38,8 @@ const ALLOWED_LEISURE_TYPES = new Set([
   'casino'
 ]);
 
-const EXCLUDED_TYPES = new Set([
+// Hard-excluded non-leisure types (Note: generic 'store' is NOT here so bakeries/cafes/galleries with 'store' aren't wiped out)
+const HARD_EXCLUDED_TYPES = new Set([
   'lodging',
   'locality',
   'political',
@@ -66,7 +67,6 @@ const EXCLUDED_TYPES = new Set([
   'drugstore',
   'physiotherapist',
   'veterinary_care',
-  'store',
   'supermarket',
   'grocery_or_supermarket',
   'gas_station',
@@ -122,25 +122,27 @@ const EXCLUDED_NAME_PATTERNS = [
   /\b(school|école|ecole|lycée|lycee|collège|college|university|université|universite|faculté|faculte|institut|institute|académie|academie|training|formation|éducation|education|enseignement)\b/i,
   /\b(jardin\s*d['’]?enfants|crèche|creche|garderie|maternelle|primaire|préparatoire|preparatoire|scolaire|campus|iset|isg|insat|esprit|fst|enit|ihec)\b/i,
   /\b(hospital|hôpital|hopital|clinic|clinique|pharmacy|pharmacie|cabinet|médical|medical|santé|sante|dispensaire|laboratoire|laboratory|polyclinique|dentaire|dentiste|optique|opticien|kiné|kine)\b/i,
-  /\b(police|protection\s*civile|civil\s*protection|civil|gendarmerie|pompiers|municipalité|municipalite|commune|mairie|ministère|ministere|ambassade|consulat|tribunal|gouvernorat|délégation|delegation|recette\s*des\s*finances|cnss|cnam|steg|sonede|onàs|onas)\b/i,
+  /\b(police|protection\s*civile|civil\s*protection|gendarmerie|pompiers|municipalité|municipalite|commune|mairie|ministère|ministere|ambassade|consulat|tribunal|gouvernorat|délégation|delegation|recette\s*des\s*finances|cnss|cnam|steg|sonede|onàs|onas)\b/i,
   /\b(bank|banque|atm|biat|bna|stb|bh\b|amen\s*bank|attijari|zitouna|uib|ubci|btk|tsb|wifak|assurance|insurance|gat|star|comar|maghrébia|lloyd|mae|notaire|avocat|courtier|finance|leasing|microfinance|endatamweel)\b/i,
   /\b(société|societe|ste\b|sté\b|sarl|suarl|s\.a\.r\.l|s\.a\b|company|enterprise|entreprise|industrie|industry|industrial|manufactur|usine|holding|groupe|group|consulting|conseil|corporate|siège|siege|direction\s*générale|centre\s*d['’]?affaires|business\s*center|bureau|office|agence|agency|imprimerie|impression|plv\b|publicité|publicite|travaux|batiment|bâtiment|immobilier|immobilière|promotion|construction|logistique|logistics|transport|import|export|distribution|commerce|commercial|crown\s*maghreb|marquardt)\b/i,
   /\b(supermarket|supérette|superette|monoprix|carrefour|magasin\s*général|mg\b|aziza|épicerie|epicerie|station\s*service|totalenergies|shell|agil|ola\s*energy|kiosque|lavage)\b/i,
   /\b(post\s*office|la\s*poste|rapid\s*poste|telecom|télécom|orange|ooredoo|tunisie\s*telecom|topnet|globalnet)\b/i
 ];
 
-const LOUNGE_NIGHT_REGEX = /\b(lounge|bar|pub|club|night\s*club|disco|discothèque|discotheque|rooftop|tapas|bistro|bistrot|brasserie|cabaret|speakeasy|hookah|shisha|chicha)\b/i;
-const CULTURE_REGEX = /\b(museum|musée|musee|theatre|théâtre|theater|opéra|opera|cinéma|cinema|galerie|gallery|centre\s*culturel|cultural\s*center|palais|medina|médina|conservatoire)\b/i;
-const SPOTS_REGEX = /\b(park|parc|viewpoint|belvédère|belvedere|plage|beach|corniche|marina|port|monument|ruines|ruins|archéologique|archaeological|fort|kasbah|citadelle|attraction|lac|lake|colline)\b/i;
+const FOOD_NAME_REGEX = /\b(restaurant|resto|café|cafe|coffee|salon\s*de\s*thé|salon\s*de\s*the|pâtisserie|patisserie|boulangerie|bakery|pizzeria|pizza|burger|bistro|bistrot|brasserie|grill|crêperie|creperie|gelato|glacier|snack|traitor|traiteur)\b/i;
+const LOUNGE_NIGHT_REGEX = /\b(lounge|bar\b|pub\b|club\b|night\s*club|disco|discothèque|discotheque|rooftop|tapas|cabaret|speakeasy|hookah|shisha|chicha)\b/i;
+const ART_NAME_REGEX = /\b(galerie|gallery|atelier\s*d['’]?art|art\s*space|art\s*center|centre\s*d['’]?art|exposition|beaux[\s-]*arts)\b/i;
+const CULTURE_REGEX = /\b(museum|musée|musee|cité\s*de\s*la\s*culture|cite\s*de\s*la\s*culture|theatre|théâtre|theater|opéra|opera|cinéma|cinema|centre\s*culturel|cultural\s*center|palais|medina|médina|conservatoire|maison\s*de\s*la\s*culture|bibliothèque|bibliotheque|acropolium|cathédrale|cathedrale|thermes|amphithéâtre|site\s*archéologique)\b/i;
+const SPOTS_REGEX = /\b(park|parc|viewpoint|belvédère|belvedere|plage|beach|corniche|marina|port|monument|ruines|ruins|archéologique|archaeological|fort|kasbah|citadelle|attraction|lac|lake|colline|jardin)\b/i;
 
 function normalizeCategory(raw?: string): 'All' | VibeCategory {
   if (!raw) return 'All';
   const c = raw.trim().toLowerCase();
-  if (c === 'food') return 'Food';
-  if (c === 'night owl' || c === 'night_owl' || c === 'nightowl') return 'Night Owl';
+  if (c === 'food' || c === 'cafes' || c === 'cafe') return 'Food';
+  if (c === 'night owl' || c === 'night_owl' || c === 'nightowl' || c === 'venues' || c === 'venue') return 'Night Owl';
   if (c === 'art') return 'Art';
   if (c === 'culture') return 'Culture';
-  if (c === 'spots' || c === 'spot') return 'Spots';
+  if (c === 'spots' || c === 'spot' || c === 'hidden') return 'Spots';
   return 'All';
 }
 
@@ -149,10 +151,10 @@ function isStrictlyLeisurePlace(item: any, requestedCategory: 'All' | VibeCatego
   const name: string = (item?.name || '').trim();
   const address: string = (item?.formatted_address || item?.vicinity || '').trim();
 
-  if (!name || name.toLowerCase() === 'tunis') return false;
+  if (!name || /^(tunis|ariana|manouba|ben\s*arous)$/i.test(name)) return false;
 
   for (const t of types) {
-    if (EXCLUDED_TYPES.has(t)) {
+    if (HARD_EXCLUDED_TYPES.has(t)) {
       return false;
     }
   }
@@ -167,8 +169,10 @@ function isStrictlyLeisurePlace(item: any, requestedCategory: 'All' | VibeCatego
     /\b(zone\s*industrielle|z\.i\b|technopole|pôle\s*technologique|immeuble\s*bureau)\b/i.test(address) &&
     !types.includes('restaurant') &&
     !types.includes('cafe') &&
+    !types.includes('bakery') &&
     !types.includes('bar') &&
-    !types.includes('night_club')
+    !types.includes('night_club') &&
+    !types.includes('museum')
   ) {
     return false;
   }
@@ -178,15 +182,11 @@ function isStrictlyLeisurePlace(item: any, requestedCategory: 'All' | VibeCatego
     return true;
   }
 
-  if (requestedCategory === 'Night Owl' || requestedCategory === 'All') {
-    if (LOUNGE_NIGHT_REGEX.test(name)) return true;
-  }
-  if (requestedCategory === 'Culture' || requestedCategory === 'All') {
-    if (CULTURE_REGEX.test(name)) return true;
-  }
-  if (requestedCategory === 'Spots' || requestedCategory === 'All') {
-    if (SPOTS_REGEX.test(name)) return true;
-  }
+  if (FOOD_NAME_REGEX.test(name)) return true;
+  if (LOUNGE_NIGHT_REGEX.test(name)) return true;
+  if (ART_NAME_REGEX.test(name)) return true;
+  if (CULTURE_REGEX.test(name)) return true;
+  if (SPOTS_REGEX.test(name)) return true;
 
   return false;
 }
@@ -203,21 +203,27 @@ function mapPlaceToCategory(
     set.has('cafe') ||
     set.has('bakery') ||
     set.has('meal_takeaway') ||
-    set.has('meal_delivery');
+    set.has('meal_delivery') ||
+    FOOD_NAME_REGEX.test(name);
+
   const isNightOwl =
     set.has('bar') ||
     set.has('night_club') ||
     set.has('casino') ||
     LOUNGE_NIGHT_REGEX.test(name);
+
   const isArt =
     set.has('art_gallery') ||
-    /\b(galerie|gallery|atelier\s*d['’]?art|art\s*space)\b/i.test(name);
+    ART_NAME_REGEX.test(name);
+
   const isCulture =
     set.has('museum') ||
     set.has('performing_arts_theater') ||
     set.has('movie_theater') ||
     set.has('cultural_center') ||
-    CULTURE_REGEX.test(name);
+    CULTURE_REGEX.test(name) ||
+    (requestedCategory === 'Culture' && set.has('tourist_attraction'));
+
   const isSpot =
     set.has('tourist_attraction') ||
     set.has('park') ||
@@ -228,15 +234,19 @@ function mapPlaceToCategory(
     set.has('bowling_alley') ||
     SPOTS_REGEX.test(name);
 
+  // When a specific category tab is clicked, return that category if it matches
   if (requestedCategory === 'Food') return isFood ? 'Food' : null;
   if (requestedCategory === 'Night Owl') return isNightOwl ? 'Night Owl' : null;
   if (requestedCategory === 'Art') return isArt ? 'Art' : null;
   if (requestedCategory === 'Culture') return isCulture ? 'Culture' : null;
   if (requestedCategory === 'Spots') return isSpot ? 'Spots' : null;
 
-  if (isNightOwl && !set.has('bakery')) return 'Night Owl';
+  // In 'All' mode, assign the most specific primary category without letting Night Owl swallow restaurants
   if (isArt) return 'Art';
   if (isCulture) return 'Culture';
+  if (isNightOwl && !set.has('restaurant') && !set.has('cafe') && !set.has('bakery')) return 'Night Owl';
+  if (isFood && !LOUNGE_NIGHT_REGEX.test(name)) return 'Food';
+  if (isNightOwl) return 'Night Owl';
   if (isFood) return 'Food';
   if (isSpot) return 'Spots';
 
@@ -342,6 +352,9 @@ Deno.serve(async (request: Request) => {
     const lat = Number(body?.lat);
     const lng = Number(body?.lng);
     const requestedCategory = normalizeCategory(body?.category);
+    const requestedRadius = Number(body?.radius);
+    const radiusMeters = Number.isFinite(requestedRadius) && requestedRadius > 0 ? Math.min(requestedRadius, 25000) : 23000;
+    const maxCutoffMeters = Math.max(radiusMeters, 23000);
 
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
       return new Response(JSON.stringify({ places: [], error: 'Valid lat and lng required' }), {
@@ -360,17 +373,21 @@ Deno.serve(async (request: Request) => {
       );
     }
 
-    const radiusMeters = 8000;
-    const maxCutoffMeters = 15000;
-    const searchQuery = CATEGORY_QUERY_MAP[requestedCategory] || CATEGORY_QUERY_MAP['All'];
-
-    const { status: googleStatus, results: rawResults, error_message } = await queryGooglePlacesTextSearch(
-      lat,
-      lng,
-      radiusMeters,
-      searchQuery,
-      apiKey
-    );
+    const searchQueries = CATEGORY_QUERY_MAP[requestedCategory] || CATEGORY_QUERY_MAP['All'];
+    const searchQuery = searchQueries.join(' | ');
+    const batch = await Promise.all(searchQueries.map((q) => queryGooglePlacesTextSearch(lat, lng, radiusMeters, q, apiKey)));
+    const googleStatus = batch.find((b) => b.status === 'OK')?.status || batch[0]?.status || 'ZERO_RESULTS';
+    const error_message = batch.find((b) => b.error_message)?.error_message;
+    const seenIds = new Set<string>();
+    const rawResults: any[] = [];
+    for (const b of batch) {
+      for (const item of b.results) {
+        if (item?.place_id && !seenIds.has(item.place_id)) {
+          seenIds.add(item.place_id);
+          rawResults.push(item);
+        }
+      }
+    }
 
     const supabaseUrl = (Deno.env.get('SUPABASE_URL') || reqUrl.origin).replace(/\/$/, '');
 
@@ -459,6 +476,7 @@ Deno.serve(async (request: Request) => {
         google_error: error_message || null,
         requested_category: requestedCategory,
         query_used: searchQuery,
+        radius_meters: radiusMeters,
         count: cleanPlaces.length,
         places: cleanPlaces
       }),
@@ -472,3 +490,4 @@ Deno.serve(async (request: Request) => {
     });
   }
 });
+
