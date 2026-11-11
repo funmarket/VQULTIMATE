@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { getCurrentUserProfile } from '../d01_auth';
 import { CommunityTrail, VibeGuardian, TrailStop, TimeOfDay } from './types';
 import { withTrailGalleries } from './gallery';

@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { FlashEvent, ActivityFeedItem } from './types';
 
 export const CANONICAL_FLASH_EVENT: FlashEvent = {

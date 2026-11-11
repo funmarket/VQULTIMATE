@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { GuardianReview } from './types';
 import { hasCompletedHandshake } from '../d22_handshake';
 

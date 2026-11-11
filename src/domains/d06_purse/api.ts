@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { VqAccount, VQTransaction, TransactionType } from './types';
 import { CANONICAL_IDENTITY_MAP } from './identityMap';
 

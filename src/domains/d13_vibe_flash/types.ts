@@ -1,72 +1,78 @@
-/**
- * Vibe Flash Domain Types
- * Unified model for Secret/After-Hours Flash Events and Venue Meetups starting within <= 60m.
- */
-
-export type VibeFlashKind = 'secret_flash' | 'meetup_flash';
-
 export type VibeFlashCategory =
-  | 'After-Hours'
   | 'Secret Pop-up'
+  | 'After-Hours'
   | 'Rooftop / Underground'
   | 'Live Music / DJ'
   | 'Flash Meetup'
-  | 'House / Private Vibe';
+  | 'House / Private Vibe'
+  | 'Happy Hour'
+  | 'Secret Set / DJ'
+  | 'Pop-up Tasting'
+  | 'Flash Hunt'
+  | 'Meetup';
 
-export interface VibeFlashItem {
+export interface VibeFlashEvent {
   id: string;
-  kind: VibeFlashKind;
-  title: string;
-  description: string;
-  vibe_type: VibeFlashCategory;
+  source: 'flash' | 'meetup';
+  kind: 'vibe_flash' | 'meetup_flash';
   place_id?: string;
+  place_name: string;
   venue_name: string;
   address: string;
-  lat: number;
-  lng: number;
-  distance_meters?: number;
-  distance_km?: number;
+  title: string;
+  description: string;
+  category: VibeFlashCategory;
+  vibe_type: VibeFlashCategory;
   creator_id: string;
+  creator_handle: string;
   creator_name: string;
   creator_avatar?: string;
-  starts_at: string; // ISO timestamp
-  expires_at: string; // ISO timestamp
-  entry_type: 'Free' | 'Paid' | 'Guestlist / Password';
+  lat: number;
+  lng: number;
+  starts_at: string;
+  expires_at: string;
+  vq_bounty: number;
+  entry_type: string;
   entry_price_tnd?: string;
-  entry_rules?: string;
-  parking_transport_notes?: string;
-  photos?: string[];
-  photo_url?: string;
-  vq_hunt_pool: number;
-  vq_reward_per_hunter: number; // default 500 VQ
-  max_capacity: number; // default 10 for meetups, 10-100 for flashes
+  max_capacity: number;
   interested_ids: string[];
   going_ids: string[];
-  verified_arrived_ids: string[];
-  claimed_reward_ids: string[];
+  claimed_ids: string[];
+  photo_url?: string;
+  photoUrl?: string;
+  photos?: string[];
   created_at: string;
 }
 
-export interface CreateVibeFlashPayload {
+export type VibeFlashItem = VibeFlashEvent;
+
+export interface CreateVibeFlashInput {
+  placeId?: string;
+  placeName?: string;
+  venueName?: string;
+  address?: string;
   title: string;
   description: string;
-  vibeType: VibeFlashCategory;
-  placeId?: string;
-  venueName: string;
-  address: string;
+  category?: VibeFlashCategory;
+  vibeType?: VibeFlashCategory;
+  creatorId: string;
+  creatorHandle?: string;
+  creatorName?: string;
+  creatorAvatar?: string;
   lat: number;
   lng: number;
-  creatorId: string;
-  creatorName: string;
-  creatorAvatar?: string;
-  startsAt: string;
-  durationMinutes: number; // 60, 120, 180
-  entryType: 'Free' | 'Paid' | 'Guestlist / Password';
+  startsAt?: string;
+  expiresAt?: string;
+  durationMinutes?: number;
+  entryType?: string;
   entryPriceTnd?: string;
   entryRules?: string;
   parkingTransportNotes?: string;
-  photos?: string[];
-  photo_url?: string;
+  vqBounty?: number;
   vqHuntPool?: number;
   maxCapacity?: number;
+  photoUrl?: string;
+  photo_url?: string;
+  photos?: string[];
+  photoFile?: File;
 }

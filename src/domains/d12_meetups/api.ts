@@ -1,228 +1,236 @@
-/**
- * Spot Meetups Domain API
- * Handles organizing, discovering, joining, and propagating meetups across:
- * 1. Spot Details Modal
- * 2. User Profile Card
- * 3. Gossip Feed
- * 4. Local Feed
- * 5. My Network Feed
- */
-
 import { supabase } from '../../lib/supabase';
-import { PlaceMeetup, CreateMeetupPayload } from './types';
+import { PlaceMeetup, CreateMeetupInput } from './types';
 
-const MEETUPS_CACHE_KEY = 'vq_place_meetups_cache';
-const MEETUPS_EVENT = 'vq:meetup_updated';
+function mapRowToMeetup(row: any): PlaceMeetup {
+  const startsAt = row.starts_at || row.scheduled_at || new Date().toISOString();
+  const photo = row.photo_url || row.photoUrl || undefined;
+  const placeName = row.place_name || row.place_title || 'Secret Spot';
+  const creatorId = row.creator_id || row.host_user_id || 'usr_anonymous';
+  const rawHandle = row.creator_handle || row.host_name || 'VibeExplorer';
+  const cleanName = String(rawHandle).replace(/^@/, '');
+  const cleanHandle = `@${cleanName}`;
+  const avatar = row.creator_avatar || row.host_avatar || undefined;
 
-function getLocalMeetups(): PlaceMeetup[] {
-  if (typeof window === 'undefined') return [];
+  return {
+    id: row.id,
+    place_id: row.place_id,
+    place_name: placeName,
+    place_title: placeName,
+    place_address: row.place_address || '',
+    place_category: row.place_category || 'Spots',
+    creator_id: creatorId,
+    creator_handle: cleanHandle,
+    creator_avatar: avatar,
+    host_user_id: creatorId,
+    host_name: cleanName,
+    host_avatar: avatar,
+    title: row.title,
+    description: row.description || '',
+    starts_at: startsAt,
+    scheduled_at: startsAt,
+    max_attendees: Number(row.max_attendees || 8),
+    attendee_ids: Array.isArray(row.attendee_ids) ? row.attendee_ids : [],
+    attendee_handles: Array.isArray(row.attendee_handles) ? row.attendee_handles : [],
+    photo_url: photo,
+    photoUrl: photo,
+    is_live_checkin: Boolean(row.is_live_checkin),
+    created_at: row.created_at || new Date().toISOString(),
+  };
+}
+
+function emitMeetupsUpdated() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('vibequest:meetups-updated'));
+  }
+}
+
+export async function fetchAllMeetups(): Promise<PlaceMeetup[]> {
   try {
-    const raw = localStorage.getItem(MEETUPS_CACHE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const cutoff = new Date(Date.now() - 4 * 3600 * 1000).toISOString();
+    const { data, error } = await supabase
+      .from('place_meetups')
+      .select('*')
+      .gte('starts_at', cutoff)
+      .order('starts_at', { ascending: true });
+
+    if (error || !data) return [];
+    return data.map(mapRowToMeetup);
   } catch {
     return [];
   }
 }
 
-function saveLocalMeetups(list: PlaceMeetup[]): void {
-  if (typeof window === 'undefined') return;
+export async function fetchMeetupsByPlaceId(placeId: string): Promise<PlaceMeetup[]> {
+  if (!placeId) return [];
   try {
-    localStorage.setItem(MEETUPS_CACHE_KEY, JSON.stringify(list));
-    window.dispatchEvent(new CustomEvent(MEETUPS_EVENT));
-  } catch (err) {
-    console.warn('Failed to save meetups to cache:', err);
+    const cutoff = new Date(Date.now() - 4 * 3600 * 1000).toISOString();
+    const { data, error } = await supabase
+      .from('place_meetups')
+      .select('*')
+      .eq('place_id', placeId)
+      .gte('starts_at', cutoff)
+      .order('starts_at', { ascending: true });
+
+    if (error || !data) return [];
+    return data.map(mapRowToMeetup);
+  } catch {
+    return [];
+  }
+}
+
+export const fetchPlaceMeetups = fetchMeetupsByPlaceId;
+
+export async function fetchMeetupsByUser(userId: string): Promise<PlaceMeetup[]> {
+  if (!userId) return [];
+  try {
+    const all = await fetchAllMeetups();
+    return all.filter((m) => m.creator_id === userId || m.attendee_ids.includes(userId));
+  } catch {
+    return [];
+  }
+}
+
+export async function createPlaceMeetup(
+  input: CreateMeetupInput
+): Promise<{ success: boolean; meetup?: PlaceMeetup; error?: string }> {
+  try {
+    let resolvedPhotoUrl = input.photoUrl || input.photo_url;
+    const creatorId = input.creatorId || input.hostUserId || 'usr_anonymous';
+    const rawHandle = input.creatorHandle || input.hostName || 'VibeExplorer';
+    const cleanHandle = rawHandle.startsWith('@') ? rawHandle : `@${rawHandle}`;
+    const placeName = input.placeName || input.placeTitle || 'Secret Spot';
+
+    if (input.photoFile) {
+      const ext = (input.photoFile.name.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '');
+      const path = `meetups/${input.placeId}/${creatorId}_${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from('vibe-media')
+        .upload(path, input.photoFile, { cacheControl: '3600', upsert: true });
+      if (!uploadErr) {
+        const { data: pub } = supabase.storage.from('vibe-media').getPublicUrl(path);
+        resolvedPhotoUrl = pub?.publicUrl;
+      }
+    } else if (resolvedPhotoUrl && resolvedPhotoUrl.startsWith('data:image/')) {
+      try {
+        const res = await fetch(resolvedPhotoUrl);
+        const blob = await res.blob();
+        const path = `meetups/${input.placeId}/${creatorId}_${Date.now()}.jpg`;
+        const { error: uploadErr } = await supabase.storage
+          .from('vibe-media')
+          .upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: true });
+        if (!uploadErr) {
+          const { data: pub } = supabase.storage.from('vibe-media').getPublicUrl(path);
+          if (pub?.publicUrl) resolvedPhotoUrl = pub.publicUrl;
+        }
+      } catch {
+        // Keep data URL if storage upload fails
+      }
+    }
+
+    const startsAtIso =
+      input.startsAt || input.scheduledAt || new Date(Date.now() + 30 * 60000).toISOString();
+
+    const payload = {
+      place_id: input.placeId,
+      place_name: placeName,
+      creator_id: creatorId,
+      creator_handle: cleanHandle,
+      creator_avatar: input.creatorAvatar || input.hostAvatar || '✨',
+      title: input.title.trim(),
+      description: (input.description || '').trim(),
+      starts_at: startsAtIso,
+      max_attendees: input.maxAttendees || 8,
+      attendee_ids: [creatorId],
+      attendee_handles: [cleanHandle],
+      photo_url: resolvedPhotoUrl || null,
+    };
+
+    const { data, error } = await supabase
+      .from('place_meetups')
+      .insert(payload)
+      .select('*')
+      .single();
+
+    if (error || !data) {
+      return { success: false, error: error?.message || 'Failed to create meetup in Supabase' };
+    }
+
+    const created = mapRowToMeetup({
+      ...data,
+      place_address: input.placeAddress,
+      place_category: input.placeCategory,
+      is_live_checkin: input.isLiveCheckin,
+    });
+    emitMeetupsUpdated();
+    return { success: true, meetup: created };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Unexpected error creating meetup' };
+  }
+}
+
+export async function toggleMeetupRsvp(
+  meetupId: string,
+  _userId: string,
+  userHandle = '@VibeExplorer'
+): Promise<{
+  success: boolean;
+  isAttending: boolean;
+  attendeesCount: number;
+  attendeeCount: number;
+  error?: string;
+}> {
+  try {
+    const cleanHandle = userHandle.startsWith('@') ? userHandle : `@${userHandle}`;
+    const { data, error } = await supabase.rpc('rpc_toggle_meetup_rsvp', {
+      p_meetup_id: meetupId,
+      p_user_handle: cleanHandle,
+    });
+
+    if (error) {
+      return {
+        success: false,
+        isAttending: false,
+        attendeesCount: 0,
+        attendeeCount: 0,
+        error: error.message,
+      };
+    }
+
+    const count = Number(data?.attendee_count || 0);
+    emitMeetupsUpdated();
+    return {
+      success: true,
+      isAttending: data?.action === 'joined',
+      attendeesCount: count,
+      attendeeCount: count,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      isAttending: false,
+      attendeesCount: 0,
+      attendeeCount: 0,
+      error: err?.message,
+    };
   }
 }
 
 export function subscribeToMeetupUpdates(callback: () => void): () => void {
-  if (typeof window === 'undefined') return () => {};
   const handler = () => callback();
-  window.addEventListener(MEETUPS_EVENT, handler);
-  return () => window.removeEventListener(MEETUPS_EVENT, handler);
-}
+  if (typeof window !== 'undefined') {
+    window.addEventListener('vibequest:meetups-updated', handler);
+  }
+  const channel = supabase
+    .channel('public:place_meetups_realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'place_meetups' }, () => {
+      callback();
+    })
+    .subscribe();
 
-/**
- * Fetches all active meetups across the application.
- */
-export async function fetchAllMeetups(): Promise<PlaceMeetup[]> {
-  const localList = getLocalMeetups();
-
-  try {
-    const { data, error } = await supabase
-      .from('place_meetups')
-      .select('*')
-      .eq('status', 'active')
-      .order('scheduled_at', { ascending: true });
-
-    if (!error && Array.isArray(data)) {
-      const dbList: PlaceMeetup[] = data.map((row: any) => ({
-        id: String(row.id),
-        place_id: String(row.place_id),
-        place_title: String(row.place_title || ''),
-        place_address: String(row.place_address || ''),
-        place_category: String(row.place_category || 'Spots'),
-        host_user_id: String(row.host_user_id),
-        host_name: String(row.host_name || 'Explorer'),
-        host_avatar: row.host_avatar || undefined,
-        title: String(row.title),
-        description: row.description || undefined,
-        scheduled_at: row.scheduled_at || new Date().toISOString(),
-        is_live_checkin: Boolean(row.is_live_checkin),
-        attendee_ids: Array.isArray(row.attendee_ids) ? row.attendee_ids : [],
-        status: row.status || 'active',
-        created_at: row.created_at || new Date().toISOString()
-      }));
-
-      const map = new Map<string, PlaceMeetup>();
-      [...dbList, ...localList].forEach(m => map.set(m.id, m));
-      const merged = Array.from(map.values());
-      merged.sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
-      saveLocalMeetups(merged);
-      return merged;
+  return () => {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('vibequest:meetups-updated', handler);
     }
-  } catch (err) {
-    console.warn('Supabase fetchAllMeetups fallback to local cache:', err);
-  }
-
-  return localList;
-}
-
-/**
- * Fetches all meetups for a specific place.
- */
-export async function fetchMeetupsByPlaceId(placeId: string): Promise<PlaceMeetup[]> {
-  const all = await fetchAllMeetups();
-  return all.filter(m => m.place_id === placeId && m.status === 'active');
-}
-
-/**
- * Fetches all meetups hosted or joined by a specific user.
- */
-export async function fetchMeetupsByUser(userId: string): Promise<PlaceMeetup[]> {
-  if (!userId) return [];
-  const all = await fetchAllMeetups();
-  const cleanId = userId.replace(/^usr_/, '');
-  return all.filter(m =>
-    (m.host_user_id === userId || m.host_user_id === cleanId || m.host_user_id === 'usr_' + cleanId) ||
-    m.attendee_ids.some(id => id === userId || id === cleanId || id === 'usr_' + cleanId)
-  );
-}
-
-/**
- * Creates and publishes a new Meetup at a place.
- */
-export async function createPlaceMeetup(payload: CreateMeetupPayload): Promise<{
-  success: boolean;
-  meetup?: PlaceMeetup;
-  error?: string;
-}> {
-  const {
-    placeId,
-    placeTitle,
-    placeAddress,
-    placeCategory,
-    hostUserId,
-    hostName,
-    hostAvatar,
-    title,
-    description,
-    scheduledAt,
-    isLiveCheckin = false
-  } = payload;
-
-  if (!title.trim()) {
-    return { success: false, error: 'Please enter a title or vibe for the meetup.' };
-  }
-
-  const meetupId = `meetup-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-  const meetup: PlaceMeetup = {
-    id: meetupId,
-    place_id: placeId,
-    place_title: placeTitle,
-    place_address: placeAddress,
-    place_category: placeCategory,
-    host_user_id: hostUserId,
-    host_name: hostName,
-    host_avatar: hostAvatar,
-    title: title.trim(),
-    description: description?.trim(),
-    scheduled_at: scheduledAt || new Date().toISOString(),
-    is_live_checkin: isLiveCheckin,
-    attendee_ids: [hostUserId], // Host is first attendee
-    status: 'active',
-    created_at: new Date().toISOString()
-  };
-
-  const localList = getLocalMeetups();
-  localList.unshift(meetup);
-  saveLocalMeetups(localList);
-
-  try {
-    await supabase.from('place_meetups').insert([{
-      id: meetupId,
-      place_id: placeId,
-      place_title: placeTitle,
-      place_address: placeAddress,
-      place_category: placeCategory,
-      host_user_id: hostUserId,
-      host_name: hostName,
-      host_avatar: hostAvatar || null,
-      title: title.trim(),
-      description: description?.trim() || null,
-      scheduled_at: meetup.scheduled_at,
-      is_live_checkin: isLiveCheckin,
-      attendee_ids: [hostUserId],
-      status: 'active'
-    }]);
-  } catch (err) {
-    console.warn('Supabase meetup insert fallback to local:', err);
-  }
-
-  return { success: true, meetup };
-}
-
-/**
- * Joins or leaves (RSVP) a meetup.
- */
-export async function toggleMeetupRsvp(meetupId: string, userId: string): Promise<{
-  success: boolean;
-  isAttending: boolean;
-  attendeesCount: number;
-  error?: string;
-}> {
-  if (!userId) {
-    return { success: false, isAttending: false, attendeesCount: 0, error: 'Authentication required' };
-  }
-
-  const all = getLocalMeetups();
-  const meetup = all.find(m => m.id === meetupId);
-  if (!meetup) {
-    return { success: false, isAttending: false, attendeesCount: 0, error: 'Meetup not found' };
-  }
-
-  const isAttending = meetup.attendee_ids.includes(userId);
-  if (isAttending) {
-    // If not the host, allow leaving
-    if (meetup.host_user_id === userId) {
-      return { success: true, isAttending: true, attendeesCount: meetup.attendee_ids.length };
-    }
-    meetup.attendee_ids = meetup.attendee_ids.filter(id => id !== userId);
-  } else {
-    meetup.attendee_ids.push(userId);
-  }
-
-  saveLocalMeetups(all);
-
-  try {
-    await supabase
-      .from('place_meetups')
-      .update({ attendee_ids: meetup.attendee_ids })
-      .eq('id', meetupId);
-  } catch {}
-
-  return {
-    success: true,
-    isAttending: !isAttending,
-    attendeesCount: meetup.attendee_ids.length
+    supabase.removeChannel(channel);
   };
 }

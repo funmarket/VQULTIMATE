@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { DirectMessage, DmAuthorizationResult, SendMessageResult } from './types';
 
 export async function checkDmAuthorization(senderId: string, recipientId: string): Promise<DmAuthorizationResult> {

@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { SharePostPayload } from './types';
 
 export async function uploadMediaBlob(blob: Blob, path: string, isProfilePhoto = false): Promise<string> {

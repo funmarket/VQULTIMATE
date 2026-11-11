@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { VibePostItem, VibeComment } from './types';
 
 const LOCAL_POSTS_KEY = 'vq_vibe_posts_local';

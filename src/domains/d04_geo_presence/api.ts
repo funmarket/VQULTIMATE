@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { calculateDistanceMeters, fetchNearbyPlaces, VibePlace } from '../d03_vibe_orbit';
 import { CityPulse, VibePulsesSummary } from './types';
 

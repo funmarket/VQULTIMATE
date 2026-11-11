@@ -1,33 +1,48 @@
 export interface PlaceMeetup {
   id: string;
   place_id: string;
+  place_name: string;
   place_title: string;
-  place_address: string;
-  place_category: string;
+  place_address?: string;
+  place_category?: string;
+  creator_id: string;
+  creator_handle: string;
+  creator_avatar?: string;
   host_user_id: string;
   host_name: string;
   host_avatar?: string;
   title: string;
-  description?: string;
+  description: string;
+  starts_at: string;
   scheduled_at: string;
-  is_live_checkin: boolean;
+  max_attendees: number;
   attendee_ids: string[];
-  status: 'active' | 'completed' | 'cancelled';
-  created_at: string;
+  attendee_handles: string[];
   photo_url?: string;
+  photoUrl?: string;
+  is_live_checkin?: boolean;
+  created_at: string;
 }
 
-export interface CreateMeetupPayload {
+export interface CreateMeetupInput {
   placeId: string;
-  placeTitle: string;
-  placeAddress: string;
-  placeCategory: string;
-  hostUserId: string;
-  hostName: string;
+  placeName?: string;
+  placeTitle?: string;
+  placeAddress?: string;
+  placeCategory?: string;
+  creatorId?: string;
+  creatorHandle?: string;
+  creatorAvatar?: string;
+  hostUserId?: string;
+  hostName?: string;
   hostAvatar?: string;
   title: string;
   description?: string;
-  scheduledAt: string;
-  isLiveCheckin?: boolean;
+  startsAt?: string;
+  scheduledAt?: string;
+  maxAttendees?: number;
+  photoUrl?: string;
   photo_url?: string;
+  photoFile?: File;
+  isLiveCheckin?: boolean;
 }

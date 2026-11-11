@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { AppNotification } from './types';
 
 const LOCAL_NOTIFS_KEY = 'vq_notifications_local';

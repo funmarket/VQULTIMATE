@@ -1,6 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Compass, Maximize2, Minimize2, Sparkles, Navigation, Flame,
   MapPin, Shield, Route, Clock, Award, ChevronLeft, ChevronRight,
@@ -78,10 +76,11 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
   onRequireAuth
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<maplibregl.Map | null>(null);
-  const markersRef = useRef<maplibregl.Marker[]>([]);
-  const userMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const mapInstance = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+  const userMarkerRef = useRef<any>(null);
   const hasInitiallyCenteredRef = useRef<boolean>(false);
+  const [mapReady, setMapReady] = useState(false);
 
   const trailsScrollRef = useRef<HTMLDivElement>(null);
 
@@ -122,8 +121,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     if (!user) { onRequireAuth?.(); return; }
     const existing = guardians.find(guardian => guardian.id === user.id);
     if (type === 'local' && existing?.type === 'pro') {
-      showToast('This account is already a Pro Guardian.');
-      return;
+      showToast('Creating a Local Legend would replace that role.');
     }
     setGuardianRegistrationType(type);
     setIsSelfieModalOpen(true);
@@ -170,8 +168,8 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
   const [activePromos, setActivePromos] = useState<any[]>([]);
   useEffect(() => {
-    fetchActivePromotions().then(map => {
-      setActivePromos(map ? Object.values(map) : []);
+    fetchActivePromotions().then(list => {
+      setActivePromos(Array.isArray(list) ? list : list ? Object.values(list) : []);
     });
   }, []);
 
@@ -202,64 +200,102 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     return () => { cancelled = true; };
   }, [locationState.coords?.lat, locationState.coords?.lng, selectedCategory, user?.id]);
 
-  // 3. Initialize MapLibre directly using bundled NPM package
+  // 3. Initialize MapLibre via window.maplibregl with 150ms polling, ResizeObserver, and raster fallback
   useEffect(() => {
-    if (!mapContainer.current) return;
-    if (mapInstance.current) return;
+    if (!mapContainer.current || mapInstance.current) return;
 
-    try {
-      const initialCenter: [number, number] = locationState.coords
-        ? [locationState.coords.lng, locationState.coords.lat]
-        : [10.1815, 36.8065]; // Tunis center fallback
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+    let resizeObserver: ResizeObserver | null = null;
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+    let attempts = 0;
 
-      const map = new maplibregl.Map({
-        container: mapContainer.current,
-        style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
-        center: initialCenter,
-        zoom: locationState.coords ? 13 : 11,
-        pitch: 45,
-        bearing: -17,
-        attributionControl: false
-      });
+    const initMap = (): boolean => {
+      const maplibregl = (window as any).maplibregl;
+      if (!maplibregl || !mapContainer.current || mapInstance.current) return false;
 
-      // Handle style load failure with reliable raster fallback
-      map.on('error', (e) => {
-        if (e && e.error && (e.error.message?.includes('style') || e.error.status === 404)) {
-          console.warn('Vector style unavailable, switching to fallback raster dark style.');
-          try {
-            map.setStyle(FALLBACK_DARK_STYLE);
-          } catch {}
+      try {
+        const initialCenter: [number, number] = locationState.coords
+          ? [locationState.coords.lng, locationState.coords.lat]
+          : [10.1815, 36.8065]; // Tunis center fallback
+
+        let usedFallbackStyle = false;
+        const map = new maplibregl.Map({
+          container: mapContainer.current,
+          style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+          center: initialCenter,
+          zoom: locationState.coords ? 13.5 : 11,
+          pitch: 45,
+          bearing: -17,
+          attributionControl: false
+        });
+
+        // Handle style load failure with reliable raster fallback
+        map.on('error', (e: any) => {
+          if (!usedFallbackStyle && e && e.error && (e.error.message?.includes('style') || (e.error as any).status === 404 || (e.error as any).status)) {
+            usedFallbackStyle = true;
+            console.warn('Vector style unavailable, switching to fallback raster dark style.');
+            try {
+              map.setStyle(FALLBACK_DARK_STYLE);
+            } catch {}
+          }
+        });
+
+        map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+
+        mapInstance.current = map;
+        setMapReady(true);
+
+        // Ensure proper canvas layout sizing
+        map.on('load', () => {
+          setMapReady(true);
+          map.resize();
+        });
+
+        // Delayed resize to ensure layout settlement
+        resizeTimer = setTimeout(() => {
+          if (mapInstance.current) mapInstance.current.resize();
+        }, 250);
+
+        if (typeof ResizeObserver !== 'undefined' && mapContainer.current) {
+          resizeObserver = new ResizeObserver(() => {
+            try {
+              mapInstance.current?.resize();
+            } catch {}
+          });
+          resizeObserver.observe(mapContainer.current);
         }
-      });
 
-      map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+        return true;
+      } catch (err) {
+        console.error('MapLibre init error:', err);
+        return false;
+      }
+    };
 
-      // Ensure proper canvas layout sizing
-      map.on('load', () => {
-        map.resize();
-      });
-
-      mapInstance.current = map;
-
-      // Delayed resize to ensure layout settlement
-      const resizeTimer = setTimeout(() => {
-        if (mapInstance.current) mapInstance.current.resize();
-      }, 300);
-
-      return () => {
-        clearTimeout(resizeTimer);
-        map.remove();
-        mapInstance.current = null;
-      };
-    } catch (err) {
-      console.error('MapLibre init error:', err);
+    if (!initMap()) {
+      pollTimer = setInterval(() => {
+        attempts += 1;
+        if (initMap() || attempts >= 30) {
+          if (pollTimer) clearInterval(pollTimer);
+        }
+      }, 150);
     }
+
+    return () => {
+      if (pollTimer) clearInterval(pollTimer);
+      if (resizeTimer) clearTimeout(resizeTimer);
+      if (resizeObserver) resizeObserver.disconnect();
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
   }, []);
 
   // Trigger resize whenever fullscreen is toggled
   useEffect(() => {
     if (mapInstance.current) {
-      setTimeout(() => mapInstance.current?.resize(), 150);
+      setTimeout(() => mapInstance.current?.resize(), 250);
     }
   }, [isFullScreen]);
 
@@ -269,7 +305,8 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
       !hasInitiallyCenteredRef.current &&
       locationState.status === 'granted' &&
       locationState.coords &&
-      mapInstance.current
+      mapInstance.current &&
+      mapReady
     ) {
       try {
         hasInitiallyCenteredRef.current = true;
@@ -284,12 +321,13 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         console.warn('Center flyTo error:', err);
       }
     }
-  }, [locationState.status, locationState.coords]);
+  }, [locationState.status, locationState.coords, mapReady]);
 
   // 5. Update user and place markers
   useEffect(() => {
+    const maplibregl = (window as any).maplibregl;
     const map = mapInstance.current;
-    if (!map) return;
+    if (!map || !mapReady || !maplibregl) return;
 
     markersRef.current.forEach((m) => {
       try { m.remove(); } catch {}
@@ -377,7 +415,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
       markersRef.current.push(marker);
     });
-  }, [places, locationState.coords]);
+  }, [places, locationState.coords, mapReady]);
 
   const handleSaveTrail = async (trailId: string) => {
     if (!user) { onRequireAuth?.(); return; }
@@ -537,7 +575,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
       {/* MapLibre Canvas Container */}
       <div className={`relative rounded-3xl overflow-hidden border border-neutral-800 bg-neutral-900 shadow-2xl ${isFullScreen ? 'h-[70vh]' : 'h-[380px]'}`}>
-        <div ref={mapContainer} className="absolute inset-0 w-full h-full" style={{ minHeight: '380px' }} />
+        <div ref={mapContainer} className="absolute inset-0 w-full h-full min-h-[380px]" style={{ minHeight: '380px' }} />
 
         {/* Radar concentric ring overlay */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden">
@@ -607,8 +645,8 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                 const appCheckinsCount = typeof place.checkins_count === 'number' && place.checkins_count > 0 ? place.checkins_count : undefined;
                 const dynamicMatch = computeAiVibeMatch(place, user);
                 const matchScore = place.ai_match_score ?? dynamicMatch.score;
-                const promo = activePromos.find(p => p.place_id === place.id && p.is_active && p.remaining_pool > 0);
-                const isPromoted = Boolean(place.is_promoted || (promo && promo.remaining_pool > 0));
+                const promo = activePromos.find(p => p.place_id === place.id && p.status === 'active' && p.remaining_vq_pool > 0);
+                const isPromoted = Boolean(place.is_promoted || (promo && promo.remaining_vq_pool > 0));
                 const vqReward = promo ? promo.reward_per_checkin : place.vq_reward;
 
                 return (
@@ -952,6 +990,18 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           onToast={showToast}
           onRequireSignIn={() => onRequireAuth?.()}
         />
+      )}
+
+      {guardianFilter === 'local' && (
+        <button
+          type="button"
+          onClick={() => openGuardianRegistration('local')}
+          className="w-full rounded-2xl border border-amber-500/50 bg-amber-500/15 px-4 py-3 text-xs font-black text-amber-200 transition hover:bg-amber-500/25 flex items-center justify-center gap-2"
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          <span>{guardians.some(guardian => guardian.id === user?.id && guardian.type === 'local')
+            ? 'Renew Local Legend' : 'Create Local Legend'}</span>
+        </button>
       )}
 
       {isSelfieModalOpen && (

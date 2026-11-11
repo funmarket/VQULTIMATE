@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { getCurrentUserProfile } from '../d01_auth';
 import type { VibeGuardian } from '../d07_trails/types';
 

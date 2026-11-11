@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { ConnectionPull, ConfirmedVibe, PullActionResult } from './types';
 
 export async function sendConnectionPull(

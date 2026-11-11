@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { HandshakeRecord, HandshakeStatus } from './types';
 
 const LOCAL_HANDSHAKES_KEY = 'vq_handshakes_store';

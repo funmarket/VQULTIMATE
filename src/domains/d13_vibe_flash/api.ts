@@ -1,327 +1,337 @@
-/**
- * Vibe Flash Domain API
- * Manages fetching, creating, and participating in Vibe Flash events and bridging active meetups (<= 60m).
- */
-
 import { supabase } from '../../lib/supabase';
-import { VibeFlashItem, CreateVibeFlashPayload } from './types';
-import { fetchAllMeetups } from '../d12_meetups/api';
-import { calculateHaversineMeters } from '../d03_vibe_orbit/presenceVerifier';
+import { VibeFlashEvent, CreateVibeFlashInput, VibeFlashCategory } from './types';
+import { fetchAllMeetups, toggleMeetupRsvp } from '../d12_meetups';
 
-const FLASH_CACHE_KEY = 'vq_vibe_flashes_cache';
-const FLASH_EVENT = 'vq:vibe_flash_updated';
+function mapRowToVibeFlash(row: any): VibeFlashEvent {
+  const photo = row.photo_url || row.photoUrl || undefined;
+  const placeName = row.place_name || row.venue_name || 'Secret Spot';
+  const cat = (row.category || row.vibe_type || 'Secret Pop-up') as VibeFlashCategory;
+  const rawHandle = row.creator_handle || row.creator_name || 'VibeInsider';
+  const cleanName = String(rawHandle).replace(/^@/, '');
 
-function getLocalFlashes(): VibeFlashItem[] {
-  if (typeof window === 'undefined') return [];
+  return {
+    id: row.id,
+    source: 'flash',
+    kind: 'vibe_flash',
+    place_id: row.place_id || undefined,
+    place_name: placeName,
+    venue_name: placeName,
+    address: row.address || placeName,
+    title: row.title,
+    description: row.description || '',
+    category: cat,
+    vibe_type: cat,
+    creator_id: row.creator_id,
+    creator_handle: `@${cleanName}`,
+    creator_name: cleanName,
+    creator_avatar: row.creator_avatar || '⚡',
+    lat: Number(row.lat || 36.8065),
+    lng: Number(row.lng || 10.1815),
+    starts_at: row.starts_at || row.created_at || new Date().toISOString(),
+    expires_at: row.expires_at || new Date(Date.now() + 2 * 3600 * 1000).toISOString(),
+    vq_bounty: Number(row.vq_bounty || 25),
+    entry_type: row.entry_type || 'Free',
+    entry_price_tnd: row.entry_price_tnd || undefined,
+    max_capacity: Number(row.max_capacity || 20),
+    interested_ids: Array.isArray(row.interested_ids) ? row.interested_ids : [],
+    going_ids: Array.isArray(row.going_ids) ? row.going_ids : [],
+    claimed_ids: Array.isArray(row.claimed_ids) ? row.claimed_ids : [],
+    photo_url: photo,
+    photoUrl: photo,
+    photos: photo ? [photo] : [],
+    created_at: row.created_at || new Date().toISOString(),
+  };
+}
+
+function emitFlashesUpdated() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('vibequest:flashes-updated'));
+  }
+}
+
+export async function fetchRawVibeFlashes(): Promise<VibeFlashEvent[]> {
   try {
-    const raw = localStorage.getItem(FLASH_CACHE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    const nowIso = new Date().toISOString();
+    const { data, error } = await supabase
+      .from('vibe_flashes')
+      .select('*')
+      .gt('expires_at', nowIso)
+      .order('starts_at', { ascending: true });
+
+    if (error || !data) return [];
+    return data.map(mapRowToVibeFlash);
   } catch {
     return [];
   }
 }
 
-function saveLocalFlashes(list: VibeFlashItem[]): void {
-  if (typeof window === 'undefined') return;
+/**
+ * Fetch active Vibe Flashes + any Venue Meetup starting within <= 60 minutes or LIVE NOW
+ */
+export async function fetchActiveVibeFlashes(
+  _coords?: { lat: number; lng: number }
+): Promise<VibeFlashEvent[]> {
+  const [flashes, meetups] = await Promise.all([
+    fetchRawVibeFlashes(),
+    fetchAllMeetups(),
+  ]);
+
+  const nowMs = Date.now();
+  const sixtyMinsFromNowMs = nowMs + 60 * 60 * 1000;
+  const twoHoursAgoMs = nowMs - 2 * 60 * 60 * 1000;
+
+  const urgentMeetups: VibeFlashEvent[] = meetups
+    .filter((m) => {
+      const startMs = new Date(m.starts_at).getTime();
+      return startMs <= sixtyMinsFromNowMs && startMs >= twoHoursAgoMs;
+    })
+    .map((m) => {
+      const startMs = new Date(m.starts_at).getTime();
+      const expiresAt = new Date(startMs + 2 * 3600 * 1000).toISOString();
+      const photo = m.photo_url || m.photoUrl;
+      const cleanName = m.creator_handle.replace(/^@/, '');
+      return {
+        id: `meetup_${m.id}`,
+        source: 'meetup',
+        kind: 'meetup_flash',
+        place_id: m.place_id,
+        place_name: m.place_name,
+        venue_name: m.place_name,
+        address: m.place_address || m.place_name,
+        title: m.title,
+        description: m.description,
+        category: 'Meetup',
+        vibe_type: 'Meetup',
+        creator_id: m.creator_id,
+        creator_handle: m.creator_handle,
+        creator_name: cleanName,
+        creator_avatar: m.creator_avatar || '👥',
+        lat: 36.8065,
+        lng: 10.1815,
+        starts_at: m.starts_at,
+        expires_at: expiresAt,
+        vq_bounty: 30,
+        entry_type: 'Free',
+        max_capacity: m.max_attendees || 12,
+        interested_ids: [],
+        going_ids: m.attendee_ids,
+        claimed_ids: [],
+        photo_url: photo,
+        photoUrl: photo,
+        photos: photo ? [photo] : [],
+        created_at: m.created_at,
+      };
+    });
+
+  return [...flashes, ...urgentMeetups].sort(
+    (a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime()
+  );
+}
+
+export async function createVibeFlash(
+  input: CreateVibeFlashInput
+): Promise<{ success: boolean; flash?: VibeFlashEvent; error?: string }> {
   try {
-    localStorage.setItem(FLASH_CACHE_KEY, JSON.stringify(list));
-    window.dispatchEvent(new CustomEvent(FLASH_EVENT));
-  } catch (err) {
-    console.warn('Failed to save vibe flashes to cache:', err);
+    let resolvedPhotoUrl = input.photoUrl || input.photo_url || input.photos?.[0];
+
+    if (input.photoFile) {
+      const ext = (input.photoFile.name.split('.').pop() || 'jpg').replace(/[^a-zA-Z0-9]/g, '');
+      const path = `vibe_flashes/${input.creatorId}_${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from('vibe-media')
+        .upload(path, input.photoFile, { cacheControl: '3600', upsert: true });
+      if (!uploadErr) {
+        const { data: pub } = supabase.storage.from('vibe-media').getPublicUrl(path);
+        resolvedPhotoUrl = pub?.publicUrl;
+      }
+    } else if (resolvedPhotoUrl && resolvedPhotoUrl.startsWith('data:image/')) {
+      try {
+        const res = await fetch(resolvedPhotoUrl);
+        const blob = await res.blob();
+        const path = `vibe_flashes/${input.creatorId}_${Date.now()}.jpg`;
+        const { error: uploadErr } = await supabase.storage
+          .from('vibe-media')
+          .upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: true });
+        if (!uploadErr) {
+          const { data: pub } = supabase.storage.from('vibe-media').getPublicUrl(path);
+          if (pub?.publicUrl) resolvedPhotoUrl = pub.publicUrl;
+        }
+      } catch {
+        // Keep data URL if storage upload fails
+      }
+    }
+
+    const rawHandle = input.creatorHandle || input.creatorName || 'VibeInsider';
+    const cleanHandle = rawHandle.startsWith('@') ? rawHandle : `@${rawHandle}`;
+    const placeName = (input.placeName || input.venueName || 'Secret Underground Loft').trim();
+    const category = input.category || input.vibeType || 'Secret Pop-up';
+    const startsAtIso = input.startsAt || new Date().toISOString();
+    const durationMins = input.durationMinutes || 120;
+    const expiresAtIso =
+      input.expiresAt ||
+      new Date(new Date(startsAtIso).getTime() + durationMins * 60000).toISOString();
+
+    const payload = {
+      place_id: input.placeId || null,
+      place_name: placeName,
+      title: input.title.trim(),
+      description: input.description.trim(),
+      category,
+      creator_id: input.creatorId,
+      creator_handle: cleanHandle,
+      creator_avatar: input.creatorAvatar || '⚡',
+      lat: input.lat,
+      lng: input.lng,
+      starts_at: startsAtIso,
+      expires_at: expiresAtIso,
+      vq_bounty: input.vqBounty || input.vqHuntPool || 25,
+      interested_ids: [],
+      going_ids: [input.creatorId],
+      claimed_ids: [],
+      photo_url: resolvedPhotoUrl || null,
+    };
+
+    const { data, error } = await supabase
+      .from('vibe_flashes')
+      .insert(payload)
+      .select('*')
+      .single();
+
+    if (error || !data) {
+      return { success: false, error: error?.message || 'Failed to publish Vibe Flash' };
+    }
+
+    const created = mapRowToVibeFlash({
+      ...data,
+      address: input.address || placeName,
+      entry_type: input.entryType || 'Free',
+      entry_price_tnd: input.entryPriceTnd,
+      max_capacity: input.maxCapacity || 20,
+    });
+    emitFlashesUpdated();
+    return { success: true, flash: created };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Unexpected error creating Vibe Flash' };
+  }
+}
+
+export const createVibeFlashEvent = createVibeFlash;
+
+export async function toggleVibeFlashRsvp(
+  flashId: string,
+  userId: string,
+  mode: 'interested' | 'going' = 'going',
+  userHandle = '@VibeExplorer'
+): Promise<{
+  success: boolean;
+  isInterested: boolean;
+  isGoing: boolean;
+  interestedCount: number;
+  goingCount: number;
+  error?: string;
+}> {
+  try {
+    if (flashId.startsWith('meetup_')) {
+      const rawMeetupId = flashId.replace(/^meetup_/, '');
+      const res = await toggleMeetupRsvp(rawMeetupId, userId, userHandle);
+      emitFlashesUpdated();
+      return {
+        success: res.success,
+        isInterested: false,
+        isGoing: res.isAttending,
+        interestedCount: 0,
+        goingCount: res.attendeeCount,
+        error: res.error,
+      };
+    }
+
+    const { data, error } = await supabase.rpc('rpc_toggle_vibe_flash_rsvp', {
+      p_flash_id: flashId,
+      p_mode: mode,
+    });
+
+    if (error) {
+      return {
+        success: false,
+        isInterested: false,
+        isGoing: false,
+        interestedCount: 0,
+        goingCount: 0,
+        error: error.message,
+      };
+    }
+
+    emitFlashesUpdated();
+    return {
+      success: true,
+      isInterested: mode === 'interested' && data?.mode === 'interested',
+      isGoing: mode === 'going' && data?.mode === 'going',
+      interestedCount: Number(data?.interested_count || 0),
+      goingCount: Number(data?.going_count || 0),
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      isInterested: false,
+      isGoing: false,
+      interestedCount: 0,
+      goingCount: 0,
+      error: err?.message,
+    };
+  }
+}
+
+export async function toggleFlashInterested(flashId: string, userId: string) {
+  return toggleVibeFlashRsvp(flashId, userId, 'interested');
+}
+
+export async function toggleFlashGoing(flashId: string, userId: string, userHandle?: string) {
+  return toggleVibeFlashRsvp(flashId, userId, 'going', userHandle);
+}
+
+export async function claimVibeFlashHunt(
+  flashId: string,
+  distanceMeters: number
+): Promise<{ success: boolean; vqEarned: number; error?: string }> {
+  try {
+    const { data, error } = await supabase.rpc('rpc_claim_vibe_flash_bounty', {
+      p_flash_id: flashId.replace(/^meetup_/, ''),
+      p_distance_meters: Math.round(distanceMeters),
+    });
+
+    if (error) {
+      return { success: false, vqEarned: 0, error: error.message };
+    }
+
+    emitFlashesUpdated();
+    return {
+      success: true,
+      vqEarned: Number(data?.vq_rewarded || 25),
+    };
+  } catch (err: any) {
+    return { success: false, vqEarned: 0, error: err?.message };
   }
 }
 
 export function subscribeToVibeFlashes(callback: () => void): () => void {
-  if (typeof window === 'undefined') return () => {};
   const handler = () => callback();
-  window.addEventListener(FLASH_EVENT, handler);
-  return () => window.removeEventListener(FLASH_EVENT, handler);
-}
-
-/**
- * Fetches active vibe flashes from Supabase and local cache (read-only, no event dispatch).
- */
-export async function fetchRawVibeFlashes(): Promise<VibeFlashItem[]> {
-  const localList = getLocalFlashes();
-
-  try {
-    const { data, error } = await supabase
-      .from('vibe_flash_events')
-      .select('*')
-      .gt('expires_at', new Date().toISOString())
-      .order('starts_at', { ascending: true });
-
-    if (!error && Array.isArray(data)) {
-      const dbList: VibeFlashItem[] = data.map((row: any) => ({
-        id: String(row.id),
-        kind: 'secret_flash',
-        title: String(row.title || ''),
-        description: String(row.description || ''),
-        vibe_type: row.vibe_type || 'Secret Pop-up',
-        place_id: row.place_id || undefined,
-        venue_name: String(row.venue_name || ''),
-        address: String(row.address || ''),
-        lat: Number(row.lat || 36.8065),
-        lng: Number(row.lng || 10.1815),
-        creator_id: String(row.creator_id || ''),
-        creator_name: String(row.creator_name || 'Explorer'),
-        creator_avatar: row.creator_avatar || undefined,
-        starts_at: row.starts_at || new Date().toISOString(),
-        expires_at: row.expires_at || new Date(Date.now() + 3600000).toISOString(),
-        entry_type: row.entry_type || 'Free',
-        entry_price_tnd: row.entry_price_tnd || undefined,
-        entry_rules: row.entry_rules || undefined,
-        parking_transport_notes: row.parking_transport_notes || undefined,
-        photo_url: row.photo_url || undefined,
-        photos: row.photo_url ? [row.photo_url] : (Array.isArray(row.photos) ? row.photos : []),
-        vq_hunt_pool: Number(row.vq_hunt_pool || 0),
-        vq_reward_per_hunter: Number(row.vq_reward_per_hunter || 500),
-        max_capacity: Number(row.max_capacity || 20),
-        interested_ids: Array.isArray(row.interested_ids) ? row.interested_ids : [],
-        going_ids: Array.isArray(row.going_ids) ? row.going_ids : [],
-        verified_arrived_ids: Array.isArray(row.verified_arrived_ids) ? row.verified_arrived_ids : [],
-        claimed_reward_ids: Array.isArray(row.claimed_reward_ids) ? row.claimed_reward_ids : [],
-        created_at: row.created_at || new Date().toISOString()
-      }));
-
-      const map = new Map<string, VibeFlashItem>();
-      [...dbList, ...localList].forEach(f => map.set(f.id, f));
-      const merged = Array.from(map.values()).filter(f => new Date(f.expires_at).getTime() > Date.now());
-      // Silent save without dispatching window event on read
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem(FLASH_CACHE_KEY, JSON.stringify(merged));
-        } catch {}
-      }
-      return merged;
-    }
-  } catch (err) {
-    console.warn('Supabase fetchRawVibeFlashes fallback to local cache:', err);
+  if (typeof window !== 'undefined') {
+    window.addEventListener('vibequest:flashes-updated', handler);
+    window.addEventListener('vibequest:meetups-updated', handler);
   }
 
-  return localList.filter(f => new Date(f.expires_at).getTime() > Date.now());
-}
-
-/**
- * Automatically bridges active Meetups starting within <= 60 minutes or live now
- * into unified VibeFlashItem items alongside standalone Secret Flashes.
- */
-export async function fetchActiveVibeFlashes(userCoords?: { lat: number; lng: number }): Promise<VibeFlashItem[]> {
-  const [flashes, meetups] = await Promise.all([
-    fetchRawVibeFlashes(),
-    fetchAllMeetups()
-  ]);
-
-  const now = Date.now();
-  const sixtyMinutesMs = 60 * 60 * 1000;
-
-  const meetupFlashes: VibeFlashItem[] = meetups
-    .filter(m => {
-      const startsTime = new Date(m.scheduled_at).getTime();
-      const expiresTime = startsTime + 2 * 60 * 60 * 1000;
-      const diffToStart = startsTime - now;
-      return diffToStart <= sixtyMinutesMs && expiresTime > now;
+  const channel = supabase
+    .channel('public:vibe_flashes_realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'vibe_flashes' }, () => {
+      callback();
     })
-    .map(m => ({
-      id: `meetup-flash-${m.id}`,
-      kind: 'meetup_flash' as const,
-      title: m.title,
-      description: m.description || `Live pop-up gathering at ${m.place_title}`,
-      vibe_type: 'Flash Meetup' as const,
-      place_id: m.place_id,
-      venue_name: m.place_title,
-      address: m.place_address || 'Local Discovery Spot',
-      lat: 36.8065,
-      lng: 10.1815,
-      creator_id: m.host_user_id,
-      creator_name: m.host_name,
-      creator_avatar: m.host_avatar,
-      starts_at: m.scheduled_at,
-      expires_at: new Date(new Date(m.scheduled_at).getTime() + 7200000).toISOString(),
-      entry_type: 'Free' as const,
-      photo_url: m.photo_url || undefined,
-      photos: m.photo_url ? [m.photo_url] : [],
-      vq_hunt_pool: 0,
-      vq_reward_per_hunter: 500,
-      max_capacity: 10,
-      interested_ids: [],
-      going_ids: m.attendee_ids,
-      verified_arrived_ids: [],
-      claimed_reward_ids: [],
-      created_at: m.created_at
-    }));
+    .subscribe();
 
-  const combined = [...flashes, ...meetupFlashes];
-
-  if (userCoords) {
-    combined.forEach(item => {
-      const dist = calculateHaversineMeters(userCoords.lat, userCoords.lng, item.lat, item.lng);
-      item.distance_meters = dist;
-      item.distance_km = Number((dist / 1000).toFixed(2));
-    });
-  }
-
-  combined.sort((a, b) => {
-    const aStart = new Date(a.starts_at).getTime();
-    const bStart = new Date(b.starts_at).getTime();
-    const aLive = aStart <= now ? 1 : 0;
-    const bLive = bStart <= now ? 1 : 0;
-    if (aLive !== bLive) return bLive - aLive;
-    if (aStart !== bStart) return aStart - bStart;
-    return (a.distance_meters || 0) - (b.distance_meters || 0);
-  });
-
-  return combined;
-}
-
-/**
- * Creates and publishes a new Vibe Flash Secret Event.
- */
-export async function createVibeFlash(payload: CreateVibeFlashPayload): Promise<{
-  success: boolean;
-  flash?: VibeFlashItem;
-  error?: string;
-}> {
-  const {
-    title,
-    description,
-    vibeType,
-    placeId,
-    venueName,
-    address,
-    lat,
-    lng,
-    creatorId,
-    creatorName,
-    creatorAvatar,
-    startsAt,
-    durationMinutes,
-    entryType,
-    entryPriceTnd,
-    entryRules,
-    parkingTransportNotes,
-    photos,
-    photo_url,
-    vqHuntPool = 0,
-    maxCapacity = 20
-  } = payload;
-
-  if (!title.trim()) {
-    return { success: false, error: 'Please enter a title for your Vibe Flash.' };
-  }
-
-  const startsTime = new Date(startsAt).getTime();
-  const expiresTime = startsTime + durationMinutes * 60 * 1000;
-
-  const flashId = `flash-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-  const newFlash: VibeFlashItem = {
-    id: flashId,
-    kind: 'secret_flash',
-    title: title.trim(),
-    description: description?.trim() || '',
-    vibe_type: vibeType,
-    place_id: placeId,
-    venue_name: venueName,
-    address,
-    lat,
-    lng,
-    creator_id: creatorId,
-    creator_name: creatorName,
-    creator_avatar: creatorAvatar,
-    starts_at: startsAt,
-    expires_at: new Date(expiresTime).toISOString(),
-    entry_type: entryType,
-    entry_price_tnd: entryPriceTnd,
-    entry_rules: entryRules,
-    parking_transport_notes: parkingTransportNotes,
-    photos: photos || (photo_url ? [photo_url] : []),
-    photo_url: photo_url || undefined,
-    vq_hunt_pool: vqHuntPool,
-    vq_reward_per_hunter: 500,
-    max_capacity: maxCapacity,
-    interested_ids: [],
-    going_ids: [creatorId],
-    verified_arrived_ids: [],
-    claimed_reward_ids: [],
-    created_at: new Date().toISOString()
-  };
-
-  const list = getLocalFlashes();
-  list.unshift(newFlash);
-  saveLocalFlashes(list);
-
-  try {
-    await supabase.from('vibe_flash_events').insert([{
-      id: flashId,
-      title: newFlash.title,
-      description: newFlash.description,
-      vibe_type: newFlash.vibe_type,
-      place_id: newFlash.place_id,
-      venue_name: newFlash.venue_name,
-      address: newFlash.address,
-      lat: newFlash.lat,
-      lng: newFlash.lng,
-      creator_id: newFlash.creator_id,
-      creator_name: newFlash.creator_name,
-      creator_avatar: newFlash.creator_avatar,
-      starts_at: newFlash.starts_at,
-      expires_at: newFlash.expires_at,
-      entry_type: newFlash.entry_type,
-      entry_price_tnd: newFlash.entry_price_tnd,
-      entry_rules: newFlash.entry_rules,
-      parking_transport_notes: newFlash.parking_transport_notes,
-      photos: newFlash.photos,
-      photo_url: newFlash.photo_url,
-      vq_hunt_pool: newFlash.vq_hunt_pool,
-      max_capacity: newFlash.max_capacity,
-      going_ids: newFlash.going_ids
-    }]);
-  } catch (err) {
-    console.warn('Supabase vibe_flash_events insert fallback to local:', err);
-  }
-
-  return { success: true, flash: newFlash };
-}
-
-export async function toggleFlashInterested(flashId: string, userId: string): Promise<{ success: boolean; isInterested: boolean }> {
-  const list = getLocalFlashes();
-  const flash = list.find(f => f.id === flashId);
-  if (!flash) return { success: false, isInterested: false };
-
-  const idx = flash.interested_ids.indexOf(userId);
-  let isInterested = false;
-  if (idx !== -1) {
-    flash.interested_ids.splice(idx, 1);
-  } else {
-    flash.interested_ids.push(userId);
-    const gIdx = flash.going_ids.indexOf(userId);
-    if (gIdx !== -1) flash.going_ids.splice(gIdx, 1);
-    isInterested = true;
-  }
-
-  saveLocalFlashes(list);
-  return { success: true, isInterested };
-}
-
-export async function toggleFlashGoing(flashId: string, userId: string): Promise<{ success: boolean; isGoing: boolean }> {
-  const list = getLocalFlashes();
-  const flash = list.find(f => f.id === flashId);
-  if (!flash) return { success: false, isGoing: false };
-
-  const idx = flash.going_ids.indexOf(userId);
-  let isGoing = false;
-  if (idx !== -1) {
-    flash.going_ids.splice(idx, 1);
-  } else {
-    if (flash.going_ids.length >= flash.max_capacity) {
-      return { success: false, isGoing: false };
+  return () => {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('vibequest:flashes-updated', handler);
+      window.removeEventListener('vibequest:meetups-updated', handler);
     }
-    flash.going_ids.push(userId);
-    const iIdx = flash.interested_ids.indexOf(userId);
-    if (iIdx !== -1) flash.interested_ids.splice(iIdx, 1);
-    isGoing = true;
-  }
-
-  saveLocalFlashes(list);
-  return { success: true, isGoing };
+    supabase.removeChannel(channel);
+  };
 }

@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import {
   VibePlace,
   VibeCategory,
@@ -6,7 +6,7 @@ import {
   UserCoordinates
 } from './types';
 
-export const DISCOVERY_RADIUS_METERS = 8000; // 8 km leisure discovery scope
+export const DISCOVERY_RADIUS_METERS = 23000; // 23 km leisure discovery scope
 
 /**
  * Calculates great-circle distance between two coordinates in meters (Haversine formula).
@@ -147,14 +147,7 @@ export function watchDeviceLocation(
 
 /**
  * Public domain API: Fetches real nearby places from the Supabase Edge Function 'nearby-places'
- * which queries the Google Places API server-side using GOOGLE_PLACES_API_KEY.
- *
- * Rules:
- * - Real data only. No mocks. No hardcoded place arrays.
- * - If Google returns nothing or fails, returns an empty array [].
- * - Uses the returned photo URL. Do not invent ratings.
- * - Preserves server's Google Relevance/Rating-first, Distance-second sort order.
- * - In-app checkins_count and confirmations_count are never aliased from Google reviews_count.
+ * and enriches each place from Supabase tables (place_promotions, place_validations, place_checkins, place_meetups).
  */
 export async function fetchNearbyPlaces(
   coords: UserCoordinates | null,
@@ -162,7 +155,6 @@ export async function fetchNearbyPlaces(
 ): Promise<VibePlace[]> {
   let targetCoords = coords;
 
-  // If coordinates are not provided, attempt to acquire real device GPS once
   if (!targetCoords || isNaN(targetCoords.lat) || isNaN(targetCoords.lng)) {
     const locState = await getDeviceLocation();
     if (locState.status === 'granted' && locState.coords) {
@@ -170,7 +162,6 @@ export async function fetchNearbyPlaces(
     }
   }
 
-  // Without coordinates, do not fabricate locations: return empty array
   if (!targetCoords || isNaN(targetCoords.lat) || isNaN(targetCoords.lng)) {
     return [];
   }
@@ -193,20 +184,85 @@ export async function fetchNearbyPlaces(
       return [];
     }
 
-    // Preserve the server's Google Relevance/Rating-first, Distance-second sort order.
-    // Keep in-app checkins_count / confirmations_count strictly separate from Google reviews_count.
+    const placeIds: string[] = data.places.map((p: any) => p.id).filter(Boolean);
+
+    const promoMap: Record<string, { reward: number; pool: number }> = {};
+    const valMap: Record<string, { latestConfidence: number; count: number }> = {};
+    const checkinCounts: Record<string, number> = {};
+
+    if (placeIds.length > 0) {
+      const [promosRes, valsRes, checkinsRes] = await Promise.all([
+        supabase
+          .from('place_promotions')
+          .select('place_id, remaining_vq_pool, reward_per_checkin, status')
+          .in('place_id', placeIds)
+          .eq('status', 'active'),
+        supabase
+          .from('place_validations')
+          .select('place_id, resulting_confidence, confidence_score, created_at')
+          .in('place_id', placeIds)
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('place_checkins')
+          .select('place_id')
+          .in('place_id', placeIds)
+      ]);
+
+      if (!promosRes.error && Array.isArray(promosRes.data)) {
+        promosRes.data.forEach((row: any) => {
+          const pool = Number(row.remaining_vq_pool || 0);
+          const reward = Number(row.reward_per_checkin || 500);
+          if (row.place_id && pool >= reward) {
+            promoMap[row.place_id] = { reward, pool };
+          }
+        });
+      }
+
+      if (!valsRes.error && Array.isArray(valsRes.data)) {
+        // Because rows are ordered by created_at ASC, the last row seen per place_id holds the latest cumulative resulting_confidence
+        valsRes.data.forEach((row: any) => {
+          const pid = row.place_id;
+          const conf = Number(row.resulting_confidence ?? row.confidence_score ?? 80);
+          if (pid && !isNaN(conf)) {
+            if (!valMap[pid]) {
+              valMap[pid] = { latestConfidence: conf, count: 0 };
+            }
+            valMap[pid].latestConfidence = conf;
+            valMap[pid].count += 1;
+          }
+        });
+      }
+
+      if (!checkinsRes.error && Array.isArray(checkinsRes.data)) {
+        checkinsRes.data.forEach((row: any) => {
+          if (row.place_id) {
+            checkinCounts[row.place_id] = (checkinCounts[row.place_id] || 0) + 1;
+          }
+        });
+      }
+    }
+
     const places: VibePlace[] = data.places.map((p: any) => {
       const dist =
         typeof p.distance_meters === 'number'
           ? p.distance_meters
           : calculateDistanceMeters(targetCoords!.lat, targetCoords!.lng, p.lat, p.lng);
+
+      const promo = promoMap[p.id];
+      const valInfo = valMap[p.id];
+      const chkCount = checkinCounts[p.id] || 0;
+
       return {
         ...p,
         distance_meters: dist,
         distance_km: Number((dist / 1000).toFixed(2)),
         reviews_count: typeof p.reviews_count === 'number' ? p.reviews_count : undefined,
-        checkins_count: typeof p.checkins_count === 'number' ? p.checkins_count : undefined,
-        confirmations_count: typeof p.confirmations_count === 'number' ? p.confirmations_count : undefined
+        is_promoted: Boolean(promo),
+        vq_reward: promo ? promo.reward : undefined,
+        promotion_pool: promo ? promo.pool : undefined,
+        vibe_confidence: valInfo && valInfo.count > 0 ? Math.round(valInfo.latestConfidence) : undefined,
+        confirmations_count: valInfo ? valInfo.count : 0,
+        checkins_count: chkCount
       };
     });
 
@@ -217,14 +273,8 @@ export async function fetchNearbyPlaces(
   }
 }
 
-/**
- * Backward-compatible alias for fetchNearbyPlaces.
- */
 export const fetchNearbyVibePlaces = fetchNearbyPlaces;
 
-/**
- * Backward-compatible function querying real nearby places.
- */
 export async function fetchVibePlaces(category?: VibeCategory): Promise<VibePlace[]> {
   return fetchNearbyPlaces(null, category);
 }

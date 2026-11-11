@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { UserProfile, ProfileRegistration, RegistrationResult, ProfileEdits } from './types';
 import { queuePendingProfileAvatar, uploadPendingProfileAvatar, uploadProfileAvatar } from '../../lib/profileAvatar';
 

@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { Guardian, UserProfile } from './types';
 
 /** Hydrate actual published Supabase profile records without invented values. */

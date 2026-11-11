@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { UserProfile } from '../d02_users';
 import { SocialFollowResult } from './types';
 

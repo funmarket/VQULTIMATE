@@ -1,138 +1,172 @@
-/**
- * VibeQuest Gamification Domain API (Mayor & Badges - ES-011)
- * Manages verified venue Mayorship and the 5 canonical achievement badges:
- * 1. Caffeine Fiend (3 Cozy/Café/Bakery check-ins)
- * 2. Gourmet Scout (2 Chilled/Food/Restaurant check-ins)
- * 3. Night Mayor (2 Hype/Night Owl/Bar check-ins)
- * 4. Culture Vulture (2 Quiet/Culture & Art check-ins)
- * 5. Vibe Vanguard (5 distinct verified venue check-ins)
- */
-
 import { supabase } from '../../lib/supabase';
 
-export interface VenueMayorState {
-  mayorUserId?: string;
-  mayorName?: string;
-  mayorAvatar?: string;
-  mayorCheckinsCount: number;
-  leaderboard: { userId: string; name: string; avatar?: string; checkinsCount: number }[];
+export interface MayorState {
+  mayorUserId: string | null;
+  mayorHandle: string;
+  mayorAvatar: string;
+  mayorCheckins: number;
+  currentUserCheckins: number;
+  isCurrentUserMayor: boolean;
+  checkinsNeededForMayor: number;
 }
 
-export interface VibeQuestBadgeDefinition {
+export interface VibeBadge {
   id: string;
-  title: string;
+  name: string;
   icon: string;
   description: string;
-  targetCount: number;
-  currentCount: number;
-  isUnlocked: boolean;
+  unlocked: boolean;
+  progress: number;
+  target: number;
 }
 
 /**
- * Computes venue Mayorship and check-in leaderboard for a spot.
+ * Authoritative Supabase RPC query for Venue Mayor (strictly 33m-verified check-ins in last 60 days)
  */
-export async function getVenueMayorState(placeId: string): Promise<VenueMayorState> {
+export async function getVenueMayorState(
+  placeId: string,
+  placeName: string,
+  currentUserId?: string,
+  currentUserHandle?: string
+): Promise<MayorState> {
+  void placeName;
+  void currentUserHandle;
   try {
-    const { data, error } = await supabase
-      .from('place_checkins')
-      .select('*')
-      .eq('place_id', placeId);
+    const { data, error } = await supabase.rpc('rpc_get_venue_mayor_and_badges', {
+      p_place_id: placeId,
+      p_user_id: currentUserId || null,
+    });
 
-    if (!error && Array.isArray(data)) {
-      const countsMap = new Map<string, { count: number; name: string; avatar?: string }>();
-      data.forEach((row: any) => {
-        const uid = String(row.user_id || 'usr_anonymous');
-        const existing = countsMap.get(uid) || { count: 0, name: row.user_name || 'Explorer', avatar: row.user_avatar };
-        existing.count += 1;
-        countsMap.set(uid, existing);
-      });
-
-      const leaderboard = Array.from(countsMap.entries())
-        .map(([userId, info]) => ({
-          userId,
-          name: info.name,
-          avatar: info.avatar,
-          checkinsCount: info.count
-        }))
-        .sort((a, b) => b.checkinsCount - a.checkinsCount);
-
-      if (leaderboard.length === 0) {
-        return { mayorCheckinsCount: 0, leaderboard: [] };
-      }
-
-      const top = leaderboard[0];
+    if (error || !data) {
       return {
-        mayorUserId: top.userId,
-        mayorName: top.name,
-        mayorAvatar: top.avatar,
-        mayorCheckinsCount: top.checkinsCount,
-        leaderboard
+        mayorUserId: null,
+        mayorHandle: 'Unclaimed Throne',
+        mayorAvatar: '👑',
+        mayorCheckins: 0,
+        currentUserCheckins: 0,
+        isCurrentUserMayor: false,
+        checkinsNeededForMayor: 1,
       };
     }
-  } catch (err) {
-    console.warn('Error fetching venue mayor state:', err);
-  }
 
-  return { mayorCheckinsCount: 0, leaderboard: [] };
+    const mayorCheckins = Number(data.mayor_checkins || 0);
+    const currentUserCheckins = Number(data.user_place_checkins || 0);
+    const mayorUserId = data.mayor_user_id || null;
+    const isCurrentUserMayor = Boolean(currentUserId && mayorUserId === currentUserId && mayorCheckins > 0);
+    const checkinsNeededForMayor = isCurrentUserMayor
+      ? 0
+      : Math.max(1, mayorCheckins - currentUserCheckins + 1);
+
+    return {
+      mayorUserId,
+      mayorHandle: mayorUserId ? `@${data.mayor_handle || 'VibeExplorer'}` : 'Unclaimed Throne',
+      mayorAvatar: data.mayor_avatar || '👑',
+      mayorCheckins,
+      currentUserCheckins,
+      isCurrentUserMayor,
+      checkinsNeededForMayor,
+    };
+  } catch {
+    return {
+      mayorUserId: null,
+      mayorHandle: 'Unclaimed Throne',
+      mayorAvatar: '👑',
+      mayorCheckins: 0,
+      currentUserCheckins: 0,
+      isCurrentUserMayor: false,
+      checkinsNeededForMayor: 1,
+    };
+  }
 }
 
 /**
- * Computes the 5 canonical VibeQuest achievement badges for a user.
+ * Authoritative 5 canonical VibeQuest badges computed from Supabase check-in & validation history
  */
-export function getCanonicalVibeBadges(
-  categoryBreakdown: Record<string, number> = {},
-  uniquePlacesCount: number = 0
-): VibeQuestBadgeDefinition[] {
-  const foodCount = (categoryBreakdown['food'] || 0) + (categoryBreakdown['restaurant'] || 0) + (categoryBreakdown['cafe'] || 0) + (categoryBreakdown['cozy'] || 0);
-  const gourmetCount = (categoryBreakdown['food'] || 0) + (categoryBreakdown['restaurant'] || 0) + (categoryBreakdown['chilled'] || 0);
-  const nightCount = (categoryBreakdown['night'] || 0) + (categoryBreakdown['night owl'] || 0) + (categoryBreakdown['bar'] || 0) + (categoryBreakdown['hype'] || 0);
-  const cultureCount = (categoryBreakdown['culture'] || 0) + (categoryBreakdown['art'] || 0) + (categoryBreakdown['quiet'] || 0) + (categoryBreakdown['museum'] || 0);
+export async function getCanonicalVibeBadges(
+  userId?: string,
+  placeCategory?: string
+): Promise<VibeBadge[]> {
+  void placeCategory;
+  let foodCount = 0;
+  let nightCount = 0;
+  let cultureCount = 0;
+  let validationCount = 0;
+
+  if (userId) {
+    try {
+      const [{ data: checkins }, { count: valCount }] = await Promise.all([
+        supabase
+          .from('place_checkins')
+          .select('category')
+          .eq('user_id', userId)
+          .lte('distance_meters', 33),
+        supabase
+          .from('place_validations')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId),
+      ]);
+
+      for (const row of checkins || []) {
+        const cat = (row.category || '').toLowerCase();
+        if (cat.includes('food') || cat.includes('cafe') || cat.includes('coffee')) {
+          foodCount += 1;
+        } else if (cat.includes('night') || cat.includes('bar') || cat.includes('club')) {
+          nightCount += 1;
+        } else if (cat.includes('art') || cat.includes('culture') || cat.includes('museum')) {
+          cultureCount += 1;
+        }
+      }
+      validationCount = valCount || 0;
+    } catch {
+      // ignore
+    }
+  }
 
   return [
     {
       id: 'caffeine_fiend',
-      title: 'Caffeine Fiend',
+      name: 'Caffeine Fiend',
       icon: '☕',
-      description: 'Complete 3 Cozy / Café / Bakery check-ins',
-      targetCount: 3,
-      currentCount: foodCount,
-      isUnlocked: foodCount >= 3
+      description: '3+ verified 33m check-ins at specialty cafes & bakeries',
+      unlocked: foodCount >= 3,
+      progress: Math.min(3, foodCount),
+      target: 3,
     },
     {
       id: 'gourmet_scout',
-      title: 'Gourmet Scout',
+      name: 'Gourmet Scout',
       icon: '🍽️',
-      description: 'Complete 2 Chilled / Food / Restaurant check-ins',
-      targetCount: 2,
-      currentCount: gourmetCount,
-      isUnlocked: gourmetCount >= 2
+      description: '5+ verified 33m check-ins at culinary & dining hotspots',
+      unlocked: foodCount >= 5,
+      progress: Math.min(5, foodCount),
+      target: 5,
     },
     {
       id: 'night_mayor',
-      title: 'Night Mayor',
-      icon: '🌙',
-      description: 'Complete 2 Nightlife / Bar / Hype check-ins',
-      targetCount: 2,
-      currentCount: nightCount,
-      isUnlocked: nightCount >= 2
+      name: 'Night Mayor',
+      icon: '🦉',
+      description: '3+ verified 33m check-ins at late-night lounges & rooftops',
+      unlocked: nightCount >= 3,
+      progress: Math.min(3, nightCount),
+      target: 3,
     },
     {
       id: 'culture_vulture',
-      title: 'Culture Vulture',
-      icon: '🏛️',
-      description: 'Complete 2 Culture / Art / Quiet check-ins',
-      targetCount: 2,
-      currentCount: cultureCount,
-      isUnlocked: cultureCount >= 2
+      name: 'Culture Vulture',
+      icon: '🎨',
+      description: '3+ verified 33m check-ins at art galleries & cultural landmarks',
+      unlocked: cultureCount >= 3,
+      progress: Math.min(3, cultureCount),
+      target: 3,
     },
     {
       id: 'vibe_vanguard',
-      title: 'Vibe Vanguard',
-      icon: '🛡️',
-      description: 'Check in at 5 distinct verified venues',
-      targetCount: 5,
-      currentCount: uniquePlacesCount,
-      isUnlocked: uniquePlacesCount >= 5
-    }
+      name: 'Vibe Vanguard',
+      icon: '⚡',
+      description: '3+ live Vibe Validations or LiveCheck receipts submitted',
+      unlocked: validationCount >= 3,
+      progress: Math.min(3, validationCount),
+      target: 3,
+    },
   ];
 }
