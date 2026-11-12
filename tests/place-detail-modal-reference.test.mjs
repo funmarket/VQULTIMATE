@@ -86,7 +86,7 @@ test('retiring paid venue API preserves leisure-classification and D03 contracts
   assert.match(d03Content, /calculateDistanceMeters/);
 
   const d03IndexContent = readFileSync(resolve('src/domains/d03_vibe_orbit/index.ts'), 'utf8');
-  assert.match(d03IndexContent, /export \\* from '\\.\\/api'/);
+  assert.ok(d03IndexContent.includes("export * from './api'"), 'Preserve public domain export');
 });
 
 test('D04 fetchCityPulses prioritizes real user vibes, then leisure places, without fake baseline fallback', () => {
