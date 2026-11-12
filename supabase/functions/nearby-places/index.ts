@@ -6,14 +6,6 @@
 
 type VibeCategory = 'Food' | 'Art' | 'Spots' | 'Culture' | 'Night Owl';
 
-const CATEGORY_QUERY_MAP: Record<string, string[]> = {
-  All: ['restaurant cafe salon de the', 'lounge bar pub rooftop', 'musee galerie parc attraction'],
-  Food: ['restaurant bistro pizzeria', 'cafe salon de the patisserie'],
-  'Night Owl': ['lounge bar pub', 'night club rooftop'],
-  Art: ['art gallery galerie d art', 'centre d art exposition'],
-  Culture: ['museum musee cite de la culture', 'theatre cinema centre culturel', 'medina palais monument'],
-  Spots: ['tourist attraction viewpoint belvedere', 'parc park jardin plage marina', 'monument site archeologique']
-};
 
 const ALLOWED_LEISURE_TYPES = new Set([
   'restaurant',
@@ -266,78 +258,16 @@ function calculateHaversineMeters(lat1: number, lon1: number, lat2: number, lon2
   return Math.round(R * c);
 }
 
-async function queryGooglePlacesTextSearch(
-  lat: number,
-  lng: number,
-  radius: number,
-  query: string,
-  apiKey: string
-): Promise<{ status: string; results: any[]; error_message?: string }> {
-  const url = new URL('https://maps.googleapis.com/maps/api/place/textsearch/json');
-  url.searchParams.set('query', query);
-  url.searchParams.set('location', `${lat},${lng}`);
-  url.searchParams.set('radius', String(radius));
-  url.searchParams.set('key', apiKey);
-
-  try {
-    const res = await fetch(url.toString());
-    if (!res.ok) return { status: `HTTP_${res.status}`, results: [] };
-    const data = await res.json();
-    return {
-      status: data.status || 'UNKNOWN',
-      results: Array.isArray(data.results) ? data.results : [],
-      error_message: data.error_message
-    };
-  } catch (err: any) {
-    return { status: 'FETCH_ERROR', results: [], error_message: err?.message };
-  }
-}
-
 Deno.serve(async (request: Request) => {
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cors });
   }
 
-  const apiKey = Deno.env.get('GOOGLE_PLACES_API_KEY');
-  const reqUrl = new URL(request.url);
-
   if (request.method === 'GET') {
-    const photoReference = reqUrl.searchParams.get('photo_reference');
-    if (!photoReference) {
-      return new Response(JSON.stringify({ error: 'Missing photo_reference' }), {
-        status: 400,
-        headers: { ...cors, 'Content-Type': 'application/json' }
-      });
-    }
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'GOOGLE_PLACES_API_KEY is not configured in Supabase secrets.' }), {
-        status: 500,
-        headers: { ...cors, 'Content-Type': 'application/json' }
-      });
-    }
-    try {
-      const maxwidth = reqUrl.searchParams.get('maxwidth') || '800';
-      const googlePhotoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${encodeURIComponent(maxwidth)}&photoreference=${encodeURIComponent(photoReference)}&key=${apiKey}`;
-      const photoRes = await fetch(googlePhotoUrl, { redirect: 'follow' });
-      if (!photoRes.ok) {
-        return new Response(null, { status: photoRes.status, headers: cors });
-      }
-      const contentType = photoRes.headers.get('content-type') || 'image/jpeg';
-      const imageBuffer = await photoRes.arrayBuffer();
-      return new Response(imageBuffer, {
-        status: 200,
-        headers: {
-          ...cors,
-          'Content-Type': contentType,
-          'Cache-Control': 'public, max-age=86400, s-maxage=86400'
-        }
-      });
-    } catch {
-      return new Response(JSON.stringify({ error: 'Failed to retrieve photo.' }), {
-        status: 500,
-        headers: { ...cors, 'Content-Type': 'application/json' }
-      });
-    }
+    return new Response(
+      JSON.stringify({ error: 'The former venue photo proxy has been retired.', code: 'PHOTO_PROXY_RETIRED' }),
+      { status: 410, headers: { ...cors, 'Content-Type': 'application/json' } }
+    );
   }
 
   if (request.method !== 'POST') {
@@ -363,125 +293,16 @@ Deno.serve(async (request: Request) => {
       });
     }
 
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({
-          error: 'GOOGLE_PLACES_API_KEY is not configured in Supabase secrets.',
-          places: []
-        }),
-        { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const searchQueries = CATEGORY_QUERY_MAP[requestedCategory] || CATEGORY_QUERY_MAP['All'];
-    const searchQuery = searchQueries.join(' | ');
-    const batch = await Promise.all(searchQueries.map((q) => queryGooglePlacesTextSearch(lat, lng, radiusMeters, q, apiKey)));
-    const googleStatus = batch.find((b) => b.status === 'OK')?.status || batch[0]?.status || 'ZERO_RESULTS';
-    const error_message = batch.find((b) => b.error_message)?.error_message;
-    const seenIds = new Set<string>();
-    const rawResults: any[] = [];
-    for (const b of batch) {
-      for (const item of b.results) {
-        if (item?.place_id && !seenIds.has(item.place_id)) {
-          seenIds.add(item.place_id);
-          rawResults.push(item);
-        }
-      }
-    }
-
-    const supabaseUrl = (Deno.env.get('SUPABASE_URL') || reqUrl.origin).replace(/\/$/, '');
-
-    const places = rawResults
-      .map((item: any, googleIndex: number) => {
-        const pLat = item.geometry?.location?.lat;
-        const pLng = item.geometry?.location?.lng;
-        if (typeof pLat !== 'number' || typeof pLng !== 'number') return null;
-
-        const distMeters = calculateHaversineMeters(lat, lng, pLat, pLng);
-        if (distMeters > maxCutoffMeters) return null;
-
-        if (!isStrictlyLeisurePlace(item, requestedCategory)) return null;
-
-        const mappedCategory = mapPlaceToCategory(item.types, item.name, requestedCategory);
-        if (!mappedCategory) return null;
-
-        const photoRef = item.photos?.[0]?.photo_reference;
-        const imageUrl =
-          photoRef
-            ? `${supabaseUrl}/functions/v1/nearby-places?photo_reference=${encodeURIComponent(photoRef)}&maxwidth=800`
-            : undefined;
-
-        const rating = typeof item.rating === 'number' ? Number(item.rating.toFixed(1)) : undefined;
-        const reviewsCount = typeof item.user_ratings_total === 'number' ? item.user_ratings_total : undefined;
-        const isLegendary = Boolean(rating !== undefined && rating >= 4.5 && (reviewsCount ?? 0) >= 40);
-
-        const priceBands = ['Free', 'TND 1–10', 'TND 10–25', 'TND 25–50', 'TND 50+'];
-        const priceBand =
-          typeof item.price_level === 'number' ? priceBands[item.price_level] : undefined;
-
-        const openNow =
-          typeof item.opening_hours?.open_now === 'boolean'
-            ? item.opening_hours.open_now
-            : undefined;
-
-        return {
-          id: item.place_id,
-          place_id: item.place_id,
-          title: item.name,
-          name: item.name,
-          types: Array.isArray(item.types) ? item.types : [],
-          category: mappedCategory,
-          description: item.formatted_address || item.vicinity || '',
-          image_url: imageUrl,
-          lat: pLat,
-          lng: pLng,
-          address: item.formatted_address || item.vicinity || '',
-          distance_meters: distMeters,
-          distance_km: Number((distMeters / 1000).toFixed(2)),
-          rating: rating,
-          reviews_count: reviewsCount,
-          checkins_count: undefined,
-          confirmations_count: undefined,
-          created_by: 'google_places',
-          is_legendary: isLegendary,
-          price_band: priceBand,
-          open_now: openNow,
-          _googleRank: googleIndex
-        };
-      })
-      .filter((p): p is NonNullable<typeof p> => p !== null);
-
-    places.sort((a, b) => {
-      const ratingA = a.rating ?? 0;
-      const ratingB = b.rating ?? 0;
-      const reviewsA = a.reviews_count ?? 0;
-      const reviewsB = b.reviews_count ?? 0;
-
-      const relevanceScoreA = ratingA * Math.log10(reviewsA + 10) - a._googleRank * 0.12;
-      const relevanceScoreB = ratingB * Math.log10(reviewsB + 10) - b._googleRank * 0.12;
-
-      if (Math.abs(relevanceScoreB - relevanceScoreA) > 0.3) {
-        return relevanceScoreB - relevanceScoreA;
-      }
-
-      return (a.distance_meters ?? 999999) - (b.distance_meters ?? 999999);
-    });
-
-    const cleanPlaces = places.map(({ _googleRank, ...rest }) => rest);
-
-    return new Response(
-      JSON.stringify({
-        endpoint: 'https://maps.googleapis.com/maps/api/place/textsearch/json',
-        google_status: googleStatus,
-        google_error: error_message || null,
-        requested_category: requestedCategory,
-        query_used: searchQuery,
-        radius_meters: radiusMeters,
-        count: cleanPlaces.length,
-        places: cleanPlaces
-      }),
-      { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } }
-    );
+    // Only paid-provider calls were removed. Preserve the existing
+    // category classification, leisure filtering, radius and distance
+    // helpers for the next venue data provider.
+    return new Response(JSON.stringify({
+      places: [],
+      error: 'Venue discovery is temporarily unavailable while an open-data provider is configured.',
+      code: 'VENUE_DISCOVERY_UNAVAILABLE',
+      requested_category: requestedCategory,
+      radius_meters: radiusMeters
+    }), { status: 503, headers: { ...cors, 'Content-Type': 'application/json' } });
   } catch (err: any) {
     console.error('nearby-places edge function error:', err);
     return new Response(JSON.stringify({ places: [], error: err?.message || 'Server error' }), {
@@ -490,4 +311,3 @@ Deno.serve(async (request: Request) => {
     });
   }
 });
-
