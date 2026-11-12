@@ -34,7 +34,7 @@ test('PlaceDetailModal component satisfies reference visual and behavioral contr
   assert.match(modalContent, /#00e5a3|emerald-400|teal-400/, 'Vibe confidence must have bright cyan/teal styling');
   assert.doesNotMatch(modalContent, /OpenStreetMap/, 'Must not state location has been mapped on OpenStreetMap');
   assert.doesNotMatch(modalContent, /Verified by VibeQuest community nodes/, 'Must not include fake community nodes verification');
-  assert.match(modalContent, /Verified Google Places venue/, 'Must display verified Google Places venue status');
+  assert.doesNotMatch(modalContent, /Verified Google Places venue/, 'Must not assert a retired provider verified a venue');
 
   // 6. AI Vibe Match Score card
   assert.match(modalContent, /AI VIBE MATCH SCORE/, 'Must display AI VIBE MATCH SCORE banner');
@@ -54,41 +54,18 @@ test('PlaceDetailModal component satisfies reference visual and behavioral contr
   assert.equal(/Unlocked — Submit Live Status/.test(modalContent), false, 'Old Unlocked string must not exist');
 });
 
-test('Google Places Edge Function and d03 public API enforce real places with strict leisure filter', () => {
-  // 1. Edge Function exists and holds the Google Places API key securely
-  const edgeFunctionPath = resolve('supabase/functions/nearby-places/index.ts');
-  const edgeContent = readFileSync(edgeFunctionPath, 'utf8');
-  assert.match(edgeContent, /GOOGLE_PLACES_API_KEY/, 'Edge function must read GOOGLE_PLACES_API_KEY from environment');
-  assert.match(edgeContent, /ALLOWED_LEISURE_TYPES/, 'Must define ALLOWED_LEISURE_TYPES');
-  assert.match(edgeContent, /EXCLUDED_TYPES/, 'Must define EXCLUDED_TYPES');
-  assert.match(edgeContent, /isStrictlyLeisurePlace/, 'Must implement isStrictlyLeisurePlace filtering function');
-  assert.match(edgeContent, /photo_reference/, 'Edge function must support secure photo proxying');
-
-  // 2. Leisure inclusions & exclusions
-  assert.match(edgeContent, /restaurant/, 'Must include restaurant in allowed leisure');
-  assert.match(edgeContent, /cafe/, 'Must include cafe in allowed leisure');
-  assert.match(edgeContent, /bar/, 'Must include bar in allowed leisure');
-  assert.match(edgeContent, /bank/, 'Must exclude banks');
-  assert.match(edgeContent, /school/, 'Must exclude schools');
-  assert.match(edgeContent, /hospital/, 'Must exclude hospitals');
-  assert.match(edgeContent, /lawyer/, 'Must exclude lawyer offices');
-
-  // 3. Relevance & rating sorting with Haversine distance
-  assert.match(edgeContent, /calculateHaversineMeters/, 'Must compute distance via Haversine in edge function');
-  assert.match(edgeContent, /relevanceScore|distDiff/, 'Must prioritize Google relevance and rating');
-
-  // 4. d03 domain api calls Edge Function and has NO hardcoded place arrays
-  const d03ApiPath = resolve('src/domains/d03_vibe_orbit/api.ts');
-  const d03Content = readFileSync(d03ApiPath, 'utf8');
-  assert.match(d03Content, /fetchNearbyPlaces/, 'd03 must export fetchNearbyPlaces');
-  assert.match(d03Content, /supabase\.functions\.invoke\('nearby-places'/, 'Must invoke nearby-places Edge Function');
-  assert.doesNotMatch(d03Content, /CANONICAL_PO_PLACES/, 'Must not contain hardcoded CANONICAL_PO_PLACES array');
-  assert.match(d03Content, /calculateDistanceMeters/, 'Must compute distance using Haversine');
-
-  // 5. d03 index.ts exports public API
-  const d03IndexPath = resolve('src/domains/d03_vibe_orbit/index.ts');
-  const d03IndexContent = readFileSync(d03IndexPath, 'utf8');
-  assert.match(d03IndexContent, /export \* from '\.\/api'/, 'index.ts must export domain API');
+test('retired paid provider cannot issue external requests and D03 discovery contract survives', () => {
+  const edge = readFileSync(resolve('supabase/functions/nearby-places/index.ts'), 'utf8');
+  assert.match(edge, /VENUE_DISCOVERY_UNAVAILABLE/);
+  assert.match(edge, /status: 503/);
+  assert.match(edge, /PHOTO_PROXY_RETIRED/);
+  assert.match(edge, /status: 410/);
+  assert.doesNotMatch(edge, /GOOGLE_PLACES_API_KEY|maps\.googleapis\.com|queryGooglePlaces|fetch\(/);
+  const d03 = readFileSync(resolve('src/domains/d03_vibe_orbit/api.ts'), 'utf8');
+  assert.match(d03, /fetchNearbyPlaces/);
+  assert.match(d03, /supabase\.functions\.invoke\('nearby-places'/);
+  assert.doesNotMatch(d03, /CANONICAL_PO_PLACES/);
+  assert.match(d03, /calculateDistanceMeters/);
 });
 
 test('D04 fetchCityPulses prioritizes real user vibes, then leisure places, without fake baseline fallback', () => {
