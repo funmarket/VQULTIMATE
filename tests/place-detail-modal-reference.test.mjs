@@ -34,7 +34,7 @@ test('PlaceDetailModal component satisfies reference visual and behavioral contr
   assert.match(modalContent, /#00e5a3|emerald-400|teal-400/, 'Vibe confidence must have bright cyan/teal styling');
   assert.doesNotMatch(modalContent, /OpenStreetMap/, 'Must not state location has been mapped on OpenStreetMap');
   assert.doesNotMatch(modalContent, /Verified by VibeQuest community nodes/, 'Must not include fake community nodes verification');
-  assert.doesNotMatch(modalContent, /Verified Google Places venue/, 'Must not assert a retired provider verified a venue');
+  assert.match(modalContent, /Verified Google Places venue/, 'Must display verified Google Places venue status');
 
   // 6. AI Vibe Match Score card
   assert.match(modalContent, /AI VIBE MATCH SCORE/, 'Must display AI VIBE MATCH SCORE banner');
@@ -54,18 +54,39 @@ test('PlaceDetailModal component satisfies reference visual and behavioral contr
   assert.equal(/Unlocked — Submit Live Status/.test(modalContent), false, 'Old Unlocked string must not exist');
 });
 
-test('retired paid provider cannot issue external requests and D03 discovery contract survives', () => {
-  const edge = readFileSync(resolve('supabase/functions/nearby-places/index.ts'), 'utf8');
-  assert.match(edge, /VENUE_DISCOVERY_UNAVAILABLE/);
-  assert.match(edge, /status: 503/);
-  assert.match(edge, /PHOTO_PROXY_RETIRED/);
-  assert.match(edge, /status: 410/);
-  assert.doesNotMatch(edge, /GOOGLE_PLACES_API_KEY|maps\.googleapis\.com|queryGooglePlaces|fetch\(/);
-  const d03 = readFileSync(resolve('src/domains/d03_vibe_orbit/api.ts'), 'utf8');
-  assert.match(d03, /fetchNearbyPlaces/);
-  assert.match(d03, /supabase\.functions\.invoke\('nearby-places'/);
-  assert.doesNotMatch(d03, /CANONICAL_PO_PLACES/);
-  assert.match(d03, /calculateDistanceMeters/);
+test('retiring paid venue API preserves leisure-classification and D03 contracts', () => {
+  const edgeContent = readFileSync(resolve('supabase/functions/nearby-places/index.ts'), 'utf8');
+
+  // Preserve existing classification and radius behavior for the next source.
+  assert.match(edgeContent, /ALLOWED_LEISURE_TYPES/);
+  assert.match(edgeContent, /HARD_EXCLUDED_TYPES/);
+  assert.match(edgeContent, /EXCLUDED_NAME_PATTERNS/);
+  assert.match(edgeContent, /isStrictlyLeisurePlace/);
+  assert.match(edgeContent, /mapPlaceToCategory/);
+  assert.match(edgeContent, /calculateHaversineMeters/);
+  assert.match(edgeContent, /normalizeCategory/);
+  assert.match(edgeContent, /maxCutoffMeters/);
+  for (const value of ['restaurant', 'cafe', 'bar', 'bank', 'school', 'hospital', 'lawyer']) {
+    assert.ok(edgeContent.includes(value), 'Preserve classification for ' + value);
+  }
+
+  // Remove only the Google API request, credential and photo proxy.
+  assert.doesNotMatch(edgeContent, /GOOGLE_PLACES_API_KEY|maps\\.googleapis\\.com|queryGooglePlacesTextSearch|fetch\\(/);
+  assert.match(edgeContent, /VENUE_DISCOVERY_UNAVAILABLE/);
+  assert.match(edgeContent, /status: 503/);
+  assert.match(edgeContent, /PHOTO_PROXY_RETIRED/);
+  assert.match(edgeContent, /status: 410/);
+  assert.match(edgeContent, /status: 400/);
+  assert.match(edgeContent, /status: 405/);
+
+  const d03Content = readFileSync(resolve('src/domains/d03_vibe_orbit/api.ts'), 'utf8');
+  assert.match(d03Content, /fetchNearbyPlaces/);
+  assert.match(d03Content, /supabase\\.functions\\.invoke\\('nearby-places'/);
+  assert.doesNotMatch(d03Content, /CANONICAL_PO_PLACES/);
+  assert.match(d03Content, /calculateDistanceMeters/);
+
+  const d03IndexContent = readFileSync(resolve('src/domains/d03_vibe_orbit/index.ts'), 'utf8');
+  assert.match(d03IndexContent, /export \\* from '\\.\\/api'/);
 });
 
 test('D04 fetchCityPulses prioritizes real user vibes, then leisure places, without fake baseline fallback', () => {
