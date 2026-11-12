@@ -71,7 +71,7 @@ test('retiring paid venue API preserves leisure-classification and D03 contracts
   }
 
   // Remove only the Google API request, credential and photo proxy.
-  assert.doesNotMatch(edgeContent, /GOOGLE_PLACES_API_KEY|maps\\.googleapis\\.com|queryGooglePlacesTextSearch|fetch\\(/);
+  for (const token of ['GOOGLE_PLACES_API_KEY', 'maps.googleapis.com', 'queryGooglePlacesTextSearch', 'fetch(']) assert.ok(!edgeContent.includes(token), 'Paid API removed: ' + token);
   assert.match(edgeContent, /VENUE_DISCOVERY_UNAVAILABLE/);
   assert.match(edgeContent, /status: 503/);
   assert.match(edgeContent, /PHOTO_PROXY_RETIRED/);
@@ -81,7 +81,7 @@ test('retiring paid venue API preserves leisure-classification and D03 contracts
 
   const d03Content = readFileSync(resolve('src/domains/d03_vibe_orbit/api.ts'), 'utf8');
   assert.match(d03Content, /fetchNearbyPlaces/);
-  assert.match(d03Content, /supabase\\.functions\\.invoke\\('nearby-places'/);
+  assert.ok(d03Content.includes("supabase.functions.invoke('nearby-places'"), 'Preserve D03 function invocation');
   assert.doesNotMatch(d03Content, /CANONICAL_PO_PLACES/);
   assert.match(d03Content, /calculateDistanceMeters/);
 
