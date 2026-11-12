@@ -642,7 +642,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
               {places.slice(0, visibleWaypointsCount).map((place, idx) => {
                 const tier = idx === 0 ? 'LEGENDARY' : idx === 1 ? 'LEGENDARY' : 'RARE';
                 const rating = place.rating !== undefined ? place.rating.toFixed(1) : undefined;
-                const reviewsCount = typeof place.reviews_count === 'number' ? place.reviews_count : undefined;
+                const googleReviewsCount = typeof place.reviews_count === 'number' ? place.reviews_count : undefined;
                 const appCheckinsCount = typeof place.checkins_count === 'number' && place.checkins_count > 0 ? place.checkins_count : undefined;
                 const dynamicMatch = computeAiVibeMatch(place, user);
                 const matchScore = place.ai_match_score ?? dynamicMatch.score;
@@ -699,7 +699,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                     <div className="pt-3 border-t border-neutral-800/80 flex items-center justify-between text-xs">
                       <span className="font-semibold text-teal-300">
                         {place.distance_km !== undefined ? `${place.distance_km} km` : 'Nearby'}
-                        {reviewsCount !== undefined ? ` • ${reviewsCount} reviews` : ''}
+                        {googleReviewsCount !== undefined ? ` • ${googleReviewsCount} reviews` : ''}
                         {appCheckinsCount !== undefined ? ` • ${appCheckinsCount} check-ins` : ''}
                       </span>
                       <div className="flex items-center space-x-2">
