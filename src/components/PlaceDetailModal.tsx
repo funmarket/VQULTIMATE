@@ -396,7 +396,7 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                       </span>
                     </div>
                     <p className="text-xs text-neutral-400 leading-relaxed pl-6">
-                      {distanceDisplay !== 'Unknown distance' ? `Located ${distanceDisplay} from your position.` : ''}
+                      {distanceDisplay !== 'Unknown distance' ? `Located ${distanceDisplay} from your position.` : ''} Verified Google Places venue.
                     </p>
                   </div>
 
