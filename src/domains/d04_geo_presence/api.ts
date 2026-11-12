@@ -4,7 +4,7 @@ import { CityPulse, VibePulsesSummary } from './types';
 
 /**
  * Historical reference baseline constants.
- * @deprecated Do NOT use as runtime fallback. Real user vibes or real leisure data only.
+ * @deprecated Do NOT use as runtime fallback. Real user vibes or live Google Places leisure data only.
  */
 export const CANONICAL_CITY_BASELINES: Omit<CityPulse, 'distanceKm'>[] = [
   {
@@ -87,7 +87,7 @@ export function isWeekendNow(): boolean {
 /**
  * Fetches city-level Vibe Pulses adhering to the strict priority rules:
  * - Mode A: If real user vibes / city pulses exist in the database, show those.
- * - Mode B: If none exist, call fetchNearbyPlaces and show ONLY the leisure places returned by the venue directory.
+ * - Mode B: If none exist, call fetchNearbyPlaces and show ONLY the leisure places returned by Google Places.
  *   Sort Mode B by closest first, then highest rating.
  * - Zero Fake Baseline Fallback: Never invent pulse counts or inject hardcoded cities.
  */
@@ -140,7 +140,7 @@ export async function fetchCityPulses(
     // Fall through to Mode B
   }
 
-  // Mode B: If no live city pulses in database, fetch real leisure places from the venue directory
+  // Mode B: If no live city pulses in database, fetch real leisure places from Google Places
   if (liveCities.length === 0) {
     try {
       const realPlaces = await fetchNearbyPlaces(coords);
