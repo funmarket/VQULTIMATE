@@ -349,61 +349,61 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
   ];
 
   return (
-    <div className="space-y-4 pb-32 text-white max-w-md mx-auto box-border overflow-x-hidden">
+    <div className="space-y-4 pb-32 text-[#050505] dark:text-white max-w-md mx-auto box-border overflow-x-hidden">
       {/* Toast Notification */}
       {notificationToast && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl bg-teal-500 text-neutral-950 font-bold text-xs shadow-2xl flex items-center space-x-2 animate-fadeIn border border-teal-300">
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl bg-[#0866FF] dark:bg-teal-500 text-white dark:text-neutral-950 font-bold text-xs shadow-2xl flex items-center space-x-2 animate-fadeIn border border-blue-400 dark:border-teal-300">
           <CheckCircle2 className="w-4 h-4" />
           <span>{notificationToast}</span>
         </div>
       )}
 
       {/* Top Header Navigation Pill (Vibe Share) */}
-      <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-3 flex items-center justify-between shadow-xl">
+      <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 p-3 flex items-center justify-between shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-xl">
         <button
           onClick={() => setDualCameraOpen(true)}
-          className="p-2.5 rounded-full bg-neutral-950 border border-amber-500/40 text-amber-300 hover:bg-neutral-900 transition flex items-center justify-center shadow cursor-pointer"
+          className="p-2.5 rounded-full bg-[#EFEFEF] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-amber-500/40 text-[#050505] dark:text-amber-300 hover:bg-[#E4E6EB] dark:hover:bg-neutral-900 transition flex items-center justify-center shadow-sm dark:shadow cursor-pointer"
           title="Open Dual-Camera Share"
         >
-          <Camera className="w-5 h-5 text-amber-400" />
+          <Camera className="w-5 h-5 text-[#0866FF] dark:text-amber-400" />
         </button>
-        <span className="font-black text-base tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-white to-teal-300">
+        <span className="font-black text-base tracking-tight text-[#050505] dark:bg-clip-text dark:text-transparent dark:bg-gradient-to-r dark:from-orange-300 dark:via-white dark:to-teal-300">
           Vibe Share
         </span>
         <button
           onClick={() => setActiveSubTab('gossip')}
-          className="p-2.5 rounded-full bg-neutral-950 border border-amber-500/40 text-amber-300 hover:bg-neutral-900 transition flex items-center justify-center shadow cursor-pointer"
+          className="p-2.5 rounded-full bg-[#EFEFEF] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-amber-500/40 text-[#050505] dark:text-amber-300 hover:bg-[#E4E6EB] dark:hover:bg-neutral-900 transition flex items-center justify-center shadow-sm dark:shadow cursor-pointer"
           title="Gossip Chat Feed"
         >
-          <MessageCircle className="w-5 h-5 text-teal-400" />
+          <MessageCircle className="w-5 h-5 text-[#0866FF] dark:text-teal-400" />
         </button>
       </div>
 
       {/* Rumi Quote Banner */}
-      <div className="rounded-2xl bg-neutral-900/80 border border-neutral-800 p-5 text-center space-y-2 shadow-lg backdrop-blur-md">
-        <p className="text-sm italic font-serif text-amber-200/90 leading-relaxed">
+      <div className="rounded-2xl bg-white dark:bg-neutral-900/80 border border-[#DBDBDB] dark:border-neutral-800 p-5 text-center space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-lg backdrop-blur-md">
+        <p className="text-sm italic font-serif text-[#262626] dark:text-amber-200/90 leading-relaxed">
           &ldquo;Out beyond ideas of wrongdoing and rightdoing, there is a field. I&apos;ll meet you there.&rdquo;
         </p>
-        <p className="text-[10px] uppercase tracking-widest text-neutral-400 font-bold">— RUMI</p>
+        <p className="text-[10px] uppercase tracking-widest text-[#65676B] dark:text-neutral-400 font-bold">— RUMI</p>
       </div>
 
       {/* Horizontal User Cards Strip */}
       <div className="space-y-2">
         <div className="flex items-center justify-between px-1">
-          <span className="text-[10px] uppercase tracking-widest font-bold text-neutral-400">
+          <span className="text-[10px] uppercase tracking-widest font-bold text-[#65676B] dark:text-neutral-400">
             Active Crew & Guardians ({demoProfiles.length})
           </span>
           <div className="flex items-center space-x-1">
             <button
               onClick={() => handleScroll('left')}
-              className="p-1 rounded-lg bg-neutral-900 border border-neutral-800 text-teal-400 hover:bg-neutral-800 cursor-pointer"
+              className="p-1 rounded-lg bg-white border border-[#DBDBDB] text-[#050505] hover:bg-[#EFEFEF] dark:bg-neutral-900 dark:border-neutral-800 dark:text-teal-400 dark:hover:bg-neutral-800 cursor-pointer"
               aria-label="Scroll Left"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => handleScroll('right')}
-              className="p-1 rounded-lg bg-neutral-900 border border-neutral-800 text-teal-400 hover:bg-neutral-800 cursor-pointer"
+              className="p-1 rounded-lg bg-white border border-[#DBDBDB] text-[#050505] hover:bg-[#EFEFEF] dark:bg-neutral-900 dark:border-neutral-800 dark:text-teal-400 dark:hover:bg-neutral-800 cursor-pointer"
               aria-label="Scroll Right"
             >
               <ChevronRight className="w-3.5 h-3.5" />
@@ -419,21 +419,21 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
             <div
               key={p.id}
               onClick={() => setSelectedProfile(p)}
-              className="flex-shrink-0 w-36 rounded-2xl bg-neutral-900 border border-neutral-800 p-3 flex flex-col items-center text-center space-y-2 shadow-lg hover:border-teal-500/50 transition cursor-pointer"
+              className="flex-shrink-0 w-36 rounded-2xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 p-3 flex flex-col items-center text-center space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-lg hover:border-[#0866FF] dark:hover:border-teal-500/50 transition cursor-pointer"
             >
               <div className="relative">
                 <img
                   src={p.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'}
                   alt={p.username || 'user'}
-                  className="w-12 h-12 rounded-full object-cover border-2 border-orange-500 shadow"
+                  className="w-12 h-12 rounded-full object-cover border-2 border-[#0866FF] dark:border-orange-500 shadow"
                 />
-                <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-neutral-900 animate-pulse" />
+                <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 dark:bg-emerald-400 border-2 border-white dark:border-neutral-900 animate-pulse" />
               </div>
               <div className="min-w-0 w-full">
-                <h5 className="font-bold text-xs text-white truncate">{p.full_name || 'Explorer'}</h5>
-                <p className="text-[10px] text-teal-400 truncate">@{p.username || 'explorer'}</p>
+                <h5 className="font-bold text-xs text-[#050505] dark:text-white truncate">{p.full_name || 'Explorer'}</h5>
+                <p className="text-[10px] text-[#65676B] dark:text-teal-400 truncate">@{p.username || 'explorer'}</p>
               </div>
-              <span className="text-[9px] bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full font-bold uppercase truncate max-w-full">
+              <span className="text-[9px] bg-[#E7F3FF] text-[#0866FF] dark:bg-orange-500/20 dark:text-orange-300 px-2 py-0.5 rounded-full font-bold uppercase truncate max-w-full">
                 {p.tier || p.role}
               </span>
             </div>
@@ -443,7 +443,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
 
       {/* Dynamic Subtitle Banner per Tab */}
       <div className="text-center py-1">
-        <p className="text-[11px] font-bold tracking-widest uppercase text-neutral-400">
+        <p className="text-[11px] font-bold tracking-widest uppercase text-[#65676B] dark:text-neutral-400">
           {activeSubTab === 'gossip' && 'SPILL THE TEA FROM YOUR CREW AND MATCHED BESTIES — NO FILTER ZONE'}
           {activeSubTab === 'drift' && 'WANDER AWAY, GET LOST ON PURPOSE, AND VIBE WITH RANDOM LEGENDS'}
           {activeSubTab === 'vibes' && 'YOUR OFFICIAL DOUBLE-MATCHED SQUAD — THE ONES WHO ALREADY CHOSE YOU BACK'}
@@ -464,13 +464,13 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                 onClick={() => setActiveSubTab(tab.id as any)}
                 className={`px-4 py-2 rounded-xl text-xs font-black tracking-wider whitespace-nowrap transition-all duration-300 flex items-center space-x-1.5 cursor-pointer ${
                   isActive
-                    ? 'bg-neutral-900 text-teal-400 border border-teal-500/60 shadow-lg shadow-teal-500/20'
-                    : 'bg-neutral-900/60 text-neutral-400 border border-neutral-800 hover:text-white'
+                    ? 'bg-[#E7F3FF] text-[#0866FF] border border-[#0866FF]/30 shadow-sm dark:bg-neutral-900 dark:text-teal-400 dark:border-teal-500/60 dark:shadow-lg dark:shadow-teal-500/20'
+                    : 'bg-white text-[#65676B] border border-[#DBDBDB] hover:text-[#050505] dark:bg-neutral-900/60 dark:text-neutral-400 dark:border-neutral-800 dark:hover:text-white'
                 }`}
               >
                 <span>{tab.label}</span>
                 {tab.badge && (
-                  <span className="w-4 h-4 rounded-full bg-teal-500/20 text-teal-300 text-[9px] font-bold flex items-center justify-center border border-teal-500/40">
+                  <span className="w-4 h-4 rounded-full bg-[#0866FF]/15 text-[#0866FF] dark:bg-teal-500/20 dark:text-teal-300 text-[9px] font-bold flex items-center justify-center border border-[#0866FF]/30 dark:border-teal-500/40">
                     {tab.badge}
                   </span>
                 )}
@@ -481,10 +481,10 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
 
         {/* Track / Indicator bar under tabs */}
         <div className="flex items-center space-x-2 px-1">
-          <span className="text-[10px] text-teal-500">◀</span>
-          <div className="flex-1 h-1.5 rounded-full bg-neutral-900 border border-neutral-800 overflow-hidden">
+          <span className="text-[10px] text-[#0866FF] dark:text-teal-500">◀</span>
+          <div className="flex-1 h-1.5 rounded-full bg-[#E4E6EB] dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-teal-500 via-cyan-400 to-teal-400 transition-all duration-300 rounded-full"
+              className="h-full bg-[#0866FF] dark:bg-gradient-to-r dark:from-teal-500 dark:via-cyan-400 dark:to-teal-400 transition-all duration-300 rounded-full"
               style={{
                 width: `${
                   activeSubTab === 'gossip' ? '16%' :
@@ -496,7 +496,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
               }}
             />
           </div>
-          <span className="text-[10px] text-teal-500">▶</span>
+          <span className="text-[10px] text-[#0866FF] dark:text-teal-500">▶</span>
         </div>
       </div>
 
@@ -504,44 +504,44 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
       {activeSubTab === 'gossip' && (
         <div className="space-y-4">
           {/* Composer */}
-          <form onSubmit={handleCreatePost} className="relative rounded-2xl bg-neutral-900 border border-neutral-800 p-4 space-y-3 shadow-xl">
+          <form onSubmit={handleCreatePost} className="relative rounded-2xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 p-4 space-y-3 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-xl">
             <div className="flex space-x-3 items-start">
               <img
                 src={user?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'}
                 alt="User"
-                className="w-9 h-9 rounded-full object-cover border border-orange-500/40"
+                className="w-9 h-9 rounded-full object-cover border border-[#DBDBDB] dark:border-orange-500/40"
               />
               <textarea
                 value={newPostCaption}
                 onChange={(e) => setNewPostCaption(e.target.value)}
                 placeholder={`What's your vibe today, @${user?.username || 'explorer'}? Post to Gossip & My Network...`}
-                className="flex-1 bg-transparent border-none text-xs text-white placeholder-neutral-500 focus:outline-none resize-none h-16"
+                className="flex-1 bg-transparent border-none text-xs text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none resize-none h-16"
               />
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-neutral-800 text-xs">
-              <div className="flex items-center space-x-3 text-neutral-400">
+            <div className="flex items-center justify-between pt-2 border-t border-[#E4E6EB] dark:border-neutral-800 text-xs">
+              <div className="flex items-center space-x-3 text-[#65676B] dark:text-neutral-400">
                 <button
                   type="button"
                   onClick={() => setDualCameraOpen(true)}
-                  className="flex items-center space-x-1 hover:text-teal-400 transition cursor-pointer"
+                  className="flex items-center space-x-1 hover:text-[#0866FF] dark:hover:text-teal-400 transition cursor-pointer"
                   title="Capture dual photo"
                 >
-                  <Camera className="w-4 h-4 text-teal-400" />
+                  <Camera className="w-4 h-4 text-[#0866FF] dark:text-teal-400" />
                 </button>
                 <button
                   type="button"
                   onClick={() => setGossipEmojiPickerOpen(!gossipEmojiPickerOpen)}
-                  className={`flex items-center space-x-1 hover:text-amber-300 transition cursor-pointer ${gossipEmojiPickerOpen ? 'text-amber-400 font-bold' : ''}`}
+                  className={`flex items-center space-x-1 hover:text-amber-600 dark:hover:text-amber-300 transition cursor-pointer ${gossipEmojiPickerOpen ? 'text-amber-600 dark:text-amber-400 font-bold' : ''}`}
                   title="Telegram & Animated Emojis"
                 >
-                  <Smile className="w-4 h-4 text-amber-400" />
+                  <Smile className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                   <span className="text-[11px]">Emoji</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setNewPostCaption(prev => prev ? `${prev} #MissionAccepted` : 'Completed District Heritage Mission! #MissionAccepted')}
-                  className="flex items-center space-x-1 text-orange-400 font-bold hover:underline cursor-pointer"
+                  className="flex items-center space-x-1 text-orange-600 dark:text-orange-400 font-bold hover:underline cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Mission</span>
@@ -549,14 +549,14 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                 <button
                   type="button"
                   onClick={() => setNewPostCaption(prev => prev ? `${prev} ✨ #VibeCheck` : 'Electric sunset vibe across the old souk. ✨ #VibeCheck')}
-                  className="flex items-center space-x-1 text-purple-400 font-bold hover:underline cursor-pointer"
+                  className="flex items-center space-x-1 text-purple-600 dark:text-purple-400 font-bold hover:underline cursor-pointer"
                 >
                   <span>✨ Vibe</span>
                 </button>
               </div>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-teal-500 text-white font-black text-xs shadow-lg hover:opacity-90 transition flex items-center space-x-1 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[#0866FF] dark:bg-gradient-to-r dark:from-orange-500 dark:to-teal-500 text-white font-black text-xs shadow-sm dark:shadow-lg hover:opacity-90 transition flex items-center space-x-1 cursor-pointer"
               >
                 <span>POST</span>
                 <Send className="w-3 h-3" />
@@ -577,13 +577,13 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
           </form>
 
           {/* Vibe Signals & Gossip Feed (D12) Header */}
-          <div className="flex items-center justify-between text-xs font-bold text-neutral-400 px-1">
-            <span className="flex items-center space-x-1.5 text-amber-400">
-              <Sparkles className="w-3.5 h-3.5" />
+          <div className="flex items-center justify-between text-xs font-bold text-[#65676B] dark:text-neutral-400 px-1">
+            <span className="flex items-center space-x-1.5 text-[#050505] dark:text-amber-400">
+              <Sparkles className="w-3.5 h-3.5 text-[#0866FF] dark:text-amber-400" />
               <span>VIBE SIGNALS & GOSSIP FEED (D12)</span>
             </span>
-            <span className="flex items-center space-x-1 text-emerald-400 text-[10px]">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 text-[10px]">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
               <span>LIVE NETWORK</span>
             </span>
           </div>
@@ -591,8 +591,8 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
           {/* Active Spot Meetups Cross-Feed Propagation */}
           {spotMeetups.length > 0 && (
             <div className="space-y-2.5 pb-2">
-              <div className="flex items-center justify-between text-xs font-bold text-neutral-400 uppercase tracking-wider px-1">
-                <span className="flex items-center gap-1.5 text-blue-400 font-black">
+              <div className="flex items-center justify-between text-xs font-bold text-[#65676B] dark:text-neutral-400 uppercase tracking-wider px-1">
+                <span className="flex items-center gap-1.5 text-[#0866FF] dark:text-blue-400 font-black">
                   <Users className="w-3.5 h-3.5" />
                   <span>Spot Meetups & Circles ({spotMeetups.length})</span>
                 </span>
@@ -612,9 +612,9 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                 const authorUsername = post.username || 'explorer';
                 const isLiked = likedPosts.has(post.id);
                 return (
-                  <div key={post.id} className="rounded-3xl bg-neutral-900 border border-neutral-800 overflow-hidden shadow-2xl">
+                  <div key={post.id} className="rounded-3xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-2xl">
                     {/* Post Header */}
-                    <div className="p-4 flex items-center justify-between border-b border-neutral-800/80">
+                    <div className="p-4 flex items-center justify-between border-b border-[#E4E6EB] dark:border-neutral-800/80">
                       <div
                         onClick={async () => {
                           const profile = await fetchPublicProfileByHandle(authorUsername);
@@ -638,18 +638,18 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                         <img
                           src={post.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'}
                           alt={authorUsername}
-                          className="w-10 h-10 rounded-full object-cover border border-orange-500/40 group-hover:border-teal-400 transition"
+                          className="w-10 h-10 rounded-full object-cover border border-[#DBDBDB] dark:border-orange-500/40 group-hover:border-[#0866FF] dark:group-hover:border-teal-400 transition"
                         />
                         <div>
-                          <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition">
+                          <h4 className="font-bold text-sm text-[#050505] dark:text-white group-hover:text-[#0866FF] dark:group-hover:text-teal-400 transition">
                             @{authorUsername}
                           </h4>
-                          <p className="text-[10px] text-neutral-400">Just now • 📍 Local Node</p>
+                          <p className="text-[10px] text-[#65676B] dark:text-neutral-400">Just now • 📍 Local Node</p>
                         </div>
                       </div>
                       <button
                         onClick={() => handleSharePost(post)}
-                        className="text-neutral-400 hover:text-white transition cursor-pointer"
+                        className="text-[#65676B] hover:text-[#050505] dark:text-neutral-400 dark:hover:text-white transition cursor-pointer"
                         aria-label="Share post"
                       >
                         <Share2 className="w-4 h-4" />
@@ -658,7 +658,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
 
                     {/* Post Image with PIP Selfie - only if image_url is provided */}
                     {post.image_url && post.image_url.trim() !== '' && (
-                      <div className="relative aspect-[4/5] bg-neutral-950">
+                      <div className="relative aspect-[4/5] bg-[#F0F2F5] dark:bg-neutral-950">
                         <img src={post.image_url} alt="Scene" className="w-full h-full object-cover" />
                         {post.selfie_url && (
                           <div className="absolute top-4 left-4 w-24 h-32 rounded-2xl overflow-hidden border-4 border-orange-500 shadow-2xl">
@@ -670,37 +670,37 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
 
                     {/* Caption & Actions */}
                     <div className="p-4 space-y-3">
-                      <p className="text-sm text-neutral-200">{post.caption}</p>
+                      <p className="text-sm text-[#262626] dark:text-neutral-200">{post.caption}</p>
 
-                      <div className="flex items-center justify-between pt-2 border-t border-neutral-800 text-xs text-neutral-400">
+                      <div className="flex items-center justify-between pt-2 border-t border-[#E4E6EB] dark:border-neutral-800 text-xs text-[#65676B] dark:text-neutral-400">
                         <span className="flex items-center space-x-1">
                           <Heart className={`w-3.5 h-3.5 ${isLiked ? 'text-rose-500 fill-rose-500' : 'text-rose-500 fill-rose-500/30'}`} />
-                          <span className="font-bold text-white">{post.reactions_count}</span>
+                          <span className="font-bold text-[#050505] dark:text-white">{post.reactions_count}</span>
                           <span>{post.reactions_count === 1 ? 'like' : 'likes'}</span>
                         </span>
                         <span>{post.comments_count} comments</span>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-1 pt-2 border-t border-neutral-800 text-xs font-semibold text-neutral-300">
+                      <div className="grid grid-cols-3 gap-1 pt-2 border-t border-[#E4E6EB] dark:border-neutral-800 text-xs font-semibold text-[#65676B] dark:text-neutral-300">
                         <button
                           onClick={() => handleToggleLike(post.id)}
-                          className={`flex items-center justify-center space-x-1.5 py-2 hover:bg-neutral-800/50 rounded-xl transition cursor-pointer ${
-                            isLiked ? 'text-rose-400 font-bold' : ''
+                          className={`flex items-center justify-center space-x-1.5 py-2 hover:bg-[#F0F2F5] dark:hover:bg-neutral-800/50 rounded-xl transition cursor-pointer ${
+                            isLiked ? 'text-rose-500 dark:text-rose-400 font-bold' : ''
                           }`}
                         >
-                          <Heart className={`w-4 h-4 ${isLiked ? 'fill-rose-500 text-rose-500' : 'text-orange-400'}`} />
+                          <Heart className={`w-4 h-4 ${isLiked ? 'fill-rose-500 text-rose-500' : 'text-orange-500 dark:text-orange-400'}`} />
                           <span>{isLiked ? 'Liked' : 'Like'}</span>
                         </button>
                         <button
                           onClick={() => handleOpenComments(post.id)}
-                          className="flex items-center justify-center space-x-1.5 py-2 hover:bg-neutral-800/50 rounded-xl transition text-teal-400 font-bold cursor-pointer"
+                          className="flex items-center justify-center space-x-1.5 py-2 hover:bg-[#F0F2F5] dark:hover:bg-neutral-800/50 rounded-xl transition text-[#0866FF] dark:text-teal-400 font-bold cursor-pointer"
                         >
                           <MessageCircle className="w-4 h-4" />
                           <span>Comment</span>
                         </button>
                         <button
                           onClick={() => handleSharePost(post)}
-                          className="flex items-center justify-center space-x-1.5 py-2 hover:bg-neutral-800/50 rounded-xl transition cursor-pointer"
+                          className="flex items-center justify-center space-x-1.5 py-2 hover:bg-[#F0F2F5] dark:hover:bg-neutral-800/50 rounded-xl transition cursor-pointer"
                         >
                           <Share2 className="w-4 h-4" />
                           <span>Share</span>
@@ -712,15 +712,15 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
               })}
             </div>
           ) : (
-            <div className="rounded-3xl bg-neutral-900 border border-neutral-800 p-8 text-center space-y-3 shadow-xl">
-              <Sparkles className="w-10 h-10 text-teal-400/70 mx-auto animate-pulse" />
-              <h4 className="font-black text-base text-white">No Vibe Signals Yet</h4>
-              <p className="text-xs text-neutral-400 max-w-xs mx-auto leading-relaxed">
+            <div className="rounded-3xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 p-8 text-center space-y-3 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-xl">
+              <Sparkles className="w-10 h-10 text-[#0866FF] dark:text-teal-400/70 mx-auto animate-pulse" />
+              <h4 className="font-black text-base text-[#050505] dark:text-white">No Vibe Signals Yet</h4>
+              <p className="text-xs text-[#65676B] dark:text-neutral-400 max-w-xs mx-auto leading-relaxed">
                 Be the first explorer to drop an authentic dual-camera moment or gossip signal into your district!
               </p>
               <button
                 onClick={() => setDualCameraOpen(true)}
-                className="mt-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-orange-500 to-teal-500 text-white font-bold text-xs shadow-lg transition hover:opacity-90 cursor-pointer"
+                className="mt-2 px-5 py-2.5 rounded-2xl bg-[#0866FF] dark:bg-gradient-to-r dark:from-orange-500 dark:to-teal-500 text-white font-bold text-xs shadow-sm dark:shadow-lg transition hover:opacity-90 cursor-pointer"
               >
                 Launch BeReal Camera
               </button>
@@ -732,9 +732,9 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
       {/* DRIFT TAB CONTENT */}
       {activeSubTab === 'drift' && (
         <div className="space-y-4">
-          <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 space-y-2">
-            <h3 className="font-bold text-sm text-teal-300">Shared Wavelengths</h3>
-            <p className="text-xs text-neutral-400 leading-relaxed">
+          <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 p-4 space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
+            <h3 className="font-bold text-sm text-[#0866FF] dark:text-teal-300">Shared Wavelengths</h3>
+            <p className="text-xs text-[#65676B] dark:text-neutral-400 leading-relaxed">
               Tune into a neighborhood wavelength to chat and drift along with fellow travelers sharing similar interests!
             </p>
           </div>
@@ -754,16 +754,16 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                 <div
                   key={w.id}
                   onClick={() => handleEnterDriftRoom(matchingRoom)}
-                  className={`rounded-2xl bg-neutral-900 border p-4 space-y-2 transition flex flex-col justify-between cursor-pointer ${
-                    isTuned ? 'border-teal-400/80 shadow-lg shadow-teal-500/10' : 'border-neutral-800 hover:border-teal-500/50'
+                  className={`rounded-2xl bg-white dark:bg-neutral-900 border p-4 space-y-2 transition flex flex-col justify-between cursor-pointer shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none ${
+                    isTuned ? 'border-[#0866FF] dark:border-teal-400/80 ring-1 ring-[#0866FF]/20 dark:ring-0 dark:shadow-lg dark:shadow-teal-500/10' : 'border-[#DBDBDB] hover:border-[#0866FF] dark:border-neutral-800 dark:hover:border-teal-500/50'
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-sm text-white font-serif">{w.name}</h4>
+                      <h4 className="font-bold text-sm text-[#050505] dark:text-white font-serif">{w.name}</h4>
                       <span className={`w-2.5 h-2.5 rounded-full ${w.color} animate-pulse`} />
                     </div>
-                    <p className="text-xs text-neutral-400 mt-1 leading-relaxed">{w.desc}</p>
+                    <p className="text-xs text-[#65676B] dark:text-neutral-400 mt-1 leading-relaxed">{w.desc}</p>
                   </div>
                   <button
                     onClick={(e) => {
@@ -772,13 +772,13 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                     }}
                     className={`w-full mt-2 py-2 rounded-xl text-[11px] font-bold transition cursor-pointer flex items-center justify-center space-x-1.5 ${
                       isTuned
-                        ? 'bg-teal-500/20 border border-teal-500/50 text-teal-300'
-                        : 'bg-neutral-950 border border-neutral-800 hover:border-teal-500/50 text-neutral-300'
+                        ? 'bg-[#E7F3FF] border border-[#0866FF]/30 text-[#0866FF] dark:bg-teal-500/20 dark:border-teal-500/50 dark:text-teal-300'
+                        : 'bg-[#EFEFEF] border border-[#DBDBDB] hover:border-[#0866FF] text-[#050505] dark:bg-neutral-950 dark:border-neutral-800 dark:hover:border-teal-500/50 dark:text-neutral-300'
                     }`}
                   >
                     {isTuned ? (
-                      <span className="flex items-center space-x-1.5 text-emerald-300 font-bold">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="flex items-center space-x-1.5 text-[#0866FF] dark:text-emerald-300 font-bold">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                         <span>Active Souls: {soulCount}</span>
                       </span>
                     ) : (
@@ -795,14 +795,14 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
       {/* VIBES TAB CONTENT (D17 Confirmed Vibes Squad) */}
       {activeSubTab === 'vibes' && (
         <div className="space-y-4">
-          <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
+          <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 p-4 flex items-center justify-between shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
             <div className="space-y-0.5">
-              <h3 className="font-bold text-xs text-teal-400 uppercase tracking-wider">CONFIRMED VIBES SQUAD (D17)</h3>
-              <p className="text-[11px] text-neutral-400">
+              <h3 className="font-bold text-xs text-[#0866FF] dark:text-teal-400 uppercase tracking-wider">CONFIRMED VIBES SQUAD (D17)</h3>
+              <p className="text-[11px] text-[#65676B] dark:text-neutral-400">
                 Only confirmed mutual Vibes unlock ordinary 1:1 personal messaging (SOC-002).
               </p>
             </div>
-            <span className="text-xs px-2.5 py-1 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 font-bold whitespace-nowrap">
+            <span className="text-xs px-2.5 py-1 rounded-full bg-[#E7F3FF] text-[#0866FF] border border-[#0866FF]/20 dark:bg-teal-500/20 dark:text-teal-300 dark:border-teal-500/30 font-bold whitespace-nowrap">
               {confirmedVibes.length} Confirmed
             </span>
           </div>
@@ -818,7 +818,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                   avatar: (v.partner_profile?.avatar_url && v.partner_profile.avatar_url.trim() !== '') ? v.partner_profile.avatar_url : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'
                 };
                 return (
-                  <div key={v.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
+                  <div key={v.id} className="rounded-2xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 p-4 flex items-center justify-between shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
                     <div
                       onClick={async () => {
                         const profile = await fetchPublicProfileByHandle(partnerProfile.handle);
@@ -826,20 +826,20 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                       }}
                       className="flex items-center space-x-3 cursor-pointer group"
                     >
-                      <img src={partnerProfile.avatar} alt={partnerProfile.name} className="w-12 h-12 rounded-full object-cover border border-teal-500/40 group-hover:border-teal-400 transition" />
+                      <img src={partnerProfile.avatar} alt={partnerProfile.name} className="w-12 h-12 rounded-full object-cover border border-[#DBDBDB] dark:border-teal-500/40 group-hover:border-[#0866FF] dark:group-hover:border-teal-400 transition" />
                       <div>
-                        <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition">{partnerProfile.name}</h4>
-                        <p className="text-xs text-neutral-400">@{partnerProfile.handle}</p>
-                        <span className="text-[10px] text-amber-300 font-medium">⚡ Cultural Explorer • Unlocked</span>
+                        <h4 className="font-bold text-sm text-[#050505] dark:text-white group-hover:text-[#0866FF] dark:group-hover:text-teal-400 transition">{partnerProfile.name}</h4>
+                        <p className="text-xs text-[#65676B] dark:text-neutral-400">@{partnerProfile.handle}</p>
+                        <span className="text-[10px] text-amber-600 dark:text-amber-300 font-medium">⚡ Cultural Explorer • Unlocked</span>
                       </div>
                     </div>
                     <div className="flex flex-col items-end space-y-2">
-                      <span className="text-[10px] font-bold text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded border border-teal-500/20">
+                      <span className="text-[10px] font-bold text-[#0866FF] bg-[#E7F3FF] border-[#0866FF]/20 dark:text-teal-400 dark:bg-teal-500/10 px-2 py-0.5 rounded border dark:border-teal-500/20">
                         ✨ {v.vibe_score || 95}% Vibe
                       </span>
                       <button
                         onClick={() => handleOpenChat(partnerProfile)}
-                        className="px-3 py-1.5 rounded-xl bg-teal-500 hover:bg-teal-600 text-neutral-950 font-black text-xs shadow transition flex items-center space-x-1 cursor-pointer"
+                        className="px-3 py-1.5 rounded-xl bg-[#0866FF] hover:bg-[#075CE5] text-white dark:bg-teal-500 dark:hover:bg-teal-600 dark:text-neutral-950 font-black text-xs shadow transition flex items-center space-x-1 cursor-pointer"
                       >
                         <MessageCircle className="w-3.5 h-3.5" />
                         <span>Chat</span>
@@ -850,10 +850,10 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
               })}
             </div>
           ) : (
-            <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800 p-8 text-center space-y-2">
-              <Users className="w-8 h-8 text-teal-400/60 mx-auto" />
-              <h4 className="font-bold text-xs text-white">No confirmed mutual vibes yet</h4>
-              <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
+            <div className="rounded-2xl bg-white dark:bg-neutral-900/60 border border-[#DBDBDB] dark:border-neutral-800 p-8 text-center space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
+              <Users className="w-8 h-8 text-[#0866FF]/60 dark:text-teal-400/60 mx-auto" />
+              <h4 className="font-bold text-xs text-[#050505] dark:text-white">No confirmed mutual vibes yet</h4>
+              <p className="text-[11px] text-[#65676B] dark:text-neutral-400 max-w-xs mx-auto">
                 Send PULLs to explorers in your sector. Once they accept, your mutual vibe unlocks direct 1:1 DMs (SOC-002).
               </p>
             </div>
@@ -864,14 +864,14 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
       {/* ORBIT TAB CONTENT (D03 Outbound Follows) */}
       {activeSubTab === 'orbit' && (
         <div className="space-y-4">
-          <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
+          <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 p-4 flex items-center justify-between shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
             <div className="space-y-0.5">
-              <h3 className="font-bold text-xs text-orange-400 uppercase tracking-wider">YOUR ORBIT (D03 OUTBOUND)</h3>
-              <p className="text-[11px] text-neutral-400">
+              <h3 className="font-bold text-xs text-orange-600 dark:text-orange-400 uppercase tracking-wider">YOUR ORBIT (D03 OUTBOUND)</h3>
+              <p className="text-[11px] text-[#65676B] dark:text-neutral-400">
                 Accounts you actively follow via ECHO. Following is directed and distinct from confirmed Vibes (ECHO never grants DMs).
               </p>
             </div>
-            <span className="text-xs px-2.5 py-1 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30 font-bold whitespace-nowrap">
+            <span className="text-xs px-2.5 py-1 rounded-full bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/20 dark:text-orange-300 border dark:border-orange-500/30 font-bold whitespace-nowrap">
               {orbitProfiles.length} Orbiting
             </span>
           </div>
@@ -879,25 +879,25 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
           {orbitProfiles.length > 0 ? (
             <div className="space-y-3">
               {orbitProfiles.map((g) => (
-                <div key={g.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
+                <div key={g.id} className="rounded-2xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 p-4 flex items-center justify-between shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
                   <div
                     onClick={() => setSelectedProfile(g)}
                     className="flex items-center space-x-3 min-w-0 cursor-pointer group"
                   >
-                    <img src={g.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'} alt={g.full_name} className="w-12 h-12 rounded-full object-cover border border-orange-500/40 group-hover:border-teal-400 transition" />
+                    <img src={g.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'} alt={g.full_name} className="w-12 h-12 rounded-full object-cover border border-[#DBDBDB] dark:border-orange-500/40 group-hover:border-[#0866FF] dark:group-hover:border-teal-400 transition" />
                     <div className="min-w-0">
-                      <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition truncate">{g.full_name}</h4>
-                      <p className="text-xs text-neutral-400 truncate">@{g.username}</p>
-                      <p className="text-[11px] text-neutral-300 truncate mt-0.5">{g.district}</p>
+                      <h4 className="font-bold text-sm text-[#050505] dark:text-white group-hover:text-[#0866FF] dark:group-hover:text-teal-400 transition truncate">{g.full_name}</h4>
+                      <p className="text-xs text-[#65676B] dark:text-neutral-400 truncate">@{g.username}</p>
+                      <p className="text-[11px] text-[#262626] dark:text-neutral-300 truncate mt-0.5">{g.district}</p>
                     </div>
                   </div>
                   <div className="flex flex-col items-end space-y-2 flex-shrink-0">
-                    <span className="text-[9px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                    <span className="text-[9px] px-2 py-0.5 rounded bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 font-bold border dark:border-amber-500/30">
                       {g.tier || g.role}
                     </span>
                     <button
                       onClick={() => handleUnfollowOrbit(g.id, g.username)}
-                      className="px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-semibold text-xs transition cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-[#E4E6EB] hover:bg-[#D8DADF] text-[#050505] dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-300 font-semibold text-xs transition cursor-pointer"
                     >
                       Unfollow
                     </button>
@@ -906,10 +906,10 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800 p-8 text-center space-y-2">
-              <Radio className="w-8 h-8 text-orange-400/60 mx-auto" />
-              <h4 className="font-bold text-xs text-white">Your Orbit is clear</h4>
-              <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
+            <div className="rounded-2xl bg-white dark:bg-neutral-900/60 border border-[#DBDBDB] dark:border-neutral-800 p-8 text-center space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
+              <Radio className="w-8 h-8 text-orange-500/60 dark:text-orange-400/60 mx-auto" />
+              <h4 className="font-bold text-xs text-[#050505] dark:text-white">Your Orbit is clear</h4>
+              <p className="text-[11px] text-[#65676B] dark:text-neutral-400 max-w-xs mx-auto">
                 Tap ECHO on public profile cards to follow local legends and district explorers into your Orbit.
               </p>
             </div>
@@ -920,14 +920,14 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
       {/* ECHO TAB CONTENT (D03 Inbound Followers) */}
       {activeSubTab === 'echo' && (
         <div className="space-y-4">
-          <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
+          <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 p-4 flex items-center justify-between shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
             <div className="space-y-0.5">
-              <h3 className="font-bold text-xs text-purple-400 uppercase tracking-wider">ECHO FOLLOWERS (D03 INBOUND)</h3>
-              <p className="text-[11px] text-neutral-400">
+              <h3 className="font-bold text-xs text-purple-600 dark:text-purple-400 uppercase tracking-wider">ECHO FOLLOWERS (D03 INBOUND)</h3>
+              <p className="text-[11px] text-[#65676B] dark:text-neutral-400">
                 Explorers who are tuning into your profile and presence frequency.
               </p>
             </div>
-            <span className="text-xs px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold whitespace-nowrap">
+            <span className="text-xs px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/20 dark:text-purple-300 border dark:border-purple-500/30 font-bold whitespace-nowrap">
               {echoProfiles.length} Tuning In
             </span>
           </div>
@@ -935,21 +935,21 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
           {echoProfiles.length > 0 ? (
             <div className="space-y-3">
               {echoProfiles.map((echo) => (
-                <div key={echo.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
+                <div key={echo.id} className="rounded-2xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 p-4 flex items-center justify-between shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
                   <div
                     onClick={() => setSelectedProfile(echo)}
                     className="flex items-center space-x-3 cursor-pointer group"
                   >
-                    <img src={echo.avatar_url || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80'} alt={echo.full_name} className="w-12 h-12 rounded-full object-cover border border-purple-500/40 group-hover:border-teal-400 transition" />
+                    <img src={echo.avatar_url || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80'} alt={echo.full_name} className="w-12 h-12 rounded-full object-cover border border-[#DBDBDB] dark:border-purple-500/40 group-hover:border-[#0866FF] dark:group-hover:border-teal-400 transition" />
                     <div>
-                      <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition">{echo.full_name}</h4>
-                      <p className="text-xs text-neutral-400">@{echo.username}</p>
-                      <p className="text-[11px] text-neutral-300 mt-0.5">{echo.bio || echo.district}</p>
+                      <h4 className="font-bold text-sm text-[#050505] dark:text-white group-hover:text-[#0866FF] dark:group-hover:text-teal-400 transition">{echo.full_name}</h4>
+                      <p className="text-xs text-[#65676B] dark:text-neutral-400">@{echo.username}</p>
+                      <p className="text-[11px] text-[#262626] dark:text-neutral-300 mt-0.5">{echo.bio || echo.district}</p>
                     </div>
                   </div>
                   <button
                     onClick={() => handleFollowBackEcho(echo.id, echo.username)}
-                    className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-bold text-xs shadow transition cursor-pointer hover:opacity-90"
+                    className="px-3.5 py-1.5 rounded-xl bg-[#0866FF] dark:bg-gradient-to-r dark:from-teal-500 dark:to-emerald-600 text-white font-bold text-xs shadow-sm dark:shadow transition cursor-pointer hover:opacity-90"
                   >
                     ECHO Back
                   </button>
@@ -957,10 +957,10 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800 p-8 text-center space-y-2">
-              <Radio className="w-8 h-8 text-purple-400/60 mx-auto" />
-              <h4 className="font-bold text-xs text-white">No active Echo frequencies</h4>
-              <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
+            <div className="rounded-2xl bg-white dark:bg-neutral-900/60 border border-[#DBDBDB] dark:border-neutral-800 p-8 text-center space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
+              <Radio className="w-8 h-8 text-purple-500/60 dark:text-purple-400/60 mx-auto" />
+              <h4 className="font-bold text-xs text-[#050505] dark:text-white">No active Echo frequencies</h4>
+              <p className="text-[11px] text-[#65676B] dark:text-neutral-400 max-w-xs mx-auto">
                 Broadcast your vibe or check in at high-intensity pulses to attract inbound explorers.
               </p>
             </div>
@@ -971,14 +971,14 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
       {/* PULLS TAB CONTENT (D17 Inbound Connection Pulls) */}
       {activeSubTab === 'pulls' && (
         <div className="space-y-4">
-          <div className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 flex items-center justify-between">
+          <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 p-4 flex items-center justify-between shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
             <div className="space-y-0.5">
-              <h3 className="font-bold text-xs text-amber-400 uppercase tracking-wider">CONNECTION PULLS (D17 INBOUND)</h3>
-              <p className="text-[11px] text-neutral-400">
+              <h3 className="font-bold text-xs text-amber-600 dark:text-amber-400 uppercase tracking-wider">CONNECTION PULLS (D17 INBOUND)</h3>
+              <p className="text-[11px] text-[#65676B] dark:text-neutral-400">
                 Explorers inviting you into their Vibe squad. Accept establishes a confirmed Vibe and unlocks 1:1 personal DMs.
               </p>
             </div>
-            <span className="text-xs px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold whitespace-nowrap">
+            <span className="text-xs px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 border dark:border-amber-500/30 font-bold whitespace-nowrap">
               {pendingPulls.length} Pending
             </span>
           </div>
@@ -993,7 +993,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                 };
                 const senderAvatar = (sender.avatar_url && sender.avatar_url.trim() !== '') ? sender.avatar_url : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80';
                 return (
-                  <div key={p.id} className="rounded-2xl bg-neutral-900 border border-neutral-800 p-4 space-y-3">
+                  <div key={p.id} className="rounded-2xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 p-4 space-y-3 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
                     <div className="flex items-center justify-between">
                       <div
                         onClick={async () => {
@@ -1002,31 +1002,31 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                         }}
                         className="flex items-center space-x-3 cursor-pointer group"
                       >
-                        <img src={senderAvatar} alt={sender.full_name} className="w-12 h-12 rounded-full object-cover border border-amber-500/40 group-hover:border-teal-400 transition" />
+                        <img src={senderAvatar} alt={sender.full_name} className="w-12 h-12 rounded-full object-cover border border-[#DBDBDB] dark:border-amber-500/40 group-hover:border-[#0866FF] dark:group-hover:border-teal-400 transition" />
                         <div>
-                          <h4 className="font-bold text-sm text-white group-hover:text-teal-400 transition">{sender.full_name}</h4>
-                          <p className="text-xs text-neutral-400">@{sender.username}</p>
+                          <h4 className="font-bold text-sm text-[#050505] dark:text-white group-hover:text-[#0866FF] dark:group-hover:text-teal-400 transition">{sender.full_name}</h4>
+                          <p className="text-xs text-[#65676B] dark:text-neutral-400">@{sender.username}</p>
                         </div>
                       </div>
-                      <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/30">
+                      <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-500/10 px-2.5 py-1 rounded-full border dark:border-amber-500/30">
                         ✨ Pending Pull
                       </span>
                     </div>
                     {p.reason && (
-                      <p className="text-xs text-neutral-300 italic bg-neutral-950/60 p-2.5 rounded-xl border border-neutral-800">
+                      <p className="text-xs text-[#262626] dark:text-neutral-300 italic bg-[#F0F2F5] dark:bg-neutral-950/60 p-2.5 rounded-xl border border-[#E4E6EB] dark:border-neutral-800">
                         &ldquo;{p.reason}&rdquo;
                       </p>
                     )}
                     <div className="flex space-x-2 pt-1">
                       <button
                         onClick={() => handlePassPull(p.id)}
-                        className="flex-1 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs transition cursor-pointer"
+                        className="flex-1 py-2 rounded-xl bg-[#E4E6EB] hover:bg-[#D8DADF] text-[#050505] dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-300 font-bold text-xs transition cursor-pointer"
                       >
                         Pass
                       </button>
                       <button
                         onClick={() => handleAcceptPull(p)}
-                        className="flex-2 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-600 text-white font-black text-xs shadow-lg shadow-teal-500/20 transition hover:opacity-90 flex items-center justify-center space-x-1 cursor-pointer"
+                        className="flex-2 py-2 rounded-xl bg-[#0866FF] dark:bg-gradient-to-r dark:from-teal-500 dark:to-emerald-600 text-white font-black text-xs shadow-sm dark:shadow-lg dark:shadow-teal-500/20 transition hover:opacity-90 flex items-center justify-center space-x-1 cursor-pointer"
                       >
                         <Check className="w-4 h-4" />
                         <span>ACCEPT</span>
@@ -1037,10 +1037,10 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
               })}
             </div>
           ) : (
-            <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800 p-8 text-center space-y-2">
-              <Users className="w-8 h-8 text-amber-400/60 mx-auto" />
-              <h4 className="font-bold text-xs text-white">No pending connection pulls</h4>
-              <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
+            <div className="rounded-2xl bg-white dark:bg-neutral-900/60 border border-[#DBDBDB] dark:border-neutral-800 p-8 text-center space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
+              <Users className="w-8 h-8 text-amber-500/60 dark:text-amber-400/60 mx-auto" />
+              <h4 className="font-bold text-xs text-[#050505] dark:text-white">No pending connection pulls</h4>
+              <p className="text-[11px] text-[#65676B] dark:text-neutral-400 max-w-xs mx-auto">
                 All connection invites reviewed. Browse district profiles to send outbound Vibe pulls.
               </p>
             </div>
@@ -1050,14 +1050,14 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
 
       {/* 1:1 Secure Chat Modal (SOC-002) governed by D14 authorization */}
       {activeChatUser && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="w-full sm:max-w-md bg-neutral-900 border border-neutral-800 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[85vh] flex flex-col shadow-2xl text-white">
-            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+        <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
+          <div className="w-full sm:max-w-md bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[85vh] flex flex-col shadow-2xl text-[#050505] dark:text-white">
+            <div className="flex items-center justify-between border-b border-[#E4E6EB] dark:border-neutral-800 pb-3">
               <div className="flex items-center space-x-3">
-                <img src={activeChatUser.avatar && activeChatUser.avatar.trim() !== '' ? activeChatUser.avatar : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'} alt={activeChatUser.name} className="w-9 h-9 rounded-full object-cover border border-teal-500/40" />
+                <img src={activeChatUser.avatar && activeChatUser.avatar.trim() !== '' ? activeChatUser.avatar : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'} alt={activeChatUser.name} className="w-9 h-9 rounded-full object-cover border border-[#DBDBDB] dark:border-teal-500/40" />
                 <div>
-                  <h4 className="font-bold text-sm text-white">{activeChatUser.name}</h4>
-                  <p className="text-[10px] text-teal-400">@{activeChatUser.handle} • SOC-002 Encrypted</p>
+                  <h4 className="font-bold text-sm text-[#050505] dark:text-white">{activeChatUser.name}</h4>
+                  <p className="text-[10px] text-[#0866FF] dark:text-teal-400">@{activeChatUser.handle} • SOC-002 Encrypted</p>
                 </div>
               </div>
               <button
@@ -1065,7 +1065,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                   setActiveChatUser(null);
                   setDmAuthError(null);
                 }}
-                className="p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white cursor-pointer"
+                className="p-1.5 rounded-xl bg-[#EFEFEF] text-[#65676B] hover:text-[#050505] dark:bg-neutral-800 dark:text-neutral-400 dark:hover:text-white cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1073,14 +1073,14 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
 
             {dmAuthError ? (
               <div className="py-8 px-4 text-center space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto text-red-400">
+                <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto text-red-500 dark:text-red-400">
                   <Lock className="w-6 h-6" />
                 </div>
-                <h4 className="font-bold text-sm text-white">D14 DM Access Denied</h4>
-                <p className="text-xs text-neutral-300 leading-relaxed max-w-xs mx-auto">
+                <h4 className="font-bold text-sm text-[#050505] dark:text-white">D14 DM Access Denied</h4>
+                <p className="text-xs text-[#262626] dark:text-neutral-300 leading-relaxed max-w-xs mx-auto">
                   {dmAuthError}
                 </p>
-                <p className="text-[11px] text-amber-300/80 bg-neutral-950 p-3 rounded-xl border border-neutral-800">
+                <p className="text-[11px] text-amber-800 bg-amber-50 border-amber-200 dark:text-amber-300/80 dark:bg-neutral-950 p-3 rounded-xl border dark:border-neutral-800">
                   Rule SOC-002: One-way ECHO follows do not unlock personal messages. Only mutual accepted Vibe requests (D17) unlock 1:1 DMs.
                 </p>
               </div>
@@ -1096,35 +1096,35 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                         <div
                           className={`max-w-[75%] p-3 rounded-2xl text-xs space-y-1 ${
                             msg.sender_id === user?.id
-                              ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-br-sm'
-                              : 'bg-neutral-950 border border-neutral-800 text-neutral-200 rounded-bl-sm'
+                              ? 'bg-[#0866FF] dark:bg-gradient-to-r dark:from-orange-500 dark:to-amber-600 text-white rounded-br-sm'
+                              : 'bg-[#EFEFEF] border-[#DBDBDB] text-[#050505] dark:bg-neutral-950 border dark:border-neutral-800 dark:text-neutral-200 rounded-bl-sm'
                           }`}
                         >
                           <p>{msg.content}</p>
-                          <p className="text-[9px] text-white/60 text-right">
+                          <p className={`text-[9px] text-right ${msg.sender_id === user?.id ? 'text-white/75' : 'text-[#65676B] dark:text-white/60'}`}>
                             {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="py-12 text-center text-xs text-neutral-500 italic">
+                    <div className="py-12 text-center text-xs text-[#65676B] dark:text-neutral-500 italic">
                       Confirmed Vibe established. Start your 1:1 conversation!
                     </div>
                   )}
                 </div>
 
-                <form onSubmit={handleSendChatMessage} className="flex items-center space-x-2 pt-2 border-t border-neutral-800">
+                <form onSubmit={handleSendChatMessage} className="flex items-center space-x-2 pt-2 border-t border-[#E4E6EB] dark:border-neutral-800">
                   <input
                     type="text"
                     value={newChatMessage}
                     onChange={(e) => setNewChatMessage(e.target.value)}
                     placeholder="Send a private vibe message..."
-                    className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
+                    className="flex-1 bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-[#0866FF] dark:focus:border-teal-500"
                   />
                   <button
                     type="submit"
-                    className="p-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-teal-500 text-white hover:opacity-90 transition cursor-pointer"
+                    className="p-2.5 rounded-xl bg-[#0866FF] dark:bg-gradient-to-r dark:from-orange-500 dark:to-teal-500 text-white hover:opacity-90 transition cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -1137,13 +1137,13 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
 
       {/* District Comments Modal */}
       {activePostId && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="w-full sm:max-w-lg bg-neutral-900 border border-neutral-800 rounded-t-3xl sm:rounded-3xl p-6 space-y-4 max-h-[80vh] flex flex-col shadow-2xl text-white">
-            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+        <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
+          <div className="w-full sm:max-w-lg bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 rounded-t-3xl sm:rounded-3xl p-6 space-y-4 max-h-[80vh] flex flex-col shadow-2xl text-[#050505] dark:text-white">
+            <div className="flex items-center justify-between border-b border-[#E4E6EB] dark:border-neutral-800 pb-3">
               <h3 className="font-bold text-base">District Comments</h3>
               <button
                 onClick={() => setActivePostId(null)}
-                className="text-xs text-neutral-400 hover:text-white px-2.5 py-1 rounded-xl bg-neutral-800 cursor-pointer"
+                className="text-xs text-[#65676B] hover:text-[#050505] dark:text-neutral-400 dark:hover:text-white px-2.5 py-1 rounded-xl bg-[#EFEFEF] dark:bg-neutral-800 cursor-pointer"
               >
                 Close
               </button>
@@ -1152,45 +1152,45 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
             <div className="flex-1 overflow-y-auto space-y-3 min-h-[160px]">
               {comments.length > 0 ? (
                 comments.map((comm) => (
-                  <div key={comm.id} className="flex space-x-3 items-start bg-neutral-950/60 p-3 rounded-2xl border border-neutral-800">
+                  <div key={comm.id} className="flex space-x-3 items-start bg-[#F0F2F5] dark:bg-neutral-950/60 p-3 rounded-2xl border border-[#E4E6EB] dark:border-neutral-800">
                     <img src={comm.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'} alt={comm.username} className="w-8 h-8 rounded-full object-cover" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-white">@{comm.username}</span>
-                        <span className="text-[10px] text-neutral-500">
+                        <span className="font-bold text-xs text-[#050505] dark:text-white">@{comm.username}</span>
+                        <span className="text-[10px] text-[#65676B] dark:text-neutral-500">
                           {new Date(comm.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
-                      <p className="text-xs text-neutral-300 mt-1">{comm.content}</p>
+                      <p className="text-xs text-[#262626] dark:text-neutral-300 mt-1">{comm.content}</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="py-6 text-center text-xs text-neutral-500 italic">
+                <div className="py-6 text-center text-xs text-[#65676B] dark:text-neutral-500 italic">
                   No comments yet. Start the conversation!
                 </div>
               )}
             </div>
 
-            <form onSubmit={handleSendComment} className="relative flex items-center space-x-2 pt-2 border-t border-neutral-800">
+            <form onSubmit={handleSendComment} className="relative flex items-center space-x-2 pt-2 border-t border-[#E4E6EB] dark:border-neutral-800">
               <input
                 type="text"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="Write a comment..."
-                className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
+                className="flex-1 bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-[#0866FF] dark:focus:border-teal-500"
               />
               <button
                 type="button"
                 onClick={() => setCommentEmojiPickerOpen(!commentEmojiPickerOpen)}
-                className={`p-2 transition cursor-pointer ${commentEmojiPickerOpen ? 'text-amber-400' : 'text-neutral-400 hover:text-amber-300'}`}
+                className={`p-2 transition cursor-pointer ${commentEmojiPickerOpen ? 'text-amber-500 dark:text-amber-400' : 'text-[#65676B] hover:text-[#050505] dark:text-neutral-400 dark:hover:text-amber-300'}`}
                 title="Telegram & Animated Emojis"
               >
                 <Smile className="w-5 h-5" />
               </button>
               <button
                 type="submit"
-                className="p-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-teal-500 text-white hover:opacity-90 transition cursor-pointer"
+                className="p-2.5 rounded-xl bg-[#0866FF] dark:bg-gradient-to-r dark:from-orange-500 dark:to-teal-500 text-white hover:opacity-90 transition cursor-pointer"
               >
                 <Send className="w-4 h-4" />
               </button>

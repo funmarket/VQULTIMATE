@@ -292,35 +292,35 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
   const isPro = guardian.type === 'pro';
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn select-none font-sans">
-      <div className="w-full sm:max-w-lg bg-[#0d0b12] border border-zinc-800/90 rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl text-white max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-50 bg-black/50 dark:bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn select-none font-sans">
+      <div className="w-full sm:max-w-lg bg-white dark:bg-[#0d0b12] border border-[#DBDBDB] dark:border-zinc-800/90 rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl text-[#050505] dark:text-white max-h-[92vh] flex flex-col">
         {/* Header Bar matching Screenshot 3 */}
-        <div className="px-6 pt-5 pb-3 flex items-center justify-between border-b border-zinc-900 bg-[#0d0b12] shrink-0">
+        <div className="px-6 pt-5 pb-3 flex items-center justify-between border-b border-[#E4E6EB] dark:border-zinc-900 bg-white dark:bg-[#0d0b12] shrink-0">
           <div className="flex items-center gap-2.5">
-            <span className="text-[12px] font-extrabold uppercase tracking-wider text-purple-400 font-mono">
+            <span className="text-[12px] font-extrabold uppercase tracking-wider text-purple-700 dark:text-purple-400 font-mono">
               GUARDIAN PROFILE
             </span>
-            <span className="px-2.5 py-0.5 rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-300 font-black text-[9px] uppercase tracking-wider flex items-center gap-1 shadow-sm">
-              <Shield className="w-2.5 h-2.5 text-amber-400" />
+            <span className="px-2.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 font-black text-[9px] uppercase tracking-wider flex items-center gap-1 shadow-sm">
+              <Shield className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
               <span>{isPro ? 'PRO GUIDE' : 'LOCAL LEGEND'}</span>
             </span>
           </div>
           <button
             onClick={onClose}
             aria-label="Close Guardian Modal"
-            className="w-8 h-8 rounded-full bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center cursor-pointer transition border border-white/5"
+            className="w-8 h-8 rounded-full bg-[#EFEFEF] dark:bg-zinc-900 hover:bg-[#E4E6EB] dark:hover:bg-zinc-800 text-[#050505] dark:text-zinc-400 dark:hover:text-white flex items-center justify-center cursor-pointer transition border border-[#DBDBDB] dark:border-white/5"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Scrollable Content Container */}
-        <div className="overflow-y-auto flex-1 divide-y divide-zinc-900">
+        <div className="overflow-y-auto flex-1 divide-y divide-[#E4E6EB] dark:divide-zinc-900">
           {/* Identity Block matching Screenshot 3 */}
           <div className="p-6">
             <div className="flex items-start gap-4">
               {/* Square Selfie Box with APP SELFIE tag */}
-              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden bg-zinc-950 border border-zinc-800 shrink-0 shadow-lg">
+              <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden bg-[#F0F2F5] dark:bg-zinc-950 border border-[#DBDBDB] dark:border-zinc-800 shrink-0 shadow-lg">
                 <img
                   src={guardian.avatarUrl || guardian.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'}
                   alt={guardian.name}
@@ -335,28 +335,28 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
               {/* Identity details */}
               <div className="min-w-0 flex-1 space-y-1.5">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight truncate">
+                  <h2 className="text-xl sm:text-2xl font-black text-[#050505] dark:text-white tracking-tight truncate">
                     {guardian.name}
                   </h2>
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 text-xs shrink-0" title="Verified Identity">
-                    <Shield className="w-3.5 h-3.5 fill-blue-500 text-blue-500" />
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#E7F3FF] dark:bg-blue-500/20 text-[#0866FF] dark:text-blue-400 text-xs shrink-0" title="Verified Identity">
+                    <Shield className="w-3.5 h-3.5 fill-[#0866FF] dark:fill-blue-500 text-[#0866FF] dark:text-blue-500" />
                   </span>
                 </div>
 
-                <p className="text-xs text-zinc-400 font-mono tracking-wide">
+                <p className="text-xs text-[#65676B] dark:text-zinc-400 font-mono tracking-wide">
                   {guardian.handle}
                 </p>
 
-                <p className="text-xs text-zinc-400 flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                <p className="text-xs text-[#65676B] dark:text-zinc-400 flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-[#65676B] dark:text-zinc-500 shrink-0" />
                   <span className="truncate">{guardian.city || guardian.district || 'Tunis / Carthage, Tunisia'}</span>
-                  <span className="text-zinc-600">•</span>
+                  <span className="text-[#65676B] dark:text-zinc-600">•</span>
                   <span className="shrink-0">{guardian.age ? `${guardian.age} yrs old` : '32 yrs old'}</span>
                 </p>
 
                 {/* Rate and Handshake Action Row */}
                 <div className="flex items-center gap-2 pt-1 flex-wrap">
-                  <span className="px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center gap-1">
+                  <span className="px-2.5 py-1 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-bold flex items-center gap-1">
                     <span>💰</span>
                     <span>Rate: {guardian.type === 'local' ? 'Free' : `$${guardian.hourlyRate || 50} / hr`}</span>
                   </span>
@@ -374,7 +374,7 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
                       <button
                         onClick={handleDeclineHandshake}
                         disabled={handshakeLoading}
-                        className="px-2 py-1 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs font-bold uppercase transition cursor-pointer"
+                        className="px-2 py-1 rounded-xl bg-[#EFEFEF] dark:bg-zinc-800 hover:bg-[#E4E6EB] dark:hover:bg-zinc-700 text-[#262626] dark:text-zinc-400 text-xs font-bold uppercase transition cursor-pointer"
                       >
                         Decline
                       </button>
@@ -385,13 +385,13 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
                       disabled={handshakeLoading || handshakeStatus === 'accepted'}
                       className={`px-3 py-1 rounded-xl border text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition active:scale-95 cursor-pointer ${
                         handshakeStatus === 'accepted'
-                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 cursor-default'
+                          ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/50 cursor-default'
                           : handshakeStatus === 'pending_sent'
-                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse cursor-default'
-                            : 'bg-black hover:bg-zinc-900 text-amber-300 border-amber-500/40 hover:border-amber-400'
+                            ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/40 animate-pulse cursor-default'
+                            : 'bg-[#EFEFEF] dark:bg-black hover:bg-[#E4E6EB] dark:hover:bg-zinc-900 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/40 hover:border-amber-400'
                       }`}
                     >
-                      <Handshake className="w-3.5 h-3.5 text-amber-400" />
+                      <Handshake className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                       <span>
                         {handshakeStatus === 'accepted'
                           ? 'HANDSHAKEN'
@@ -407,10 +407,10 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
                 <div className="pt-1">
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
                     isSelfieFresh
-                      ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-300'
-                      : 'bg-red-950/30 border-red-500/30 text-red-300'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300'
+                      : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300'
                   }`}>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>{isSelfieFresh ? `In-App Selfie Fresh • ${daysLeft} days left` : 'In-App Selfie Expired'}</span>
                   </span>
                 </div>
@@ -420,10 +420,10 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
 
           {/* About Section matching Screenshot 3 */}
           <div className="p-6 space-y-2">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-400">
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#65676B] dark:text-zinc-400">
               ABOUT THE GUARDIAN
             </span>
-            <div className="rounded-2xl bg-zinc-900/50 border border-zinc-800/80 p-4 text-xs text-zinc-300 leading-relaxed font-light">
+            <div className="rounded-2xl bg-[#FAFAFA] dark:bg-zinc-900/50 border border-[#E4E6EB] dark:border-zinc-800/80 p-4 text-xs text-[#262626] dark:text-zinc-300 leading-relaxed font-normal dark:font-light">
               {guardian.bio || 'Strategic explorer and heritage guide. Leading authentic expeditions across historic Carthage and the Mediterranean coast.'}
             </div>
           </div>
@@ -431,13 +431,13 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
           {/* Pre-made Bookable Tours Section matching Screenshot 3 & 2 */}
           <div className="p-6 space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-zinc-300">
-                <Calendar className="w-4 h-4 text-emerald-400" />
-                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-300">
+              <div className="flex items-center gap-2 text-[#050505] dark:text-zinc-300">
+                <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#050505] dark:text-zinc-300">
                   PRE-MADE BOOKABLE TOURS
                 </span>
               </div>
-              <span className="text-xs text-emerald-400 font-medium">
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                 Direct Reservation
               </span>
             </div>
@@ -447,28 +447,28 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
               {displayTours.map((tour) => (
                 <div
                   key={tour.id}
-                  className="rounded-2xl bg-zinc-900/50 border border-zinc-800/80 p-4 space-y-3 transition hover:border-zinc-700"
+                  className="rounded-2xl bg-[#FAFAFA] dark:bg-zinc-900/50 border border-[#E4E6EB] dark:border-zinc-800/80 p-4 space-y-3 transition hover:border-[#DBDBDB] dark:hover:border-zinc-700"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-sm sm:text-base font-bold text-white leading-snug">
+                    <h3 className="text-sm sm:text-base font-bold text-[#050505] dark:text-white leading-snug">
                       {tour.title}
                     </h3>
-                    <span className="px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold shrink-0">
+                    <span className="px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-bold shrink-0">
                       ${tour.pricePerPerson || 50} / hour
                     </span>
                   </div>
 
-                  <p className="text-xs text-zinc-400 leading-relaxed">
+                  <p className="text-xs text-[#65676B] dark:text-zinc-400 leading-relaxed">
                     {tour.story || tour.description || 'Private in-depth historical expedition exploring ancient Punic ruins, Roman baths, and legendary fortress ramparts.'}
                   </p>
 
                   <div className="flex items-center gap-4 text-xs pt-1 flex-wrap">
-                    <div className="flex items-center gap-1.5 text-purple-300 font-medium">
-                      <Clock className="w-3.5 h-3.5 text-purple-400" />
+                    <div className="flex items-center gap-1.5 text-purple-700 dark:text-purple-300 font-medium">
+                      <Clock className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                       <span>{tour.durationHours || 3.0} hours</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-emerald-300 font-medium">
-                      <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                    <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 font-medium">
+                      <MapPin className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       <span className="truncate max-w-[200px]">{tour.stops?.[0]?.address || tour.city || 'Byrsa Hill Acropolium Gates, Carthage'}</span>
                     </div>
                   </div>
@@ -487,34 +487,34 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
 
             {/* Quick in-modal reservation drawer if booking active */}
             {bookingTour && (
-              <form onSubmit={handleConfirmReservation} className="p-4 rounded-2xl bg-zinc-950 border border-amber-500/40 space-y-3 animate-in fade-in">
-                <div className="flex items-center justify-between pb-1 border-b border-zinc-900">
-                  <span className="text-xs font-bold text-amber-300">Reserve Slot: {bookingTour.title}</span>
-                  <button type="button" onClick={() => setBookingTour(null)} className="text-zinc-500 hover:text-white text-xs">Cancel</button>
+              <form onSubmit={handleConfirmReservation} className="p-4 rounded-2xl bg-[#F0F2F5] dark:bg-zinc-950 border border-amber-300 dark:border-amber-500/40 space-y-3 animate-in fade-in">
+                <div className="flex items-center justify-between pb-1 border-b border-[#DBDBDB] dark:border-zinc-900">
+                  <span className="text-xs font-bold text-amber-700 dark:text-amber-300">Reserve Slot: {bookingTour.title}</span>
+                  <button type="button" onClick={() => setBookingTour(null)} className="text-[#65676B] dark:text-zinc-500 hover:text-[#050505] dark:hover:text-white text-xs">Cancel</button>
                 </div>
                 {bookingSuccess ? (
-                  <p className="text-xs text-emerald-400 font-bold py-2">✓ Reservation request submitted! Awaiting guide confirmation.</p>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold py-2">✓ Reservation request submitted! Awaiting guide confirmation.</p>
                 ) : (
                   <>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <label className="text-[10px] text-zinc-400 block mb-1">Date</label>
+                        <label className="text-[10px] text-[#65676B] dark:text-zinc-400 block mb-1">Date</label>
                         <input
                           type="date"
                           required
                           value={bookingDate}
                           onChange={e => setBookingDate(e.target.value)}
-                          className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-white text-xs outline-none focus:border-amber-500"
+                          className="w-full bg-white dark:bg-zinc-900 border border-[#DBDBDB] dark:border-zinc-800 rounded-lg p-2 text-[#050505] dark:text-white text-xs outline-none focus:border-amber-500"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-zinc-400 block mb-1">Time</label>
+                        <label className="text-[10px] text-[#65676B] dark:text-zinc-400 block mb-1">Time</label>
                         <input
                           type="time"
                           required
                           value={bookingTime}
                           onChange={e => setBookingTime(e.target.value)}
-                          className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-2 text-white text-xs outline-none focus:border-amber-500"
+                          className="w-full bg-white dark:bg-zinc-900 border border-[#DBDBDB] dark:border-zinc-800 rounded-lg p-2 text-[#050505] dark:text-white text-xs outline-none focus:border-amber-500"
                         />
                       </div>
                     </div>
@@ -534,44 +534,44 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
           {/* Handshake-Gated Reviews Section matching Screenshot 2 */}
           <div className="p-6 space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-amber-400">
-                <Award className="w-4 h-4 text-amber-400" />
-                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-400">
+              <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                <Award className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                   HANDSHAKE-GATED REVIEWS ({reviews.length})
                 </span>
               </div>
-              <span className="text-[11px] font-mono text-zinc-500">
+              <span className="text-[11px] font-mono text-[#65676B] dark:text-zinc-500">
                 Max 111 chars
               </span>
             </div>
 
             {/* Reviews display */}
             {reviewsLoading ? (
-              <div className="p-4 text-center text-xs text-zinc-500 font-mono">
+              <div className="p-4 text-center text-xs text-[#65676B] dark:text-zinc-500 font-mono">
                 Loading verified reviews...
               </div>
             ) : reviews.length === 0 ? (
-              <div className="rounded-2xl bg-zinc-900/40 border border-zinc-800/80 p-5 text-center text-xs text-zinc-400">
+              <div className="rounded-2xl bg-[#FAFAFA] dark:bg-zinc-900/40 border border-[#E4E6EB] dark:border-zinc-800/80 p-5 text-center text-xs text-[#65676B] dark:text-zinc-400">
                 No reviews yet. Complete a Handshake to share the first review!
               </div>
             ) : (
               <div className="space-y-2">
                 {reviews.map(rev => (
-                  <div key={rev.id} className="rounded-xl bg-zinc-900/50 border border-zinc-800/80 p-3 space-y-1.5">
+                  <div key={rev.id} className="rounded-xl bg-[#FAFAFA] dark:bg-zinc-900/50 border border-[#E4E6EB] dark:border-zinc-800/80 p-3 space-y-1.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 rounded-full bg-purple-900/50 border border-purple-500/30 flex items-center justify-center text-[10px] text-purple-300 font-bold">
+                        <span className="w-5 h-5 rounded-full bg-purple-50 dark:bg-purple-900/50 border border-purple-200 dark:border-purple-500/30 flex items-center justify-center text-[10px] text-purple-700 dark:text-purple-300 font-bold">
                           {rev.reviewer_name.slice(0, 1)}
                         </span>
-                        <span className="text-xs font-bold text-zinc-200">{rev.reviewer_name}</span>
+                        <span className="text-xs font-bold text-[#050505] dark:text-zinc-200">{rev.reviewer_name}</span>
                       </div>
-                      <div className="flex items-center gap-0.5 text-amber-400 text-xs">
+                      <div className="flex items-center gap-0.5 text-amber-500 dark:text-amber-400 text-xs">
                         {Array.from({ length: rev.rating }).map((_, i) => (
-                          <Star key={i} className="w-3 h-3 fill-amber-400" />
+                          <Star key={i} className="w-3 h-3 fill-amber-500 dark:fill-amber-400" />
                         ))}
                       </div>
                     </div>
-                    <p className="text-xs text-zinc-300 font-light leading-relaxed">
+                    <p className="text-xs text-[#262626] dark:text-zinc-300 font-normal dark:font-light leading-relaxed">
                       &ldquo;{rev.comment}&rdquo;
                     </p>
                   </div>
@@ -581,9 +581,9 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
 
             {/* Handshake Gating State */}
             {handshakeStatus === 'accepted' ? (
-              <form onSubmit={handleSubmitReview} className="rounded-2xl bg-zinc-900/60 border border-zinc-800 p-3.5 space-y-2.5">
+              <form onSubmit={handleSubmitReview} className="rounded-2xl bg-[#F0F2F5] dark:bg-zinc-900/60 border border-[#E4E6EB] dark:border-zinc-800 p-3.5 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" />
                     Verified Handshake Review
                   </span>
@@ -593,7 +593,7 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
                         key={star}
                         type="button"
                         onClick={() => setReviewRating(star)}
-                        className={`text-sm cursor-pointer ${star <= reviewRating ? 'text-amber-400' : 'text-zinc-600'}`}
+                        className={`text-sm cursor-pointer ${star <= reviewRating ? 'text-amber-500 dark:text-amber-400' : 'text-[#65676B] dark:text-zinc-600'}`}
                       >
                         ★
                       </button>
@@ -608,11 +608,11 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
                   placeholder="Share your verified encounter experience (max 111 chars)..."
                   value={reviewComment}
                   onChange={e => setReviewComment(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-xs text-white placeholder-zinc-500 outline-none focus:border-amber-500"
+                  className="w-full bg-white dark:bg-zinc-950 border border-[#DBDBDB] dark:border-zinc-800 rounded-xl p-2.5 text-xs text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-zinc-500 outline-none focus:border-[#0866FF] dark:focus:border-amber-500"
                 />
 
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-zinc-500">
+                  <span className="text-[10px] font-mono text-[#65676B] dark:text-zinc-500">
                     {reviewComment.length}/111
                   </span>
                   <button
@@ -624,10 +624,10 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
                     <span>{submittingReview ? 'Posting...' : 'Post Review'}</span>
                   </button>
                 </div>
-                {reviewError && <p className="text-red-400 text-[11px]">{reviewError}</p>}
+                {reviewError && <p className="text-red-600 dark:text-red-400 text-[11px]">{reviewError}</p>}
               </form>
             ) : (
-              <div className="p-3 rounded-xl bg-zinc-900/40 border border-zinc-800/80 text-center text-xs text-zinc-500 flex items-center justify-center gap-2">
+              <div className="p-3 rounded-xl bg-[#FAFAFA] dark:bg-zinc-900/40 border border-[#E4E6EB] dark:border-zinc-800/80 text-center text-xs text-[#65676B] dark:text-zinc-500 flex items-center justify-center gap-2">
                 <span>🔒</span>
                 <span>Handshake required before reviews can be posted.</span>
               </div>
@@ -636,7 +636,7 @@ export const GuardianDetailModal: React.FC<GuardianDetailModalProps> = ({
         </div>
 
         {/* Fixed Sticky Bottom Action Bar matching Screenshot 2 */}
-        <div className="p-4 sm:p-5 border-t border-zinc-900 bg-[#0d0b12] shrink-0">
+        <div className="p-4 sm:p-5 border-t border-[#E4E6EB] dark:border-zinc-900 bg-white dark:bg-[#0d0b12] shrink-0">
           <button
             onClick={handleMessage}
             className="w-full py-3.5 rounded-2xl bg-[#7c3aed] hover:bg-[#6d28d9] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-purple-600/30 active:scale-98 transition cursor-pointer"

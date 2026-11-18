@@ -240,16 +240,16 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
   };
 
   return (
-    <div className="bg-zinc-950 border border-white/20 rounded-3xl p-6 w-full max-w-lg mx-auto text-left space-y-6 text-white select-none">
+    <div className="bg-white dark:bg-zinc-950 border border-[#DBDBDB] dark:border-white/20 rounded-3xl p-6 w-full max-w-lg mx-auto text-left space-y-6 text-[#050505] dark:text-white select-none shadow-2xl dark:shadow-none">
       
       {/* Dynamic Header */}
-      <div className="flex justify-between items-center pb-4 border-b border-white/10">
+      <div className="flex justify-between items-center pb-4 border-b border-[#E4E6EB] dark:border-white/10">
         <div>
-          <h2 className="text-xl font-extrabold uppercase tracking-tight italic flex items-center gap-2">
-            <span className="text-vibe-primary">🎒</span> 
+          <h2 className="text-xl font-extrabold uppercase tracking-tight italic flex items-center gap-2 text-[#050505] dark:text-white">
+            <span className="text-[#0866FF] dark:text-vibe-primary">🎒</span> 
             {isEditing ? "Edit Traveler Profile" : "Create Your Account"}
           </h2>
-          <p className="text-[10px] text-zinc-500 font-mono tracking-wider mt-0.5">
+          <p className="text-[10px] text-[#65676B] dark:text-zinc-500 font-mono tracking-wider mt-0.5">
             {isEditing ? "MODIFY YOUR TRAVELER COMPASS" : "JOIN THE COZY VIBE CIRCLE"}
           </p>
         </div>
@@ -258,7 +258,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
           <button 
             type="button"
             onClick={onCancel}
-            className="text-xs font-mono border border-white/10 hover:border-white/30 text-zinc-400 px-3 py-1 rounded-xl transition-all cursor-pointer"
+            className="text-xs font-mono border border-[#DBDBDB] dark:border-white/10 hover:border-[#65676B] dark:hover:border-white/30 bg-[#EFEFEF] dark:bg-transparent text-[#050505] dark:text-zinc-400 px-3 py-1 rounded-xl transition-all cursor-pointer"
           >
             Cancel
           </button>
@@ -269,24 +269,24 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
         
         {/* Alerts */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-xl flex items-start gap-2.5 text-xs text-red-400 animate-pulse">
+          <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 p-3 rounded-xl flex items-start gap-2.5 text-xs text-red-700 dark:text-red-400 animate-pulse">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl flex items-start gap-2.5 text-xs text-emerald-400">
+          <div className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 p-3 rounded-xl flex items-start gap-2.5 text-xs text-emerald-700 dark:text-emerald-400">
             <Check className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{successMsg}</span>
           </div>
         )}
 
         {/* 1. Live Avatar Preview & Hex Entry */}
-        <div className="flex flex-col sm:flex-row items-center gap-5 bg-zinc-900/30 p-4 rounded-2xl border border-white/5">
+        <div className="flex flex-col sm:flex-row items-center gap-5 bg-[#F0F2F5] dark:bg-zinc-900/30 p-4 rounded-2xl border border-[#DBDBDB] dark:border-white/5">
           <div className="relative shrink-0">
-            <div className="absolute inset-0 bg-vibe-primary/5 blur-xl rounded-full" />
-            <div className="relative w-20 h-20 rounded-full border border-white/20 p-1 bg-black flex items-center justify-center overflow-hidden">
+            <div className="hidden dark:block absolute inset-0 bg-vibe-primary/5 blur-xl rounded-full" />
+            <div className="relative w-20 h-20 rounded-full border border-[#DBDBDB] dark:border-white/20 p-1 bg-white dark:bg-black flex items-center justify-center overflow-hidden">
               {((avatarPreview && avatarPreview.trim()) || (photoUrl && photoUrl.trim())) ? (
                 <img 
                   src={((avatarPreview && avatarPreview.trim()) || (photoUrl && photoUrl.trim())) as string} 
@@ -298,28 +298,28 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
                   }}
                 />
               ) : (
-                <User className="w-8 h-8 text-zinc-600" />
+                <User className="w-8 h-8 text-[#65676B] dark:text-zinc-600" />
               )}
             </div>
           </div>
           
           <div className="space-y-1.5 w-full flex-1">
-            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500 flex items-center gap-1">
-              <Globe className="w-3 h-3 text-vibe-primary" /> Avatar Photo URL (Optional)
+            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#65676B] dark:text-zinc-500 flex items-center gap-1">
+              <Globe className="w-3 h-3 text-[#0866FF] dark:text-vibe-primary" /> Avatar Photo URL (Optional)
             </label>
             <input 
               type="text" 
               placeholder="https://images.unsplash.com/..." 
               value={photoUrl}
               onChange={(e) => setPhotoUrl(e.target.value)}
-              className="w-full h-10 px-3.5 bg-zinc-950 border border-white/10 rounded-xl text-xs text-zinc-200 focus:outline-none focus:border-vibe-primary transition-colors font-mono"
+              className="w-full h-10 px-3.5 bg-white dark:bg-zinc-950 border border-[#DBDBDB] dark:border-white/10 rounded-xl text-xs text-[#050505] dark:text-zinc-200 focus:outline-none focus:border-[#0866FF] dark:focus:border-vibe-primary transition-colors font-mono"
             />
-            <label className="block text-[10px] font-semibold text-vibe-primary cursor-pointer">
+            <label className="block text-[10px] font-semibold text-[#0866FF] dark:text-vibe-primary cursor-pointer">
               Upload a JPG, PNG or WebP photo (up to 5 MB)
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
-                className="mt-1 block w-full text-xs text-zinc-400 file:mr-2 file:rounded-lg file:border-0 file:bg-zinc-800 file:px-3 file:py-2 file:text-white"
+                className="mt-1 block w-full text-xs text-[#65676B] dark:text-zinc-400 file:mr-2 file:rounded-lg file:border-0 file:bg-[#EFEFEF] dark:file:bg-zinc-800 file:px-3 file:py-2 file:text-[#050505] dark:file:text-white"
                 onChange={event => {
                   const file = event.target.files?.[0] || null;
                   if (file && (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024)) {
@@ -331,7 +331,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
                 }}
               />
             </label>
-            <span className="text-[8px] text-zinc-600 block">
+            <span className="text-[8px] text-[#65676B] dark:text-zinc-600 block">
               Or paste an image URL above. Uploaded signup photos are saved after email verification on this device.
             </span>
           </div>
@@ -340,7 +340,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
         {/* 2. Credentials Form Group */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500 flex items-center gap-1">
+            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#65676B] dark:text-zinc-500 flex items-center gap-1">
               {isCheckingHandle ? "⏳" : "@"} Unique username (@)
             </label>
             <input 
@@ -351,8 +351,8 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
               required
               disabled={isEditing}
               className={cn(
-                "w-full h-11 px-3.5 bg-zinc-950 border rounded-xl text-xs font-mono transition-colors focus:outline-none focus:ring-0",
-                isEditing ? "text-zinc-500 border-white/5 bg-zinc-950/50 cursor-not-allowed" : "text-white border-white/10 focus:border-vibe-primary",
+                "w-full h-11 px-3.5 border rounded-xl text-xs font-mono transition-colors focus:outline-none focus:ring-0",
+                isEditing ? "text-[#65676B] dark:text-zinc-500 border-[#DBDBDB] dark:border-white/5 bg-[#EFEFEF] dark:bg-zinc-950/50 cursor-not-allowed" : "bg-white dark:bg-zinc-950 text-[#050505] dark:text-white border-[#DBDBDB] dark:border-white/10 focus:border-[#0866FF] dark:focus:border-vibe-primary",
                 handle && handleAvailable === true && "border-emerald-500/50 focus:border-emerald-500",
                 handle && handleAvailable === false && "border-red-500/50 focus:border-red-500"
               )}
@@ -360,7 +360,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
             {!isEditing && handle && (
               <span className={cn(
                 "text-[8px] font-mono tracking-tight",
-                handleAvailable ? "text-emerald-400" : "text-red-400"
+                handleAvailable ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
               )}>
                 {handleAvailable ? "✓ Handle is unique" : "✗ Handle already taken by another node"}
               </span>
@@ -368,7 +368,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
+            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#65676B] dark:text-zinc-500">
               Password
             </label>
             <input 
@@ -378,13 +378,13 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
               onChange={(e) => setPassword(e.target.value)}
               required={!isEditing}
               minLength={8}
-              className="w-full h-11 px-3.5 bg-zinc-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-vibe-primary transition-colors font-mono"
+              className="w-full h-11 px-3.5 bg-white dark:bg-zinc-950 border border-[#DBDBDB] dark:border-white/10 rounded-xl text-xs text-[#050505] dark:text-white focus:outline-none focus:border-[#0866FF] dark:focus:border-vibe-primary transition-colors font-mono"
             />
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">
+          <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#65676B] dark:text-zinc-500">
             Citizen Display Name
           </label>
           <input 
@@ -393,27 +393,27 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             required
-            className="w-full h-11 px-3.5 bg-zinc-950 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-vibe-primary transition-colors"
+            className="w-full h-11 px-3.5 bg-white dark:bg-zinc-950 border border-[#DBDBDB] dark:border-white/10 rounded-xl text-xs text-[#050505] dark:text-white focus:outline-none focus:border-[#0866FF] dark:focus:border-vibe-primary transition-colors"
           />
         </div>
 
         {!isEditing && (
           <div className="space-y-1.5">
-            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500">Email address</label>
+            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#65676B] dark:text-zinc-500">Email address</label>
             <input type="email" autoComplete="email" required value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full h-11 px-3.5 bg-zinc-950 border border-white/10 rounded-xl text-xs text-white outline-none focus:border-vibe-primary" />
+              className="w-full h-11 px-3.5 bg-white dark:bg-zinc-950 border border-[#DBDBDB] dark:border-white/10 rounded-xl text-xs text-[#050505] dark:text-white outline-none focus:border-[#0866FF] dark:focus:border-vibe-primary" />
           </div>
         )}
 
         {/* 3. Vibe Tags (Pills) Selection */}
-        <div className="space-y-2 bg-zinc-900/10 p-4 rounded-xl border border-white/5">
+        <div className="space-y-2 bg-[#F0F2F5] dark:bg-zinc-900/10 p-4 rounded-xl border border-[#DBDBDB] dark:border-white/5">
           <div className="flex justify-between items-center">
-            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-500 flex items-center gap-1">
-              <Hash className="w-3 h-3 text-vibe-primary" /> Cultural Tags (Select Min 3)
+            <label className="text-[9px] font-black uppercase tracking-[0.2em] text-[#65676B] dark:text-zinc-500 flex items-center gap-1">
+              <Hash className="w-3 h-3 text-[#0866FF] dark:text-vibe-primary" /> Cultural Tags (Select Min 3)
             </label>
-            <span className="text-[8px] font-mono text-zinc-500">
+            <span className="text-[8px] font-mono text-[#65676B] dark:text-zinc-500">
               {tags.length} SELECTED
             </span>
           </div>
@@ -430,8 +430,8 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
                   className={cn(
                     "text-[10px] font-mono tracking-tight px-2.5 py-1.5 rounded-lg border transition-all cursor-pointer",
                     isSelected 
-                      ? "bg-vibe-primary/20 hover:bg-vibe-primary/30 border-vibe-primary text-vibe-secondary scale-102 font-bold" 
-                      : "bg-zinc-950/60 border-white/5 hover:border-white/15 text-zinc-400"
+                      ? "bg-[#E7F3FF] dark:bg-vibe-primary/20 hover:bg-[#DCEBFF] dark:hover:bg-vibe-primary/30 border-[#0866FF] dark:border-vibe-primary text-[#0866FF] dark:text-vibe-secondary scale-102 font-bold" 
+                      : "bg-white dark:bg-zinc-950/60 border-[#DBDBDB] dark:border-white/5 hover:border-[#0866FF]/40 dark:hover:border-white/15 text-[#65676B] dark:text-zinc-400"
                   )}
                 >
                   #{pTag}
@@ -447,12 +447,12 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
               placeholder="Type custom tag..." 
               value={customTagInput}
               onChange={(e) => setCustomTagInput(e.target.value.replace(/\s+/g, '-'))}
-              className="flex-1 h-9 px-3 bg-zinc-950 border border-white/10 rounded-lg text-xs text-zinc-300 focus:outline-none focus:border-vibe-primary font-mono"
+              className="flex-1 h-9 px-3 bg-white dark:bg-zinc-950 border border-[#DBDBDB] dark:border-white/10 rounded-lg text-xs text-[#050505] dark:text-zinc-300 focus:outline-none focus:border-[#0866FF] dark:focus:border-vibe-primary font-mono"
             />
             <button 
               type="button"
               onClick={handleAddCustomTag}
-              className="h-9 px-3 bg-white/5 border border-white/10 rounded-lg text-xs font-bold hover:bg-white/10 transition-colors cursor-pointer text-zinc-300"
+              className="h-9 px-3 bg-[#EFEFEF] dark:bg-white/5 border border-[#DBDBDB] dark:border-white/10 rounded-lg text-xs font-bold hover:bg-[#E4E6EB] dark:hover:bg-white/10 transition-colors cursor-pointer text-[#050505] dark:text-zinc-300"
             >
               Add
             </button>
@@ -460,12 +460,12 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
         </div>
 
         {/* 4. Oracle mode mandate checker */}
-        <div className="flex items-center justify-between bg-zinc-900/40 p-4 rounded-2xl border border-white/5">
+        <div className="flex items-center justify-between bg-[#F0F2F5] dark:bg-zinc-900/40 p-4 rounded-2xl border border-[#DBDBDB] dark:border-white/5">
           <div className="space-y-0.5 flex-1 pr-3">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white flex items-center gap-1">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#050505] dark:text-white flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5 text-[#ef4444]" /> Cozy Diary Mode
             </span>
-            <p className="text-[9px] text-zinc-500 leading-normal">
+            <p className="text-[9px] text-[#65676B] dark:text-zinc-500 leading-normal">
               Optional completion assistance for your bio, broad location and at least one contact handle.
             </p>
           </div>
@@ -476,14 +476,14 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
               onChange={() => setOracleMode(!oracleMode)}
               className="sr-only peer" 
             />
-            <div className="w-9 h-5 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#ef4444] peer-checked:after:bg-white" />
+            <div className="w-9 h-5 bg-[#D8DADF] dark:bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:after:bg-zinc-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#ef4444] peer-checked:after:bg-white" />
           </label>
         </div>
 
         {/* 5. Extended Information (Optional, required under Oracle mode) */}
-        <div className="space-y-4 bg-zinc-900/20 p-4 rounded-xl border border-white/5">
+        <div className="space-y-4 bg-[#F0F2F5] dark:bg-zinc-900/20 p-4 rounded-xl border border-[#DBDBDB] dark:border-white/5">
           <div className="space-y-1.5 animate-in fade-in duration-200">
-            <label className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-500">
+            <label className="text-[10px] font-black uppercase tracking-[0.15em] text-[#65676B] dark:text-zinc-500">
               Biography {oracleMode && <span className="text-red-500">(Mandated)</span>}
             </label>
             <textarea 
@@ -492,12 +492,12 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
               onChange={(e) => setBio(e.target.value)}
               rows={2}
               required={oracleMode}
-              className="w-full bg-zinc-950 border border-white/10 rounded-lg p-3 text-xs text-white focus:outline-none focus:border-vibe-primary"
+              className="w-full bg-white dark:bg-zinc-950 border border-[#DBDBDB] dark:border-white/10 rounded-lg p-3 text-xs text-[#050505] dark:text-white focus:outline-none focus:border-[#0866FF] dark:focus:border-vibe-primary"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-500">
+            <label className="text-[10px] font-black uppercase tracking-[0.15em] text-[#65676B] dark:text-zinc-500">
               City or broad location {oracleMode && <span className="text-red-500">(Mandated)</span>}
             </label>
             <input 
@@ -506,19 +506,19 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               required={oracleMode}
-              className="w-full h-10 px-3 bg-zinc-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none"
+              className="w-full h-10 px-3 bg-white dark:bg-zinc-950 border border-[#DBDBDB] dark:border-white/10 rounded-lg text-xs text-[#050505] dark:text-white focus:outline-none focus:border-[#0866FF]"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[9px] font-black uppercase tracking-wider text-zinc-500">
+              <label className="text-[9px] font-black uppercase tracking-wider text-[#65676B] dark:text-zinc-500">
                 Contact Protocol
               </label>
               <select
                 value={contactMethod}
                 onChange={(e) => setContactMethod(e.target.value)}
-                className="w-full h-10 bg-zinc-950 border border-white/10 rounded-lg text-xs text-zinc-300 focus:outline-none px-2 cursor-pointer"
+                className="w-full h-10 bg-white dark:bg-zinc-950 border border-[#DBDBDB] dark:border-white/10 rounded-lg text-xs text-[#050505] dark:text-zinc-300 focus:outline-none px-2 cursor-pointer"
               >
                 <option value="telegram">Telegram Direct</option>
                 <option value="x">X Direct Message</option>
@@ -527,7 +527,7 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[9px] font-black uppercase tracking-wider text-zinc-500">
+              <label className="text-[9px] font-black uppercase tracking-wider text-[#65676B] dark:text-zinc-500">
                 Telegram Handle
               </label>
               <input 
@@ -535,12 +535,12 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
                 placeholder="e.g. paul_active" 
                 value={telegramHandle}
                 onChange={(e) => setTelegramHandle(e.target.value.replace('@', ''))}
-                className="w-full h-10 px-3 bg-zinc-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none font-mono"
+                className="w-full h-10 px-3 bg-white dark:bg-zinc-950 border border-[#DBDBDB] dark:border-white/10 rounded-lg text-xs text-[#050505] dark:text-white focus:outline-none font-mono"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[9px] font-black uppercase tracking-wider text-zinc-500">
+              <label className="text-[9px] font-black uppercase tracking-wider text-[#65676B] dark:text-zinc-500">
                 X (Twitter) Handle
               </label>
               <input 
@@ -548,23 +548,23 @@ export const ProfileForm: React.FC<ProfileFormProps> = ({ profile: originalProfi
                 placeholder="e.g. paul_cultural" 
                 value={xHandle}
                 onChange={(e) => setXHandle(e.target.value.replace('@', ''))}
-                className="w-full h-10 px-3 bg-zinc-950 border border-white/10 rounded-lg text-xs text-white focus:outline-none font-mono"
+                className="w-full h-10 px-3 bg-white dark:bg-zinc-950 border border-[#DBDBDB] dark:border-white/10 rounded-lg text-xs text-[#050505] dark:text-white focus:outline-none font-mono"
               />
             </div>
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-[9px] font-black uppercase tracking-wider text-zinc-500">Languages</label>
+          <label className="text-[9px] font-black uppercase tracking-wider text-[#65676B] dark:text-zinc-500">Languages</label>
           <input type="text" value={languages} onChange={event => setLanguages(event.target.value)}
-            placeholder="English, Arabic" className="w-full h-10 px-3 bg-zinc-950 border border-white/10 rounded-xl text-xs text-white" />
+            placeholder="English, Arabic" className="w-full h-10 px-3 bg-white dark:bg-zinc-950 border border-[#DBDBDB] dark:border-white/10 rounded-xl text-xs text-[#050505] dark:text-white" />
         </div>
 
         {/* Action button */}
         <button
           type="submit"
           disabled={submitting || (handleAvailable === false && !isEditing)}
-          className="w-full h-12 bg-white text-black hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-600 rounded-xl flex items-center justify-center font-bold tracking-[0.1em] text-xs uppercase italic transition-all cursor-pointer"
+          className="w-full h-12 bg-[#0866FF] hover:bg-[#075CE5] text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 disabled:bg-[#E4E6EB] dark:disabled:bg-zinc-800 disabled:text-[#65676B] dark:disabled:text-zinc-600 rounded-xl flex items-center justify-center font-bold tracking-[0.1em] text-xs uppercase italic transition-all cursor-pointer"
         >
           {submitting ? "Tying your boots..." : (isEditing ? "Save Diary Changes" : "Start Your Adventure")}
         </button>

@@ -34,36 +34,36 @@ export const TourReservationModal: React.FC<TourReservationModalProps> = ({tour,
   };
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 dark:bg-black/85 backdrop-blur-md overflow-y-auto">
         <motion.div initial={{opacity:0,scale:0.95,y:15}} animate={{opacity:1,scale:1,y:0}}
-          exit={{opacity:0,scale:0.95,y:15}} className="bg-[#110F15] border border-white/10 rounded-3xl w-full max-w-md overflow-hidden text-left shadow-2xl">
-          <header className="bg-[#17141E] border-b border-white/10 p-4 flex items-center justify-between">
-            <div><h3 className="font-extrabold text-white text-sm">Request a Vibe Tour</h3>
-              <p className="text-xs text-zinc-400 truncate max-w-[260px]">{tour.title}</p></div>
-            <button aria-label="Close reservation" onClick={onClose} className="text-zinc-300 p-2 rounded-full bg-white/5"><X className="w-4 h-4"/></button>
+          exit={{opacity:0,scale:0.95,y:15}} className="bg-white dark:bg-[#110F15] border border-[#DBDBDB] dark:border-white/10 rounded-3xl w-full max-w-md overflow-hidden text-left shadow-2xl">
+          <header className="bg-[#FAFAFA] dark:bg-[#17141E] border-b border-[#E4E6EB] dark:border-white/10 p-4 flex items-center justify-between">
+            <div><h3 className="font-extrabold text-[#050505] dark:text-white text-sm">Request a Vibe Tour</h3>
+              <p className="text-xs text-[#65676B] dark:text-zinc-400 truncate max-w-[260px]">{tour.title}</p></div>
+            <button aria-label="Close reservation" onClick={onClose} className="text-[#65676B] dark:text-zinc-300 hover:text-[#050505] dark:hover:text-white p-2 rounded-full bg-[#EFEFEF] dark:bg-white/5 hover:bg-[#E4E6EB] dark:hover:bg-white/10 transition"><X className="w-4 h-4"/></button>
           </header>
           {requestId ? <div className="p-6 text-center space-y-3">
-            <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto"/>
-            <h4 className="font-bold text-white">Request saved — awaiting response</h4>
-            <p className="text-xs text-zinc-400">This is pending, not an accepted booking or Handshake.</p>
-            <p className="text-xs text-zinc-500 font-mono break-all">{requestId}</p>
+            <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mx-auto"/>
+            <h4 className="font-bold text-[#050505] dark:text-white">Request saved — awaiting response</h4>
+            <p className="text-xs text-[#65676B] dark:text-zinc-400">This is pending, not an accepted booking or Handshake.</p>
+            <p className="text-xs text-[#65676B] dark:text-zinc-500 font-mono break-all">{requestId}</p>
           </div> : <form onSubmit={submit} className="p-5 space-y-4">
-            <div className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/20 text-xs text-zinc-300 flex gap-2"><Shield className="w-4 h-4 shrink-0"/>Choose a real date and time to request this Tour. The guide must confirm separately.</div>
-            <label className="text-xs text-zinc-300 block"><Calendar className="w-4 h-4 inline mr-2"/>Date
+            <div className="p-3 rounded-xl bg-[#E7F3FF] dark:bg-purple-950/20 border border-[#0866FF]/20 dark:border-purple-500/20 text-xs text-[#262626] dark:text-zinc-300 flex gap-2"><Shield className="w-4 h-4 text-[#0866FF] dark:text-purple-400 shrink-0"/>Choose a real date and time to request this Tour. The guide must confirm separately.</div>
+            <label className="text-xs font-semibold text-[#262626] dark:text-zinc-300 block"><Calendar className="w-4 h-4 inline mr-2 text-[#65676B] dark:text-zinc-400"/>Date
               <input aria-label="Tour date" required type="date" value={date} onChange={e=>setDate(e.target.value)}
-              className="mt-1 block w-full bg-zinc-900 border border-white/10 rounded-xl p-2 text-white"/></label>
-            <label className="text-xs text-zinc-300 block"><Clock className="w-4 h-4 inline mr-2"/>Time
+              className="mt-1 block w-full bg-[#F0F2F5] dark:bg-zinc-900 border border-[#DBDBDB] dark:border-white/10 rounded-xl p-2 text-[#050505] dark:text-white focus:outline-none focus:border-[#0866FF]"/></label>
+            <label className="text-xs font-semibold text-[#262626] dark:text-zinc-300 block"><Clock className="w-4 h-4 inline mr-2 text-[#65676B] dark:text-zinc-400"/>Time
               <input aria-label="Tour time" required type="time" value={time} onChange={e=>setTime(e.target.value)}
-              className="mt-1 block w-full bg-zinc-900 border border-white/10 rounded-xl p-2 text-white"/></label>
-            <label className="text-xs text-zinc-300 block"><Users className="w-4 h-4 inline mr-2"/>Party size
+              className="mt-1 block w-full bg-[#F0F2F5] dark:bg-zinc-900 border border-[#DBDBDB] dark:border-white/10 rounded-xl p-2 text-[#050505] dark:text-white focus:outline-none focus:border-[#0866FF]"/></label>
+            <label className="text-xs font-semibold text-[#262626] dark:text-zinc-300 block"><Users className="w-4 h-4 inline mr-2 text-[#65676B] dark:text-zinc-400"/>Party size
               <input aria-label="Party size" required type="number" min={1} max={30} value={partySize}
               onChange={e=>setPartySize(Number(e.target.value))}
-              className="mt-1 block w-full bg-zinc-900 border border-white/10 rounded-xl p-2 text-white"/></label>
-            <label className="text-xs text-zinc-300 block">Note to guide
+              className="mt-1 block w-full bg-[#F0F2F5] dark:bg-zinc-900 border border-[#DBDBDB] dark:border-white/10 rounded-xl p-2 text-[#050505] dark:text-white focus:outline-none focus:border-[#0866FF]"/></label>
+            <label className="text-xs font-semibold text-[#262626] dark:text-zinc-300 block">Note to guide
               <textarea aria-label="Reservation note" maxLength={2000} value={note} onChange={e=>setNote(e.target.value)}
-              className="mt-1 block w-full bg-zinc-900 border border-white/10 rounded-xl p-2 text-white" rows={3}/></label>
-            {error && <p role="alert" className="text-red-400 text-xs">{error}</p>}
-            <button disabled={submitting} type="submit" className="w-full bg-purple-600 rounded-xl px-4 py-3 text-white font-bold text-xs flex gap-2 justify-center items-center">
+              className="mt-1 block w-full bg-[#F0F2F5] dark:bg-zinc-900 border border-[#DBDBDB] dark:border-white/10 rounded-xl p-2 text-[#050505] dark:text-white focus:outline-none focus:border-[#0866FF]" rows={3}/></label>
+            {error && <p role="alert" className="text-red-600 dark:text-red-400 text-xs">{error}</p>}
+            <button disabled={submitting} type="submit" className="w-full bg-[#0866FF] hover:bg-[#075CE5] dark:bg-purple-600 dark:hover:bg-purple-500 rounded-xl px-4 py-3 text-white font-bold text-xs flex gap-2 justify-center items-center transition">
               <Send className="w-4 h-4"/>{submitting ? 'Saving request...' : 'Send reservation request'}
             </button>
           </form>}

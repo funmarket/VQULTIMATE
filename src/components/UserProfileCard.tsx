@@ -149,8 +149,8 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
   const avatar = profile.avatar_url && profile.avatar_url.trim() !== '' ? profile.avatar_url.trim() : null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-      <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl text-white relative">
+    <div className="fixed inset-0 z-50 bg-black/50 dark:bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+      <div className="w-full max-w-sm bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 rounded-3xl overflow-hidden shadow-2xl text-[#050505] dark:text-white relative">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -161,15 +161,15 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
         </button>
 
         {/* Photo-First Hero Section */}
-        <div className="relative aspect-[4/4.5] w-full bg-neutral-950 overflow-hidden">
+        <div className="relative aspect-[4/4.5] w-full bg-[#EFEFEF] dark:bg-neutral-950 overflow-hidden">
           {avatar ? (
             <img src={avatar} alt={profile.full_name} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-neutral-900 text-neutral-500">
+            <div className="w-full h-full flex items-center justify-center bg-[#EFEFEF] dark:bg-neutral-900 text-[#65676B] dark:text-neutral-500">
               <span className="text-5xl" aria-hidden="true">👤</span>
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent dark:from-neutral-900 dark:via-neutral-900/40" />
 
           {/* Badges Overlay */}
           <div className="absolute top-4 left-4 flex flex-col space-y-1.5 z-10">
@@ -199,8 +199,8 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
           {/* VQ Balance Badge & Send VQ Button row */}
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-              <span className="text-[11px] text-amber-300 font-bold flex items-center space-x-1.5 bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-500/30">
-                <Coins className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-[11px] text-amber-700 dark:text-amber-300 font-bold flex items-center space-x-1.5 bg-amber-50 dark:bg-amber-500/10 px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-500/30">
+                <Coins className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>{profile.vq_balance} VQ</span>
               </span>
 
@@ -214,7 +214,7 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
                     }
                     setIsTransferOpen(true);
                   }}
-                  className="px-3 py-1.5 rounded-full bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/50 font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow"
+                  className="px-3 py-1.5 rounded-full bg-[#E7F3FF] dark:bg-teal-500/10 hover:bg-[#DCEBFF] dark:hover:bg-teal-500/20 text-[#0866FF] dark:text-teal-300 border border-[#0866FF]/30 dark:border-teal-500/50 font-bold text-xs flex items-center space-x-1.5 transition cursor-pointer shadow-xs dark:shadow"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Send VQ</span>
@@ -223,15 +223,15 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
             </div>
 
             {typeof profile.trust_score === 'number' && (
-              <span className="text-[11px] text-teal-300 font-bold flex items-center space-x-1 bg-teal-500/10 px-3 py-1 rounded-xl border border-teal-500/30">
-                <Award className="w-3.5 h-3.5 text-teal-400" />
+              <span className="text-[11px] text-teal-700 dark:text-teal-300 font-bold flex items-center space-x-1 bg-teal-50 dark:bg-teal-500/10 px-3 py-1 rounded-xl border border-teal-200 dark:border-teal-500/30">
+                <Award className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
                 <span>Trust {profile.trust_score}%</span>
               </span>
             )}
           </div>
 
           {profile.bio && (
-            <p className="text-xs text-neutral-300 italic bg-neutral-950/80 p-3 rounded-2xl border border-neutral-800 leading-relaxed">
+            <p className="text-xs text-[#262626] dark:text-neutral-300 italic bg-[#F0F2F5] dark:bg-neutral-950/80 p-3 rounded-2xl border border-[#DBDBDB] dark:border-neutral-800 leading-relaxed">
               &ldquo;{profile.bio}&rdquo;
             </p>
           )}
@@ -239,23 +239,23 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
           {profile.interests && profile.interests.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {profile.interests.map(tag => (
-                <span key={tag} className="px-2 py-1 text-[11px] rounded-xl border border-neutral-700 bg-neutral-800 text-neutral-300">{tag}</span>
+                <span key={tag} className="px-2 py-1 text-[11px] rounded-xl border border-[#DBDBDB] dark:border-neutral-700 bg-[#EFEFEF] dark:bg-neutral-800 text-[#262626] dark:text-neutral-300">{tag}</span>
               ))}
             </div>
           )}
 
-          <div className="text-[11px] text-neutral-400 flex items-center justify-between px-1">
+          <div className="text-[11px] text-[#65676B] dark:text-neutral-400 flex items-center justify-between px-1">
             <span className="flex items-center space-x-1">
-              <MapPin className="w-3.5 h-3.5 text-orange-400" />
+              <MapPin className="w-3.5 h-3.5 text-[#0866FF] dark:text-orange-400" />
               <span>{profile.city || profile.district || 'Location not provided'}</span>
             </span>
-            <span className="text-neutral-500 text-[10px]">
+            <span className="text-[#65676B] dark:text-neutral-500 text-[10px]">
               ECHO = Follow • PULL = Request Vibe
             </span>
           </div>
 
           {feedbackError && (
-            <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-center space-x-1.5 animate-fadeIn">
+            <div className="p-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-xs text-red-700 dark:text-red-400 flex items-center space-x-1.5 animate-fadeIn">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{feedbackError}</span>
             </div>
@@ -263,9 +263,9 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
 
           {/* Active & Upcoming Spot Meetups */}
           {userMeetups.length > 0 && (
-            <div className="space-y-2 pt-2 border-t border-neutral-800/80">
-              <div className="flex items-center justify-between text-xs font-bold text-neutral-400 uppercase tracking-wider px-0.5">
-                <span className="flex items-center gap-1.5 text-blue-400 font-black">
+            <div className="space-y-2 pt-2 border-t border-[#E4E6EB] dark:border-neutral-800/80">
+              <div className="flex items-center justify-between text-xs font-bold text-[#65676B] dark:text-neutral-400 uppercase tracking-wider px-0.5">
+                <span className="flex items-center gap-1.5 text-[#0866FF] dark:text-blue-400 font-black">
                   <Users className="w-3.5 h-3.5" />
                   <span>Spot Gatherings ({userMeetups.length})</span>
                 </span>
@@ -280,7 +280,7 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
 
           {/* Action Buttons: Left = ECHO (D03), Right = PULL (D17) */}
           {isSelf ? (
-            <div className="p-2.5 rounded-2xl bg-neutral-950 border border-neutral-800 text-center text-xs text-neutral-400 font-semibold">
+            <div className="p-2.5 rounded-2xl bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 text-center text-xs text-[#65676B] dark:text-neutral-400 font-semibold">
               This is your public explorer profile.
             </div>
           ) : (
@@ -291,8 +291,8 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
                 disabled={loading}
                 className={`flex-1 font-mono text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
                   isFollowing
-                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
-                    : 'border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10'
+                    ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/60 shadow-sm dark:shadow-[0_0_15px_rgba(168,85,247,0.2)]'
+                    : 'border-emerald-300 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'
                 }`}
                 title="ECHO: One-way follow into your Orbit. Does not grant DMs."
               >
@@ -312,8 +312,8 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
                 disabled={loading || pullPending}
                 className={`flex-1 font-mono text-xs font-black uppercase tracking-wider py-2.5 px-4 rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95 ${
                   pullPending
-                    ? 'bg-rose-500/20 text-rose-200 border-rose-500/60 shadow-[0_0_15px_rgba(244,63,94,0.2)] cursor-default'
-                    : 'border-rose-500/40 text-rose-300 hover:bg-rose-500/10'
+                    ? 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-200 border-rose-300 dark:border-rose-500/60 shadow-sm dark:shadow-[0_0_15px_rgba(244,63,94,0.2)] cursor-default'
+                    : 'border-rose-300 dark:border-rose-500/40 text-rose-700 dark:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-500/10'
                 }`}
                 title="PULL: Mutual Vibe connection request. When accepted, unlocks D14 1:1 DMs."
               >
@@ -333,28 +333,28 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
 
       {/* Send VQ Sub-Modal */}
       {isTransferOpen && (
-        <div className="fixed inset-0 z-60 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-          <div className="w-full max-w-xs bg-neutral-900 border border-neutral-800 rounded-3xl p-5 space-y-4 shadow-2xl text-white">
-            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+        <div className="fixed inset-0 z-60 bg-black/50 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="w-full max-w-xs bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 rounded-3xl p-5 space-y-4 shadow-2xl text-[#050505] dark:text-white">
+            <div className="flex items-center justify-between border-b border-[#E4E6EB] dark:border-neutral-800 pb-3">
               <h3 className="font-bold text-sm flex items-center space-x-2">
-                <Send className="w-4 h-4 text-teal-400" />
+                <Send className="w-4 h-4 text-[#0866FF] dark:text-teal-400" />
                 <span>Send VQ to @{profile.username}</span>
               </h3>
-              <button onClick={() => setIsTransferOpen(false)} className="p-1.5 rounded-xl bg-neutral-800 text-neutral-400 hover:text-white cursor-pointer">
+              <button onClick={() => setIsTransferOpen(false)} className="p-1.5 rounded-xl bg-[#EFEFEF] dark:bg-neutral-800 text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-white cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSendVqSubmit} className="space-y-3">
               {transferError && (
-                <div className="p-2 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-center space-x-1.5">
+                <div className="p-2 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-xs text-red-700 dark:text-red-400 flex items-center space-x-1.5">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   <span>{transferError}</span>
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-bold text-neutral-300 mb-1">Amount (VQ) *</label>
+                <label className="block text-xs font-bold text-[#262626] dark:text-neutral-300 mb-1">Amount (VQ) *</label>
                 <input
                   type="number"
                   min="1"
@@ -362,18 +362,18 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
                   value={transferAmount}
                   onChange={(e) => setTransferAmount(e.target.value)}
                   placeholder="e.g. 50"
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
+                  className="w-full bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-[#0866FF] dark:focus:border-teal-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-neutral-300 mb-1">Optional Message</label>
+                <label className="block text-xs font-bold text-[#262626] dark:text-neutral-300 mb-1">Optional Message</label>
                 <input
                   type="text"
                   value={transferMsg}
                   onChange={(e) => setTransferMsg(e.target.value)}
                   placeholder="Great exploration vibe!"
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
+                  className="w-full bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-[#0866FF] dark:focus:border-teal-500"
                 />
               </div>
 
@@ -381,14 +381,14 @@ export const UserProfileCard: React.FC<UserProfileCardProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsTransferOpen(false)}
-                  className="px-3.5 py-2 rounded-xl bg-neutral-800 text-xs font-bold text-neutral-300 hover:text-white cursor-pointer"
+                  className="px-3.5 py-2 rounded-xl bg-[#EFEFEF] dark:bg-neutral-800 text-xs font-bold text-[#050505] dark:text-neutral-300 hover:bg-[#E4E6EB] dark:hover:text-white cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={transferLoading}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-600 text-neutral-950 font-black text-xs hover:opacity-95 transition cursor-pointer shadow-lg disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-[#0866FF] hover:bg-[#075CE5] dark:bg-gradient-to-r dark:from-teal-500 dark:to-cyan-600 text-white dark:text-neutral-950 font-black text-xs hover:opacity-95 transition cursor-pointer shadow-sm dark:shadow-lg disabled:opacity-50"
                 >
                   {transferLoading ? 'Transferring...' : 'Send VQ'}
                 </button>

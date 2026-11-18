@@ -195,24 +195,24 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-      <div className="w-full sm:max-w-lg bg-neutral-900 border border-neutral-800 rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl text-white max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 bg-black/50 dark:bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
+      <div className="w-full sm:max-w-lg bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl text-[#050505] dark:text-white max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-neutral-800 flex items-center justify-between bg-neutral-950/80">
+        <div className="px-6 py-4 border-b border-[#E4E6EB] dark:border-neutral-800 flex items-center justify-between bg-[#FAFAFA] dark:bg-neutral-950/80">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-              <Compass className="w-4 h-4 text-emerald-400" />
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center">
+              <Compass className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <h3 className="font-black text-sm text-white">
+              <h3 className="font-black text-sm text-[#050505] dark:text-white">
                 {isTour ? 'Curate Vibe Tour' : 'Curate Cultural Vibe Trail'}
               </h3>
-              <p className="text-[10px] text-neutral-400">D07 Local Knowledge & Curation Engine</p>
+              <p className="text-[10px] text-[#65676B] dark:text-neutral-400">D07 Local Knowledge & Curation Engine</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white cursor-pointer"
+            className="p-2 rounded-full bg-[#EFEFEF] dark:bg-neutral-900 hover:bg-[#E4E6EB] dark:hover:bg-neutral-800 text-[#050505] dark:text-neutral-400 dark:hover:text-white cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -220,25 +220,25 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
 
         {/* Scrollable Form Body */}
         <form onSubmit={handleSubmit} noValidate className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
-          <div role="tablist" aria-label="Trail and Tour creator sections" className="grid grid-cols-3 gap-1 rounded-xl border border-neutral-800 bg-neutral-950 p-1">
+          <div role="tablist" aria-label="Trail and Tour creator sections" className="grid grid-cols-3 gap-1 rounded-xl border border-[#DBDBDB] dark:border-neutral-800 bg-[#F0F2F5] dark:bg-neutral-950 p-1">
             {([['overview', '1. Overview'], ['stops', '2. Stops'], ['tour', '3. Tour']] as const).map(([tab, label]) => (
               <button key={tab} type="button" role="tab" id={`studio-tab-${tab}`} aria-controls={`studio-panel-${tab}`}
                 aria-selected={activeTab === tab} onClick={() => setActiveTab(tab)}
-                className={`min-w-0 rounded-lg px-1.5 py-2 text-[11px] font-bold transition sm:text-xs ${activeTab === tab ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'text-neutral-400 hover:text-white border border-transparent'}`}>
+                className={`min-w-0 rounded-lg px-1.5 py-2 text-[11px] font-bold transition sm:text-xs ${activeTab === tab ? 'bg-white dark:bg-emerald-500/20 text-[#0866FF] dark:text-emerald-300 border border-[#DBDBDB] dark:border-emerald-500/40 shadow-sm dark:shadow-none' : 'text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-white border border-transparent'}`}>
                 {label}{tab === 'stops' ? ` (${stops.length})` : ''}
               </button>
             ))}
           </div>
           <div role="tabpanel" id="studio-panel-overview" aria-labelledby="studio-tab-overview" hidden={activeTab !== 'overview'} className="space-y-4">
           {/* Curation Type Selector */}
-          <div className="grid grid-cols-2 gap-2 p-1 bg-neutral-950 rounded-2xl border border-neutral-800">
+          <div className="grid grid-cols-2 gap-2 p-1 bg-[#F0F2F5] dark:bg-neutral-950 rounded-2xl border border-[#DBDBDB] dark:border-neutral-800">
             <button
               type="button"
               onClick={() => setIsTour(false)}
               className={`py-2 px-3 rounded-xl font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer ${
                 !isTour
                   ? 'bg-emerald-500 text-neutral-950 shadow-md shadow-emerald-500/20'
-                  : 'text-neutral-400 hover:text-white'
+                  : 'text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-white'
               }`}
             >
               <span>🧭 Free Vibe Trail</span>
@@ -255,47 +255,47 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
               className={`py-2 px-3 rounded-xl font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer ${
                 isTour
                   ? 'bg-amber-500 text-neutral-950 shadow-md shadow-amber-500/20'
-                  : 'text-neutral-400 hover:text-white'
+                  : 'text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-white'
               }`}
             >
               <span>⬡ Vibe Tour</span>
             </button>
           </div>
 
-          <section className="space-y-2 rounded-xl border border-neutral-800 bg-neutral-950/60 p-3">
+          <section className="space-y-2 rounded-xl border border-[#E4E6EB] dark:border-neutral-800 bg-[#FAFAFA] dark:bg-neutral-950/60 p-3">
             <div className="flex items-center justify-between gap-2">
-              <label htmlFor="trail-gallery-input" className="text-[11px] font-bold text-white">
+              <label htmlFor="trail-gallery-input" className="text-[11px] font-bold text-[#050505] dark:text-white">
                 Add Trail Photos
               </label>
-              <span className="text-[10px] text-neutral-400">
+              <span className="text-[10px] text-[#65676B] dark:text-neutral-400">
                 {photoFiles.length + (imageUrl ? 1 : 0)} / {maxPhotos} photos
               </span>
             </div>
-            <p className="text-[10px] text-neutral-400">
+            <p className="text-[10px] text-[#65676B] dark:text-neutral-400">
               Add real JPG, PNG or WebP images (up to 5 MB each). The existing cover counts toward your limit.
               Select a cover for your uploaded gallery.
             </p>
             <input id="trail-gallery-input" type="file" accept="image/jpeg,image/png,image/webp"
               multiple disabled={submitting || photoFiles.length >= freePhotoSlots}
               onChange={event => { selectPhotos(event.target.files); event.currentTarget.value = ''; }}
-              className="block w-full text-xs text-neutral-300 file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-500/20 file:px-3 file:py-2 file:font-bold file:text-emerald-300 disabled:opacity-50"
+              className="block w-full text-xs text-[#262626] dark:text-neutral-300 file:mr-3 file:rounded-lg file:border-0 file:bg-[#E7F3FF] dark:file:bg-emerald-500/20 file:px-3 file:py-2 file:font-bold file:text-[#0866FF] dark:file:text-emerald-300 disabled:opacity-50"
             />
             {photoFiles.length > 0 && (
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {photoFiles.map((file, index) => (
-                  <div key={`${previews[index] || file.name}-${index}`} className="min-w-0 space-y-1 rounded-lg border border-neutral-800 p-1.5">
+                  <div key={`${previews[index] || file.name}-${index}`} className="min-w-0 space-y-1 rounded-lg border border-[#DBDBDB] dark:border-neutral-800 bg-white dark:bg-transparent p-1.5">
                     {previews[index] ? (
                       <img src={previews[index]} alt={`Selected Trail photo ${index + 1}`}
                         className="aspect-video w-full rounded-md object-cover" />
                     ) : null}
-                    <label className="flex items-center gap-1 text-[10px] text-neutral-300">
+                    <label className="flex items-center gap-1 text-[10px] text-[#262626] dark:text-neutral-300">
                       <input type="radio" checked={coverPhotoIndex === index}
                         onChange={() => setCoverPhotoIndex(index)}
                         name="trail-gallery-cover" /> Cover
                     </label>
                     <button type="button" onClick={() => removePhoto(index)}
-                      className="text-[10px] text-red-300 hover:text-red-200">Remove</button>
-                    <p className="truncate text-[9px] text-neutral-500" title={file.name}>{file.name}</p>
+                      className="text-[10px] text-red-600 dark:text-red-300 hover:text-red-700 dark:hover:text-red-200">Remove</button>
+                    <p className="truncate text-[9px] text-[#65676B] dark:text-neutral-500" title={file.name}>{file.name}</p>
                   </div>
                 ))}
               </div>
@@ -304,25 +304,25 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
 
           {/* Title */}
           <div className="space-y-1">
-            <label className="text-[11px] font-bold text-neutral-300">Trail Title</label>
+            <label className="text-[11px] font-bold text-[#262626] dark:text-neutral-300">Trail Title</label>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Golden Day in Tunis: Coastal Coffee to Late Night Beats"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-[#0866FF] dark:focus:border-emerald-500"
             />
           </div>
 
           {/* Category & City */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-neutral-300">Category Tag</label>
+              <label className="text-[11px] font-bold text-[#262626] dark:text-neutral-300">Category Tag</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-white focus:outline-none focus:border-emerald-500"
+                className="w-full px-3 py-2 rounded-xl bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-white focus:outline-none focus:border-[#0866FF] dark:focus:border-emerald-500"
               >
                 <option value="FULL DAY CIRCUIT">FULL DAY CIRCUIT</option>
                 <option value="ANTIQUITY & COAST">ANTIQUITY & COAST</option>
@@ -333,44 +333,44 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-neutral-300">City / Location</label>
+              <label className="text-[11px] font-bold text-[#262626] dark:text-neutral-300">City / Location</label>
               <input
                 type="text"
                 required
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="e.g. Tunis, Tunisia"
-                className="w-full px-3.5 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
+                className="w-full px-3.5 py-2 rounded-xl bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-[#0866FF] dark:focus:border-emerald-500"
               />
             </div>
           </div>
 
           {/* Story Narrative */}
           <div className="space-y-1">
-            <label className="text-[11px] font-bold text-neutral-300">Atmospheric Narrative & Story</label>
+            <label className="text-[11px] font-bold text-[#262626] dark:text-neutral-300">Atmospheric Narrative & Story</label>
             <textarea
               rows={2}
               value={story}
               onChange={(e) => setStory(e.target.value)}
               placeholder="A complete sunup-to-late-night circuit through the soul of northern Tunis..."
-              className="w-full px-3.5 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500 resize-none"
+              className="w-full px-3.5 py-2 rounded-xl bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-[#0866FF] dark:focus:border-emerald-500 resize-none"
             />
           </div>
 
           {/* Tags & Duration */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-neutral-300">Vibe Tags (comma-separated)</label>
+              <label className="text-[11px] font-bold text-[#262626] dark:text-neutral-300">Vibe Tags (comma-separated)</label>
               <input
                 type="text"
                 value={vibeTagsInput}
                 onChange={(e) => setVibeTagsInput(e.target.value)}
                 placeholder="tunis, culture, sunset"
-                className="w-full px-3.5 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
+                className="w-full px-3.5 py-2 rounded-xl bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-[#0866FF] dark:focus:border-emerald-500"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-neutral-300">Estimated Duration (~hours)</label>
+              <label className="text-[11px] font-bold text-[#262626] dark:text-neutral-300">Estimated Duration (~hours)</label>
               <input
                 type="number"
                 step="0.5"
@@ -378,14 +378,14 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
                 max="24"
                 value={durationHours}
                 onChange={(e) => setDurationHours(Number(e.target.value))}
-                className="w-full px-3.5 py-2 rounded-xl bg-neutral-950 border border-neutral-800 text-white focus:outline-none focus:border-emerald-500"
+                className="w-full px-3.5 py-2 rounded-xl bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-white focus:outline-none focus:border-[#0866FF] dark:focus:border-emerald-500"
               />
             </div>
           </div>
 
           {/* Time Flow Sequence Picker */}
           <div className="space-y-1">
-            <label className="text-[11px] font-bold text-neutral-300">Time Flow Sequence</label>
+            <label className="text-[11px] font-bold text-[#262626] dark:text-neutral-300">Time Flow Sequence</label>
             <div className="flex items-center space-x-2">
               {['🌅 Morning', '☀️ Afternoon', '🌆 Sunset', '🌙 Night'].map((item) => {
                 const emoji = item.split(' ')[0];
@@ -403,8 +403,8 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
                     }}
                     className={`px-2.5 py-1.5 rounded-xl border font-bold text-[11px] transition cursor-pointer flex items-center space-x-1 ${
                       active
-                        ? 'bg-neutral-800 text-emerald-300 border-emerald-500/50'
-                        : 'bg-neutral-950 text-neutral-500 border-neutral-800'
+                        ? 'bg-[#E7F3FF] dark:bg-neutral-800 text-[#0866FF] dark:text-emerald-300 border-[#0866FF]/40 dark:border-emerald-500/50'
+                        : 'bg-[#F0F2F5] dark:bg-neutral-950 text-[#65676B] dark:text-neutral-500 border-[#DBDBDB] dark:border-neutral-800'
                     }`}
                   >
                     <span>{item}</span>
@@ -416,8 +416,8 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
 
           {isTour && (
         <div className="space-y-2">
-          <label className="block text-xs font-bold text-amber-300">Reuse an Existing or Adopted Trail</label>
-          <select value={sourceTrailId} onChange={event => applySourceTrail(event.target.value)} className="w-full bg-neutral-900 text-white border border-neutral-700 rounded-xl p-2">
+          <label className="block text-xs font-bold text-amber-700 dark:text-amber-300">Reuse an Existing or Adopted Trail</label>
+          <select value={sourceTrailId} onChange={event => applySourceTrail(event.target.value)} className="w-full bg-[#F0F2F5] dark:bg-neutral-900 text-[#050505] dark:text-white border border-[#DBDBDB] dark:border-neutral-700 rounded-xl p-2">
             <option value="">Create a new itinerary</option>
             {availableTrails.filter(trail => !trail.isTour).map(trail =>
               <option key={trail.id} value={trail.id}>{trail.title} — @{trail.authorHandle.replace(/^@/, '')}</option>
@@ -429,16 +429,16 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
           </div>
           <div role="tabpanel" id="studio-panel-stops" aria-labelledby="studio-tab-stops" hidden={activeTab !== 'stops'} className="space-y-3">
       {/* Itinerary Stops Builder */}
-          <div className="space-y-2 pt-2 border-t border-neutral-800">
+          <div className="space-y-2 pt-2 border-t border-[#E4E6EB] dark:border-neutral-800">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-white text-xs flex items-center space-x-1.5">
-                <Route className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="font-bold text-[#050505] dark:text-white text-xs flex items-center space-x-1.5">
+                <Route className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>Itinerary Stops ({stops.length} Stops)</span>
               </span>
               <button
                 type="button"
                 onClick={handleAddStop}
-                className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 text-[11px] font-bold flex items-center space-x-1 cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-[#E7F3FF] dark:bg-emerald-500/20 text-[#0866FF] dark:text-emerald-300 border border-[#0866FF]/30 dark:border-emerald-500/40 hover:bg-[#DCEBFF] dark:hover:bg-emerald-500/30 text-[11px] font-bold flex items-center space-x-1 cursor-pointer"
               >
                 <Plus className="w-3 h-3" />
                 <span>Add Stop</span>
@@ -447,24 +447,24 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
 
             <div className="space-y-2.5">
               {stops.map((stop, idx) => (
-                <div key={stop.id} className="p-3 rounded-2xl bg-neutral-950 border border-neutral-800 space-y-2">
+                <div key={stop.id} className="p-3 rounded-2xl bg-[#FAFAFA] dark:bg-neutral-950 border border-[#E4E6EB] dark:border-neutral-800 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center text-[10px] font-black">
+                    <span className="w-5 h-5 rounded-full bg-[#E7F3FF] dark:bg-emerald-500/20 text-[#0866FF] dark:text-emerald-300 border border-[#0866FF]/30 dark:border-emerald-500/40 flex items-center justify-center text-[10px] font-black">
                       {idx + 1}
                     </span>
                     <div className="flex items-center space-x-2">
                       <button type="button" onClick={() => handleMoveStop(idx, -1)} disabled={idx === 0}
-                        aria-label={`Move stop ${idx + 1} up`} className="p-1 rounded-lg text-neutral-400 hover:text-white disabled:opacity-30">
+                        aria-label={`Move stop ${idx + 1} up`} className="p-1 rounded-lg text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-white disabled:opacity-30">
                         <ArrowUp className="w-3.5 h-3.5" />
                       </button>
                       <button type="button" onClick={() => handleMoveStop(idx, 1)} disabled={idx === stops.length - 1}
-                        aria-label={`Move stop ${idx + 1} down`} className="p-1 rounded-lg text-neutral-400 hover:text-white disabled:opacity-30">
+                        aria-label={`Move stop ${idx + 1} down`} className="p-1 rounded-lg text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-white disabled:opacity-30">
                         <ArrowDown className="w-3.5 h-3.5" />
                       </button>
                       <select
                         value={stop.timeOfDay}
                         onChange={(e) => handleUpdateStop(idx, 'timeOfDay', e.target.value as TimeOfDay)}
-                        className="px-2 py-0.5 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 text-[10px]"
+                        className="px-2 py-0.5 rounded-lg bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-neutral-300 text-[10px]"
                       >
                         <option value="Morning">🌅 Morning</option>
                         <option value="Afternoon">☀️ Afternoon</option>
@@ -476,7 +476,7 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
                         <button
                           type="button"
                           onClick={() => handleRemoveStop(idx)}
-                          className="p-1 rounded-lg text-neutral-500 hover:text-red-400 cursor-pointer"
+                          className="p-1 rounded-lg text-[#65676B] dark:text-neutral-500 hover:text-red-500 dark:hover:text-red-400 cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -490,10 +490,10 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
                     value={stop.name}
                     onChange={(e) => handleUpdateStop(idx, 'name', e.target.value)}
                     placeholder="Stop location / landmark name"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-500 text-xs focus:outline-none focus:border-emerald-500"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 text-xs focus:outline-none focus:border-[#0866FF] dark:focus:border-emerald-500"
                   />
 
-                  <label htmlFor={`trail-stop-address-${idx}`} className="block text-[11px] font-bold text-neutral-300">
+                  <label htmlFor={`trail-stop-address-${idx}`} className="block text-[11px] font-bold text-[#262626] dark:text-neutral-300">
                     Stop address / Google Maps location
                   </label>
                   <input
@@ -503,7 +503,7 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
                     value={stop.address}
                     onChange={(e) => handleUpdateStop(idx, 'address', e.target.value)}
                     placeholder="Street address or exact Google Maps place name, city"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-white placeholder-neutral-500 text-xs focus:outline-none focus:border-emerald-500"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 text-xs focus:outline-none focus:border-[#0866FF] dark:focus:border-emerald-500"
                   />
 
                   <input
@@ -511,7 +511,7 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
                     value={stop.vibeNote}
                     onChange={(e) => handleUpdateStop(idx, 'vibeNote', e.target.value)}
                     placeholder="Pro-tip or vibe note (e.g. Try pine-nut tea, sunset view...)"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-300 placeholder-neutral-600 text-[11px] focus:outline-none focus:border-emerald-500"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 text-[#262626] dark:text-neutral-300 placeholder-[#65676B] dark:placeholder-neutral-600 text-[11px] focus:outline-none focus:border-[#0866FF] dark:focus:border-emerald-500"
                   />
                 </div>
               ))}
@@ -520,35 +520,35 @@ export const CurateTrailModal: React.FC<CurateTrailModalProps> = ({
 
           </div>
           <div role="tabpanel" id="studio-panel-tour" aria-labelledby="studio-tab-tour" hidden={activeTab !== 'tour'} className="space-y-4">
-            <p className="text-[11px] text-neutral-400">
+            <p className="text-[11px] text-[#65676B] dark:text-neutral-400">
               Paid guided Tours are available to eligible Pro and Business creators.
               Free Trails remain available to all signed-in creators.
             </p>
           {/* If Tour: Price */}
           {isTour && (
-            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2">
+            <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-amber-300 text-xs">Commercial Tour Pricing</span>
-                <span className="text-[10px] text-neutral-400">Guaranteed D22 Handshake</span>
+                <span className="font-bold text-amber-700 dark:text-amber-300 text-xs">Commercial Tour Pricing</span>
+                <span className="text-[10px] text-[#65676B] dark:text-neutral-400">Guaranteed D22 Handshake</span>
               </div>
               <div className="flex items-center space-x-2">
-                <span className="text-sm font-bold text-neutral-300">$</span>
+                <span className="text-sm font-bold text-[#262626] dark:text-neutral-300">$</span>
                 <input
                   type="number"
                   min="5"
                   max="500"
                   value={pricePerPerson}
                   onChange={(e) => setPricePerPerson(Number(e.target.value))}
-                  className="w-28 px-3 py-1.5 rounded-xl bg-neutral-950 border border-neutral-800 text-white focus:outline-none focus:border-amber-400"
+                  className="w-28 px-3 py-1.5 rounded-xl bg-white dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-white focus:outline-none focus:border-amber-400"
                 />
-                <span className="text-xs text-neutral-400">per person (USD)</span>
+                <span className="text-xs text-[#65676B] dark:text-neutral-400">per person (USD)</span>
               </div>
             </div>
           )}
           </div>
           {/* Submit */}
           {publishError && (
-            <div role="alert" className="rounded-xl border border-red-500/40 bg-red-950/40 px-3 py-2 text-xs text-red-200">
+            <div role="alert" className="rounded-xl border border-red-200 dark:border-red-500/40 bg-red-50 dark:bg-red-950/40 px-3 py-2 text-xs text-red-700 dark:text-red-200">
               Trail was not published. {publishError}
             </div>
           )}

@@ -14,10 +14,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Check localStorage, default to 'dark' for that gorgeous, signature cyber/neon look
   const [theme, setThemeState] = useState<Theme>(() => {
     const saved = localStorage.getItem('vq_theme');
-    if (saved === 'light' || saved === 'dark') {
-      return saved;
+    const initial: Theme = saved === 'light' || saved === 'dark' ? saved : 'dark';
+    if (typeof document !== 'undefined') {
+      const root = document.documentElement;
+      root.classList.remove('light', 'dark');
+      root.classList.add(initial);
     }
-    return 'dark'; // Keep default as dark to avoid breaking original vibe
+    return initial;
   });
 
   useEffect(() => {

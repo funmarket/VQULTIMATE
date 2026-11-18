@@ -166,10 +166,10 @@ export const VibePulsesCarousel: React.FC<VibePulsesCarouselProps> = ({
 
   if (!cities || cities.length === 0) {
     return (
-      <div className="rounded-3xl bg-neutral-900/60 border border-neutral-800/80 p-6 text-center space-y-2">
-        <Compass className="w-8 h-8 text-purple-400/60 mx-auto" />
-        <h3 className="font-bold text-sm text-white">No active pulses in this sector</h3>
-        <p className="text-xs text-neutral-400 max-w-xs mx-auto">
+      <div className="rounded-3xl bg-white dark:bg-neutral-900/60 border border-[#DBDBDB] dark:border-neutral-800/80 p-6 text-center space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
+        <Compass className="w-8 h-8 text-[#0866FF]/60 dark:text-purple-400/60 mx-auto" />
+        <h3 className="font-bold text-sm text-[#050505] dark:text-white">No active pulses in this sector</h3>
+        <p className="text-xs text-[#65676B] dark:text-neutral-400 max-w-xs mx-auto">
           Scan the horizon in Vibe Orbit to detect newly verified city pulses.
         </p>
       </div>
@@ -190,20 +190,20 @@ export const VibePulsesCarousel: React.FC<VibePulsesCarouselProps> = ({
     >
       {/* Ambient background glow matching reference aura */}
       <div
-        className="pointer-events-none absolute -top-10 -right-10 w-72 h-44 rounded-full bg-gradient-to-br from-purple-600/20 via-pink-500/10 to-transparent blur-3xl"
+        className="pointer-events-none hidden dark:block absolute -top-10 -right-10 w-72 h-44 rounded-full bg-gradient-to-br from-purple-600/20 via-pink-500/10 to-transparent blur-3xl"
         aria-hidden="true"
       />
 
       {/* 1. Header Bar matching Reference Screenshot */}
       <div className="flex items-start justify-between relative z-10 px-0.5">
         <div>
-          <h2 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-            <span className="text-pink-400 drop-shadow-[0_0_12px_rgba(244,114,182,0.8)]">
+          <h2 className="text-2xl font-black tracking-tight text-[#050505] dark:text-white flex items-center gap-2">
+            <span className="text-[#0866FF] dark:text-pink-400 dark:drop-shadow-[0_0_12px_rgba(244,114,182,0.8)]">
               <PulseWaveIcon size={26} />
             </span>
             <span>Vibe Pulses</span>
           </h2>
-          <p className="text-xs text-purple-200/70 font-medium tracking-wide mt-0.5">
+          <p className="text-xs text-[#65676B] dark:text-purple-200/70 font-medium tracking-wide mt-0.5">
             Your city's social pulse
           </p>
         </div>
@@ -230,8 +230,8 @@ export const VibePulsesCarousel: React.FC<VibePulsesCarouselProps> = ({
                 onClick={() => handleCardClick(city, index)}
                 className={`relative shrink-0 rounded-[28px] overflow-hidden transition-all duration-500 ease-out cursor-pointer ${
                   isActive
-                    ? 'w-[200px] sm:w-[220px] h-[310px] sm:h-[330px] z-20 scale-100 shadow-[0_0_35px_rgba(168,85,247,0.45)] ring-2 ring-purple-400/80 border border-purple-300/40'
-                    : 'w-[140px] sm:w-[155px] h-[270px] sm:h-[285px] z-10 scale-95 opacity-70 hover:opacity-90 border border-white/10'
+                    ? 'w-[200px] sm:w-[220px] h-[310px] sm:h-[330px] z-20 scale-100 shadow-xl dark:shadow-[0_0_35px_rgba(168,85,247,0.45)] ring-2 ring-[#0866FF] dark:ring-purple-400/80 border border-[#0866FF]/40 dark:border-purple-300/40'
+                    : 'w-[140px] sm:w-[155px] h-[270px] sm:h-[285px] z-10 scale-95 opacity-75 dark:opacity-70 hover:opacity-95 dark:hover:opacity-90 border border-[#DBDBDB] dark:border-white/10'
                 }`}
               >
                 {/* City Photographic Background */}
@@ -344,7 +344,7 @@ export const VibePulsesCarousel: React.FC<VibePulsesCarouselProps> = ({
             handlePrev();
           }}
           aria-label="Previous city pulse"
-          className="w-9 h-9 rounded-full bg-zinc-900/80 hover:bg-zinc-800 border border-white/10 text-zinc-400 hover:text-white flex items-center justify-center transition cursor-pointer active:scale-90"
+          className="w-9 h-9 rounded-full bg-white hover:bg-[#EFEFEF] border border-[#DBDBDB] text-[#050505] dark:bg-zinc-900/80 dark:hover:bg-zinc-800 dark:border-white/10 dark:text-zinc-400 dark:hover:text-white flex items-center justify-center transition cursor-pointer active:scale-90 shadow-sm dark:shadow-none"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
@@ -366,8 +366,8 @@ export const VibePulsesCarousel: React.FC<VibePulsesCarouselProps> = ({
                 }}
                 className={`transition-all duration-300 cursor-pointer ${
                   isSelected
-                    ? 'w-7 h-1.5 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full'
-                    : 'w-1.5 h-1.5 bg-zinc-600 hover:bg-zinc-400 rounded-full'
+                    ? 'w-7 h-1.5 bg-[#0866FF] dark:bg-gradient-to-r dark:from-purple-400 dark:to-pink-400 rounded-full'
+                    : 'w-1.5 h-1.5 bg-[#CED0D4] hover:bg-[#65676B] dark:bg-zinc-600 dark:hover:bg-zinc-400 rounded-full'
                 }`}
               />
             );
@@ -381,21 +381,21 @@ export const VibePulsesCarousel: React.FC<VibePulsesCarouselProps> = ({
             handleNext();
           }}
           aria-label="Next city pulse"
-          className="w-9 h-9 rounded-full bg-zinc-900/80 hover:bg-zinc-800 border border-white/10 text-zinc-400 hover:text-white flex items-center justify-center transition cursor-pointer active:scale-90"
+          className="w-9 h-9 rounded-full bg-white hover:bg-[#EFEFEF] border border-[#DBDBDB] text-[#050505] dark:bg-zinc-900/80 dark:hover:bg-zinc-800 dark:border-white/10 dark:text-zinc-400 dark:hover:text-white flex items-center justify-center transition cursor-pointer active:scale-90 shadow-sm dark:shadow-none"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 
       {/* 4. Aggregate Summary Banner Bar matching Reference Screenshot */}
-      <div className="rounded-2xl bg-[#140e22]/90 border border-purple-500/20 p-3 sm:p-3.5 flex items-center justify-between shadow-xl backdrop-blur-md">
+      <div className="rounded-2xl bg-white dark:bg-[#140e22]/90 border border-[#DBDBDB] dark:border-purple-500/20 p-3 sm:p-3.5 flex items-center justify-between shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-xl backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-800 flex items-center justify-center text-white shadow-md shadow-purple-600/30 shrink-0">
-            <PulseWaveIcon size={20} className="text-pink-300" />
+          <div className="w-10 h-10 rounded-2xl bg-[#E7F3FF] text-[#0866FF] dark:bg-gradient-to-br dark:from-purple-600 dark:via-indigo-600 dark:to-purple-800 flex items-center justify-center dark:text-white dark:shadow-md dark:shadow-purple-600/30 shrink-0">
+            <PulseWaveIcon size={20} className="text-[#0866FF] dark:text-pink-300" />
           </div>
           <div>
-            <h4 className="font-bold text-sm text-white leading-tight">Vibe Pulses</h4>
-            <p className="text-[11px] text-purple-200/70 font-medium">
+            <h4 className="font-bold text-sm text-[#050505] dark:text-white leading-tight">Vibe Pulses</h4>
+            <p className="text-[11px] text-[#65676B] dark:text-purple-200/70 font-medium">
               {totalCities} nearby {totalCities === 1 ? 'place' : 'places'} • {totalLiveVibes} total live vibes
             </p>
           </div>
@@ -410,11 +410,11 @@ export const VibePulsesCarousel: React.FC<VibePulsesCarouselProps> = ({
               onViewMap(activeCity);
             }
           }}
-          className="px-3.5 py-2 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 border border-white/10 text-xs text-white font-semibold flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-sm"
+          className="px-3.5 py-2 rounded-xl bg-[#E4E6EB] hover:bg-[#D8DADF] border border-[#DBDBDB] text-xs text-[#050505] dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 dark:border-white/10 dark:text-white font-semibold flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-sm"
         >
-          <MapIcon className="w-3.5 h-3.5 text-purple-300" />
+          <MapIcon className="w-3.5 h-3.5 text-[#0866FF] dark:text-purple-300" />
           <span>View Map</span>
-          <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
+          <ChevronRight className="w-3.5 h-3.5 text-[#65676B] dark:text-zinc-400" />
         </button>
       </div>
     </section>

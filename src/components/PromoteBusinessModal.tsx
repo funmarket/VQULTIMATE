@@ -95,20 +95,20 @@ export const PromoteBusinessModal: React.FC<PromoteBusinessModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-label={`Promote ${place.title}`}
-      className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fadeIn overflow-y-auto"
+      className="fixed inset-0 z-[60] bg-black/60 dark:bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fadeIn overflow-y-auto"
     >
-      <div className="relative w-full max-w-md bg-neutral-900 border border-amber-500/50 rounded-[28px] overflow-hidden shadow-2xl text-white my-auto flex flex-col max-h-[92vh]">
+      <div className="relative w-full max-w-md bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-amber-500/50 rounded-[28px] overflow-hidden shadow-2xl text-[#050505] dark:text-white my-auto flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="p-5 border-b border-neutral-800 flex items-center justify-between bg-gradient-to-r from-amber-950/40 via-neutral-900 to-neutral-900">
+        <div className="p-5 border-b border-[#E4E6EB] dark:border-neutral-800 flex items-center justify-between bg-[#FAFAFA] dark:bg-gradient-to-r dark:from-amber-950/40 dark:via-neutral-900 dark:to-neutral-900">
           <div className="flex items-center space-x-2.5">
-            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/40">
+            <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/40">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[10px] font-black tracking-wider uppercase text-amber-400">
+              <span className="text-[10px] font-black tracking-wider uppercase text-amber-600 dark:text-amber-400">
                 Community Sponsorship
               </span>
-              <h3 className="text-base font-black text-white leading-tight">
+              <h3 className="text-base font-black text-[#050505] dark:text-white leading-tight">
                 Promote Spot Check-ins
               </h3>
             </div>
@@ -117,7 +117,7 @@ export const PromoteBusinessModal: React.FC<PromoteBusinessModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close promote modal"
-            className="p-1.5 rounded-full bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white transition cursor-pointer"
+            className="p-1.5 rounded-full bg-[#EFEFEF] dark:bg-neutral-800 hover:bg-[#E4E6EB] dark:hover:bg-neutral-700 text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-white transition cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -126,29 +126,29 @@ export const PromoteBusinessModal: React.FC<PromoteBusinessModalProps> = ({
         {/* Body */}
         <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-5 overflow-y-auto">
           {/* Target Spot Banner */}
-          <div className="rounded-2xl bg-neutral-950 border border-neutral-800 p-3.5 space-y-1">
-            <span className="text-[10px] uppercase font-bold text-neutral-400">Target Venue</span>
-            <div className="text-sm font-black text-white truncate">{place.title}</div>
-            <div className="text-xs text-neutral-400 truncate">{place.address}</div>
+          <div className="rounded-2xl bg-[#F0F2F5] dark:bg-neutral-950 border border-[#E4E6EB] dark:border-neutral-800 p-3.5 space-y-1">
+            <span className="text-[10px] uppercase font-bold text-[#65676B] dark:text-neutral-400">Target Venue</span>
+            <div className="text-sm font-black text-[#050505] dark:text-white truncate">{place.title}</div>
+            <div className="text-xs text-[#65676B] dark:text-neutral-400 truncate">{place.address}</div>
           </div>
 
           {/* User Purse Status Bar */}
-          <div className="rounded-2xl bg-amber-950/30 border border-amber-500/30 p-3.5 flex items-center justify-between">
+          <div className="rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-500/30 p-3.5 flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Coins className="w-4 h-4 text-amber-400" />
-              <span className="text-xs text-neutral-300">Your VQ Purse Balance:</span>
+              <Coins className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span className="text-xs text-[#262626] dark:text-neutral-300">Your VQ Purse Balance:</span>
             </div>
             <div className="text-right">
-              <span className="text-sm font-black text-amber-300 font-mono">
+              <span className="text-sm font-black text-amber-700 dark:text-amber-300 font-mono">
                 {userBalance.toLocaleString()} VQ
               </span>
             </div>
           </div>
 
           {hasInsufficientBalance && (
-            <div className="rounded-2xl bg-rose-950/40 border border-rose-500/40 p-3.5 flex items-center justify-between text-xs text-rose-200">
+            <div className="rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-500/40 p-3.5 flex items-center justify-between text-xs text-rose-700 dark:text-rose-200">
               <div className="flex items-center space-x-2">
-                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                 <span>Need {totalPool - userBalance} more VQ to fund this pool.</span>
               </div>
               <button
@@ -166,7 +166,7 @@ export const PromoteBusinessModal: React.FC<PromoteBusinessModalProps> = ({
           )}
 
           {errorMsg && (
-            <div className="rounded-2xl bg-rose-950/60 border border-rose-500/50 p-3 text-xs text-rose-300 flex items-center space-x-2">
+            <div className="rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-500/50 p-3 text-xs text-rose-700 dark:text-rose-300 flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -174,7 +174,7 @@ export const PromoteBusinessModal: React.FC<PromoteBusinessModalProps> = ({
 
           {/* 1. Total Pool Selection */}
           <div className="space-y-2">
-            <label className="block text-xs font-bold text-neutral-300">
+            <label className="block text-xs font-bold text-[#262626] dark:text-neutral-300">
               1. Total VQ Pool to Allocate
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -186,7 +186,7 @@ export const PromoteBusinessModal: React.FC<PromoteBusinessModalProps> = ({
                   className={`py-2 px-1 rounded-xl text-xs font-black transition border cursor-pointer ${
                     totalPool === preset
                       ? 'bg-amber-500 text-neutral-950 border-amber-400 shadow-md'
-                      : 'bg-neutral-950 text-neutral-300 border-neutral-800 hover:border-neutral-700'
+                      : 'bg-[#EFEFEF] dark:bg-neutral-950 text-[#262626] dark:text-neutral-300 border-[#DBDBDB] dark:border-neutral-800 hover:border-[#65676B] dark:hover:border-neutral-700'
                   }`}
                 >
                   {preset} VQ
@@ -199,14 +199,14 @@ export const PromoteBusinessModal: React.FC<PromoteBusinessModalProps> = ({
               step={50}
               value={totalPool}
               onChange={e => setTotalPool(Number(e.target.value) || 0)}
-              className="w-full mt-1 bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2 text-xs font-mono text-white focus:outline-none focus:border-amber-500"
+              className="w-full mt-1 bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl px-3.5 py-2 text-xs font-mono text-[#050505] dark:text-white focus:outline-none focus:border-amber-500"
               placeholder="Or enter custom VQ amount"
             />
           </div>
 
           {/* 2. Reward per Check-in Selection */}
           <div className="space-y-2">
-            <label className="block text-xs font-bold text-neutral-300">
+            <label className="block text-xs font-bold text-[#262626] dark:text-neutral-300">
               2. Reward per User Check-in
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -218,21 +218,21 @@ export const PromoteBusinessModal: React.FC<PromoteBusinessModalProps> = ({
                   className={`py-2 px-1 rounded-xl text-xs font-black transition border cursor-pointer ${
                     rewardPerCheckin === preset
                       ? 'bg-emerald-500 text-neutral-950 border-emerald-400 shadow-md'
-                      : 'bg-neutral-950 text-neutral-300 border-neutral-800 hover:border-neutral-700'
+                      : 'bg-[#EFEFEF] dark:bg-neutral-950 text-[#262626] dark:text-neutral-300 border-[#DBDBDB] dark:border-neutral-800 hover:border-[#65676B] dark:hover:border-neutral-700'
                   }`}
                 >
                   +{preset} PTS
                 </button>
               ))}
             </div>
-            <p className="text-[11px] text-neutral-400 font-medium">
-              Funds up to <strong>{estimatedCheckins} distinct visits</strong> from local explorers.
+            <p className="text-[11px] text-[#65676B] dark:text-neutral-400 font-medium">
+              Funds up to <strong className="text-[#050505] dark:text-neutral-200">{estimatedCheckins} distinct visits</strong> from local explorers.
             </p>
           </div>
 
           {/* Sponsoring Rules Callout */}
-          <div className="rounded-2xl bg-neutral-950 p-3.5 border border-neutral-800 space-y-1 text-xs text-neutral-400">
-            <div className="font-bold text-neutral-300">Open Sponsorship Protocol:</div>
+          <div className="rounded-2xl bg-[#FAFAFA] dark:bg-neutral-950 p-3.5 border border-[#E4E6EB] dark:border-neutral-800 space-y-1 text-xs text-[#65676B] dark:text-neutral-400">
+            <div className="font-bold text-[#050505] dark:text-neutral-300">Open Sponsorship Protocol:</div>
             <p className="text-[11px] leading-relaxed">
               Any VibeQuest user (Pro, Business, or Normal Explorer) can sponsor any place. Check-in rewards are automatically disbursed to users when they verify physical arrival.
             </p>

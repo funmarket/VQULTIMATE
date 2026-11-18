@@ -261,13 +261,13 @@ export const PrivateDriftView: React.FC<PrivateDriftViewProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0a0a0f] text-white flex flex-col animate-fadeIn select-none">
+    <div className="fixed inset-0 z-50 bg-[#F0F2F5] dark:bg-[#0a0a0f] text-[#050505] dark:text-white flex flex-col animate-fadeIn select-none">
       {/* Top Bar */}
-      <div className="bg-neutral-900/90 border-b border-neutral-800 p-3 flex items-center justify-between backdrop-blur-md">
+      <div className="bg-white/95 dark:bg-neutral-900/90 border-b border-[#DBDBDB] dark:border-neutral-800 p-3 flex items-center justify-between backdrop-blur-md">
         <div className="flex items-center space-x-3">
           <button
             onClick={onClose}
-            className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white transition cursor-pointer"
+            className="p-2 rounded-xl bg-[#EFEFEF] dark:bg-neutral-800 hover:bg-[#E4E6EB] dark:hover:bg-neutral-700 text-[#050505] dark:text-neutral-300 dark:hover:text-white transition cursor-pointer"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -275,17 +275,17 @@ export const PrivateDriftView: React.FC<PrivateDriftViewProps> = ({
             <span className="text-2xl select-none">🎭</span>
             <div>
               <div className="flex items-center space-x-1.5">
-                <span className="font-bold text-sm text-white">{partnerHandle}</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="font-bold text-sm text-[#050505] dark:text-white">{partnerHandle}</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
               </div>
-              <p className="text-[10px] text-neutral-400">Private Drift • Anonymous 1:1</p>
+              <p className="text-[10px] text-[#65676B] dark:text-neutral-400">Private Drift • Anonymous 1:1</p>
             </div>
           </div>
         </div>
 
         <div className="flex items-center space-x-2">
           {/* 3-Hour Expiry badge */}
-          <div className="px-2.5 py-1 rounded-full bg-neutral-950 border border-pink-500/40 text-pink-400 font-mono text-[11px] flex items-center space-x-1">
+          <div className="px-2.5 py-1 rounded-full bg-[#F0F2F5] dark:bg-neutral-950 border border-pink-300 dark:border-pink-500/40 text-pink-600 dark:text-pink-400 font-mono text-[11px] flex items-center space-x-1">
             <Clock className="w-3 h-3" />
             <span>{timeLeft}</span>
           </div>
@@ -296,9 +296,9 @@ export const PrivateDriftView: React.FC<PrivateDriftViewProps> = ({
             disabled={revealState === 'accepted'}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center space-x-1 cursor-pointer ${
               revealState === 'accepted'
-                ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300'
+                ? 'bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-300'
                 : revealState === 'pending'
-                ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
+                ? 'bg-amber-50 dark:bg-amber-500/20 border border-amber-300 dark:border-amber-500/40 text-amber-700 dark:text-amber-300'
                 : 'bg-gradient-to-r from-amber-500 to-yellow-500 text-neutral-950 hover:opacity-90 shadow'
             }`}
           >
@@ -311,9 +311,9 @@ export const PrivateDriftView: React.FC<PrivateDriftViewProps> = ({
       </div>
 
       {/* Ephemeral Warning Banner */}
-      <div className="bg-neutral-950/80 border-b border-neutral-800/80 px-4 py-2 text-[11px] text-neutral-400 flex items-center justify-between">
+      <div className="bg-[#FAFAFA] dark:bg-neutral-950/80 border-b border-[#E4E6EB] dark:border-neutral-800/80 px-4 py-2 text-[11px] text-[#65676B] dark:text-neutral-400 flex items-center justify-between">
         <span>🔒 Temporary conversation. Messages self-destruct after 3 hours.</span>
-        <span className="text-pink-400 font-bold">SOC-002 Protected</span>
+        <span className="text-pink-600 dark:text-pink-400 font-bold">SOC-002 Protected</span>
       </div>
 
       {/* Messages Stream */}
@@ -323,14 +323,14 @@ export const PrivateDriftView: React.FC<PrivateDriftViewProps> = ({
           return (
             <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[78%] rounded-2xl p-3 text-xs space-y-1.5 shadow-lg ${
+                className={`max-w-[78%] rounded-2xl p-3 text-xs space-y-1.5 shadow-sm dark:shadow-lg ${
                   isMine
-                    ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white rounded-br-none'
-                    : 'bg-neutral-900 border border-neutral-800 text-neutral-200 rounded-bl-none'
+                    ? 'bg-[#0866FF] dark:bg-gradient-to-br dark:from-purple-600 dark:to-pink-600 text-white rounded-br-none'
+                    : 'bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-neutral-200 rounded-bl-none'
                 }`}
               >
                 {!isMine && (
-                  <p className="text-[10px] font-bold text-teal-400">{msg.sender_alias_handle}</p>
+                  <p className="text-[10px] font-bold text-[#0866FF] dark:text-teal-400">{msg.sender_alias_handle}</p>
                 )}
 
                 {msg.content && (
@@ -347,21 +347,21 @@ export const PrivateDriftView: React.FC<PrivateDriftViewProps> = ({
 
                 {/* Photo attachment */}
                 {msg.media_type === 'photo' && msg.media_url && (
-                  <div className="rounded-xl overflow-hidden mt-1 border border-white/10">
+                  <div className="rounded-xl overflow-hidden mt-1 border border-[#DBDBDB] dark:border-white/10">
                     <img src={msg.media_url} alt="Shared drift photo" className="max-h-60 w-full object-cover" />
                   </div>
                 )}
 
                 {/* Voice note playback */}
                 {msg.media_type === 'voice' && msg.media_url && (
-                  <div className="flex items-center space-x-2 bg-black/30 p-2 rounded-xl">
+                  <div className="flex items-center space-x-2 bg-black/10 dark:bg-black/30 p-2 rounded-xl">
                     <button
                       onClick={() => handleAudioPlay(msg.id, msg.media_url!)}
                       className="w-8 h-8 rounded-full bg-white text-neutral-950 flex items-center justify-center shadow hover:scale-105 transition cursor-pointer"
                     >
                       {playingAudioId === msg.id ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                     </button>
-                    <div className="flex-1 h-2 bg-white/20 rounded-full overflow-hidden">
+                    <div className="flex-1 h-2 bg-black/15 dark:bg-white/20 rounded-full overflow-hidden">
                       <div className={`h-full bg-teal-400 rounded-full ${playingAudioId === msg.id ? 'animate-pulse w-full' : 'w-1/3'}`} />
                     </div>
                     <span className="text-[10px] font-mono opacity-80">
@@ -382,7 +382,7 @@ export const PrivateDriftView: React.FC<PrivateDriftViewProps> = ({
 
       {/* Recording bar if mic active */}
       {isRecording && (
-        <div className="bg-rose-500/20 border-t border-rose-500/40 p-3 flex items-center justify-between text-xs text-rose-300">
+        <div className="bg-rose-50 dark:bg-rose-500/20 border-t border-rose-200 dark:border-rose-500/40 p-3 flex items-center justify-between text-xs text-rose-700 dark:text-rose-300">
           <div className="flex items-center space-x-2">
             <span className="w-3 h-3 rounded-full bg-rose-500 animate-ping" />
             <span>Recording voice note... ({recordingDuration}s)</span>
@@ -397,7 +397,7 @@ export const PrivateDriftView: React.FC<PrivateDriftViewProps> = ({
       )}
 
       {/* Composer */}
-      <form onSubmit={handleSendText} className="bg-neutral-900 border-t border-neutral-800 p-3 flex items-center space-x-2 relative">
+      <form onSubmit={handleSendText} className="bg-white dark:bg-neutral-900 border-t border-[#DBDBDB] dark:border-neutral-800 p-3 flex items-center space-x-2 relative">
         <input
           type="file"
           ref={fileInputRef}
@@ -410,7 +410,7 @@ export const PrivateDriftView: React.FC<PrivateDriftViewProps> = ({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className="p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white transition cursor-pointer"
+          className="p-2.5 rounded-xl bg-[#EFEFEF] dark:bg-neutral-800 hover:bg-[#E4E6EB] dark:hover:bg-neutral-700 text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-white transition cursor-pointer"
           title="Attach Photo"
         >
           <ImageIcon className="w-4 h-4" />
@@ -425,7 +425,7 @@ export const PrivateDriftView: React.FC<PrivateDriftViewProps> = ({
           className={`p-2.5 rounded-xl transition cursor-pointer ${
             isRecording
               ? 'bg-rose-500 text-white animate-pulse'
-              : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white'
+              : 'bg-[#EFEFEF] dark:bg-neutral-800 hover:bg-[#E4E6EB] dark:hover:bg-neutral-700 text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-white'
           }`}
           title="Hold to Record Voice"
         >
@@ -437,7 +437,7 @@ export const PrivateDriftView: React.FC<PrivateDriftViewProps> = ({
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           placeholder="Message anonymously..."
-          className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-purple-500"
+          className="flex-1 bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-[#0866FF] dark:focus:border-purple-500"
         />
 
         {/* Telegram Emoji picker toggle button */}
@@ -445,7 +445,7 @@ export const PrivateDriftView: React.FC<PrivateDriftViewProps> = ({
           type="button"
           onClick={() => setEmojiPickerOpen((prev) => !prev)}
           className={`p-2.5 rounded-xl transition cursor-pointer ${
-            emojiPickerOpen ? 'text-amber-400 bg-neutral-800' : 'text-neutral-400 hover:text-amber-300'
+            emojiPickerOpen ? 'text-amber-500 dark:text-amber-400 bg-[#EFEFEF] dark:bg-neutral-800' : 'text-[#65676B] dark:text-neutral-400 hover:text-amber-500 dark:hover:text-amber-300'
           }`}
           title="Telegram & Animated Emojis"
         >
@@ -455,7 +455,7 @@ export const PrivateDriftView: React.FC<PrivateDriftViewProps> = ({
         <button
           type="submit"
           disabled={!inputText.trim() || uploading}
-          className="p-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90 transition disabled:opacity-40 cursor-pointer"
+          className="p-2.5 rounded-xl bg-[#0866FF] hover:bg-[#075CE5] dark:bg-gradient-to-r dark:from-purple-500 dark:to-pink-500 text-white hover:opacity-90 transition disabled:opacity-40 cursor-pointer"
         >
           <Send className="w-4 h-4" />
         </button>
@@ -476,20 +476,20 @@ export const PrivateDriftView: React.FC<PrivateDriftViewProps> = ({
 
       {/* Mutual Reveal Celebration Modal */}
       {revealCelebration && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-          <div className="w-full max-w-sm bg-neutral-900 border border-teal-500/50 rounded-3xl p-6 text-center space-y-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="w-full max-w-sm bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-teal-500/50 rounded-3xl p-6 text-center space-y-4 shadow-2xl">
             <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-400 via-pink-500 to-teal-400 p-1 mx-auto shadow-xl">
-              <div className="w-full h-full bg-neutral-950 rounded-full flex items-center justify-center text-2xl">
+              <div className="w-full h-full bg-white dark:bg-neutral-950 rounded-full flex items-center justify-center text-2xl">
                 ✨
               </div>
             </div>
 
-            <h3 className="font-black text-xl text-white font-serif">Mutual Vibe Confirmed!</h3>
-            <p className="text-xs text-neutral-300 leading-relaxed">
+            <h3 className="font-black text-xl text-[#050505] dark:text-white font-serif">Mutual Vibe Confirmed!</h3>
+            <p className="text-xs text-[#262626] dark:text-neutral-300 leading-relaxed">
               Both of you agreed to reveal your real Vibe Handles! You are now official double-matched companions.
             </p>
 
-            <div className="p-3 bg-teal-500/10 border border-teal-500/30 rounded-2xl text-[11px] text-teal-300">
+            <div className="p-3 bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/30 rounded-2xl text-[11px] text-teal-800 dark:text-teal-300">
               ⚡ Permanent 1:1 direct messaging is now unlocked under your VIBES squad tab (SOC-002).
             </div>
 

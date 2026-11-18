@@ -148,20 +148,20 @@ export const CreateVibeFlashModal: React.FC<CreateVibeFlashModalProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 dark:bg-black/85 backdrop-blur-md overflow-y-auto"
     >
-      <div className="relative w-full max-w-lg bg-[#14101c] border border-fuchsia-500/50 rounded-[28px] overflow-hidden shadow-2xl text-white my-auto flex flex-col max-h-[92vh]">
+      <div className="relative w-full max-w-lg bg-white dark:bg-[#14101c] border border-[#DBDBDB] dark:border-fuchsia-500/50 rounded-[28px] overflow-hidden shadow-2xl text-[#050505] dark:text-white my-auto flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="p-5 border-b border-neutral-800 flex items-center justify-between bg-gradient-to-r from-fuchsia-950/40 via-neutral-900 to-neutral-900">
+        <div className="p-5 border-b border-[#E4E6EB] dark:border-neutral-800 flex items-center justify-between bg-[#FAFAFA] dark:bg-gradient-to-r dark:from-fuchsia-950/40 dark:via-neutral-900 dark:to-neutral-900">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/40">
-              <Zap className="w-5 h-5 fill-fuchsia-400" />
+            <div className="p-2.5 rounded-xl bg-fuchsia-50 dark:bg-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-400 border border-fuchsia-200 dark:border-fuchsia-500/40">
+              <Zap className="w-5 h-5 fill-fuchsia-500 dark:fill-fuchsia-400" />
             </div>
             <div>
-              <h3 className="text-base font-black text-white tracking-wide">
+              <h3 className="text-base font-black text-[#050505] dark:text-white tracking-wide">
                 Launch ⚡ Vibe Flash
               </h3>
-              <p className="text-xs text-neutral-400">
+              <p className="text-xs text-[#65676B] dark:text-neutral-400">
                 Drop secret after-hours events or pop-up gatherings
               </p>
             </div>
@@ -169,7 +169,7 @@ export const CreateVibeFlashModal: React.FC<CreateVibeFlashModalProps> = ({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800 transition cursor-pointer"
+            className="p-2 text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-white rounded-xl hover:bg-[#EFEFEF] dark:hover:bg-neutral-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -178,13 +178,13 @@ export const CreateVibeFlashModal: React.FC<CreateVibeFlashModalProps> = ({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto flex-1 text-xs">
           {errorMsg && (
-            <div className="p-3 bg-red-950/60 border border-red-500/40 text-red-200 rounded-xl">
+            <div className="p-3 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-500/40 text-red-700 dark:text-red-200 rounded-xl">
               {errorMsg}
             </div>
           )}
 
           <div className="space-y-1.5">
-            <label className="font-bold text-neutral-300 uppercase tracking-wider">Vibe Category</label>
+            <label className="font-bold text-[#262626] dark:text-neutral-300 uppercase tracking-wider">Vibe Category</label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {CATEGORIES.map(cat => (
                 <button
@@ -193,8 +193,8 @@ export const CreateVibeFlashModal: React.FC<CreateVibeFlashModalProps> = ({
                   onClick={() => setVibeType(cat)}
                   className={`py-2 px-3 rounded-xl border text-left font-bold transition cursor-pointer ${
                     vibeType === cat
-                      ? 'border-fuchsia-500 bg-fuchsia-950/50 text-fuchsia-300 shadow-sm'
-                      : 'border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:text-white'
+                      ? 'border-fuchsia-500 bg-fuchsia-50 dark:bg-fuchsia-950/50 text-fuchsia-700 dark:text-fuchsia-300 shadow-sm'
+                      : 'border-[#DBDBDB] dark:border-neutral-800 bg-[#F0F2F5] dark:bg-neutral-900/60 text-[#262626] dark:text-neutral-400 hover:bg-[#E4E6EB] dark:hover:text-white'
                   }`}
                 >
                   {cat}
@@ -204,44 +204,44 @@ export const CreateVibeFlashModal: React.FC<CreateVibeFlashModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="font-bold text-neutral-300 uppercase tracking-wider">Flash Title</label>
+            <label className="font-bold text-[#262626] dark:text-neutral-300 uppercase tracking-wider">Flash Title</label>
             <input
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
               placeholder="e.g. Rooftop Sunset Synthwave Jam"
               required
-              className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-fuchsia-500 text-xs font-semibold"
+              className="w-full px-3.5 py-2.5 bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-fuchsia-500 text-xs font-semibold"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="font-bold text-neutral-300 uppercase tracking-wider">Venue / Location Name</label>
+              <label className="font-bold text-[#262626] dark:text-neutral-300 uppercase tracking-wider">Venue / Location Name</label>
               <input
                 type="text"
                 value={venueName}
                 onChange={e => setVenueName(e.target.value)}
                 placeholder="e.g. Secret Rooftop Loft"
-                className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-fuchsia-500 text-xs font-semibold"
+                className="w-full px-3.5 py-2.5 bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-fuchsia-500 text-xs font-semibold"
               />
             </div>
             <div className="space-y-1">
-              <label className="font-bold text-neutral-300 uppercase tracking-wider">Address / Area</label>
+              <label className="font-bold text-[#262626] dark:text-neutral-300 uppercase tracking-wider">Address / Area</label>
               <input
                 type="text"
                 value={address}
                 onChange={e => setAddress(e.target.value)}
                 placeholder="e.g. Medina District"
-                className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-fuchsia-500 text-xs font-semibold"
+                className="w-full px-3.5 py-2.5 bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-fuchsia-500 text-xs font-semibold"
               />
             </div>
           </div>
 
           {/* Event Photo Input */}
           <div className="space-y-1.5">
-            <label className="font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-1.5">
-              <Camera className="w-4 h-4 text-fuchsia-400" />
+            <label className="font-bold text-[#262626] dark:text-neutral-300 uppercase tracking-wider flex items-center gap-1.5">
+              <Camera className="w-4 h-4 text-fuchsia-600 dark:text-fuchsia-400" />
               <span>Event Photo (Optional — 1 Photo)</span>
             </label>
             {photoUrl ? (
@@ -256,33 +256,33 @@ export const CreateVibeFlashModal: React.FC<CreateVibeFlashModalProps> = ({
                 </button>
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-neutral-800 hover:border-fuchsia-500/50 rounded-2xl bg-neutral-950/60 cursor-pointer transition">
-                <Camera className="w-6 h-6 text-neutral-400 mb-1" />
-                <span className="text-[11px] text-neutral-400 font-semibold">Click to upload event photo</span>
-                <span className="text-[9px] text-neutral-500">Compressed automatically (JPEG)</span>
+              <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-[#DBDBDB] dark:border-neutral-800 hover:border-fuchsia-500/50 rounded-2xl bg-[#FAFAFA] dark:bg-neutral-950/60 cursor-pointer transition">
+                <Camera className="w-6 h-6 text-[#65676B] dark:text-neutral-400 mb-1" />
+                <span className="text-[11px] text-[#262626] dark:text-neutral-400 font-semibold">Click to upload event photo</span>
+                <span className="text-[9px] text-[#65676B] dark:text-neutral-500">Compressed automatically (JPEG)</span>
                 <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
               </label>
             )}
           </div>
 
           <div className="space-y-1">
-            <label className="font-bold text-neutral-300 uppercase tracking-wider">Description & Secret Access</label>
+            <label className="font-bold text-[#262626] dark:text-neutral-300 uppercase tracking-wider">Description & Secret Access</label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="Provide vibe details, directions, or secret password notes..."
               rows={3}
-              className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-fuchsia-500 text-xs font-semibold resize-none"
+              className="w-full px-3.5 py-2.5 bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-fuchsia-500 text-xs font-semibold resize-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="font-bold text-neutral-300 uppercase tracking-wider">Duration</label>
+              <label className="font-bold text-[#262626] dark:text-neutral-300 uppercase tracking-wider">Duration</label>
               <select
                 value={durationMinutes}
                 onChange={e => setDurationMinutes(Number(e.target.value))}
-                className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:outline-none focus:border-fuchsia-500 text-xs font-semibold cursor-pointer"
+                className="w-full px-3.5 py-2.5 bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl text-[#050505] dark:text-white focus:outline-none focus:border-fuchsia-500 text-xs font-semibold cursor-pointer"
               >
                 <option value={60}>60 Minutes</option>
                 <option value={120}>2 Hours (Default)</option>
@@ -290,14 +290,14 @@ export const CreateVibeFlashModal: React.FC<CreateVibeFlashModalProps> = ({
               </select>
             </div>
             <div className="space-y-1">
-              <label className="font-bold text-neutral-300 uppercase tracking-wider">Max Capacity</label>
+              <label className="font-bold text-[#262626] dark:text-neutral-300 uppercase tracking-wider">Max Capacity</label>
               <input
                 type="number"
                 value={maxCapacity}
                 onChange={e => setMaxCapacity(Math.max(5, Number(e.target.value)))}
                 min={5}
                 max={100}
-                className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-white focus:outline-none focus:border-fuchsia-500 text-xs font-semibold"
+                className="w-full px-3.5 py-2.5 bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl text-[#050505] dark:text-white focus:outline-none focus:border-fuchsia-500 text-xs font-semibold"
               />
             </div>
           </div>

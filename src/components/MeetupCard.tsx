@@ -58,49 +58,49 @@ export const MeetupCard: React.FC<MeetupCardProps> = ({
       });
 
   return (
-    <div className="rounded-2xl bg-[#0e1422] border border-neutral-800 hover:border-blue-500/40 transition p-4 space-y-3 shadow-lg relative overflow-hidden">
+    <div className="rounded-2xl bg-white dark:bg-[#0e1422] border border-[#DBDBDB] dark:border-neutral-800 hover:border-[#0866FF]/40 dark:hover:border-blue-500/40 transition p-4 space-y-3 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-lg relative overflow-hidden">
       {/* Top Banner / Badges */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="px-2.5 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+          <span className="px-2.5 py-0.5 rounded-md bg-[#E7F3FF] dark:bg-blue-500/10 text-[#0866FF] dark:text-blue-400 border border-[#0866FF]/25 dark:border-blue-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
             <Users className="w-3 h-3" />
             SPOT MEETUP
           </span>
           {meetup.is_live_checkin ? (
-            <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 animate-pulse">
+            <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/40 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 animate-pulse">
               <Radio className="w-2.5 h-2.5" /> LIVE NOW
             </span>
           ) : (
-            <span className="px-2 py-0.5 rounded-md bg-neutral-800 text-neutral-300 text-[10px] font-semibold flex items-center gap-1">
-              <Calendar className="w-2.5 h-2.5 text-blue-400" /> {formattedDate}
+            <span className="px-2 py-0.5 rounded-md bg-[#EFEFEF] dark:bg-neutral-800 text-[#262626] dark:text-neutral-300 text-[10px] font-semibold flex items-center gap-1">
+              <Calendar className="w-2.5 h-2.5 text-[#0866FF] dark:text-blue-400" /> {formattedDate}
             </span>
           )}
         </div>
 
-        <span className="text-xs font-bold text-neutral-400 bg-neutral-900 px-2 py-0.5 rounded-lg border border-neutral-800 shrink-0">
+        <span className="text-xs font-bold text-[#65676B] dark:text-neutral-400 bg-[#EFEFEF] dark:bg-neutral-900 px-2 py-0.5 rounded-lg border border-[#DBDBDB] dark:border-neutral-800 shrink-0">
           👥 {attendeeCount} going
         </span>
       </div>
 
       {/* Meetup Title & Description */}
       <div>
-        <h4 className="text-base font-bold text-white tracking-tight leading-snug">
+        <h4 className="text-base font-bold text-[#050505] dark:text-white tracking-tight leading-snug">
           {meetup.title}
         </h4>
         {meetup.description && (
-          <p className="text-xs text-neutral-300 mt-1 line-clamp-2 italic">
+          <p className="text-xs text-[#262626] dark:text-neutral-300 mt-1 line-clamp-2 italic">
             "{meetup.description}"
           </p>
         )}
       </div>
 
       {/* Spot Location */}
-      <div className="flex items-start gap-1.5 text-xs text-neutral-400 pt-0.5">
-        <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+      <div className="flex items-start gap-1.5 text-xs text-[#65676B] dark:text-neutral-400 pt-0.5">
+        <MapPin className="w-3.5 h-3.5 text-[#0866FF] dark:text-amber-400 shrink-0 mt-0.5" />
         <div className="min-w-0">
-          <span className="font-semibold text-neutral-200">{meetup.place_title}</span>
+          <span className="font-semibold text-[#050505] dark:text-neutral-200">{meetup.place_title}</span>
           {meetup.place_address && (
-            <span className="text-neutral-500 truncate block text-[11px]">
+            <span className="text-[#65676B] dark:text-neutral-500 truncate block text-[11px]">
               {meetup.place_address}
             </span>
           )}
@@ -108,20 +108,20 @@ export const MeetupCard: React.FC<MeetupCardProps> = ({
       </div>
 
       {/* Bottom Host & RSVP Row */}
-      <div className="flex items-center justify-between pt-2 border-t border-neutral-800/80 text-xs">
+      <div className="flex items-center justify-between pt-2 border-t border-[#E4E6EB] dark:border-neutral-800/80 text-xs">
         <div className="flex items-center gap-2">
           <img
             src={meetup.host_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'}
             alt={meetup.host_name}
-            className="w-5 h-5 rounded-full object-cover border border-blue-400/30"
+            className="w-5 h-5 rounded-full object-cover border border-[#DBDBDB] dark:border-blue-400/30"
           />
-          <span className="text-neutral-400 text-[11px]">
-            Organized by <strong className="text-neutral-200">@{meetup.host_name}</strong>
+          <span className="text-[#65676B] dark:text-neutral-400 text-[11px]">
+            Organized by <strong className="text-[#050505] dark:text-neutral-200">@{meetup.host_name}</strong>
           </span>
         </div>
 
         {isHost ? (
-          <span className="px-3 py-1 rounded-lg text-xs font-bold bg-neutral-800 text-blue-300 border border-blue-500/20">
+          <span className="px-3 py-1 rounded-lg text-xs font-bold bg-[#E7F3FF] dark:bg-neutral-800 text-[#0866FF] dark:text-blue-300 border border-[#0866FF]/20 dark:border-blue-500/20">
             Host
           </span>
         ) : (
@@ -131,8 +131,8 @@ export const MeetupCard: React.FC<MeetupCardProps> = ({
             disabled={submitting}
             className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer active:scale-95 ${
               attending
-                ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/40 hover:bg-rose-950/50 hover:text-rose-300 hover:border-rose-500/40'
-                : 'bg-blue-600 text-white hover:bg-blue-500 shadow-md shadow-blue-600/30'
+                ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/40 hover:bg-rose-50 dark:hover:bg-rose-950/50 hover:text-rose-700 dark:hover:text-rose-300 hover:border-rose-200 dark:hover:border-rose-500/40'
+                : 'bg-[#0866FF] hover:bg-[#075CE5] dark:bg-blue-600 text-white dark:hover:bg-blue-500 shadow-sm dark:shadow-md dark:shadow-blue-600/30'
             }`}
           >
             {attending ? (

@@ -168,10 +168,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
   };
 
   return (
-    <div className="space-y-6 pb-24 text-white max-w-md mx-auto box-border overflow-x-hidden relative">
+    <div className="space-y-6 pb-24 text-[#050505] dark:text-white max-w-md mx-auto box-border overflow-x-hidden relative">
       {/* Toast Notification */}
       {homeToast && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-teal-500 text-neutral-950 font-bold text-xs shadow-2xl flex items-center space-x-2 animate-fadeIn border border-teal-300">
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-[#0866FF] dark:bg-teal-500 text-white dark:text-neutral-950 font-bold text-xs shadow-2xl flex items-center space-x-2 animate-fadeIn border border-blue-400 dark:border-teal-300">
           <CheckCircle2 className="w-4 h-4" />
           <span>{homeToast}</span>
         </div>
@@ -179,11 +179,11 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
 
       {/* Home Header: Location and Username (Clean, unboxed) */}
       <div className="flex items-center justify-between px-1">
-        <div className="flex items-center space-x-1.5 text-xs font-semibold text-neutral-300">
-          <MapPin className="w-4 h-4 text-amber-400 flex-shrink-0" />
+        <div className="flex items-center space-x-1.5 text-xs font-semibold text-[#65676B] dark:text-neutral-300">
+          <MapPin className="w-4 h-4 text-[#0866FF] dark:text-amber-400 flex-shrink-0" />
           <span className="truncate">{user?.city || user?.district || 'Location unavailable'}</span>
         </div>
-        <div className="text-xs font-bold text-white tracking-wide truncate">
+        <div className="text-xs font-bold text-[#050505] dark:text-white tracking-wide truncate">
           {user?.full_name || user?.username || 'Explorer'}
         </div>
       </div>
@@ -191,34 +191,34 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
       {/* VIBE CHECK-INS Section (Matching Reference 2) */}
       <div className="space-y-3">
         <div className="flex items-center space-x-2">
-          <div className="p-1.5 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/40">
+          <div className="p-1.5 rounded-xl bg-[#E7F3FF] text-[#0866FF] border border-[#0866FF]/20 dark:bg-purple-500/20 dark:text-purple-400 dark:border-purple-500/40">
             <CalendarCheck className="w-4 h-4" />
           </div>
-          <h2 className="text-sm font-black tracking-wider uppercase text-white">VIBE CHECK-INS</h2>
+          <h2 className="text-sm font-black tracking-wider uppercase text-[#050505] dark:text-white">VIBE CHECK-INS</h2>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
           {/* Current Vibe Card */}
-          <div className="rounded-3xl border border-fuchsia-500/40 bg-gradient-to-br from-[#1e1924] via-[#16131c] to-[#121017] p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-lg min-w-0">
-            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-neutral-950/80 border border-neutral-800 flex items-center justify-center flex-shrink-0 shadow-inner">
+          <div className="rounded-3xl border border-[#DBDBDB] dark:border-fuchsia-500/40 bg-white dark:bg-gradient-to-br dark:from-[#1e1924] dark:via-[#16131c] dark:to-[#121017] p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-lg min-w-0">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-[#F0F2F5] dark:bg-neutral-950/80 border border-[#E4E6EB] dark:border-neutral-800 flex items-center justify-center flex-shrink-0 shadow-inner">
               <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 animate-pulse" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] sm:text-xs text-neutral-300 font-medium truncate">Current Vibe:</div>
-              <div className={`text-sm sm:text-base truncate mt-0.5 ${currentVibe ? 'font-black text-orange-400' : 'text-neutral-500 italic text-[11px]'}`}>
+              <div className="text-[11px] sm:text-xs text-[#65676B] dark:text-neutral-300 font-medium truncate">Current Vibe:</div>
+              <div className={`text-sm sm:text-base truncate mt-0.5 ${currentVibe ? 'font-black text-[#0866FF] dark:text-orange-400' : 'text-[#65676B] dark:text-neutral-500 italic text-[11px]'}`}>
                 {currentVibe || 'No vibe set'}
               </div>
             </div>
           </div>
 
           {/* Last Check-in Card */}
-          <div className="rounded-3xl border border-fuchsia-500/40 bg-gradient-to-br from-[#1e1924] via-[#16131c] to-[#121017] p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-lg min-w-0">
-            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-neutral-950/80 border border-neutral-800 flex items-center justify-center flex-shrink-0 shadow-inner">
-              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" />
+          <div className="rounded-3xl border border-[#DBDBDB] dark:border-fuchsia-500/40 bg-white dark:bg-gradient-to-br dark:from-[#1e1924] dark:via-[#16131c] dark:to-[#121017] p-3 sm:p-4 flex items-center space-x-2.5 sm:space-x-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-lg min-w-0">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-[#F0F2F5] dark:bg-neutral-950/80 border border-[#E4E6EB] dark:border-neutral-800 flex items-center justify-center flex-shrink-0 shadow-inner">
+              <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-[#0866FF] dark:text-amber-400" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[11px] sm:text-xs text-neutral-300 font-medium truncate">Last Check-in:</div>
-              <div className={`text-sm sm:text-base truncate mt-0.5 ${lastCheckin ? 'font-bold text-white' : 'text-neutral-500 italic text-[11px]'}`}>
+              <div className="text-[11px] sm:text-xs text-[#65676B] dark:text-neutral-300 font-medium truncate">Last Check-in:</div>
+              <div className={`text-sm sm:text-base truncate mt-0.5 ${lastCheckin ? 'font-bold text-[#050505] dark:text-white' : 'text-[#65676B] dark:text-neutral-500 italic text-[11px]'}`}>
                 {lastCheckin || 'No check-ins'}
               </div>
             </div>
@@ -287,34 +287,34 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold flex items-center space-x-2">
-              <Award className="w-5 h-5 text-amber-400" />
+            <h2 className="text-lg font-bold flex items-center space-x-2 text-[#050505] dark:text-white">
+              <Award className="w-5 h-5 text-amber-500 dark:text-amber-400" />
               <span>Cultural Vibes Trails & Tours</span>
             </h2>
-            <p className="text-[11px] text-neutral-400">Curated multi-stop circuits & pro guided expeditions</p>
+            <p className="text-[11px] text-[#65676B] dark:text-neutral-400">Curated multi-stop circuits & pro guided expeditions</p>
           </div>
           <div className="flex items-center space-x-3">
             {trails.length > 3 && (
               <button
                 type="button"
                 onClick={() => setShowAllTrails(v => !v)}
-                className="text-xs font-bold text-teal-400 hover:underline cursor-pointer"
+                className="text-xs font-bold text-[#0866FF] dark:text-teal-400 hover:underline cursor-pointer"
               >
                 {showAllTrails ? 'Show Less' : `View All (${trails.length})`}
               </button>
             )}
-            <span className="text-xs text-neutral-400 font-semibold">{trails.length} Total</span>
+            <span className="text-xs text-[#65676B] dark:text-neutral-400 font-semibold">{trails.length} Total</span>
             <div className="flex items-center space-x-1 pl-2">
               <button
                 onClick={() => handleScrollTrails('left')}
-                className="p-1 rounded-lg bg-neutral-900 border border-neutral-800 text-teal-400 hover:bg-neutral-800 cursor-pointer"
+                className="p-1 rounded-lg bg-white border border-[#DBDBDB] text-[#050505] hover:bg-[#EFEFEF] dark:bg-neutral-900 dark:border-neutral-800 dark:text-teal-400 dark:hover:bg-neutral-800 cursor-pointer"
                 aria-label="Scroll trails left"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => handleScrollTrails('right')}
-                className="p-1 rounded-lg bg-neutral-900 border border-neutral-800 text-teal-400 hover:bg-neutral-800 cursor-pointer"
+                className="p-1 rounded-lg bg-white border border-[#DBDBDB] text-[#050505] hover:bg-[#EFEFEF] dark:bg-neutral-900 dark:border-neutral-800 dark:text-teal-400 dark:hover:bg-neutral-800 cursor-pointer"
                 aria-label="Scroll trails right"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -332,15 +332,15 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
               <div
                 key={t.id}
                 onClick={() => setSelectedTrail(t)}
-                className="w-72 sm:w-80 flex-shrink-0 rounded-3xl overflow-hidden bg-neutral-900 border border-neutral-800 hover:border-amber-500/60 transition duration-300 cursor-pointer group flex flex-col shadow-xl"
+                className="w-72 sm:w-80 flex-shrink-0 rounded-3xl overflow-hidden bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 hover:border-[#0866FF] dark:hover:border-amber-500/60 transition duration-300 cursor-pointer group flex flex-col shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-xl"
               >
-                <div className="relative h-40 w-full overflow-hidden bg-neutral-950">
+                <div className="relative h-40 w-full overflow-hidden bg-neutral-200 dark:bg-neutral-950">
                   <img
                     src={t.imageUrl || t.image_url || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80'}
                     alt={t.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/30 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/80 via-neutral-900/20 to-transparent" />
 
                   <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
                     <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border backdrop-blur-md ${
@@ -350,12 +350,12 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
                     }`}>
                       {t.isTour ? '⬡ VIBE TOUR' : (t.category || '🧭 VIBE TRAIL')}
                     </span>
-                    <span className="text-xs font-black text-amber-300 bg-amber-500/20 px-2.5 py-1 rounded-xl border border-amber-500/40 backdrop-blur-md">
+                    <span className="text-xs font-black text-amber-300 bg-neutral-950/75 px-2.5 py-1 rounded-xl border border-amber-500/40 backdrop-blur-md">
                       +{t.vq_reward} VQ
                     </span>
                   </div>
 
-                  <div className="absolute bottom-2.5 left-3 right-3 flex items-center space-x-2 text-[11px] text-neutral-300">
+                  <div className="absolute bottom-2.5 left-3 right-3 flex items-center space-x-2 text-[11px] text-white">
                     <span className="flex items-center space-x-1 bg-neutral-950/70 px-2 py-0.5 rounded-lg backdrop-blur-md">
                       <Clock className="w-3 h-3 text-teal-400" />
                       <span>{t.durationHours ? `${t.durationHours}h` : `${t.duration_mins}m`}</span>
@@ -372,26 +372,26 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
 
                 <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
                   <div className="space-y-1">
-                    <h3 className="font-bold text-white text-base group-hover:text-amber-300 transition line-clamp-1">
+                    <h3 className="font-bold text-[#050505] dark:text-white text-base group-hover:text-[#0866FF] dark:group-hover:text-amber-300 transition line-clamp-1">
                       {t.title}
                     </h3>
-                    <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-[#65676B] dark:text-neutral-400 line-clamp-2 leading-relaxed">
                       {t.story || t.description}
                     </p>
                   </div>
 
-                  <div className="pt-2 border-t border-neutral-800/80 flex items-center justify-between text-xs">
+                  <div className="pt-2 border-t border-[#E4E6EB] dark:border-neutral-800/80 flex items-center justify-between text-xs">
                     <div className="flex items-center space-x-2">
                       <img
                         src={t.authorAvatarUrl || t.guardian_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
                         alt={t.authorName || t.guardian_name}
-                        className="w-6 h-6 rounded-full object-cover border border-orange-500/40"
+                        className="w-6 h-6 rounded-full object-cover border border-[#DBDBDB] dark:border-orange-500/40"
                       />
-                      <span className="text-[11px] text-neutral-300 font-medium truncate max-w-[120px]">
+                      <span className="text-[11px] text-[#262626] dark:text-neutral-300 font-medium truncate max-w-[120px]">
                         {t.authorName || t.guardian_name}
                       </span>
                     </div>
-                    <span className="text-[11px] text-teal-400 font-bold flex items-center space-x-0.5 group-hover:translate-x-0.5 transition">
+                    <span className="text-[11px] text-[#0866FF] dark:text-teal-400 font-bold flex items-center space-x-0.5 group-hover:translate-x-0.5 transition">
                       <span>Explore</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </span>
@@ -401,10 +401,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800/80 p-5 text-center space-y-2">
-            <Award className="w-8 h-8 text-amber-400/60 mx-auto" />
-            <h4 className="font-bold text-xs text-white">No cultural trails published yet</h4>
-            <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
+          <div className="rounded-2xl bg-white dark:bg-neutral-900/60 border border-[#DBDBDB] dark:border-neutral-800/80 p-5 text-center space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
+            <Award className="w-8 h-8 text-amber-500/70 dark:text-amber-400/60 mx-auto" />
+            <h4 className="font-bold text-xs text-[#050505] dark:text-white">No cultural trails published yet</h4>
+            <p className="text-[11px] text-[#65676B] dark:text-neutral-400 max-w-xs mx-auto">
               Certified pathfinders and guardians are mapping the next historical trail.
             </p>
           </div>
@@ -415,34 +415,34 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold flex items-center space-x-2">
-              <Shield className="w-5 h-5 text-teal-400" />
+            <h2 className="text-lg font-bold flex items-center space-x-2 text-[#050505] dark:text-white">
+              <Shield className="w-5 h-5 text-[#0866FF] dark:text-teal-400" />
               <span>Active Guardians & Local Legends</span>
             </h2>
-            <p className="text-[11px] text-neutral-400">Verified human guides & friendly neighborhood sentinels</p>
+            <p className="text-[11px] text-[#65676B] dark:text-neutral-400">Verified human guides & friendly neighborhood sentinels</p>
           </div>
           <div className="flex items-center space-x-3">
             {guardians.length > 3 && (
               <button
                 type="button"
                 onClick={() => setShowAllGuardians(v => !v)}
-                className="text-xs font-bold text-teal-400 hover:underline cursor-pointer"
+                className="text-xs font-bold text-[#0866FF] dark:text-teal-400 hover:underline cursor-pointer"
               >
                 {showAllGuardians ? 'Show Less' : `View All (${guardians.length})`}
               </button>
             )}
-            <span className="text-xs text-neutral-400 font-semibold">{guardians.length} On Duty</span>
+            <span className="text-xs text-[#65676B] dark:text-neutral-400 font-semibold">{guardians.length} On Duty</span>
             <div className="flex items-center space-x-1 pl-2">
               <button
                 onClick={() => handleScrollGuardians('left')}
-                className="p-1 rounded-lg bg-neutral-900 border border-neutral-800 text-teal-400 hover:bg-neutral-800 cursor-pointer"
+                className="p-1 rounded-lg bg-white border border-[#DBDBDB] text-[#050505] hover:bg-[#EFEFEF] dark:bg-neutral-900 dark:border-neutral-800 dark:text-teal-400 dark:hover:bg-neutral-800 cursor-pointer"
                 aria-label="Scroll guardians left"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => handleScrollGuardians('right')}
-                className="p-1 rounded-lg bg-neutral-900 border border-neutral-800 text-teal-400 hover:bg-neutral-800 cursor-pointer"
+                className="p-1 rounded-lg bg-white border border-[#DBDBDB] text-[#050505] hover:bg-[#EFEFEF] dark:bg-neutral-900 dark:border-neutral-800 dark:text-teal-400 dark:hover:bg-neutral-800 cursor-pointer"
                 aria-label="Scroll guardians right"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -462,52 +462,52 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
                 <div
                   key={g.id}
                   onClick={() => setSelectedGuardian(g)}
-                  className="w-72 sm:w-80 flex-shrink-0 rounded-3xl bg-neutral-900 border border-neutral-800 hover:border-teal-500/60 p-4 flex flex-col justify-between space-y-3 transition cursor-pointer group shadow-xl"
+                  className="w-72 sm:w-80 flex-shrink-0 rounded-3xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 hover:border-[#0866FF] dark:hover:border-teal-500/60 p-4 flex flex-col justify-between space-y-3 transition cursor-pointer group shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-xl"
                 >
                   <div className="flex items-center space-x-3">
                     <div className="relative flex-shrink-0">
                       <img
                         src={g.avatarUrl || g.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
                         alt={g.name}
-                        className="w-12 h-12 rounded-full object-cover border border-teal-500/40 group-hover:scale-105 transition duration-300"
+                        className="w-12 h-12 rounded-full object-cover border border-[#DBDBDB] dark:border-teal-500/40 group-hover:scale-105 transition duration-300"
                       />
-                      <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-neutral-900 animate-pulse" />
+                      <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 dark:bg-emerald-400 border-2 border-white dark:border-neutral-900 animate-pulse" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center space-x-1.5">
                         <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.2 rounded border ${
                           isPro
-                            ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
-                            : 'bg-teal-500/10 text-teal-300 border-teal-500/30'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/30'
+                            : 'bg-[#E7F3FF] text-[#0866FF] border-[#0866FF]/20 dark:bg-teal-500/10 dark:text-teal-300 dark:border-teal-500/30'
                         }`}>
                           {g.tier || (isPro ? 'PRO GUIDE' : 'LOCAL LEGEND')}
                         </span>
                         {g.hourlyRate ? (
-                          <span className="text-[10px] font-bold text-amber-300 bg-amber-500/10 px-1.5 py-0.2 rounded">
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 dark:text-amber-300 dark:bg-amber-500/10 px-1.5 py-0.2 rounded">
                             ${g.hourlyRate}/h
                           </span>
                         ) : (
-                          <span className="text-[10px] font-bold text-teal-300 bg-teal-500/10 px-1.5 py-0.2 rounded">
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 dark:text-teal-300 dark:bg-teal-500/10 px-1.5 py-0.2 rounded">
                             Free
                           </span>
                         )}
                       </div>
-                      <h4 className="font-bold text-sm text-white truncate group-hover:text-amber-300 transition mt-0.5">
+                      <h4 className="font-bold text-sm text-[#050505] dark:text-white truncate group-hover:text-[#0866FF] dark:group-hover:text-amber-300 transition mt-0.5">
                         {g.name}
                       </h4>
-                      <p className="text-xs text-neutral-400 truncate">{g.city || g.district}</p>
+                      <p className="text-xs text-[#65676B] dark:text-neutral-400 truncate">{g.city || g.district}</p>
                     </div>
                   </div>
 
-                  <p className="text-xs text-neutral-300 line-clamp-2 leading-relaxed font-light">
+                  <p className="text-xs text-[#262626] dark:text-neutral-300 line-clamp-2 leading-relaxed font-normal dark:font-light">
                     {g.bio || 'District guardian and cultural pathfinder.'}
                   </p>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-neutral-800 text-xs">
-                    <span className="text-[11px] text-emerald-300 font-bold">
+                  <div className="flex items-center justify-between pt-2 border-t border-[#E4E6EB] dark:border-neutral-800 text-xs">
+                    <span className="text-[11px] text-emerald-600 dark:text-emerald-300 font-bold">
                       Trust {g.trustScore || g.trust_score || 95}%
                     </span>
-                    <span className="text-[11px] text-teal-400 font-bold flex items-center space-x-0.5 group-hover:translate-x-0.5 transition">
+                    <span className="text-[11px] text-[#0866FF] dark:text-teal-400 font-bold flex items-center space-x-0.5 group-hover:translate-x-0.5 transition">
                       <span>Inspect</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </span>
@@ -517,10 +517,10 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
             })}
           </div>
         ) : (
-          <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800/80 p-5 text-center space-y-2">
-            <Shield className="w-8 h-8 text-teal-400/60 mx-auto" />
-            <h4 className="font-bold text-xs text-white">No guardians registered on duty</h4>
-            <p className="text-[11px] text-neutral-400 max-w-xs mx-auto">
+          <div className="rounded-2xl bg-white dark:bg-neutral-900/60 border border-[#DBDBDB] dark:border-neutral-800/80 p-5 text-center space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
+            <Shield className="w-8 h-8 text-[#0866FF]/60 dark:text-teal-400/60 mx-auto" />
+            <h4 className="font-bold text-xs text-[#050505] dark:text-white">No guardians registered on duty</h4>
+            <p className="text-[11px] text-[#65676B] dark:text-neutral-400 max-w-xs mx-auto">
               District guardian rotation active. New guardians sync when signed into Supabase.
             </p>
           </div>
@@ -549,13 +549,13 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
 
       {/* Comments Modal for Social Feed */}
       {activePostId && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="w-full sm:max-w-lg bg-neutral-900 border border-neutral-800 rounded-t-3xl sm:rounded-3xl p-6 space-y-4 max-h-[80vh] flex flex-col shadow-2xl text-white">
-            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+        <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
+          <div className="w-full sm:max-w-lg bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 rounded-t-3xl sm:rounded-3xl p-6 space-y-4 max-h-[80vh] flex flex-col shadow-2xl text-[#050505] dark:text-white">
+            <div className="flex items-center justify-between border-b border-[#E4E6EB] dark:border-neutral-800 pb-3">
               <h3 className="font-bold text-base">District Comments</h3>
               <button
                 onClick={() => setActivePostId(null)}
-                className="text-xs text-neutral-400 hover:text-white px-2.5 py-1 rounded-xl bg-neutral-800 cursor-pointer"
+                className="text-xs text-[#65676B] hover:text-[#050505] dark:text-neutral-400 dark:hover:text-white px-2.5 py-1 rounded-xl bg-[#EFEFEF] dark:bg-neutral-800 cursor-pointer"
               >
                 Close
               </button>
@@ -564,37 +564,37 @@ export const HomeTab: React.FC<HomeTabProps> = ({ user, onNavigateTab, onSelectP
             <div className="flex-1 overflow-y-auto space-y-3 min-h-[160px]">
               {comments.length > 0 ? (
                 comments.map((comm) => (
-                  <div key={comm.id} className="flex space-x-3 items-start bg-neutral-950/60 p-3 rounded-2xl border border-neutral-800">
+                  <div key={comm.id} className="flex space-x-3 items-start bg-[#F0F2F5] dark:bg-neutral-950/60 p-3 rounded-2xl border border-[#E4E6EB] dark:border-neutral-800">
                     <img src={comm.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'} alt={comm.username} className="w-8 h-8 rounded-full object-cover" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-white">@{comm.username}</span>
-                        <span className="text-[10px] text-neutral-500">
+                        <span className="font-bold text-xs text-[#050505] dark:text-white">@{comm.username}</span>
+                        <span className="text-[10px] text-[#65676B] dark:text-neutral-500">
                           {new Date(comm.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
-                      <p className="text-xs text-neutral-300 mt-1">{comm.content}</p>
+                      <p className="text-xs text-[#262626] dark:text-neutral-300 mt-1">{comm.content}</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="py-6 text-center text-xs text-neutral-500 italic">
+                <div className="py-6 text-center text-xs text-[#65676B] dark:text-neutral-500 italic">
                   No comments yet. Start the conversation!
                 </div>
               )}
             </div>
 
-            <form onSubmit={handleSendComment} className="flex items-center space-x-2 pt-2 border-t border-neutral-800">
+            <form onSubmit={handleSendComment} className="flex items-center space-x-2 pt-2 border-t border-[#E4E6EB] dark:border-neutral-800">
               <input
                 type="text"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 placeholder="Write a comment..."
-                className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
+                className="flex-1 bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl px-4 py-2.5 text-xs text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-[#0866FF] dark:focus:border-teal-500"
               />
               <button
                 type="submit"
-                className="p-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-teal-500 text-white hover:opacity-90 transition cursor-pointer"
+                className="p-2.5 rounded-xl bg-[#0866FF] dark:bg-gradient-to-r dark:from-orange-500 dark:to-teal-500 text-white hover:opacity-90 transition cursor-pointer"
               >
                 <Send className="w-4 h-4" />
               </button>

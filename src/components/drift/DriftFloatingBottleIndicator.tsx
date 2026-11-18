@@ -40,7 +40,7 @@ export const DriftFloatingBottleIndicator: React.FC<DriftFloatingBottleIndicator
         type="button"
         onClick={onClick}
         aria-label="Open Message in a Bottle"
-        className="relative group cursor-pointer focus:outline-none focus:ring-2 focus:ring-teal-400/50 rounded-full transition-transform active:scale-95 p-1 bg-transparent border-0 shadow-none"
+        className="relative group cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0866FF]/50 dark:focus:ring-teal-400/50 rounded-full transition-transform active:scale-95 p-1 bg-transparent border-0 shadow-none"
         style={
           prefersReducedMotion
             ? undefined

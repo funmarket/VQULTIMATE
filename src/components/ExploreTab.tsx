@@ -39,6 +39,7 @@ import { LiveSelfieModal } from './LiveSelfieModal';
 import { HireHandshakeModal } from './HireHandshakeModal';
 import { HireGuardianForTrailModal } from './HireGuardianForTrailModal';
 import { TourReservationModal } from './TourReservationModal';
+import { useTheme } from '../lib/theme';
 
 interface ExploreTabProps {
   user?: UserProfile | null;
@@ -51,6 +52,8 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
   onSelectPlace,
   onRequireAuth
 }) => {
+  const { theme } = useTheme();
+  const prevThemeRef = useRef(theme);
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
@@ -211,9 +214,13 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         : [0, 20];
       const initialZoom = locationState.coords ? 13.5 : 2;
 
+      const mapStyleUrl = theme === 'light'
+        ? 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json'
+        : 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+
       const map = new maplibregl.Map({
         container: mapContainer.current,
-        style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+        style: mapStyleUrl,
         center: initialCenter,
         zoom: initialZoom,
         pitch: locationState.coords ? 45 : 0,
@@ -239,6 +246,21 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
       }
     };
   }, []);
+
+  // Dynamically switch MapLibre basemap style when theme toggles
+  useEffect(() => {
+    if (prevThemeRef.current === theme) return;
+    prevThemeRef.current = theme;
+    if (!mapInstance.current) return;
+    const nextStyle = theme === 'light'
+      ? 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json'
+      : 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+    try {
+      mapInstance.current.setStyle(nextStyle);
+    } catch (err) {
+      console.warn('MapLibre setStyle error:', err);
+    }
+  }, [theme]);
 
   // 4. Center MapLibre ONCE on initial real device coordinates, then preserve user pan/zoom freedom
   useEffect(() => {
@@ -476,11 +498,11 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
   };
 
   return (
-    <div className={`space-y-6 pb-24 text-white transition-all duration-300 ${isFullScreen ? 'fixed inset-0 z-50 bg-neutral-950 p-4 overflow-y-auto' : ''}`}>
+    <div className={`space-y-6 pb-24 text-[#050505] dark:text-white transition-all duration-300 ${isFullScreen ? 'fixed inset-0 z-50 bg-[#F0F2F5] dark:bg-neutral-950 p-4 overflow-y-auto' : ''}`}>
       {/* Toast Notification */}
       {exploreToast && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-neutral-900/95 border border-teal-500/50 text-teal-300 px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-bold flex items-center space-x-2 animate-fadeIn pointer-events-none">
-          <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-[#050505] dark:bg-neutral-900/95 border border-[#0866FF]/40 dark:border-teal-500/50 text-white dark:text-teal-300 px-4 py-2.5 rounded-2xl shadow-2xl text-xs font-bold flex items-center space-x-2 animate-fadeIn pointer-events-none">
+          <Sparkles className="w-4 h-4 text-[#0866FF] dark:text-amber-400 flex-shrink-0" />
           <span>{exploreToast}</span>
         </div>
       )}
@@ -489,17 +511,17 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-black tracking-tight flex items-center space-x-2">
-            <Compass className="w-6 h-6 text-orange-400 animate-spin-slow" />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-neutral-200 to-orange-300">
+            <Compass className="w-6 h-6 text-[#0866FF] dark:text-orange-400 animate-spin-slow" />
+            <span className="text-[#050505] dark:bg-clip-text dark:text-transparent dark:bg-gradient-to-r dark:from-white dark:via-neutral-200 dark:to-orange-300">
               Vibe Orbit
             </span>
           </h1>
-          <p className="text-xs text-neutral-400">23km : trust your instincts</p>
+          <p className="text-xs text-[#65676B] dark:text-neutral-400">23km : trust your instincts</p>
         </div>
         <div className="flex items-center space-x-2">
           <button
             onClick={handleRecenterUser}
-            className="p-2.5 rounded-xl bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 transition text-cyan-400 flex items-center space-x-1.5 text-xs font-semibold cursor-pointer"
+            className="p-2.5 rounded-xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 hover:bg-[#EFEFEF] dark:hover:bg-neutral-800 transition text-[#0866FF] dark:text-cyan-400 flex items-center space-x-1.5 text-xs font-semibold cursor-pointer shadow-xs dark:shadow-none"
             title="Recenter on My Location"
           >
             <Navigation className="w-3.5 h-3.5" />
@@ -507,7 +529,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           </button>
           <button
             onClick={() => setIsFullScreen(!isFullScreen)}
-            className="p-2.5 rounded-xl bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 transition text-teal-400 flex items-center space-x-1.5 text-xs font-semibold cursor-pointer"
+            className="p-2.5 rounded-xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 hover:bg-[#EFEFEF] dark:hover:bg-neutral-800 transition text-[#050505] dark:text-teal-400 flex items-center space-x-1.5 text-xs font-semibold cursor-pointer shadow-xs dark:shadow-none"
           >
             {isFullScreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             <span>{isFullScreen ? 'Collapse' : 'Expand Orbit'}</span>
@@ -520,14 +542,14 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
       {/* Geolocation Status / Permission Warning Banner */}
       {locationState.status === 'denied' && (
-        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between animate-fadeIn">
+        <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between animate-fadeIn">
           <div className="flex items-center space-x-2.5">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-400" />
+            <AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
             <span>Location permission was denied. Please allow browser location access to scan the 23 km discovery orbit around your device.</span>
           </div>
           <button
             onClick={handleManualCalibrate}
-            className="px-3 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-bold text-xs whitespace-nowrap ml-2 cursor-pointer"
+            className="px-3 py-1 rounded-xl bg-amber-100 dark:bg-amber-500/20 hover:bg-amber-200 dark:hover:bg-amber-500/30 text-amber-900 dark:text-amber-200 font-bold text-xs whitespace-nowrap ml-2 cursor-pointer"
           >
             Retry GPS
           </button>
@@ -535,14 +557,14 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
       )}
 
       {locationState.status === 'unavailable' && (
-        <div className="p-3.5 rounded-2xl bg-neutral-900 border border-neutral-800 text-neutral-400 text-xs flex items-center justify-between animate-fadeIn">
+        <div className="p-3.5 rounded-2xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 text-[#65676B] dark:text-neutral-400 text-xs flex items-center justify-between animate-fadeIn">
           <div className="flex items-center space-x-2.5">
-            <Radio className="w-4 h-4 flex-shrink-0 text-neutral-500" />
+            <Radio className="w-4 h-4 flex-shrink-0 text-[#65676B] dark:text-neutral-500" />
             <span>GPS sensor is unavailable or timed out. Re-calibrating radar...</span>
           </div>
           <button
             onClick={handleManualCalibrate}
-            className="px-3 py-1 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-bold text-xs whitespace-nowrap ml-2 cursor-pointer"
+            className="px-3 py-1 rounded-xl bg-[#EFEFEF] dark:bg-neutral-800 hover:bg-[#E4E6EB] dark:hover:bg-neutral-700 text-[#050505] dark:text-neutral-200 font-bold text-xs whitespace-nowrap ml-2 cursor-pointer"
           >
             Retry GPS
           </button>
@@ -560,8 +582,8 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
             }}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 cursor-pointer ${
               selectedCategory === cat
-                ? 'bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-lg shadow-orange-500/30 border border-orange-400/50'
-                : 'bg-neutral-900 text-neutral-400 border border-neutral-800 hover:bg-neutral-800 hover:text-white'
+                ? 'bg-[#0866FF] dark:bg-gradient-to-r dark:from-orange-500 dark:to-amber-600 text-white shadow-sm dark:shadow-lg dark:shadow-orange-500/30 border border-[#0866FF] dark:border-orange-400/50'
+                : 'bg-white dark:bg-neutral-900 text-[#65676B] dark:text-neutral-400 border border-[#DBDBDB] dark:border-neutral-800 hover:bg-[#EFEFEF] dark:hover:bg-neutral-800 hover:text-[#050505] dark:hover:text-white'
             }`}
           >
             {cat}
@@ -570,38 +592,38 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
       </div>
 
       {/* Vibe Orbit Radar Container / Map View */}
-      <div className={`relative rounded-3xl overflow-hidden border border-neutral-800 bg-neutral-900 shadow-2xl ${isFullScreen ? 'h-[70vh]' : 'h-[380px]'}`}>
+      <div className={`relative rounded-3xl overflow-hidden border border-[#DBDBDB] dark:border-neutral-800 bg-[#EFEFEF] dark:bg-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-2xl ${isFullScreen ? 'h-[70vh]' : 'h-[380px]'}`}>
         {/* MapLibre Container (Real device coordinates center) */}
         <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
 
         {/* Soft Organic Concentric Rings Visual Overlay (Matches Reference 0DvcX_6bc6cde4.jpg) */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden">
           {/* Outer ring */}
-          <div className="absolute w-[320px] h-[320px] rounded-full border border-purple-500/20 animate-pulse" style={{ animationDuration: '6s' }} />
+          <div className="absolute w-[320px] h-[320px] rounded-full border border-[#0866FF]/20 dark:border-purple-500/20 animate-pulse" style={{ animationDuration: '6s' }} />
           {/* Middle ring */}
-          <div className="absolute w-56 h-56 rounded-full border border-teal-500/25" />
+          <div className="absolute w-56 h-56 rounded-full border border-teal-600/20 dark:border-teal-500/25" />
           {/* Inner ring */}
-          <div className="absolute w-36 h-36 rounded-full border border-orange-500/30 animate-pulse" style={{ animationDuration: '3s' }} />
+          <div className="absolute w-36 h-36 rounded-full border border-[#0866FF]/25 dark:border-orange-500/30 animate-pulse" style={{ animationDuration: '3s' }} />
 
           {/* Central Compass Rose Emblem */}
-          <div className="absolute flex flex-col items-center justify-center text-center pointer-events-none opacity-80">
-            <span className="text-[9px] uppercase tracking-[0.25em] text-amber-200/90 font-bold">
+          <div className="absolute flex flex-col items-center justify-center text-center pointer-events-none opacity-85">
+            <span className="text-[9px] uppercase tracking-[0.25em] text-[#0866FF] dark:text-amber-200/90 font-bold">
               ✦ VIBE ORBIT ✦
             </span>
-            <span className="text-[7.5px] uppercase tracking-[0.18em] text-neutral-400 font-medium mt-0.5">
+            <span className="text-[7.5px] uppercase tracking-[0.18em] text-[#65676B] dark:text-neutral-400 font-medium mt-0.5">
               CULTURAL DISCOVERY RADAR
             </span>
-            <span className="text-[7px] text-teal-400/80 font-mono mt-0.5">
+            <span className="text-[7px] text-[#0866FF]/80 dark:text-teal-400/80 font-mono mt-0.5">
               23 KM SCOPE
             </span>
           </div>
         </div>
 
         {/* Bottom Legend Overlay with Real Device Coordinates */}
-        <div className="absolute bottom-3 left-3 right-3 bg-neutral-950/85 backdrop-blur-xl border border-neutral-800 rounded-2xl p-3 flex items-center justify-between text-xs">
+        <div className="absolute bottom-3 left-3 right-3 bg-white/90 dark:bg-neutral-950/85 backdrop-blur-xl border border-[#DBDBDB] dark:border-neutral-800 rounded-2xl p-3 flex items-center justify-between text-xs shadow-sm dark:shadow-none">
           <div className="flex items-center space-x-2">
-            <span className={`w-2 h-2 rounded-full ${locationState.status === 'granted' ? 'bg-cyan-400 animate-pulse' : 'bg-neutral-500'}`} />
-            <span className="font-bold text-white">
+            <span className={`w-2 h-2 rounded-full ${locationState.status === 'granted' ? 'bg-[#0866FF] dark:bg-cyan-400 animate-pulse' : 'bg-[#65676B] dark:bg-neutral-500'}`} />
+            <span className="font-bold text-[#050505] dark:text-white">
               {locationState.status === 'granted' && locationState.coords
                 ? `GPS Active: ${locationState.coords.lat.toFixed(4)}, ${locationState.coords.lng.toFixed(4)}`
                 : locationState.status === 'requesting'
@@ -609,28 +631,28 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                 : 'GPS Offline'}
             </span>
           </div>
-          <span className="text-[11px] text-neutral-400 font-medium">
+          <span className="text-[11px] text-[#65676B] dark:text-neutral-400 font-medium">
             {places.length} Places in 23 km
           </span>
         </div>
       </div>
 
-      <div className="text-[10px] text-neutral-500 flex flex-wrap justify-end gap-x-1 px-2 -mt-4" aria-label="Map attribution">
+      <div className="text-[10px] text-[#65676B] dark:text-neutral-500 flex flex-wrap justify-end gap-x-1 px-2 -mt-4" aria-label="Map attribution">
         <span>MapLibre |</span>
-        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-300">© OpenStreetMap contributors</a>
+        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#050505] dark:hover:text-neutral-300">© OpenStreetMap contributors</a>
         <span>©</span>
-        <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer" className="underline hover:text-neutral-300">CARTO</a>
+        <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#050505] dark:hover:text-neutral-300">CARTO</a>
       </div>
 
       {/* Nearby Vibe Waypoints (23 km Discovery Scope) */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-base font-bold flex items-center space-x-2">
-            <Flame className="w-4 h-4 text-orange-400" />
+          <h3 className="text-base font-bold flex items-center space-x-2 text-[#050505] dark:text-white">
+            <Flame className="w-4 h-4 text-[#0866FF] dark:text-orange-400" />
             <span>Nearby Vibe Waypoints (23 km Scope: {places.length})</span>
           </h3>
           {locationState.coords && (
-            <span className="text-[11px] text-teal-400 font-mono">
+            <span className="text-[11px] text-[#0866FF] dark:text-teal-400 font-mono">
               Radius: 23,000 m
             </span>
           )}
@@ -653,29 +675,29 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                   <div
                     key={place.id}
                     onClick={() => onSelectPlace(place)}
-                    className="rounded-3xl bg-neutral-900 border border-neutral-800 hover:border-cyan-500/40 transition cursor-pointer p-4 sm:p-5 flex flex-col space-y-4 group shadow-xl relative"
+                    className="rounded-3xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 hover:border-[#0866FF]/40 dark:hover:border-cyan-500/40 transition cursor-pointer p-4 sm:p-5 flex flex-col space-y-4 group shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-xl relative"
                   >
                     {/* TOP: Badges & Full-width Title */}
                     <div className="space-y-2">
                       <div className="flex items-center space-x-2 flex-wrap gap-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-teal-300 bg-teal-950/60 border border-teal-500/30 px-2.5 py-0.5 rounded">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-500/30 px-2.5 py-0.5 rounded">
                           {place.category || 'SPOTS'}
                         </span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300 bg-amber-950/60 border border-amber-500/40 px-2.5 py-0.5 rounded">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-500/40 px-2.5 py-0.5 rounded">
                           {tier}
                         </span>
-                        <span className="text-[10px] font-bold text-purple-300 bg-purple-950/60 border border-purple-500/30 px-2.5 py-0.5 rounded flex items-center space-x-1">
+                        <span className="text-[10px] font-bold text-[#0866FF] dark:text-purple-300 bg-[#E7F3FF] dark:bg-purple-950/60 border border-[#0866FF]/20 dark:border-purple-500/30 px-2.5 py-0.5 rounded flex items-center space-x-1">
                           <span>✨</span>
                           <span>{matchScore}% MATCH</span>
                         </span>
                       </div>
-                      <h4 className="font-black text-lg sm:text-xl text-white tracking-tight leading-snug">
+                      <h4 className="font-black text-lg sm:text-xl text-[#050505] dark:text-white tracking-tight leading-snug">
                         {place.title}
                       </h4>
                     </div>
 
                     {/* MIDDLE: Large Hero Photo spanning full card width */}
-                    <div className="relative w-full h-48 sm:h-56 rounded-2xl overflow-hidden bg-neutral-950 border border-neutral-800 shadow-lg">
+                    <div className="relative w-full h-48 sm:h-56 rounded-2xl overflow-hidden bg-[#EFEFEF] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 shadow-sm dark:shadow-lg">
                       <img
                         src={place.image_url || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80'}
                         alt={place.title}
@@ -690,30 +712,30 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                     </div>
 
                     {/* BELOW PHOTO: Address */}
-                    <div className="text-xs text-neutral-300 flex items-center space-x-1.5">
-                      <MapPin className="w-4 h-4 text-orange-400 flex-shrink-0" />
+                    <div className="text-xs text-[#262626] dark:text-neutral-300 flex items-center space-x-1.5">
+                      <MapPin className="w-4 h-4 text-[#0866FF] dark:text-orange-400 flex-shrink-0" />
                       <span>{place.address}</span>
                     </div>
 
                     {/* BOTTOM: Distance, visits & reward actions */}
-                    <div className="pt-3 border-t border-neutral-800/80 flex items-center justify-between text-xs">
-                      <span className="font-semibold text-teal-300">
+                    <div className="pt-3 border-t border-[#E4E6EB] dark:border-neutral-800/80 flex items-center justify-between text-xs">
+                      <span className="font-semibold text-[#0866FF] dark:text-teal-300">
                         {place.distance_km !== undefined ? `${place.distance_km} km` : 'Nearby'}
                         {googleReviewsCount !== undefined ? ` • ${googleReviewsCount} reviews` : ''}
                         {appCheckinsCount !== undefined ? ` • ${appCheckinsCount} check-ins` : ''}
                       </span>
                       <div className="flex items-center space-x-2">
-                        <span className="px-3.5 py-2 rounded-xl bg-neutral-800/80 text-neutral-400 border border-neutral-700/60 text-xs font-bold flex items-center space-x-1 shadow">
+                        <span className="px-3.5 py-2 rounded-xl bg-[#EFEFEF] dark:bg-neutral-800/80 text-[#65676B] dark:text-neutral-400 border border-[#DBDBDB] dark:border-neutral-700/60 text-xs font-bold flex items-center space-x-1 shadow-xs dark:shadow">
                           <span className="text-[10px]">🔒</span>
                           <span>Locked</span>
                         </span>
                         {isPromoted && vqReward ? (
-                          <span className="px-3.5 py-2 rounded-xl bg-teal-950/60 text-emerald-400 border border-teal-500/30 text-xs font-bold shadow flex items-center space-x-1">
+                          <span className="px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-teal-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-teal-500/30 text-xs font-bold shadow-xs dark:shadow flex items-center space-x-1">
                             <span>🚀</span>
                             <span>+{vqReward} PTS</span>
                           </span>
                         ) : (
-                          <span className="px-3.5 py-2 rounded-xl bg-amber-950/40 text-amber-400 border border-amber-500/30 text-xs font-bold shadow flex items-center space-x-1">
+                          <span className="px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 text-xs font-bold shadow-xs dark:shadow flex items-center space-x-1">
                             <span>🚀</span>
                             <span>Promote Spot</span>
                           </span>
@@ -729,18 +751,18 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
               <button
                 type="button"
                 onClick={() => setVisibleWaypointsCount((prev) => Math.min(places.length, prev + 3))}
-                className="w-full py-3.5 rounded-2xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-700/60 text-teal-300 hover:text-white font-bold text-xs tracking-wider transition cursor-pointer shadow-lg flex items-center justify-center space-x-2"
+                className="w-full py-3.5 rounded-2xl bg-white dark:bg-neutral-900 hover:bg-[#EFEFEF] dark:hover:bg-neutral-800 border border-[#DBDBDB] dark:border-neutral-700/60 text-[#0866FF] dark:text-teal-300 hover:text-[#050505] dark:hover:text-white font-bold text-xs tracking-wider transition cursor-pointer shadow-sm dark:shadow-lg flex items-center justify-center space-x-2"
               >
                 <span>Load More</span>
-                <span className="text-[10px] text-neutral-400">({places.length - visibleWaypointsCount} remaining)</span>
+                <span className="text-[10px] text-[#65676B] dark:text-neutral-400">({places.length - visibleWaypointsCount} remaining)</span>
               </button>
             )}
           </div>
         ) : (
-          <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800/80 p-6 text-center space-y-2">
-            <Compass className="w-8 h-8 text-orange-400/60 mx-auto" />
-            <h4 className="font-bold text-sm text-white">No cultural waypoints within 23 km</h4>
-            <p className="text-xs text-neutral-400 max-w-sm mx-auto">
+          <div className="rounded-2xl bg-white dark:bg-neutral-900/60 border border-[#DBDBDB] dark:border-neutral-800/80 p-6 text-center space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
+            <Compass className="w-8 h-8 text-[#0866FF]/60 dark:text-orange-400/60 mx-auto" />
+            <h4 className="font-bold text-sm text-[#050505] dark:text-white">No cultural waypoints within 23 km</h4>
+            <p className="text-xs text-[#65676B] dark:text-neutral-400 max-w-sm mx-auto">
               {locationState.coords
                 ? `No certified places or secrets were returned in your 23 km discovery orbit (${locationState.coords.lat.toFixed(4)}, ${locationState.coords.lng.toFixed(4)}). Zero mock fallback is active.`
                 : 'Awaiting device location coordinates to scan for nearby cultural waypoints.'}
@@ -750,37 +772,37 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
       </div>
 
       {/* Part 1 & Part 2: Community Curations - Cultural Vibes Trails */}
-      <div className="space-y-4 pt-4 border-t border-neutral-800">
+      <div className="space-y-4 pt-4 border-t border-[#DBDBDB] dark:border-neutral-800">
         {/* Section Header with Neon Green Typography */}
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-[#00e599] animate-pulse" />
-            <span className="text-[11px] font-black uppercase tracking-wider text-[#00e599] font-mono">
+            <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-[#00e599] animate-pulse" />
+            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-[#00e599] font-mono">
               COMMUNITY CURATIONS - LOCAL KNOWLEDGE
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-black text-[#050505] dark:text-white tracking-tight">
               Cultural Vibes Trails
             </h2>
             <div className="flex items-center space-x-1">
               <button
                 onClick={() => handleScrollTrails('left')}
-                className="p-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-teal-400 hover:bg-neutral-800 cursor-pointer"
+                className="p-1.5 rounded-xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-teal-400 hover:bg-[#EFEFEF] dark:hover:bg-neutral-800 cursor-pointer"
                 aria-label="Scroll trails left"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 onClick={() => handleScrollTrails('right')}
-                className="p-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-teal-400 hover:bg-neutral-800 cursor-pointer"
+                className="p-1.5 rounded-xl bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-teal-400 hover:bg-[#EFEFEF] dark:hover:bg-neutral-800 cursor-pointer"
                 aria-label="Scroll trails right"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
-          <p className="text-xs text-neutral-400 leading-normal">
+          <p className="text-xs text-[#65676B] dark:text-neutral-400 leading-normal">
             Community-curated multi-stop itineraries & commercial pro-guided tour offerings.
           </p>
         </div>
@@ -792,14 +814,14 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
               onClick={() => setTrailSubTab('trails')}
               className={`px-3.5 py-2 rounded-2xl text-xs font-black transition flex items-center space-x-2 cursor-pointer border ${
                 trailSubTab === 'trails'
-                  ? 'bg-neutral-900 text-[#00e599] border-[#00e599]/60 shadow-lg shadow-[#00e599]/10'
-                  : 'bg-neutral-950 text-neutral-400 border-neutral-800 hover:text-white'
+                  ? 'bg-[#E7F3FF] dark:bg-neutral-900 text-[#0866FF] dark:text-[#00e599] border-[#0866FF]/40 dark:border-[#00e599]/60 shadow-sm dark:shadow-lg dark:shadow-[#00e599]/10'
+                  : 'bg-white dark:bg-neutral-950 text-[#65676B] dark:text-neutral-400 border-[#DBDBDB] dark:border-neutral-800 hover:text-[#050505] dark:hover:text-white'
               }`}
             >
               <Compass className="w-3.5 h-3.5" />
               <span>Vibe Trails</span>
               <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                trailSubTab === 'trails' ? 'bg-[#00e599]/20 text-[#00e599]' : 'bg-neutral-800 text-neutral-400'
+                trailSubTab === 'trails' ? 'bg-[#0866FF]/15 dark:bg-[#00e599]/20 text-[#0866FF] dark:text-[#00e599]' : 'bg-[#EFEFEF] dark:bg-neutral-800 text-[#65676B] dark:text-neutral-400'
               }`}>
                 {trails.filter((t) => !t.isTour).length}
               </span>
@@ -809,14 +831,14 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
               onClick={() => setTrailSubTab('tours')}
               className={`px-3.5 py-2 rounded-2xl text-xs font-black transition flex items-center space-x-2 cursor-pointer border ${
                 trailSubTab === 'tours'
-                  ? 'bg-neutral-900 text-amber-300 border-amber-500/60 shadow-lg shadow-amber-500/10'
-                  : 'bg-neutral-950 text-neutral-400 border-neutral-800 hover:text-white'
+                  ? 'bg-amber-50 dark:bg-neutral-900 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/60 shadow-sm dark:shadow-lg dark:shadow-amber-500/10'
+                  : 'bg-white dark:bg-neutral-950 text-[#65676B] dark:text-neutral-400 border-[#DBDBDB] dark:border-neutral-800 hover:text-[#050505] dark:hover:text-white'
               }`}
             >
-              <Award className="w-3.5 h-3.5 text-amber-400" />
+              <Award className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               <span>Vibe Tours</span>
               <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                trailSubTab === 'tours' ? 'bg-amber-500/20 text-amber-300' : 'bg-neutral-800 text-neutral-400'
+                trailSubTab === 'tours' ? 'bg-amber-200/70 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300' : 'bg-[#EFEFEF] dark:bg-neutral-800 text-[#65676B] dark:text-neutral-400'
               }`}>
                 {trails.filter((t) => t.isTour).length}
               </span>
@@ -825,7 +847,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
           <button
             onClick={() => setIsCurateOpen(true)}
-            className="px-4 py-2 rounded-2xl bg-neutral-900 border border-[#00e599]/40 hover:border-[#00e599] text-[#00e599] font-black text-xs transition flex items-center space-x-1.5 cursor-pointer shadow-md flex-shrink-0"
+            className="px-4 py-2 rounded-2xl bg-[#0866FF] hover:bg-[#075CE5] dark:bg-neutral-900 border border-[#0866FF] dark:border-[#00e599]/40 dark:hover:border-[#00e599] text-white dark:text-[#00e599] font-black text-xs transition flex items-center space-x-1.5 cursor-pointer shadow-sm dark:shadow-md flex-shrink-0"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Curate Trail</span>
@@ -840,15 +862,15 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
           if (displayedTrails.length === 0) {
             return (
-              <div className="rounded-3xl bg-neutral-900/60 border border-neutral-800/80 p-6 text-center space-y-2">
-                <Compass className="w-8 h-8 text-[#00e599]/60 mx-auto" />
-                <h4 className="font-bold text-sm text-white">No {trailSubTab === 'tours' ? 'Vibe Tours' : 'Vibe Trails'} available in this filter</h4>
-                <p className="text-xs text-neutral-400 max-w-sm mx-auto">
+              <div className="rounded-3xl bg-white dark:bg-neutral-900/60 border border-[#DBDBDB] dark:border-neutral-800/80 p-6 text-center space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
+                <Compass className="w-8 h-8 text-[#0866FF]/60 dark:text-[#00e599]/60 mx-auto" />
+                <h4 className="font-bold text-sm text-[#050505] dark:text-white">No {trailSubTab === 'tours' ? 'Vibe Tours' : 'Vibe Trails'} available in this filter</h4>
+                <p className="text-xs text-[#65676B] dark:text-neutral-400 max-w-sm mx-auto">
                   Be the first pathfinder to curate an itinerary for this district sector.
                 </p>
                 <button
                   onClick={() => setIsCurateOpen(true)}
-                  className="mt-2 px-4 py-2 rounded-xl bg-[#00e599] text-neutral-950 font-bold text-xs"
+                  className="mt-2 px-4 py-2 rounded-xl bg-[#0866FF] dark:bg-[#00e599] text-white dark:text-neutral-950 font-bold text-xs cursor-pointer"
                 >
                   + Curate First Trail
                 </button>
@@ -870,10 +892,10 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                   <div
                     key={trail.id}
                     onClick={() => setSelectedTrail(trail)}
-                    className="w-[min(300px,calc(100vw-2rem))] sm:w-[330px] flex-shrink-0 snap-start rounded-3xl bg-neutral-950 border border-neutral-800/90 hover:border-[#00e599]/60 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col justify-between group shadow-2xl relative"
+                    className="w-[min(300px,calc(100vw-2rem))] sm:w-[330px] flex-shrink-0 snap-start rounded-3xl bg-white dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800/90 hover:border-[#0866FF]/50 dark:hover:border-[#00e599]/60 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col justify-between group shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-2xl relative"
                   >
                     {/* Media Banner Section with Top Header Overlays */}
-                    <div className="relative h-44 w-full overflow-hidden bg-neutral-900">
+                    <div className="relative h-44 w-full overflow-hidden bg-[#EFEFEF] dark:bg-neutral-900">
                       <img
                         src={trail.imageUrl || trail.image_url || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=600&q=80'}
                         alt={trail.title}
@@ -924,9 +946,9 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                     {/* Card Content Body matching image_00d13d9c.png */}
                     <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
                       {/* Time Flow Indicator */}
-                      <div className="flex items-center space-x-1 text-xs font-mono font-bold text-neutral-300">
-                        <span className="text-neutral-400 text-[11px]">FLOW:</span>
-                        <span className="text-white">
+                      <div className="flex items-center space-x-1 text-xs font-mono font-bold text-[#262626] dark:text-neutral-300">
+                        <span className="text-[#65676B] dark:text-neutral-400 text-[11px]">FLOW:</span>
+                        <span className="text-[#050505] dark:text-white">
                           {trail.flowSequence && trail.flowSequence.length > 0
                             ? trail.flowSequence.join(' -> ')
                             : '🌅 -> 🌆 -> 🌙'}
@@ -935,10 +957,10 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
                       {/* Title & Story */}
                       <div className="space-y-1">
-                        <h4 className="font-bold text-white text-base group-hover:text-[#00e599] transition line-clamp-2 leading-snug">
+                        <h4 className="font-bold text-[#050505] dark:text-white text-base group-hover:text-[#0866FF] dark:group-hover:text-[#00e599] transition line-clamp-2 leading-snug">
                           {trail.title}
                         </h4>
-                        <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed font-light">
+                        <p className="text-xs text-[#65676B] dark:text-neutral-400 line-clamp-2 leading-relaxed font-normal dark:font-light">
                           &ldquo;{trail.story || trail.description}&rdquo;
                         </p>
                       </div>
@@ -948,7 +970,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                         {(trail.vibeTags && trail.vibeTags.length > 0 ? trail.vibeTags : ['tunis', 'culture', 'sunset']).map((tag) => (
                           <span
                             key={tag}
-                            className="text-[10px] font-semibold text-teal-300 bg-teal-950/40 px-2 py-0.5 rounded-lg border border-teal-500/30"
+                            className="text-[10px] font-semibold text-[#0866FF] dark:text-teal-300 bg-[#E7F3FF] dark:bg-teal-950/40 px-2 py-0.5 rounded-lg border border-[#0866FF]/20 dark:border-teal-500/30"
                           >
                             #{tag}
                           </span>
@@ -956,14 +978,14 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                       </div>
 
                       {/* Card Footer: Author + Hire + Explore now button */}
-                      <div className="pt-3 border-t border-neutral-800/80 flex items-center justify-between gap-2">
+                      <div className="pt-3 border-t border-[#E4E6EB] dark:border-neutral-800/80 flex items-center justify-between gap-2">
                         <div className="flex items-center space-x-2 min-w-0 flex-1">
                           <img
                             src={trail.authorAvatarUrl || trail.guardian_avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
                             alt={trail.authorName || trail.guardian_name || 'Curator'}
-                            className="w-6 h-6 rounded-full object-cover border border-[#00e599]/40 flex-shrink-0"
+                            className="w-6 h-6 rounded-full object-cover border border-[#0866FF]/40 dark:border-[#00e599]/40 flex-shrink-0"
                           />
-                          <span className="text-xs font-bold text-white truncate">
+                          <span className="text-xs font-bold text-[#050505] dark:text-white truncate">
                             {trail.authorName || trail.guardian_name}
                           </span>
                         </div>
@@ -976,20 +998,20 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                               e.stopPropagation();
                               setHireTrail(trail);
                             }}
-                            className="px-2.5 py-1.5 rounded-xl border border-purple-500/50 hover:border-purple-400 bg-purple-950/40 text-purple-300 text-[11px] font-bold transition flex items-center space-x-1 cursor-pointer"
+                            className="px-2.5 py-1.5 rounded-xl border border-[#DBDBDB] dark:border-purple-500/50 hover:border-[#0866FF]/40 dark:hover:border-purple-400 bg-[#EFEFEF] dark:bg-purple-950/40 text-[#050505] dark:text-purple-300 text-[11px] font-bold transition flex items-center space-x-1 cursor-pointer"
                           >
-                            <Handshake className="w-3 h-3 text-purple-400" />
+                            <Handshake className="w-3 h-3 text-[#0866FF] dark:text-purple-400" />
                             <span>Hire</span>
                           </button>
 
-                          {/* Explore Now Button (Solid Neon Green) */}
+                          {/* Explore Now Button */}
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedTrail(trail);
                             }}
-                            className="px-3.5 py-1.5 rounded-xl bg-[#00e599] hover:bg-[#00c985] text-neutral-950 text-[11px] font-black transition cursor-pointer shadow-md shadow-emerald-500/20 active:scale-95"
+                            className="px-3.5 py-1.5 rounded-xl bg-[#0866FF] hover:bg-[#075CE5] dark:bg-[#00e599] dark:hover:bg-[#00c985] text-white dark:text-neutral-950 text-[11px] font-black transition cursor-pointer shadow-sm dark:shadow-md dark:shadow-emerald-500/20 active:scale-95"
                           >
                             <span>Explore now</span>
                           </button>
@@ -1004,13 +1026,13 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         })()}
       </div>
 
-      {/* Part 3: Vibe Guardians & Local Legends (matching exact reference images: image_a6756c21.png, image_27dd8064.png, image_52948d57.png) */}
-      <div className="space-y-4 pt-4 border-t border-neutral-800">
+      {/* Part 3: Vibe Guardians & Local Legends */}
+      <div className="space-y-4 pt-4 border-t border-[#DBDBDB] dark:border-neutral-800">
         {/* Master Header Container with World Map Backdrop */}
-        <div className="relative rounded-3xl overflow-hidden bg-neutral-950 border border-neutral-800 p-6 shadow-2xl space-y-4">
+        <div className="relative rounded-3xl overflow-hidden bg-white dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 p-6 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-2xl space-y-4">
           {/* Subtle World Map Backdrop Effect */}
-          <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(#8b2cf5_1px,transparent_1px)] [background-size:16px_16px]" />
-          <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute inset-0 opacity-10 dark:opacity-15 pointer-events-none bg-[radial-gradient(#0866FF_1px,transparent_1px)] dark:bg-[radial-gradient(#8b2cf5_1px,transparent_1px)] [background-size:16px_16px]" />
+          <div className="hidden dark:block absolute top-0 right-0 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Top Avatars Preview: "3 online +12" */}
           <div className="relative z-10 flex items-center justify-between">
@@ -1019,47 +1041,47 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                 const avatar = (g.avatarUrl && g.avatarUrl.trim()) || (g.avatar_url && g.avatar_url.trim()) || null;
                 return avatar ? (
                   <img key={g.id || i} src={avatar} alt={g.name}
-                    className="w-8 h-8 rounded-full object-cover border-2 border-neutral-950 ring-1 ring-purple-500/40" />
+                    className="w-8 h-8 rounded-full object-cover border-2 border-white dark:border-neutral-950 ring-1 ring-[#0866FF]/30 dark:ring-purple-500/40" />
                 ) : (
                   <span key={g.id || i} aria-label={g.name}
-                    className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-800 border-2 border-neutral-950">
-                    <Shield className="w-4 h-4 text-neutral-400" />
+                    className="w-8 h-8 rounded-full flex items-center justify-center bg-[#EFEFEF] dark:bg-neutral-800 border-2 border-white dark:border-neutral-950">
+                    <Shield className="w-4 h-4 text-[#65676B] dark:text-neutral-400" />
                   </span>
                 );
               })}
-              <div className="w-8 h-8 rounded-full bg-purple-900 border-2 border-neutral-950 flex items-center justify-center text-[10px] font-bold text-purple-200">
+              <div className="w-8 h-8 rounded-full bg-[#E7F3FF] dark:bg-purple-900 border-2 border-white dark:border-neutral-950 flex items-center justify-center text-[10px] font-bold text-[#0866FF] dark:text-purple-200">
                 +{Math.max(0, guardians.filter(isGuardianFresh).length - 3)}
               </div>
             </div>
 
-            <div className="flex items-center space-x-1.5 text-[11px] text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="flex items-center space-x-1.5 text-[11px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/30">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
               <span>{guardians.filter(isGuardianFresh).length} Fresh Selfies</span>
             </div>
           </div>
 
           {/* Verification Badges Stack */}
           <div className="relative z-10 flex flex-wrap gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-purple-950/60 text-purple-300 px-2.5 py-1 rounded-xl border border-purple-500/30 flex items-center space-x-1">
-              <Shield className="w-3 h-3 text-purple-400" />
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#E7F3FF] dark:bg-purple-950/60 text-[#0866FF] dark:text-purple-300 px-2.5 py-1 rounded-xl border border-[#0866FF]/20 dark:border-purple-500/30 flex items-center space-x-1">
+              <Shield className="w-3 h-3 text-[#0866FF] dark:text-purple-400" />
               <span>REAL GUIDES & LOCALS DIRECTORY (D07)</span>
             </span>
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-950/60 text-emerald-300 px-2.5 py-1 rounded-xl border border-emerald-500/30 flex items-center space-x-1">
-              <Clock className="w-3 h-3 text-emerald-400" />
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-xl border border-emerald-200 dark:border-emerald-500/30 flex items-center space-x-1">
+              <Clock className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
               <span>Seven-Day Selfie Freshness</span>
             </span>
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-950/60 text-amber-300 px-2.5 py-1 rounded-xl border border-amber-500/30 flex items-center space-x-1">
-              <Handshake className="w-3 h-3 text-amber-400" />
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-xl border border-amber-200 dark:border-amber-500/30 flex items-center space-x-1">
+              <Handshake className="w-3 h-3 text-amber-600 dark:text-amber-400" />
               <span>Handshake Integration Pending</span>
             </span>
           </div>
 
           {/* Title & Subtitle */}
           <div className="relative z-10 space-y-1">
-            <h2 className="text-2xl font-black text-white tracking-tight">
+            <h2 className="text-2xl font-black text-[#050505] dark:text-white tracking-tight">
               Vibe Guardians
             </h2>
-            <p className="text-xs text-neutral-300 leading-relaxed font-light">
+            <p className="text-xs text-[#262626] dark:text-neutral-300 leading-relaxed font-normal dark:font-light">
               Connect with verified tour guides and friendly locals. Pro Guardians show advance upfront rates; Local Legends offer free hangouts. Registration and selfie renewal are available now. Handshake and rewards integration comes later.
             </p>
           </div>
@@ -1068,14 +1090,14 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           <div className="relative z-10 flex items-center space-x-2 pt-1 flex-wrap gap-y-2">
             <button
               onClick={() => openGuardianRegistration()}
-              className="px-4 py-3 rounded-2xl bg-[#8b2cf5] hover:bg-[#7823d6] text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-purple-600/30 transition flex items-center space-x-2 cursor-pointer active:scale-98"
+              className="px-4 py-3 rounded-2xl bg-[#0866FF] hover:bg-[#075CE5] dark:bg-[#8b2cf5] dark:hover:bg-[#7823d6] text-white font-black text-xs uppercase tracking-wider shadow-sm dark:shadow-lg dark:shadow-purple-600/30 transition flex items-center space-x-2 cursor-pointer active:scale-98"
             >
               <Camera className="w-4 h-4" />
               <span>BECOME A GUARDIAN / IN-APP SELFIE</span>
             </button>
 
-            <div className="px-3 py-2.5 rounded-2xl bg-neutral-900 border border-amber-500/30 text-amber-300 text-xs font-bold flex items-center space-x-1.5">
-              <Clock className="w-3.5 h-3.5 text-amber-400" />
+            <div className="px-3 py-2.5 rounded-2xl bg-[#EFEFEF] dark:bg-neutral-900 border border-[#DBDBDB] dark:border-amber-500/30 text-[#262626] dark:text-amber-300 text-xs font-bold flex items-center space-x-1.5">
+              <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               <span>{countExpiredGuardians(guardians)} Hidden (Selfie &gt; 7d)</span>
             </div>
           </div>
@@ -1087,8 +1109,8 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
             onClick={() => setGuardianFilter('top')}
             className={`py-2.5 px-2 rounded-2xl font-black text-xs transition flex items-center justify-center space-x-1.5 cursor-pointer border ${
               guardianFilter === 'top'
-                ? 'bg-purple-900/60 text-purple-200 border-purple-500 shadow-md shadow-purple-900/20'
-                : 'bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white'
+                ? 'bg-[#E7F3FF] dark:bg-purple-900/60 text-[#0866FF] dark:text-purple-200 border-[#0866FF]/40 dark:border-purple-500 shadow-sm dark:shadow-md dark:shadow-purple-900/20'
+                : 'bg-white dark:bg-neutral-900 text-[#65676B] dark:text-neutral-400 border-[#DBDBDB] dark:border-neutral-800 hover:text-[#050505] dark:hover:text-white'
             }`}
           >
             <span>⚡ TOP VIBES</span>
@@ -1098,11 +1120,11 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
             onClick={() => setGuardianFilter('pro')}
             className={`py-2.5 px-2 rounded-2xl font-black text-xs transition flex items-center justify-center space-x-1.5 cursor-pointer border ${
               guardianFilter === 'pro'
-                ? 'bg-blue-900/60 text-blue-200 border-blue-500 shadow-md shadow-blue-900/20'
-                : 'bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white'
+                ? 'bg-[#E7F3FF] dark:bg-blue-900/60 text-[#0866FF] dark:text-blue-200 border-[#0866FF]/40 dark:border-blue-500 shadow-sm dark:shadow-md dark:shadow-blue-900/20'
+                : 'bg-white dark:bg-neutral-900 text-[#65676B] dark:text-neutral-400 border-[#DBDBDB] dark:border-neutral-800 hover:text-[#050505] dark:hover:text-white'
             }`}
           >
-            <Shield className="w-3.5 h-3.5 text-blue-400" />
+            <Shield className="w-3.5 h-3.5 text-[#0866FF] dark:text-blue-400" />
             <span>PRO GUIDES</span>
           </button>
 
@@ -1110,11 +1132,11 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
             onClick={() => setGuardianFilter('local')}
             className={`py-2.5 px-2 rounded-2xl font-black text-xs transition flex items-center justify-center space-x-1.5 cursor-pointer border ${
               guardianFilter === 'local'
-                ? 'bg-amber-900/60 text-amber-200 border-amber-500 shadow-md shadow-amber-900/20'
-                : 'bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white'
+                ? 'bg-amber-50 dark:bg-amber-900/60 text-amber-700 dark:text-amber-200 border-amber-300 dark:border-amber-500 shadow-sm dark:shadow-md dark:shadow-amber-900/20'
+                : 'bg-white dark:bg-neutral-900 text-[#65676B] dark:text-neutral-400 border-[#DBDBDB] dark:border-neutral-800 hover:text-[#050505] dark:hover:text-white'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             <span>LOCAL LEGENDS</span>
           </button>
         </div>
@@ -1123,7 +1145,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           <button
             type="button"
             onClick={() => openGuardianRegistration('local')}
-            className="w-full rounded-2xl border border-amber-500/50 bg-amber-500/15 px-4 py-3 text-xs font-black text-amber-200 transition hover:bg-amber-500/25 flex items-center justify-center gap-2"
+            className="w-full rounded-2xl border border-amber-300 dark:border-amber-500/50 bg-amber-50 dark:bg-amber-500/15 px-4 py-3 text-xs font-black text-amber-800 dark:text-amber-200 transition hover:bg-amber-100 dark:hover:bg-amber-500/25 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             <span>{guardians.some(guardian => guardian.id === user?.id && guardian.type === 'local')
@@ -1131,7 +1153,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           </button>
         )}
 
-        {/* Guardian Profile Cards (matching image_a6756c21.png and image_52948d57.png) */}
+        {/* Guardian Profile Cards */}
         {(() => {
           const filtered = guardians.filter(isGuardianFresh).filter(g =>
             guardianFilter === 'pro' ? g.type === 'pro'
@@ -1141,10 +1163,10 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
           if (filtered.length === 0) {
             return (
-              <div className="rounded-3xl bg-neutral-950 border border-neutral-800 p-6 text-center space-y-2">
-                <Shield className="w-8 h-8 text-purple-400/60 mx-auto" />
-                <h4 className="font-bold text-sm text-white">No active guardians found in this category</h4>
-                <p className="text-xs text-neutral-400">
+              <div className="rounded-3xl bg-white dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 p-6 text-center space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
+                <Shield className="w-8 h-8 text-[#0866FF]/60 dark:text-purple-400/60 mx-auto" />
+                <h4 className="font-bold text-sm text-[#050505] dark:text-white">No active guardians found in this category</h4>
+                <p className="text-xs text-[#65676B] dark:text-neutral-400">
                   New guardians sync when live in-app selfies are updated.
                 </p>
               </div>
@@ -1161,7 +1183,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                     onClick={() => setSelectedGuardian(g)}
                     onKeyDown={event => { if (event.key === 'Enter') setSelectedGuardian(g); }}
                     role="button" tabIndex={0}
-                    className="rounded-3xl bg-neutral-950 border border-neutral-800/90 p-5 shadow-2xl space-y-4 hover:border-purple-500/40 transition duration-300 cursor-pointer"
+                    className="rounded-3xl bg-white dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800/90 p-5 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-2xl space-y-4 hover:border-[#0866FF]/40 dark:hover:border-purple-500/40 transition duration-300 cursor-pointer"
                   >
                     {/* Top Identity Row */}
                     <div className="flex items-start space-x-3.5">
@@ -1169,14 +1191,14 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                       <div className="relative flex-shrink-0">
                         {((g.avatarUrl && g.avatarUrl.trim()) || (g.avatar_url && g.avatar_url.trim())) ? (
                           <img src={(g.avatarUrl && g.avatarUrl.trim()) || (g.avatar_url && g.avatar_url.trim())} alt={g.name}
-                            className="w-16 h-16 rounded-2xl object-cover border-2 border-neutral-800" />
+                            className="w-16 h-16 rounded-2xl object-cover border-2 border-[#DBDBDB] dark:border-neutral-800" />
                         ) : (
-                          <span aria-label={g.name} className="w-16 h-16 rounded-2xl bg-neutral-900 border-2 border-neutral-800 flex items-center justify-center">
-                            <Shield className="w-7 h-7 text-neutral-500" />
+                          <span aria-label={g.name} className="w-16 h-16 rounded-2xl bg-[#EFEFEF] dark:bg-neutral-900 border-2 border-[#DBDBDB] dark:border-neutral-800 flex items-center justify-center">
+                            <Shield className="w-7 h-7 text-[#65676B] dark:text-neutral-500" />
                           </span>
                         )}
-                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/90 border border-emerald-500/50 text-[9px] font-black text-emerald-400 flex items-center space-x-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white dark:bg-black/90 border border-emerald-500/50 text-[9px] font-black text-emerald-700 dark:text-emerald-400 flex items-center space-x-1 shadow-xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                           <span>SELFIE</span>
                         </div>
                       </div>
@@ -1184,47 +1206,45 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                       {/* Info & Badges */}
                       <div className="min-w-0 flex-1 space-y-1">
                         <div className="flex items-center space-x-2">
-                          <h3 className="font-black text-base text-white truncate">{g.name}</h3>
-                          <Shield className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                          <h3 className="font-black text-base text-[#050505] dark:text-white truncate">{g.name}</h3>
+                          <Shield className="w-4 h-4 text-[#0866FF] dark:text-blue-400 flex-shrink-0" />
                           <span className={`text-[10px] font-black px-2 py-0.5 rounded-md border uppercase tracking-wider ${
                             isPro
-                              ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
-                              : 'bg-teal-500/10 text-teal-300 border-teal-500/30'
+                              ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
+                              : 'bg-[#E7F3FF] dark:bg-teal-500/10 text-[#0866FF] dark:text-teal-300 border-[#0866FF]/20 dark:border-teal-500/30'
                           }`}>
                             {isPro ? 'PRO GUIDE' : 'LOCAL LEGEND'}
                           </span>
                         </div>
 
-                        <p className="text-xs text-neutral-400 truncate flex items-center space-x-1">
-                          <MapPin className="w-3 h-3 text-neutral-500 flex-shrink-0" />
+                        <p className="text-xs text-[#65676B] dark:text-neutral-400 truncate flex items-center space-x-1">
+                          <MapPin className="w-3 h-3 text-[#65676B] dark:text-neutral-500 flex-shrink-0" />
                           <span>{g.city || g.district}</span>
                         </p>
 
                         {/* Pricing & Endorsement Pills */}
                         <div className="flex items-center space-x-2 pt-0.5 flex-wrap gap-y-1">
-                          <span className="px-2.5 py-0.5 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-bold flex items-center space-x-1">
+                          <span className="px-2.5 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/20 text-xs font-bold flex items-center space-x-1">
                             <span>💰</span>
                             <span>{g.type === 'local' ? 'Free Hangout' : g.pricingType === 'flat' ? `${g.flatRate} flat tour` : `${g.hourlyRate} / hr`}</span>
                           </span>
-
-
                         </div>
                       </div>
                     </div>
 
                     {/* Bio Description Snippet */}
-                    <p className="text-xs text-neutral-300 leading-relaxed font-light">
+                    <p className="text-xs text-[#262626] dark:text-neutral-300 leading-relaxed font-normal dark:font-light">
                       {g.bio}
                     </p>
 
                     {/* Offered Vibe Trails Sub-card */}
                     {g.offeredTrailId && trails.some(trail => trail.id === g.offeredTrailId) && (
-                      <div className="p-3 rounded-2xl bg-neutral-900 border border-neutral-800 space-y-1.5">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 font-mono">
+                      <div className="p-3 rounded-2xl bg-[#FAFAFA] dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 space-y-1.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-[#65676B] dark:text-neutral-400 font-mono">
                           OFFERED VIBE TRAILS (1/5):
                         </span>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-white truncate max-w-[200px]">
+                          <span className="text-xs font-bold text-[#050505] dark:text-white truncate max-w-[200px]">
                             {trails.find(trail => trail.id === g.offeredTrailId)?.title}
                           </span>
                           <button
@@ -1233,7 +1253,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                               const found = trails.find((t) => t.id === g.offeredTrailId);
                               if (found) setSelectedTrail(found);
                             }}
-                            className="px-3 py-1 rounded-xl bg-[#00e599] hover:bg-[#00c985] text-neutral-950 font-black text-[10px] uppercase tracking-wider cursor-pointer"
+                            className="px-3 py-1 rounded-xl bg-[#0866FF] hover:bg-[#075CE5] dark:bg-[#00e599] dark:hover:bg-[#00c985] text-white dark:text-neutral-950 font-black text-[10px] uppercase tracking-wider cursor-pointer"
                           >
                             EXPLORE NOW
                           </button>
@@ -1242,17 +1262,17 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                     )}
 
                     {/* Card Footer: HIRE button + Hire Counter + MESSAGE trigger */}
-                    <div className="pt-2 border-t border-neutral-800 flex items-center justify-between">
+                    <div className="pt-2 border-t border-[#E4E6EB] dark:border-neutral-800 flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <button
                           type="button"
                           disabled title="Hiring will be enabled in the deferred D22 Handshake checkpoint"
-                          className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-xs uppercase tracking-wider flex items-center space-x-1.5 cursor-pointer shadow-md shadow-amber-500/20 active:scale-95"
+                          className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-xs uppercase tracking-wider flex items-center space-x-1.5 cursor-pointer shadow-sm dark:shadow-md dark:shadow-amber-500/20 active:scale-95"
                         >
                           <Handshake className="w-3.5 h-3.5" />
                           <span>HIRE</span>
                         </button>
-                        <span className="text-xs font-bold text-neutral-400 font-mono">
+                        <span className="text-xs font-bold text-[#65676B] dark:text-neutral-400 font-mono">
                           Hiring pending
                         </span>
                       </div>
@@ -1260,7 +1280,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
                       <button
                         type="button"
                         disabled title="Messaging is not wired in this Explore checkpoint"
-                        className="px-4 py-2 rounded-xl bg-[#8b2cf5] hover:bg-[#7823d6] text-white font-black text-xs uppercase tracking-wider flex items-center space-x-1.5 cursor-pointer shadow-md shadow-purple-600/20 active:scale-95"
+                        className="px-4 py-2 rounded-xl bg-[#0866FF] hover:bg-[#075CE5] dark:bg-[#8b2cf5] dark:hover:bg-[#7823d6] text-white font-black text-xs uppercase tracking-wider flex items-center space-x-1.5 cursor-pointer shadow-sm dark:shadow-md dark:shadow-purple-600/20 active:scale-95"
                       >
                         <MessageCircle className="w-3.5 h-3.5" />
                         <span>MESSAGE</span>

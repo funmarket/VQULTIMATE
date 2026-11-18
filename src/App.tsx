@@ -61,12 +61,12 @@ export default function App() {
     <div
       dir={isRtl ? 'rtl' : 'ltr'}
       className={`h-[100dvh] flex flex-col ${
-        themeMode === 'cream' ? 'bg-amber-100 text-neutral-900' : 'bg-neutral-950 text-white'
-      } font-sans antialiased selection:bg-orange-500 selection:text-white overflow-hidden max-w-md mx-auto w-full box-border transition-colors duration-300 relative`}
+        themeMode === 'cream' ? 'bg-[#F0F2F5] text-[#050505]' : 'bg-neutral-950 text-white'
+      } font-sans antialiased selection:bg-[#0866FF] dark:selection:bg-orange-500 selection:text-white overflow-hidden max-w-md mx-auto w-full box-border transition-colors duration-300 relative`}
     >
       {/* Toast Notification Banner */}
       {appToast && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-teal-500 text-neutral-950 font-bold text-xs shadow-2xl flex items-center space-x-2 animate-fadeIn border border-teal-300">
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-[#0866FF] dark:bg-teal-500 text-white dark:text-neutral-950 font-bold text-xs shadow-2xl flex items-center space-x-2 animate-fadeIn border border-blue-400 dark:border-teal-300">
           <CheckCircle2 className="w-4 h-4" />
           <span>{appToast}</span>
         </div>

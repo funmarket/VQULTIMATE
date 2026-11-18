@@ -39,28 +39,28 @@ export const DriftMessagesModal: React.FC<DriftMessagesModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-start justify-center p-3 sm:p-4 pt-3 sm:pt-6 animate-fadeIn overflow-y-auto">
-      <div className="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-3xl p-5 space-y-4 shadow-2xl text-white max-h-[92vh] flex flex-col mt-1 sm:mt-3">
+    <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/85 backdrop-blur-md flex items-start justify-center p-3 sm:p-4 pt-3 sm:pt-6 animate-fadeIn overflow-y-auto">
+      <div className="w-full max-w-md bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 rounded-3xl p-5 space-y-4 shadow-2xl text-[#050505] dark:text-white max-h-[92vh] flex flex-col mt-1 sm:mt-3">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+        <div className="flex items-center justify-between border-b border-[#E4E6EB] dark:border-neutral-800 pb-3">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center border border-teal-500/30">
+            <div className="w-9 h-9 rounded-xl bg-[#E7F3FF] dark:bg-teal-500/20 text-[#0866FF] dark:text-teal-400 flex items-center justify-center border border-[#0866FF]/20 dark:border-teal-500/30">
               <MessageSquare className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h3 className="font-bold text-base text-white font-serif">Drift Messages</h3>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-teal-900/60 text-teal-300 font-bold border border-teal-500/40">
+                <h3 className="font-bold text-base text-[#050505] dark:text-white font-serif">Drift Messages</h3>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#E7F3FF] dark:bg-teal-900/60 text-[#0866FF] dark:text-teal-300 font-bold border border-[#0866FF]/20 dark:border-teal-500/40">
                   {threads.length} Active
                 </span>
               </div>
-              <p className="text-[11px] text-neutral-400">Your anonymous 1:1 wavelength threads</p>
+              <p className="text-[11px] text-[#65676B] dark:text-neutral-400">Your anonymous 1:1 wavelength threads</p>
             </div>
           </div>
           <button
             onClick={onClose}
             aria-label="Close Drift Messages"
-            className="w-8 h-8 rounded-full bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white flex items-center justify-center transition cursor-pointer"
+            className="w-8 h-8 rounded-full bg-[#EFEFEF] hover:bg-[#E4E6EB] dark:bg-neutral-800 dark:hover:bg-neutral-700 text-[#65676B] dark:text-neutral-300 hover:text-[#050505] dark:hover:text-white flex items-center justify-center transition cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -69,7 +69,7 @@ export const DriftMessagesModal: React.FC<DriftMessagesModalProps> = ({
         {/* Content stream */}
         <div className="overflow-y-auto flex-1 space-y-2.5 pr-1">
           {loading ? (
-            <div className="py-16 text-center text-xs text-neutral-400">
+            <div className="py-16 text-center text-xs text-[#65676B] dark:text-neutral-400">
               Scanning wavelength threads...
             </div>
           ) : threads.length > 0 ? (
@@ -79,38 +79,38 @@ export const DriftMessagesModal: React.FC<DriftMessagesModalProps> = ({
                 <div
                   key={thread.id}
                   onClick={() => onSelectThread(thread)}
-                  className="rounded-2xl bg-neutral-950 border border-neutral-800/80 hover:border-teal-500/50 p-4 flex items-center justify-between transition duration-300 cursor-pointer group shadow-md"
+                  className="rounded-2xl bg-[#FAFAFA] hover:bg-[#F0F2F5] dark:bg-neutral-950 dark:hover:bg-neutral-900 border border-[#E4E6EB] dark:border-neutral-800/80 hover:border-[#0866FF]/40 dark:hover:border-teal-500/50 p-4 flex items-center justify-between transition duration-300 cursor-pointer group shadow-sm dark:shadow-md"
                 >
                   <div className="flex items-center space-x-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500/20 to-pink-500/20 border border-teal-400/30 flex items-center justify-center text-teal-300 text-base font-bold flex-shrink-0 shadow-inner">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#E7F3FF] to-pink-50 dark:from-teal-500/20 dark:to-pink-500/20 border border-[#0866FF]/20 dark:border-teal-400/30 flex items-center justify-center text-[#0866FF] dark:text-teal-300 text-base font-bold flex-shrink-0 shadow-inner">
                       🌊
                     </div>
                     <div className="min-w-0 space-y-1">
                       <div className="flex items-center space-x-2">
-                        <span className="font-black text-sm text-white truncate group-hover:text-teal-300 transition">
+                        <span className="font-black text-sm text-[#050505] dark:text-white truncate group-hover:text-[#0866FF] dark:group-hover:text-teal-300 transition">
                           {partnerHandle}
                         </span>
-                        <span className="text-[9px] font-mono text-pink-400 bg-pink-950/60 px-1.5 py-0.5 rounded border border-pink-500/30 flex-shrink-0 flex items-center space-x-1">
+                        <span className="text-[9px] font-mono text-pink-700 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/60 px-1.5 py-0.5 rounded border border-pink-200 dark:border-pink-500/30 flex-shrink-0 flex items-center space-x-1">
                           <Clock className="w-2.5 h-2.5" />
                           <span>{getTimeRemaining(thread.expires_at)}</span>
                         </span>
                       </div>
-                      <p className="text-xs text-neutral-400 truncate">
+                      <p className="text-xs text-[#65676B] dark:text-neutral-400 truncate">
                         Active private conversation thread. Tap to open.
                       </p>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-neutral-500 group-hover:text-white group-hover:translate-x-0.5 transition flex-shrink-0 ml-2" />
+                  <ChevronRight className="w-4 h-4 text-[#65676B] dark:text-neutral-500 group-hover:text-[#050505] dark:group-hover:text-white group-hover:translate-x-0.5 transition flex-shrink-0 ml-2" />
                 </div>
               );
             })
           ) : (
             <div className="py-20 text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-400 text-xl mx-auto shadow-inner">
+              <div className="w-12 h-12 rounded-full bg-[#EFEFEF] dark:bg-neutral-800 border border-[#DBDBDB] dark:border-neutral-700 flex items-center justify-center text-[#65676B] dark:text-neutral-400 text-xl mx-auto shadow-inner">
                 📭
               </div>
-              <h4 className="font-bold text-sm text-white">No active Drift Messages</h4>
-              <p className="text-xs text-neutral-400 max-w-xs mx-auto leading-relaxed">
+              <h4 className="font-bold text-sm text-[#050505] dark:text-white">No active Drift Messages</h4>
+              <p className="text-xs text-[#65676B] dark:text-neutral-400 max-w-xs mx-auto leading-relaxed">
                 Cast or pick up a Message in a Bottle, or start a private Drift with active souls in the room.
               </p>
             </div>
@@ -120,7 +120,7 @@ export const DriftMessagesModal: React.FC<DriftMessagesModalProps> = ({
         {/* Footer close */}
         <button
           onClick={onClose}
-          className="w-full py-3 rounded-2xl bg-neutral-800 hover:bg-neutral-700 font-bold text-xs text-white transition cursor-pointer"
+          className="w-full py-3 rounded-2xl bg-[#E4E6EB] hover:bg-[#D8DADF] dark:bg-neutral-800 dark:hover:bg-neutral-700 font-bold text-xs text-[#050505] dark:text-white transition cursor-pointer"
         >
           Close Inbox
         </button>

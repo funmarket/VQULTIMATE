@@ -145,20 +145,20 @@ export const CreateMeetupModal: React.FC<CreateMeetupModalProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-sm animate-fade-in"
     >
-      <div className="relative w-full max-w-lg bg-[#0d111a] border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden border-t-2 border-t-blue-500">
+      <div className="relative w-full max-w-lg bg-white dark:bg-[#0d111a] border border-[#DBDBDB] dark:border-neutral-800 rounded-2xl shadow-2xl overflow-hidden border-t-2 border-t-[#0866FF] dark:border-t-blue-500">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-neutral-800">
+        <div className="flex items-center justify-between p-5 bg-[#FAFAFA] dark:bg-transparent border-b border-[#E4E6EB] dark:border-neutral-800">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg border border-blue-500/30">
+            <div className="p-2 bg-[#E7F3FF] dark:bg-blue-500/10 text-[#0866FF] dark:text-blue-400 rounded-lg border border-[#0866FF]/20 dark:border-blue-500/30">
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white tracking-wide">
+              <h3 className="text-base font-bold text-[#050505] dark:text-white tracking-wide">
                 Organize Spot Meetup
               </h3>
-              <p className="text-xs text-neutral-400 truncate max-w-[280px]">
+              <p className="text-xs text-[#65676B] dark:text-neutral-400 truncate max-w-[280px]">
                 {place.title}
               </p>
             </div>
@@ -166,7 +166,7 @@ export const CreateMeetupModal: React.FC<CreateMeetupModalProps> = ({
           <button
             onClick={onClose}
             aria-label="Close create meetup modal"
-            className="p-1.5 text-neutral-400 hover:text-white rounded-lg hover:bg-neutral-800 transition"
+            className="p-1.5 text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-white rounded-lg hover:bg-[#EFEFEF] dark:hover:bg-neutral-800 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -174,31 +174,31 @@ export const CreateMeetupModal: React.FC<CreateMeetupModalProps> = ({
 
         {createdMeetup ? (
           <div className="p-8 text-center space-y-3">
-            <div className="w-14 h-14 mx-auto rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center border border-blue-500/40">
+            <div className="w-14 h-14 mx-auto rounded-full bg-[#E7F3FF] dark:bg-blue-500/20 text-[#0866FF] dark:text-blue-400 flex items-center justify-center border border-[#0866FF]/30 dark:border-blue-500/40">
               <CheckCircle2 className="w-8 h-8" />
             </div>
-            <h4 className="text-lg font-bold text-white">Meetup Published!</h4>
-            <p className="text-sm text-neutral-300">
+            <h4 className="text-lg font-bold text-[#050505] dark:text-white">Meetup Published!</h4>
+            <p className="text-sm text-[#262626] dark:text-neutral-300">
               Your meetup is now active in this spot's Meetup tab, your profile, and the community feeds.
             </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto text-xs">
             {error && (
-              <div className="p-3 text-xs bg-red-950/50 border border-red-500/40 text-red-200 rounded-xl">
+              <div className="p-3 text-xs bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-500/40 text-red-700 dark:text-red-200 rounded-xl">
                 {error}
               </div>
             )}
 
             {/* Mode selection: Live Now vs Scheduled */}
-            <div className="grid grid-cols-2 gap-2 p-1 bg-neutral-900/80 rounded-xl border border-neutral-800">
+            <div className="grid grid-cols-2 gap-2 p-1 bg-[#F0F2F5] dark:bg-neutral-900/80 rounded-xl border border-[#DBDBDB] dark:border-neutral-800">
               <button
                 type="button"
                 onClick={() => setIsLiveCheckin(false)}
                 className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition ${
                   !isLiveCheckin
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-neutral-400 hover:text-neutral-200'
+                    ? 'bg-[#0866FF] dark:bg-blue-600 text-white shadow-md'
+                    : 'text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-neutral-200'
                 }`}
               >
                 <Calendar className="w-3.5 h-3.5" />
@@ -210,7 +210,7 @@ export const CreateMeetupModal: React.FC<CreateMeetupModalProps> = ({
                 className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition ${
                   isLiveCheckin
                     ? 'bg-emerald-600 text-white shadow-md'
-                    : 'text-neutral-400 hover:text-neutral-200'
+                    : 'text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-neutral-200'
                 }`}
               >
                 <Radio className="w-3.5 h-3.5 animate-pulse" />
@@ -220,7 +220,7 @@ export const CreateMeetupModal: React.FC<CreateMeetupModalProps> = ({
 
             {/* Title */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-neutral-300">
+              <label className="text-xs font-bold uppercase tracking-wider text-[#262626] dark:text-neutral-300">
                 Meetup Title / Topic *
               </label>
               <input
@@ -230,33 +230,33 @@ export const CreateMeetupModal: React.FC<CreateMeetupModalProps> = ({
                 placeholder="e.g. Afternoon Latte & Tech Chat, Casual Drinks..."
                 maxLength={60}
                 required
-                className="w-full px-3.5 py-2.5 text-sm bg-neutral-950 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
+                className="w-full px-3.5 py-2.5 text-sm bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-[#0866FF] dark:focus:border-blue-500"
               />
             </div>
 
             {/* Date/Time if not live */}
             {!isLiveCheckin && (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-neutral-300">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#262626] dark:text-neutral-300">
                   Date & Time
                 </label>
                 <input
                   type="datetime-local"
                   value={scheduledDate}
                   onChange={(e) => setScheduledDate(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-sm bg-neutral-950 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
+                  className="w-full px-3.5 py-2.5 text-sm bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-[#0866FF] dark:focus:border-blue-500"
                 />
               </div>
             )}
 
             {/* Meetup Photo Upload */}
             <div className="space-y-1.5">
-              <label className="font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-1.5">
-                <Camera className="w-4 h-4 text-blue-400" />
+              <label className="font-bold text-[#262626] dark:text-neutral-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Camera className="w-4 h-4 text-[#0866FF] dark:text-blue-400" />
                 <span>Meetup Photo (Optional — 1 Photo)</span>
               </label>
               {photoUrl ? (
-                <div className="relative w-full h-32 rounded-xl overflow-hidden border border-blue-500/40">
+                <div className="relative w-full h-32 rounded-xl overflow-hidden border border-[#0866FF]/40 dark:border-blue-500/40">
                   <img src={photoUrl} alt="Meetup preview" className="w-full h-full object-cover" />
                   <button
                     type="button"
@@ -267,9 +267,9 @@ export const CreateMeetupModal: React.FC<CreateMeetupModalProps> = ({
                   </button>
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-neutral-800 hover:border-blue-500/50 rounded-xl bg-neutral-950/60 cursor-pointer transition">
-                  <Camera className="w-5 h-5 text-neutral-400 mb-1" />
-                  <span className="text-[11px] text-neutral-400 font-semibold">Upload meetup photo</span>
+                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-[#DBDBDB] dark:border-neutral-800 hover:border-[#0866FF]/60 dark:hover:border-blue-500/50 rounded-xl bg-[#FAFAFA] dark:bg-neutral-950/60 cursor-pointer transition">
+                  <Camera className="w-5 h-5 text-[#65676B] dark:text-neutral-400 mb-1" />
+                  <span className="text-[11px] text-[#65676B] dark:text-neutral-400 font-semibold">Upload meetup photo</span>
                   <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
                 </label>
               )}
@@ -277,7 +277,7 @@ export const CreateMeetupModal: React.FC<CreateMeetupModalProps> = ({
 
             {/* Description */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-neutral-300">
+              <label className="text-xs font-bold uppercase tracking-wider text-[#262626] dark:text-neutral-300">
                 Details / Where to find us
               </label>
               <textarea
@@ -285,13 +285,13 @@ export const CreateMeetupModal: React.FC<CreateMeetupModalProps> = ({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="e.g. Look for the yellow notebook by the outdoor patio. Everyone welcome!"
                 rows={2}
-                className="w-full px-3.5 py-2.5 text-sm bg-neutral-950 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500 resize-none"
+                className="w-full px-3.5 py-2.5 text-sm bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-[#0866FF] dark:focus:border-blue-500 resize-none"
               />
             </div>
 
             {/* Location context reminder */}
-            <div className="p-3 bg-neutral-900/60 border border-neutral-800/80 rounded-xl flex items-center gap-2 text-xs text-neutral-400">
-              <MapPin className="w-4 h-4 text-blue-400 shrink-0" />
+            <div className="p-3 bg-[#F0F2F5] dark:bg-neutral-900/60 border border-[#E4E6EB] dark:border-neutral-800/80 rounded-xl flex items-center gap-2 text-xs text-[#65676B] dark:text-neutral-400">
+              <MapPin className="w-4 h-4 text-[#0866FF] dark:text-blue-400 shrink-0" />
               <span className="truncate">{place.address || place.title}</span>
             </div>
 
@@ -300,14 +300,14 @@ export const CreateMeetupModal: React.FC<CreateMeetupModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-3 px-4 rounded-xl text-sm font-semibold bg-neutral-800 text-neutral-300 hover:bg-neutral-700 transition"
+                className="flex-1 py-3 px-4 rounded-xl text-sm font-semibold bg-[#EFEFEF] dark:bg-neutral-800 text-[#050505] dark:text-neutral-300 hover:bg-[#E4E6EB] dark:hover:bg-neutral-700 transition"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="flex-[2] py-3 px-4 rounded-xl text-sm font-bold bg-blue-600 text-white hover:bg-blue-500 transition shadow-lg shadow-blue-600/20 disabled:opacity-50"
+                className="flex-[2] py-3 px-4 rounded-xl text-sm font-bold bg-[#0866FF] dark:bg-blue-600 text-white hover:bg-[#075CE5] dark:hover:bg-blue-500 transition shadow-lg shadow-[#0866FF]/20 dark:shadow-blue-600/20 disabled:opacity-50"
               >
                 {submitting ? 'Creating Meetup...' : isLiveCheckin ? 'Start Live Meetup' : 'Publish Meetup'}
               </button>

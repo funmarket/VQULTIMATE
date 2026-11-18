@@ -377,125 +377,125 @@ export const ShareTab: React.FC<ShareTabProps> = ({ user, onPostSuccess, initial
   };
 
   return (
-    <div className="pb-24 text-white" data-testid="share-good-vibes">
-      {!cameraOnly && <section className="rounded-[24px] border border-neutral-700/70 bg-[#101011] px-3 py-5 sm:px-5 shadow-[0_18px_65px_rgba(0,0,0,.45)]">
+    <div className="pb-24 text-[#050505] dark:text-white" data-testid="share-good-vibes">
+      {!cameraOnly && <section className="rounded-[24px] border border-[#DBDBDB] dark:border-neutral-700/70 bg-white dark:bg-[#101011] px-3 py-5 sm:px-5 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-[0_18px_65px_rgba(0,0,0,.45)]">
         <header className="text-center">
           <h1 className="relative inline-block whitespace-nowrap text-[clamp(1.3rem,6.5vw,2.2rem)] font-black italic leading-tight tracking-[-.055em]">
-            <span className="text-white">Share Good </span>
-            <span className="relative text-orange-400">Vibes<span aria-hidden="true" className="absolute -bottom-1 left-1 right-0 h-[4px] -rotate-3 rounded-full bg-orange-400" /></span>
+            <span className="text-[#050505] dark:text-white">Share Good </span>
+            <span className="relative text-[#0866FF] dark:text-orange-400">Vibes<span aria-hidden="true" className="absolute -bottom-1 left-1 right-0 h-[4px] -rotate-3 rounded-full bg-[#0866FF] dark:bg-orange-400" /></span>
           </h1>
-          <p className="mx-auto mt-3 max-w-[34rem] text-[13px] leading-relaxed text-neutral-300">
+          <p className="mx-auto mt-3 max-w-[34rem] text-[13px] leading-relaxed text-[#65676B] dark:text-neutral-300">
             Share the moment. Feel the city together. Right now.
             <span className="block">Warm, authentic human presence recorded in physical proximity.</span>
           </p>
         </header>
         <div className="mt-5 grid grid-cols-3 gap-2">
-          <button type="button" onClick={() => openCamera('shot')} className="min-h-[128px] min-w-0 rounded-[18px] border border-neutral-700 bg-gradient-to-b from-[#19191a] to-[#131314] p-2 text-left hover:border-pink-500/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-pink-400">
-            <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-2xl bg-pink-500/20 text-pink-400"><Camera size={19} /></span>
-            <span className="block text-[clamp(.66rem,2.85vw,.9rem)] font-extrabold leading-tight">Live Vibe Shot</span>
-            <span className="mt-2 block text-[10px] leading-snug text-neutral-300">Camera only — no uploads</span>
+          <button type="button" onClick={() => openCamera('shot')} className="min-h-[128px] min-w-0 rounded-[18px] border border-[#DBDBDB] bg-[#F0F2F5] hover:border-[#0866FF] dark:border-neutral-700 dark:bg-gradient-to-b dark:from-[#19191a] dark:to-[#131314] p-2 text-left dark:hover:border-pink-500/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0866FF] dark:focus-visible:outline-pink-400 transition">
+            <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-2xl bg-pink-500/15 dark:bg-pink-500/20 text-pink-600 dark:text-pink-400"><Camera size={19} /></span>
+            <span className="block text-[clamp(.66rem,2.85vw,.9rem)] font-extrabold leading-tight text-[#050505] dark:text-white">Live Vibe Shot</span>
+            <span className="mt-2 block text-[10px] leading-snug text-[#65676B] dark:text-neutral-300">Camera only — no uploads</span>
           </button>
-          <button type="button" onClick={() => openCamera('check')} className="min-h-[128px] min-w-0 rounded-[18px] border border-neutral-700 bg-gradient-to-b from-[#19191a] to-[#131314] p-2 text-left hover:border-violet-500/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400">
-            <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-2xl bg-purple-500/20 text-purple-400"><Zap size={19} /></span>
-            <span className="block text-[clamp(.66rem,2.85vw,.9rem)] font-extrabold leading-tight">VibeCheck</span>
-            <span className="mt-2 block text-[10px] leading-snug text-neutral-300">3-min live response</span>
+          <button type="button" onClick={() => openCamera('check')} className="min-h-[128px] min-w-0 rounded-[18px] border border-[#DBDBDB] bg-[#F0F2F5] hover:border-[#0866FF] dark:border-neutral-700 dark:bg-gradient-to-b dark:from-[#19191a] dark:to-[#131314] p-2 text-left dark:hover:border-violet-500/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0866FF] dark:focus-visible:outline-violet-400 transition">
+            <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-2xl bg-purple-500/15 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400"><Zap size={19} /></span>
+            <span className="block text-[clamp(.66rem,2.85vw,.9rem)] font-extrabold leading-tight text-[#050505] dark:text-white">VibeCheck</span>
+            <span className="mt-2 block text-[10px] leading-snug text-[#65676B] dark:text-neutral-300">3-min live response</span>
           </button>
-          <button type="button" onClick={() => openCamera('flash')} className="min-h-[128px] min-w-0 rounded-[18px] border border-neutral-700 bg-gradient-to-b from-[#19191a] to-[#131314] p-2 text-left hover:border-amber-500/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400">
-            <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-500/20 text-amber-400"><Clock3 size={19} /></span>
-            <span className="block text-[clamp(.66rem,2.85vw,.9rem)] font-extrabold leading-tight">VibeFlash</span>
-            <span className="mt-2 block text-[10px] leading-snug text-orange-400">60-second window</span>
+          <button type="button" onClick={() => openCamera('flash')} className="min-h-[128px] min-w-0 rounded-[18px] border border-[#DBDBDB] bg-[#F0F2F5] hover:border-[#0866FF] dark:border-neutral-700 dark:bg-gradient-to-b dark:from-[#19191a] dark:to-[#131314] p-2 text-left dark:hover:border-amber-500/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0866FF] dark:focus-visible:outline-amber-400 transition">
+            <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-500/15 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400"><Clock3 size={19} /></span>
+            <span className="block text-[clamp(.66rem,2.85vw,.9rem)] font-extrabold leading-tight text-[#050505] dark:text-white">VibeFlash</span>
+            <span className="mt-2 block text-[10px] leading-snug text-orange-600 dark:text-orange-400">60-second window</span>
           </button>
         </div>
-        <button type="button" onClick={() => openCamera('snap')} className="mt-5 flex w-full items-center justify-center gap-2 rounded-full border-2 border-lime-400 bg-lime-400/[.045] px-3 py-3 text-lime-300 hover:bg-lime-400/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white">
+        <button type="button" onClick={() => openCamera('snap')} className="mt-5 flex w-full items-center justify-center gap-2 rounded-full border-2 border-[#0866FF] bg-[#E7F3FF] text-[#0866FF] hover:bg-[#D8E9FF] dark:border-lime-400 dark:bg-lime-400/[.045] px-3 py-3 dark:text-lime-300 dark:hover:bg-lime-400/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0866FF] dark:focus-visible:outline-white transition">
           <Video className="h-6 w-6 shrink-0" />
-          <span className="text-center"><strong className="block text-lg font-black leading-none tracking-tight">VIBE SNAP</strong><span className="mt-1 block text-sm text-white">a 10-second video moment</span></span>
+          <span className="text-center"><strong className="block text-lg font-black leading-none tracking-tight">VIBE SNAP</strong><span className="mt-1 block text-sm text-[#262626] dark:text-white">a 10-second video moment</span></span>
         </button>
-        <div className="mt-5 border-t border-neutral-700 pt-4">
+        <div className="mt-5 border-t border-[#E4E6EB] dark:border-neutral-700 pt-4">
           <div className="grid grid-cols-3 gap-2">
             {categories.map(item => (
               <button key={item.id} type="button" aria-pressed={category === item.id} onClick={() => setCategory(previous => previous === item.id ? null : item.id)} title={item.description}
                 className={category === item.id
-                  ? 'min-w-0 rounded-2xl border border-lime-400 bg-lime-400/10 px-1 py-3 text-[10px] font-extrabold leading-tight text-lime-200 sm:text-xs'
-                  : 'min-w-0 rounded-2xl border border-neutral-700 bg-neutral-800/70 px-1 py-3 text-[10px] font-extrabold leading-tight text-neutral-200 hover:border-neutral-500 sm:text-xs'}>
+                  ? 'min-w-0 rounded-2xl border border-[#0866FF] bg-[#E7F3FF] px-1 py-3 text-[10px] font-extrabold leading-tight text-[#0866FF] dark:border-lime-400 dark:bg-lime-400/10 dark:text-lime-200 sm:text-xs'
+                  : 'min-w-0 rounded-2xl border border-[#DBDBDB] bg-[#EFEFEF] px-1 py-3 text-[10px] font-extrabold leading-tight text-[#050505] hover:border-[#65676B] dark:border-neutral-700 dark:bg-neutral-800/70 dark:text-neutral-200 dark:hover:border-neutral-500 sm:text-xs'}>
                 <span className="block text-xl" aria-hidden="true">{item.emoji}</span>{item.label}
               </button>
             ))}
           </div>
-          {category && <p className="mt-3 text-center text-xs text-lime-200" role="status">{categories.find(item => item.id === category)?.description} selected for your next captured moment.</p>}
+          {category && <p className="mt-3 text-center text-xs text-[#0866FF] dark:text-lime-200" role="status">{categories.find(item => item.id === category)?.description} selected for your next captured moment.</p>}
         </div>
       </section>}
 
       {mode && (
-        <div data-testid={mode === 'dual' ? 'vibe-dual-camera' : 'share-camera-dialog'} className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95 p-3" role="dialog" aria-modal="true" aria-label={names[mode]}>
-          <div className="flex max-h-[96dvh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-3xl border border-neutral-700 bg-neutral-950 p-4 shadow-2xl">
+        <div data-testid={mode === 'dual' ? 'vibe-dual-camera' : 'share-camera-dialog'} className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 dark:bg-black/95 p-3" role="dialog" aria-modal="true" aria-label={names[mode]}>
+          <div className="flex max-h-[96dvh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-3xl border border-[#DBDBDB] dark:border-neutral-700 bg-white dark:bg-neutral-950 text-[#050505] dark:text-white p-4 shadow-2xl">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2"><Camera className="text-orange-400" size={20} /><h2 className="text-lg font-black">{names[mode]}</h2></div>
-              <button type="button" onClick={closeCamera} className="rounded-xl bg-neutral-800 p-2" aria-label="Close camera"><X size={21} /></button>
+              <div className="flex items-center gap-2"><Camera className="text-[#0866FF] dark:text-orange-400" size={20} /><h2 className="text-lg font-black">{names[mode]}</h2></div>
+              <button type="button" onClick={closeCamera} className="rounded-xl bg-[#EFEFEF] text-[#050505] dark:bg-neutral-800 dark:text-white p-2" aria-label="Close camera"><X size={21} /></button>
             </div>
-            {(mode === 'check' || mode === 'flash') && <p className="rounded-xl border border-amber-800 bg-amber-950/40 p-3 text-xs text-amber-200">Live camera capture only. Timed challenge invitations and submissions are not connected yet; no challenge is sent or claimed.</p>}
-            {dualCapture && <p className="text-xs text-neutral-300">{stage === 'selfie' ? 'Step 2 of 2: capture your front-camera selfie.' : stage === 'camera' ? 'Step 1 of 2: capture the scene with the back camera.' : stage === 'review' ? 'Review the real scene and selfie composite.' : 'Add optional details before sharing.'}</p>}
+            {(mode === 'check' || mode === 'flash') && <p className="rounded-xl border border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 p-3 text-xs dark:text-amber-200">Live camera capture only. Timed challenge invitations and submissions are not connected yet; no challenge is sent or claimed.</p>}
+            {dualCapture && <p className="text-xs text-[#65676B] dark:text-neutral-300">{stage === 'selfie' ? 'Step 2 of 2: capture your front-camera selfie.' : stage === 'camera' ? 'Step 1 of 2: capture the scene with the back camera.' : stage === 'review' ? 'Review the real scene and selfie composite.' : 'Add optional details before sharing.'}</p>}
             {(mode === 'shot' || mode === 'check' || mode === 'dual') && stage === 'camera' && (
-              <fieldset className="flex gap-2 rounded-xl border border-neutral-700 p-2" aria-label="Capture type">
-                <legend className="px-1 text-xs text-neutral-300">Capture type</legend>
-                <button type="button" aria-pressed={!dualEnabled} onClick={() => setDualEnabled(false)} className={!dualEnabled ? 'flex-1 rounded-lg bg-lime-400 px-3 py-2 text-xs font-bold text-neutral-950' : 'flex-1 rounded-lg bg-neutral-800 px-3 py-2 text-xs text-white'}>Single camera</button>
-                <button type="button" aria-pressed={dualEnabled} onClick={() => { setFacing('environment'); setDualEnabled(true); }} className={dualEnabled ? 'flex-1 rounded-lg bg-lime-400 px-3 py-2 text-xs font-bold text-neutral-950' : 'flex-1 rounded-lg bg-neutral-800 px-3 py-2 text-xs text-white'}>Dual: scene + selfie</button>
+              <fieldset className="flex gap-2 rounded-xl border border-[#DBDBDB] dark:border-neutral-700 p-2" aria-label="Capture type">
+                <legend className="px-1 text-xs text-[#65676B] dark:text-neutral-300">Capture type</legend>
+                <button type="button" aria-pressed={!dualEnabled} onClick={() => setDualEnabled(false)} className={!dualEnabled ? 'flex-1 rounded-lg bg-[#0866FF] text-white dark:bg-lime-400 dark:text-neutral-950 px-3 py-2 text-xs font-bold' : 'flex-1 rounded-lg bg-[#EFEFEF] text-[#050505] dark:bg-neutral-800 px-3 py-2 text-xs dark:text-white'}>Single camera</button>
+                <button type="button" aria-pressed={dualEnabled} onClick={() => { setFacing('environment'); setDualEnabled(true); }} className={dualEnabled ? 'flex-1 rounded-lg bg-[#0866FF] text-white dark:bg-lime-400 dark:text-neutral-950 px-3 py-2 text-xs font-bold' : 'flex-1 rounded-lg bg-[#EFEFEF] text-[#050505] dark:bg-neutral-800 px-3 py-2 text-xs dark:text-white'}>Dual: scene + selfie</button>
               </fieldset>
             )}
-            {mode === 'flash' && <p className="text-xs text-amber-300">Dual capture required: rear-camera scene and front-camera selfie. This preview does not submit a VibeFlash response.</p>}
-            {mode === 'snap' && <p className="text-xs text-neutral-300">Record up to 10 seconds using a single camera (front/rear switch before recording). Dual video recording is not enabled in this trial. Nothing is uploaded automatically.</p>}
-            <div className="relative flex min-h-[260px] flex-1 items-center justify-center overflow-hidden rounded-2xl border border-neutral-700 bg-black aspect-[4/5] max-h-[58dvh]">
+            {mode === 'flash' && <p className="text-xs text-amber-700 dark:text-amber-300">Dual capture required: rear-camera scene and front-camera selfie. This preview does not submit a VibeFlash response.</p>}
+            {mode === 'snap' && <p className="text-xs text-[#65676B] dark:text-neutral-300">Record up to 10 seconds using a single camera (front/rear switch before recording). Dual video recording is not enabled in this trial. Nothing is uploaded automatically.</p>}
+            <div className="relative flex min-h-[260px] flex-1 items-center justify-center overflow-hidden rounded-2xl border border-[#DBDBDB] dark:border-neutral-700 bg-black aspect-[4/5] max-h-[58dvh]">
               {(stage === 'camera' || stage === 'selfie')
                 ? <video ref={liveVideo} muted playsInline autoPlay className={facing === 'user' ? 'h-full w-full scale-x-[-1] object-cover' : 'h-full w-full object-cover'} aria-label="Live camera preview" />
                 : (preview && preview.trim() !== '' ? (mode === 'snap'
                   ? <video src={preview} controls playsInline className="h-full w-full object-contain" aria-label="Recorded Vibe Snap preview" />
                   : <img src={preview} alt="Captured photo preview" className="h-full w-full object-contain" />) : null)}
               {(stage === 'camera' || stage === 'selfie') && !ready && !error && <span className="absolute inset-0 flex items-center justify-center bg-black/65 text-sm text-neutral-300">Opening camera…</span>}
-              {mode === 'snap' && recording && <span className="absolute left-3 top-3 rounded-full bg-red-600 px-3 py-1 text-xs font-bold">● REC {seconds}/10s</span>}
+              {mode === 'snap' && recording && <span className="absolute left-3 top-3 rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">● REC {seconds}/10s</span>}
             </div>
-            {error && <p role="alert" className="flex items-start gap-2 rounded-xl border border-red-800 bg-red-950/70 p-3 text-sm text-red-200"><AlertCircle className="shrink-0" size={18} />{error}</p>}
+            {error && <p role="alert" className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/70 p-3 text-sm dark:text-red-200"><AlertCircle className="shrink-0" size={18} />{error}</p>}
             {(stage === 'camera' || stage === 'selfie') ? (
               <div className="flex gap-2">
-                <button type="button" onClick={() => { setReady(false); setFacing(previous => previous === 'environment' ? 'user' : 'environment'); }} disabled={recording || !ready || dualCapture} className="rounded-xl bg-neutral-800 px-4 py-3" aria-label="Switch camera"><SwitchCamera size={21} /></button>
+                <button type="button" onClick={() => { setReady(false); setFacing(previous => previous === 'environment' ? 'user' : 'environment'); }} disabled={recording || !ready || dualCapture} className="rounded-xl bg-[#EFEFEF] text-[#050505] dark:bg-neutral-800 dark:text-white px-4 py-3" aria-label="Switch camera"><SwitchCamera size={21} /></button>
                 {mode === 'snap'
                   ? (recording
-                    ? <button type="button" onClick={stopRecording} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-3 font-bold"><Square size={18} /> Stop recording</button>
-                    : <button type="button" onClick={startRecording} disabled={!ready} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-lime-400 px-4 py-3 font-black text-neutral-950 disabled:opacity-40"><Circle size={18} /> Record 10 seconds</button>)
-                  : <button type="button" onClick={takePhoto} disabled={!ready} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 py-3 font-black disabled:opacity-40"><Camera size={20} /> {dualCapture ? (stage === 'selfie' ? 'Capture selfie' : 'Capture scene') : 'Capture photo'}</button>}
+                    ? <button type="button" onClick={stopRecording} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 text-white px-4 py-3 font-bold"><Square size={18} /> Stop recording</button>
+                    : <button type="button" onClick={startRecording} disabled={!ready} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#0866FF] text-white dark:bg-lime-400 px-4 py-3 font-black dark:text-neutral-950 disabled:opacity-40"><Circle size={18} /> Record 10 seconds</button>)
+                  : <button type="button" onClick={takePhoto} disabled={!ready} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#0866FF] dark:bg-orange-500 text-white px-4 py-3 font-black disabled:opacity-40"><Camera size={20} /> {dualCapture ? (stage === 'selfie' ? 'Capture selfie' : 'Capture scene') : 'Capture photo'}</button>}
               </div>
             ) : stage === 'review' ? (
               <div className="space-y-3" data-testid="share-capture-review">
-                <p className="text-sm font-bold text-lime-300">Capture ready for review</p>
-                <p className="text-xs text-neutral-400">This preview is from your live camera. Nothing has been uploaded or published.</p>
+                <p className="text-sm font-bold text-[#0866FF] dark:text-lime-300">Capture ready for review</p>
+                <p className="text-xs text-[#65676B] dark:text-neutral-400">This preview is from your live camera. Nothing has been uploaded or published.</p>
                 <div className="flex gap-2">
-                  <button type="button" onClick={retake} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-neutral-800 p-3 font-bold"><RefreshCw size={17} /> Retake</button>
-                  <button type="button" onClick={() => setStage('details')} className="flex flex-1 items-center justify-center rounded-xl bg-lime-400 p-3 font-black text-neutral-950">Use this capture</button>
+                  <button type="button" onClick={retake} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#EFEFEF] text-[#050505] dark:bg-neutral-800 dark:text-white p-3 font-bold"><RefreshCw size={17} /> Retake</button>
+                  <button type="button" onClick={() => setStage('details')} className="flex flex-1 items-center justify-center rounded-xl bg-[#0866FF] text-white dark:bg-lime-400 p-3 font-black dark:text-neutral-950">Use this capture</button>
                 </div>
               </div>
             ) : (
               <div className="space-y-3" data-testid="share-capture-details">
-                <h3 className="text-sm font-bold text-white">Broadcast details</h3>
-                <label className="block text-xs font-semibold text-neutral-300" htmlFor="share-capture-caption">Caption (optional)</label>
-                <textarea id="share-capture-caption" value={caption} maxLength={280} onChange={event => setCaption(event.target.value)} placeholder="What made this moment special?" className="w-full resize-none rounded-xl border border-neutral-700 bg-neutral-900 p-3 text-sm text-white" rows={2} />
-                <p className="text-right text-xs text-neutral-400">{caption.length} / 280</p>
-                <p className="text-xs text-neutral-400">Share Outside opens your device's share sheet, or downloads the captured file. In-app publication, private messaging and challenge submissions are not connected yet; nothing will be posted to Gossip.</p>
+                <h3 className="text-sm font-bold text-[#050505] dark:text-white">Broadcast details</h3>
+                <label className="block text-xs font-semibold text-[#262626] dark:text-neutral-300" htmlFor="share-capture-caption">Caption (optional)</label>
+                <textarea id="share-capture-caption" value={caption} maxLength={280} onChange={event => setCaption(event.target.value)} placeholder="What made this moment special?" className="w-full resize-none rounded-xl border border-[#DBDBDB] bg-[#F0F2F5] text-[#050505] dark:border-neutral-700 dark:bg-neutral-900 p-3 text-sm dark:text-white" rows={2} />
+                <p className="text-right text-xs text-[#65676B] dark:text-neutral-400">{caption.length} / 280</p>
+                <p className="text-xs text-[#65676B] dark:text-neutral-400">Share Outside opens your device's share sheet, or downloads the captured file. In-app publication, private messaging and challenge submissions are not connected yet; nothing will be posted to Gossip.</p>
                 <div className="flex flex-col gap-2">
                   <button
                     type="button"
                     onClick={() => void handleShareInApp()}
                     disabled={publishing}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-teal-500 p-3.5 font-black text-white shadow-lg hover:opacity-95 disabled:opacity-40 cursor-pointer"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0866FF] dark:bg-gradient-to-r dark:from-orange-500 dark:to-teal-500 p-3.5 font-black text-white shadow-lg hover:opacity-95 disabled:opacity-40 cursor-pointer"
                   >
                     <Share2 size={18} />
                     <span>{publishing ? 'Publishing to Gossip...' : 'Share in App (Publish to Gossip)'}</span>
                   </button>
                   <div className="flex gap-2">
-                    <button type="button" onClick={() => setStage('review')} disabled={publishing} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-neutral-800 p-3 font-bold"><ArrowLeft size={17} /> Review</button>
-                    <button type="button" onClick={() => void shareOrSave()} disabled={publishing} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-neutral-800 p-3 font-bold text-neutral-300"><Share2 size={17} /> Save / Outside</button>
+                    <button type="button" onClick={() => setStage('review')} disabled={publishing} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#EFEFEF] text-[#050505] dark:bg-neutral-800 dark:text-white p-3 font-bold"><ArrowLeft size={17} /> Review</button>
+                    <button type="button" onClick={() => void shareOrSave()} disabled={publishing} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#EFEFEF] text-[#050505] dark:bg-neutral-800 p-3 font-bold dark:text-neutral-300"><Share2 size={17} /> Save / Outside</button>
                   </div>
                 </div>
               </div>
             )}
-            <button type="button" onClick={closeCamera} className="flex items-center justify-center gap-1 self-center px-4 py-2 text-xs text-neutral-400"><ArrowLeft size={14} /> Back to Share</button>
+            <button type="button" onClick={closeCamera} className="flex items-center justify-center gap-1 self-center px-4 py-2 text-xs text-[#65676B] hover:text-[#050505] dark:text-neutral-400 dark:hover:text-white"><ArrowLeft size={14} /> Back to Share</button>
           </div>
         </div>
       )}

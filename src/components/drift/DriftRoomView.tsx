@@ -297,7 +297,7 @@ export const DriftRoomView: React.FC<DriftRoomViewProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0a0a0f] text-white flex flex-col font-sans overflow-hidden select-none">
+    <div className="fixed inset-0 z-50 bg-[#F0F2F5] dark:bg-[#0a0a0f] text-[#050505] dark:text-white flex flex-col font-sans overflow-hidden select-none">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl bg-teal-500 text-neutral-950 font-bold text-xs shadow-2xl flex items-center space-x-2 animate-fadeIn border border-teal-300">
@@ -355,11 +355,11 @@ export const DriftRoomView: React.FC<DriftRoomViewProps> = ({
             ))
           ) : (
             <div className="py-20 text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-teal-500/20 border border-teal-400/40 flex items-center justify-center text-teal-300 text-xl mx-auto shadow-lg">
+              <div className="w-12 h-12 rounded-full bg-[#E7F3FF] dark:bg-teal-500/20 border border-[#0866FF]/30 dark:border-teal-400/40 flex items-center justify-center text-[#0866FF] dark:text-teal-300 text-xl mx-auto shadow-lg">
                 🌊
               </div>
-              <h4 className="font-black text-sm text-white">Quiet Current in {room.name}</h4>
-              <p className="text-xs text-neutral-400 max-w-xs mx-auto leading-relaxed">
+              <h4 className="font-black text-sm text-[#050505] dark:text-white">Quiet Current in {room.name}</h4>
+              <p className="text-xs text-[#65676B] dark:text-neutral-400 max-w-xs mx-auto leading-relaxed">
                 Be the first soul to drop an anonymous message or voice thought into this wavelength!
               </p>
             </div>

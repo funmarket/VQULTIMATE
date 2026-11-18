@@ -97,42 +97,42 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             onClose();
           }
         }}
-        className="h-full w-[80%] max-w-[340px] bg-zinc-950 border-l border-zinc-900 flex flex-col justify-between py-6 px-5 relative shadow-[0_0_55px_rgba(0,0,0,0.9)] overflow-y-auto z-20 pointer-events-auto text-left"
+        className="h-full w-[80%] max-w-[340px] bg-white dark:bg-zinc-950 border-l border-[#DBDBDB] dark:border-zinc-900 flex flex-col justify-between py-6 px-5 relative shadow-2xl dark:shadow-[0_0_55px_rgba(0,0,0,0.9)] overflow-y-auto z-20 pointer-events-auto text-left text-[#050505] dark:text-white"
       >
         {/* Top Banner and Close */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between pb-3 border-b border-zinc-900">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E4E6EB] dark:border-zinc-900">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-ping" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#0866FF] dark:bg-orange-500 animate-ping" />
               {/* Small label details EXACTLY 13px */}
-              <span className="text-[13px] font-mono tracking-wider text-zinc-500 uppercase font-semibold">{t('profile.voyagerConsole')}</span>
+              <span className="text-[13px] font-mono tracking-wider text-[#65676B] dark:text-zinc-500 uppercase font-semibold">{t('profile.voyagerConsole')}</span>
             </div>
             <button 
               onClick={() => {
                 triggerHaptic('light');
                 onClose();
               }}
-              className="w-8 h-8 rounded-full bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full bg-[#EFEFEF] dark:bg-zinc-900 hover:bg-[#E4E6EB] dark:hover:bg-zinc-800 flex items-center justify-center text-[#65676B] dark:text-zinc-400 hover:text-[#050505] dark:hover:text-white transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {verificationNotice && (
-            <div role="status" className="rounded-xl border border-emerald-500/40 bg-emerald-950/40 p-3 text-xs text-emerald-200">
+            <div role="status" className="rounded-xl border border-emerald-200 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/40 p-3 text-xs text-emerald-800 dark:text-emerald-200">
               <p className="font-bold">Check your email</p>
               <p>Account created. Open the verification link sent to {verificationNotice.email}, then return here to sign in.</p>
-              {verificationNotice.avatarUploadNote && <p className="mt-2 text-amber-200">{verificationNotice.avatarUploadNote}</p>}
-              <button type="button" className="mt-2 underline" onClick={() => setVerificationNotice(null)}>Dismiss</button>
+              {verificationNotice.avatarUploadNote && <p className="mt-2 text-amber-700 dark:text-amber-200">{verificationNotice.avatarUploadNote}</p>}
+              <button type="button" className="mt-2 underline cursor-pointer" onClick={() => setVerificationNotice(null)}>Dismiss</button>
             </div>
           )}
           {!user ? (
-            <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-4 space-y-3">
-              <p className="text-base font-semibold text-white">Explore as a visitor</p>
-              <p className="text-xs text-zinc-400">Browse public places, trails and community posts. Sign in to take part.</p>
+            <div className="bg-[#F0F2F5] dark:bg-zinc-900/40 border border-[#DBDBDB] dark:border-zinc-800 rounded-2xl p-4 space-y-3">
+              <p className="text-base font-semibold text-[#050505] dark:text-white">Explore as a visitor</p>
+              <p className="text-xs text-[#65676B] dark:text-zinc-400">Browse public places, trails and community posts. Sign in to take part.</p>
               <div className="flex gap-2">
-                <button type="button" onClick={() => setAuthPanel('login')} className="flex-1 rounded-xl bg-vibe-primary text-white px-3 py-2 text-sm font-bold">Sign in</button>
-                <button type="button" onClick={() => setAuthPanel('register')} className="flex-1 rounded-xl border border-zinc-700 text-white px-3 py-2 text-sm font-bold">Create profile</button>
+                <button type="button" onClick={() => setAuthPanel('login')} className="flex-1 rounded-xl bg-[#0866FF] hover:bg-[#075CE5] dark:bg-vibe-primary text-white px-3 py-2 text-sm font-bold cursor-pointer">Sign in</button>
+                <button type="button" onClick={() => setAuthPanel('register')} className="flex-1 rounded-xl bg-white dark:bg-transparent border border-[#DBDBDB] dark:border-zinc-700 text-[#050505] dark:text-white px-3 py-2 text-sm font-bold cursor-pointer">Create profile</button>
               </div>
               <button type="button" disabled={oauthLoading}
                 onClick={async () => {
@@ -141,18 +141,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   catch (error) { setOauthError(error instanceof Error ? error.message : 'Google sign-in failed.'); }
                   finally { setOauthLoading(false); }
                 }}
-                className="w-full rounded-xl border border-zinc-700 text-white px-3 py-2 text-sm font-bold mt-3 disabled:opacity-60">
+                className="w-full rounded-xl bg-white dark:bg-transparent border border-[#DBDBDB] dark:border-zinc-700 text-[#050505] dark:text-white px-3 py-2 text-sm font-bold mt-3 disabled:opacity-60 cursor-pointer">
                 {oauthLoading ? 'Connecting…' : 'Sign in with Google'}
               </button>
-              {oauthError && <p role="alert" className="text-red-400 text-xs mt-2">{oauthError}</p>}
+              {oauthError && <p role="alert" className="text-red-600 dark:text-red-400 text-xs mt-2">{oauthError}</p>}
             </div>
           ) : (
             <>
           {/* User Profile Info Card (X/Twitter style) */}
-          <div className="bg-zinc-900/40 border border-zinc-900 rounded-2xl p-4 space-y-3.5">
+          <div className="bg-[#F0F2F5] dark:bg-zinc-900/40 border border-[#DBDBDB] dark:border-zinc-900 rounded-2xl p-4 space-y-3.5">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full border-2 border-emerald-500 p-0.5 bg-black flex items-center justify-center overflow-hidden">
-                <div className="w-full h-full rounded-full bg-zinc-950 flex items-center justify-center text-zinc-500 relative overflow-hidden">
+              <div className="w-12 h-12 rounded-full border-2 border-emerald-500 p-0.5 bg-white dark:bg-black flex items-center justify-center overflow-hidden">
+                <div className="w-full h-full rounded-full bg-[#EFEFEF] dark:bg-zinc-950 flex items-center justify-center text-[#65676B] dark:text-zinc-500 relative overflow-hidden">
                   {profile?.photoUrl && profile.photoUrl.trim() !== '' ? (
                     <img
                       src={profile.photoUrl}
@@ -164,7 +164,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                       }}
                     />
                   ) : null}
-                  <svg className="w-7 h-7 text-zinc-400 mt-1" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <svg className="w-7 h-7 text-[#65676B] dark:text-zinc-400 mt-1" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                 </div>
@@ -172,18 +172,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
               <div className="min-w-0 flex-1">
                 {/* Body / main username text EXACTLY 16px */}
-                <h3 className="font-semibold text-[16px] text-white tracking-tight uppercase truncate">
+                <h3 className="font-semibold text-[16px] text-[#050505] dark:text-white tracking-tight uppercase truncate">
                   {profile?.displayName || profile?.handle || 'Profile'}
                 </h3>
                 {/* Small labels text EXACTLY 13px */}
-                <p className="text-[13px] text-zinc-500 font-bold font-mono">
+                <p className="text-[13px] text-[#65676B] dark:text-zinc-500 font-bold font-mono">
                   @{profile?.handle || 'username'}
                 </p>
               </div>
 
               {/* Account Type Level Indicator */}
-              <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg px-2.5 py-1 text-center shrink-0">
-                <span className="block text-[8px] text-zinc-400 uppercase font-bold">{t('profile.level')}</span>
+              <div className="bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/30 rounded-lg px-2.5 py-1 text-center shrink-0">
+                <span className="block text-[8px] text-[#65676B] dark:text-zinc-400 uppercase font-bold">{t('profile.level')}</span>
                 <span className="text-[14px] font-bold text-[#f97316] font-mono leading-none">
                   {profile?.streaks ?? 0}🔥
                 </span>
@@ -191,16 +191,16 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             </div>
 
             {/* Stats: Points & Tier */}
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-900/60">
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#E4E6EB] dark:border-zinc-900/60">
               <div>
-                <span className="block text-[11px] text-zinc-500 uppercase font-bold tracking-wide">VQ Points</span>
+                <span className="block text-[11px] text-[#65676B] dark:text-zinc-500 uppercase font-bold tracking-wide">VQ Points</span>
                 <span className="font-mono font-bold text-[#ef4444] text-[16px]">
                   {(profile?.points ?? 0).toLocaleString()}
                 </span>
               </div>
               <div>
-                <span className="block text-[11px] text-zinc-500 uppercase font-bold tracking-wide">{t('profile.travelerClass')}</span>
-                <span className="font-bold text-[#f59e0b] text-[13px] uppercase tracking-wider flex items-center gap-0.5 mt-0.5">
+                <span className="block text-[11px] text-[#65676B] dark:text-zinc-500 uppercase font-bold tracking-wide">{t('profile.travelerClass')}</span>
+                <span className="font-bold text-amber-600 dark:text-[#f59e0b] text-[13px] uppercase tracking-wider flex items-center gap-0.5 mt-0.5">
                   <Sparkles className="w-3.5 h-3.5 shrink-0" />
                   {profile?.accountType || 'vibe'}
                 </span>
@@ -214,17 +214,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           {user && <>
           {/* Edit Profile is accessible directly from the profile sidebar. */}
           <button type="button" onClick={() => setAuthPanel('edit')}
-            className="w-full rounded-xl border border-vibe-primary/30 bg-vibe-primary/10 p-3 text-left text-sm font-semibold text-white">
+            className="w-full rounded-xl border border-[#0866FF]/30 dark:border-vibe-primary/30 bg-[#E7F3FF] dark:bg-vibe-primary/10 p-3 text-left text-sm font-semibold text-[#0866FF] dark:text-white cursor-pointer">
             Edit Profile
           </button>
           </>}
           {/* Theme Selector (Light / Dark Mode in Profile Dropdown) */}
           <div className="space-y-1.5 px-0.5">
             <div className="flex items-center justify-between">
-              <label className="text-[13px] font-semibold uppercase tracking-wider text-zinc-400">
+              <label className="text-[13px] font-semibold uppercase tracking-wider text-[#65676B] dark:text-zinc-400">
                 Display Theme
               </label>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-bold">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-[#0866FF] dark:text-amber-400 font-bold">
                 {theme === 'light' ? 'Light Mode' : 'Dark Mode'}
               </span>
             </div>
@@ -234,43 +234,43 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 triggerHaptic('medium');
                 toggleTheme();
               }}
-              className="bg-black/90 border border-zinc-800 hover:border-zinc-700 p-3 rounded-2xl flex items-center justify-between cursor-pointer transition-all duration-300 active:scale-[0.98] group"
+              className="bg-[#F0F2F5] dark:bg-black/90 border border-[#DBDBDB] dark:border-zinc-800 hover:border-[#0866FF]/40 dark:hover:border-zinc-700 p-3 rounded-2xl flex items-center justify-between cursor-pointer transition-all duration-300 active:scale-[0.98] group"
               title="Toggle Light / Dark Mode"
             >
               <div className="flex items-center gap-3">
                 <div className={cn(
                   "w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm",
                   theme === 'light' 
-                    ? "bg-amber-400/20 text-amber-400 border border-amber-400/30 scale-105" 
+                    ? "bg-[#E7F3FF] text-[#0866FF] border border-[#0866FF]/20 scale-105" 
                     : "bg-purple-900/30 text-purple-300 border border-purple-500/20"
                 )}>
                   {theme === 'light' ? (
-                    <Sun className="w-4.5 h-4.5 text-amber-400 animate-spin-slow" />
+                    <Sun className="w-4.5 h-4.5 text-[#0866FF] animate-spin-slow" />
                   ) : (
                     <Moon className="w-4.5 h-4.5 text-purple-300" />
                   )}
                 </div>
                 <div>
-                  <span className="text-[13.5px] font-bold text-white block leading-tight">
-                    {theme === 'light' ? 'Warm Cream Mode' : 'Midnight Neon Mode'}
+                  <span className="text-[13.5px] font-bold text-[#050505] dark:text-white block leading-tight">
+                    {theme === 'light' ? 'Meta Light Mode' : 'Midnight Neon Mode'}
                   </span>
-                  <span className="text-[11px] text-zinc-400 font-medium">
+                  <span className="text-[11px] text-[#65676B] dark:text-zinc-400 font-medium">
                     {theme === 'light' ? 'Crisp daytime high-contrast' : 'Cyberpunk dark ambiance'}
                   </span>
                 </div>
               </div>
               
               {/* Dual Pill Switch */}
-              <div className="flex items-center p-1 bg-zinc-900 border border-white/5 rounded-full">
+              <div className="flex items-center p-1 bg-white dark:bg-zinc-900 border border-[#DBDBDB] dark:border-white/5 rounded-full">
                 <div className={cn(
                   "w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 text-xs",
-                  theme === 'light' ? "bg-amber-400 text-black shadow-sm font-bold" : "text-zinc-500"
+                  theme === 'light' ? "bg-[#0866FF] text-white shadow-sm font-bold" : "text-[#65676B] dark:text-zinc-500"
                 )}>
                   <Sun className="w-3.5 h-3.5" />
                 </div>
                 <div className={cn(
                   "w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 text-xs",
-                  theme === 'dark' ? "bg-purple-600 text-white shadow-sm font-bold" : "text-zinc-500"
+                  theme === 'dark' ? "bg-purple-600 text-white shadow-sm font-bold" : "text-[#65676B] dark:text-zinc-500"
                 )}>
                   <Moon className="w-3.5 h-3.5" />
                 </div>
@@ -288,14 +288,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 onOpenMessages();
                 onClose();
               }}
-              className="w-full hover:bg-zinc-900 rounded-xl p-3 flex items-center justify-between transition-colors text-left cursor-pointer border border-transparent hover:border-white/5"
+              className="w-full hover:bg-[#F0F2F5] dark:hover:bg-zinc-900 rounded-xl p-3 flex items-center justify-between transition-colors text-left cursor-pointer border border-transparent hover:border-[#E4E6EB] dark:hover:border-white/5"
             >
               <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                <div className="w-7 h-7 rounded-lg bg-[#E7F3FF] dark:bg-purple-500/10 border border-[#0866FF]/20 dark:border-purple-500/20 flex items-center justify-center text-[#0866FF] dark:text-purple-400">
                   <MessageSquare className="w-4 h-4" />
                 </div>
                 {/* Secondary text EXACTLY 14px */}
-                <span className="text-[14px] font-medium uppercase tracking-wider text-zinc-300">{t('profile.messages')}</span>
+                <span className="text-[14px] font-medium uppercase tracking-wider text-[#050505] dark:text-zinc-300">{t('profile.messages')}</span>
               </div>
               <span className="bg-[#ec4899] text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
                 DMs
@@ -309,32 +309,32 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 onOpenNotifications();
                 onClose();
               }}
-              className="w-full hover:bg-zinc-900 rounded-xl p-3 flex items-center justify-between transition-colors text-left cursor-pointer border border-transparent hover:border-white/5"
+              className="w-full hover:bg-[#F0F2F5] dark:hover:bg-zinc-900 rounded-xl p-3 flex items-center justify-between transition-colors text-left cursor-pointer border border-transparent hover:border-[#E4E6EB] dark:hover:border-white/5"
             >
               <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
                   <Bell className="w-4 h-4" />
                 </div>
                 {/* Secondary text EXACTLY 14px */}
-                <span className="text-[14px] font-medium uppercase tracking-wider text-zinc-300">{t('profile.notifications')}</span>
+                <span className="text-[14px] font-medium uppercase tracking-wider text-[#050505] dark:text-zinc-300">{t('profile.notifications')}</span>
               </div>
               {unreadNotificationsCount > 0 ? (
                 <span className="bg-red-600 text-white text-[11px] font-black px-2 py-0.5 rounded-full font-mono animate-pulse">
                   {unreadNotificationsCount} NEW
                 </span>
               ) : (
-                <span className="bg-zinc-850 text-zinc-500 text-[11px] font-mono px-2 py-0.5 rounded-full">
+                <span className="bg-[#EFEFEF] dark:bg-zinc-850 text-[#65676B] dark:text-zinc-500 text-[11px] font-mono px-2 py-0.5 rounded-full">
                   0
                 </span>
               )}
             </button>
 
             {/* Optional Device AI Settings */}
-            <div className="border border-zinc-900/80 bg-zinc-950 p-4 rounded-xl mt-2 space-y-2.5">
+            <div className="border border-[#DBDBDB] dark:border-zinc-900/80 bg-[#F0F2F5] dark:bg-zinc-950 p-4 rounded-xl mt-2 space-y-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Cpu className="w-4 h-4 text-orange-500 animate-pulse" />
-                  <span className="text-[12px] font-bold uppercase tracking-wider text-zinc-300">{t('profile.localDeviceAi.title')}</span>
+                  <Cpu className="w-4 h-4 text-[#0866FF] dark:text-orange-500 animate-pulse" />
+                  <span className="text-[12px] font-bold uppercase tracking-wider text-[#050505] dark:text-zinc-300">{t('profile.localDeviceAi.title')}</span>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
@@ -346,10 +346,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     }}
                     className="sr-only peer" 
                   />
-                  <div className="w-8 h-4 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-zinc-400 after:border-zinc-350 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-orange-500 peer-checked:after:bg-white"></div>
+                  <div className="w-8 h-4 bg-[#D8DADF] dark:bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white dark:after:bg-zinc-400 after:border-[#DBDBDB] dark:after:border-zinc-350 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#0866FF] dark:peer-checked:bg-orange-500 peer-checked:after:bg-white"></div>
                 </label>
               </div>
-              <p className="text-[10px] text-zinc-500 leading-normal font-sans">
+              <p className="text-[10px] text-[#65676B] dark:text-zinc-500 leading-normal font-sans">
                 {t('profile.localDeviceAi.description')}
               </p>
               
@@ -361,7 +361,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                       placeholder="http://localhost:11434"
                       value={settings.endpoint}
                       onChange={(e) => updateSettings({ endpoint: e.target.value })}
-                      className="flex-1 text-xs px-2.5 py-1.5 bg-black border border-zinc-800 rounded-lg text-zinc-300 outline-none focus:border-orange-500 font-mono"
+                      className="flex-1 text-xs px-2.5 py-1.5 bg-white dark:bg-black border border-[#DBDBDB] dark:border-zinc-800 rounded-lg text-[#050505] dark:text-zinc-300 outline-none focus:border-[#0866FF] dark:focus:border-orange-500 font-mono"
                     />
                     <button
                       onClick={testEndpointConnection}
@@ -369,8 +369,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                       className={cn(
                         "text-[10px] font-mono uppercase px-2.5 rounded-lg border font-semibold transition-colors shrink-0 cursor-pointer",
                         isTesting 
-                          ? "bg-zinc-900 border-zinc-800 text-zinc-500 cursor-not-allowed" 
-                          : "bg-orange-500/10 border-orange-500/30 hover:border-orange-500 text-orange-400"
+                          ? "bg-[#EFEFEF] dark:bg-zinc-900 border-[#DBDBDB] dark:border-zinc-800 text-[#65676B] dark:text-zinc-500 cursor-not-allowed" 
+                          : "bg-[#E7F3FF] dark:bg-orange-500/10 border-[#0866FF]/30 dark:border-orange-500/30 hover:border-[#0866FF] dark:hover:border-orange-500 text-[#0866FF] dark:text-orange-400"
                       )}
                     >
                       {isTesting ? 'Testing...' : 'Test'}
@@ -380,14 +380,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   {testResult && (
                     <span className={cn(
                       "text-[9px] font-mono block",
-                      testResult.success ? "text-emerald-400" : "text-red-400"
+                      testResult.success ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
                     )}>
                       {testResult.message}
                     </span>
                   )}
 
-                  <div className="flex justify-between items-center pt-1.5 border-t border-zinc-900/40">
-                    <span className="text-[9px] text-zinc-500 font-mono uppercase">
+                  <div className="flex justify-between items-center pt-1.5 border-t border-[#E4E6EB] dark:border-zinc-900/40">
+                    <span className="text-[9px] text-[#65676B] dark:text-zinc-500 font-mono uppercase">
                       {t('profile.detected')}: {aiStatus.statusText}
                     </span>
                     <span className={cn(
@@ -407,19 +407,19 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   setIsLocaleDropdownOpen(!isLocaleDropdownOpen);
                 }}
                 className={cn(
-                  "w-full hover:bg-zinc-900 rounded-xl p-3 flex items-center justify-between transition-colors text-left cursor-pointer",
-                  isLocaleDropdownOpen ? "bg-zinc-900/60 border border-white/10" : ""
+                  "w-full hover:bg-[#F0F2F5] dark:hover:bg-zinc-900 rounded-xl p-3 flex items-center justify-between transition-colors text-left cursor-pointer",
+                  isLocaleDropdownOpen ? "bg-[#F0F2F5] dark:bg-zinc-900/60 border border-[#DBDBDB] dark:border-white/10" : ""
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <Languages className="w-4 h-4 text-zinc-400" />
+                  <Languages className="w-4 h-4 text-[#65676B] dark:text-zinc-400" />
                   {/* Secondary text EXACTLY 14px */}
-                  <span className="text-[14px] font-medium uppercase tracking-wider text-zinc-300">
+                  <span className="text-[14px] font-medium uppercase tracking-wider text-[#050505] dark:text-zinc-300">
                     {t('profile.locale')} ({locale.toUpperCase()})
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold text-purple-400 font-mono uppercase">
+                  <span className="text-[11px] font-bold text-[#0866FF] dark:text-purple-400 font-mono uppercase">
                     {locale === 'en' ? 'ENGLISH' : 
                      locale === 'ja' ? '日本語' : 
                      locale === 'fr' ? 'FRANÇAIS' : 
@@ -428,14 +428,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                      locale === 'pt' ? 'PORTUGUÊS' : 
                      locale === 'zh' ? '中文' : 'ENGLISH'}
                   </span>
-                  <span className="text-zinc-600 text-xs transition-transform duration-200" style={{ transform: isLocaleDropdownOpen ? 'rotate(180deg)' : 'none' }}>
+                  <span className="text-[#65676B] dark:text-zinc-600 text-xs transition-transform duration-200" style={{ transform: isLocaleDropdownOpen ? 'rotate(180deg)' : 'none' }}>
                     ▼
                   </span>
                 </div>
               </button>
 
               {isLocaleDropdownOpen && (
-                <div className="bg-black/80 border border-white/5 rounded-xl p-1.5 space-y-1.5 mt-1 animate-fadeIn grid grid-cols-1 gap-1">
+                <div className="bg-white dark:bg-black/80 border border-[#DBDBDB] dark:border-white/5 rounded-xl p-1.5 space-y-1.5 mt-1 animate-fadeIn grid grid-cols-1 gap-1 shadow-sm dark:shadow-none">
                   {[
                     { code: 'en' as AppLocale, label: 'English', native: 'English', flag: '🇺🇸' },
                     { code: 'ja' as AppLocale, label: 'Japanese', native: '日本語', flag: '🇯🇵' },
@@ -458,17 +458,17 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                         className={cn(
                           "w-full text-left px-3 py-2 rounded-lg text-xs flex items-center justify-between transition-all cursor-pointer font-sans",
                           isSelected 
-                            ? "bg-purple-500/15 border border-purple-500/30 text-purple-300 font-bold" 
-                            : "hover:bg-zinc-900/60 text-zinc-400 hover:text-white"
+                            ? "bg-[#E7F3FF] dark:bg-purple-500/15 border border-[#0866FF]/30 dark:border-purple-500/30 text-[#0866FF] dark:text-purple-300 font-bold" 
+                            : "hover:bg-[#F0F2F5] dark:hover:bg-zinc-900/60 text-[#262626] dark:text-zinc-400 hover:text-[#050505] dark:hover:text-white"
                         )}
                       >
                         <div className="flex items-center gap-2">
                           <span className="text-base leading-none">{lang.flag}</span>
                           <span>{t(`languages.${lang.code}`)}</span>
-                          <span className="text-[10px] text-zinc-500 font-mono">({lang.native})</span>
+                          <span className="text-[10px] text-[#65676B] dark:text-zinc-500 font-mono">({lang.native})</span>
                         </div>
                         {isSelected && (
-                          <span className="w-2 h-2 rounded-full bg-purple-500" />
+                          <span className="w-2 h-2 rounded-full bg-[#0866FF] dark:bg-purple-500" />
                         )}
                       </button>
                     );
@@ -485,13 +485,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 onOpenAdmin();
                 onClose();
               }}
-              className="w-full hover:bg-zinc-900 rounded-xl p-3 flex items-center justify-between transition-colors text-left cursor-pointer border border-vibe-primary/30 bg-vibe-primary/5 shadow-md"
+              className="w-full hover:bg-[#E7F3FF] dark:hover:bg-zinc-900 rounded-xl p-3 flex items-center justify-between transition-colors text-left cursor-pointer border border-[#0866FF]/30 dark:border-vibe-primary/30 bg-[#E7F3FF]/60 dark:bg-vibe-primary/5 shadow-sm dark:shadow-md"
             >
               <div className="flex items-center gap-3">
-                <ShieldCheck className="w-4 h-4 text-vibe-primary" />
-                <span className="text-[14px] font-semibold uppercase tracking-wider text-white">{t('profile.adminDashboard')}</span>
+                <ShieldCheck className="w-4 h-4 text-[#0866FF] dark:text-vibe-primary" />
+                <span className="text-[14px] font-semibold uppercase tracking-wider text-[#050505] dark:text-white">{t('profile.adminDashboard')}</span>
               </div>
-              <span className="bg-vibe-primary text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+              <span className="bg-[#0866FF] dark:bg-vibe-primary text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
                 System
               </span>
             </button>
@@ -500,21 +500,21 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           {/* Settings */}
             <button 
               disabled title="No verified app-settings action is implemented in the reference"
-              className="w-full hover:bg-zinc-900 rounded-xl p-3 flex items-center transition-colors text-left gap-3 cursor-pointer"
+              className="w-full hover:bg-[#F0F2F5] dark:hover:bg-zinc-900 rounded-xl p-3 flex items-center transition-colors text-left gap-3 cursor-pointer"
             >
-              <Settings className="w-4 h-4 text-zinc-500" />
+              <Settings className="w-4 h-4 text-[#65676B] dark:text-zinc-500" />
               {/* Secondary text EXACTLY 14px */}
-              <span className="text-[14px] font-medium uppercase tracking-wider text-zinc-300">{t('profile.deviceSettings')}</span>
+              <span className="text-[14px] font-medium uppercase tracking-wider text-[#050505] dark:text-zinc-300">{t('profile.deviceSettings')}</span>
             </button>
 
             {/* Help & Support */}
             <button 
               disabled title="No verified help destination is configured"
-              className="w-full hover:bg-zinc-900 rounded-xl p-3 flex items-center transition-colors text-left gap-3 cursor-pointer"
+              className="w-full hover:bg-[#F0F2F5] dark:hover:bg-zinc-900 rounded-xl p-3 flex items-center transition-colors text-left gap-3 cursor-pointer"
             >
-              <HelpCircle className="w-4 h-4 text-zinc-500" />
+              <HelpCircle className="w-4 h-4 text-[#65676B] dark:text-zinc-500" />
               {/* Secondary text EXACTLY 14px */}
-              <span className="text-[14px] font-medium uppercase tracking-wider text-[#3b82f6]">{t('profile.oracleHelp')}</span>
+              <span className="text-[14px] font-medium uppercase tracking-wider text-[#0866FF] dark:text-[#3b82f6]">{t('profile.oracleHelp')}</span>
             </button>
 
           </div>
@@ -535,15 +535,15 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           >
             <LogOut className="w-3.5 h-3.5" /> {t('profile.terminateSession')}
           </button>}
-          {logoutError && <p role="alert" className="text-red-400 text-xs">{logoutError}</p>}
+          {logoutError && <p role="alert" className="text-red-600 dark:text-red-400 text-xs">{logoutError}</p>}
           {/* Small text / labels EXACTLY 13px */}
-          <div className="text-[13px] text-zinc-600 font-bold tracking-wider uppercase text-center">
+          <div className="text-[13px] text-[#65676B] dark:text-zinc-600 font-bold tracking-wider uppercase text-center">
             {t('profile.securedNodeSync')} v1.0.4
           </div>
         </div>
       </motion.div>
       {authPanel && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/85 p-4 overflow-y-auto">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/85 p-4 overflow-y-auto">
           {authPanel === 'login' ? (
             <ProfileLogin
               onCancel={() => setAuthPanel(null)}

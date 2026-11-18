@@ -82,8 +82,8 @@ export const DriftMessageItem: React.FC<DriftMessageItemProps> = ({
             <span
               className={`text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider flex items-center space-x-0.5 ${
                 msg.gender === 'F'
-                  ? 'text-pink-300 bg-pink-950/80 border border-pink-500/40 shadow-sm shadow-pink-500/20'
-                  : 'text-cyan-300 bg-cyan-950/80 border border-cyan-500/40 shadow-sm shadow-cyan-500/20'
+                  ? 'text-pink-700 dark:text-pink-300 bg-pink-50 dark:bg-pink-950/80 border border-pink-200 dark:border-pink-500/40 shadow-sm dark:shadow-pink-500/20'
+                  : 'text-cyan-700 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-950/80 border border-cyan-200 dark:border-cyan-500/40 shadow-sm dark:shadow-cyan-500/20'
               }`}
               title={msg.gender === 'F' ? 'Female (F)' : 'Male (M)'}
             >
@@ -91,17 +91,17 @@ export const DriftMessageItem: React.FC<DriftMessageItemProps> = ({
             </span>
           )}
 
-          <span className="text-[10px] text-neutral-500">
+          <span className="text-[10px] text-[#65676B] dark:text-neutral-500">
             {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
 
         {/* Bubble Content */}
-        <div className="rounded-2xl bg-neutral-900/80 border border-neutral-800/80 p-3 space-y-2 backdrop-blur-md max-w-lg shadow-xl">
+        <div className="rounded-2xl bg-white dark:bg-neutral-900/80 border border-[#DBDBDB] dark:border-neutral-800/80 p-3 space-y-2 backdrop-blur-md max-w-lg shadow-sm dark:shadow-xl">
           {/* Reply preview */}
           {msg.reply_to_snippet && (
-            <div className="border-l-2 border-teal-400 pl-2.5 py-0.5 text-[10px] text-neutral-400 bg-neutral-950/60 rounded">
-              <span className="font-bold text-teal-300">{msg.reply_to_handle}: </span>
+            <div className="border-l-2 border-[#0866FF] dark:border-teal-400 pl-2.5 py-0.5 text-[10px] text-[#65676B] dark:text-neutral-400 bg-[#F0F2F5] dark:bg-neutral-950/60 rounded">
+              <span className="font-bold text-[#0866FF] dark:text-teal-300">{msg.reply_to_handle}: </span>
               <span className="italic">{msg.reply_to_snippet}</span>
             </div>
           )}
@@ -115,7 +115,7 @@ export const DriftMessageItem: React.FC<DriftMessageItemProps> = ({
                 </span>
               </div>
             ) : (
-              <p className="text-xs text-neutral-100 leading-relaxed break-words">
+              <p className="text-xs text-[#050505] dark:text-neutral-100 leading-relaxed break-words">
                 {msg.content}
               </p>
             )
@@ -123,7 +123,7 @@ export const DriftMessageItem: React.FC<DriftMessageItemProps> = ({
 
           {/* Photo */}
           {msg.media_type === 'photo' && msg.media_url && (
-            <div className="relative rounded-xl overflow-hidden border border-white/10 max-h-72">
+            <div className="relative rounded-xl overflow-hidden border border-[#DBDBDB] dark:border-white/10 max-h-72">
               <img
                 src={msg.media_url}
                 alt="Drift snapshot"
@@ -137,7 +137,7 @@ export const DriftMessageItem: React.FC<DriftMessageItemProps> = ({
 
           {/* Voice Note */}
           {msg.media_type === 'voice' && msg.media_url && (
-            <div className="flex items-center space-x-3 bg-black/40 p-2.5 rounded-xl border border-neutral-800">
+            <div className="flex items-center space-x-3 bg-[#F0F2F5] dark:bg-black/40 p-2.5 rounded-xl border border-[#E4E6EB] dark:border-neutral-800">
               <button
                 onClick={() => onPlayVoice(msg.id, msg.media_url!)}
                 className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white flex items-center justify-center shadow hover:scale-105 transition cursor-pointer"
@@ -153,13 +153,13 @@ export const DriftMessageItem: React.FC<DriftMessageItemProps> = ({
                   <div
                     key={i}
                     className={`w-1 rounded-full ${
-                      playingAudioId === msg.id ? 'bg-teal-400 animate-pulse' : 'bg-neutral-600'
+                      playingAudioId === msg.id ? 'bg-[#0866FF] dark:bg-teal-400 animate-pulse' : 'bg-[#DBDBDB] dark:bg-neutral-600'
                     }`}
                     style={{ height: `${h}px` }}
                   />
                 ))}
               </div>
-              <span className="text-[10px] font-mono text-neutral-400">
+              <span className="text-[10px] font-mono text-[#65676B] dark:text-neutral-400">
                 0:{String(msg.voice_duration || 24).padStart(2, '0')}
               </span>
             </div>
@@ -188,8 +188,8 @@ export const DriftMessageItem: React.FC<DriftMessageItemProps> = ({
                     onClick={() => onToggleReaction(msg.id, emo)}
                     className={`px-2 py-0.5 rounded-full text-[10px] font-bold border transition flex items-center space-x-1 cursor-pointer hover:scale-105 ${
                       isReacted
-                        ? 'bg-pink-500/20 border-pink-500/50 text-pink-300'
-                        : 'bg-neutral-950 border-neutral-800 text-neutral-300 hover:border-neutral-700'
+                        ? 'bg-pink-50 dark:bg-pink-500/20 border-pink-300 dark:border-pink-500/50 text-pink-700 dark:text-pink-300'
+                        : 'bg-[#EFEFEF] dark:bg-neutral-950 border-[#DBDBDB] dark:border-neutral-800 text-[#262626] dark:text-neutral-300 hover:border-[#65676B] dark:hover:border-neutral-700'
                     }`}
                   >
                     <span className={getEmojiAnimationClass(emo)}>{emo}</span>
@@ -202,16 +202,16 @@ export const DriftMessageItem: React.FC<DriftMessageItemProps> = ({
             {/* Telegram Emoji picker trigger for this message */}
             <button
               onClick={() => onOpenEmojiReactionPicker(msg.id)}
-              className="px-2 py-0.5 rounded-full text-[10px] text-neutral-400 hover:text-amber-300 hover:bg-neutral-800 border border-neutral-800/60 hover:border-neutral-700 transition cursor-pointer flex items-center space-x-1"
+              className="px-2 py-0.5 rounded-full text-[10px] text-[#65676B] dark:text-neutral-400 hover:text-amber-600 dark:hover:text-amber-300 hover:bg-[#EFEFEF] dark:hover:bg-neutral-800 border border-[#DBDBDB] dark:border-neutral-800/60 hover:border-[#65676B]/40 dark:hover:border-neutral-700 transition cursor-pointer flex items-center space-x-1"
               title="Choose Telegram Emoji reaction"
             >
-              <Smile className="w-3 h-3 text-amber-400" />
+              <Smile className="w-3 h-3 text-amber-500 dark:text-amber-400" />
               <span>+</span>
             </button>
 
             <button
               onClick={() => onReply(msg)}
-              className="text-[10px] text-neutral-500 hover:text-teal-400 hover:underline px-1 cursor-pointer"
+              className="text-[10px] text-[#65676B] dark:text-neutral-500 hover:text-[#0866FF] dark:hover:text-teal-400 hover:underline px-1 cursor-pointer"
             >
               Reply
             </button>

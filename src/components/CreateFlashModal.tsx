@@ -78,28 +78,28 @@ export const CreateFlashModal: React.FC<CreateFlashModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
-      <div className="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl text-white space-y-5 relative">
+    <div className="fixed inset-0 z-50 bg-black/50 dark:bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+      <div className="w-full max-w-md bg-white dark:bg-neutral-900 border border-[#DBDBDB] dark:border-neutral-800 rounded-3xl p-6 shadow-2xl text-[#050505] dark:text-white space-y-5 relative">
         <button
           onClick={onClose}
           aria-label="Close Create Flash Modal"
-          className="absolute top-4 right-4 text-neutral-400 hover:text-white p-2 rounded-full bg-neutral-950 border border-neutral-800 transition cursor-pointer"
+          className="absolute top-4 right-4 text-[#050505] dark:text-neutral-400 hover:bg-[#E4E6EB] dark:hover:text-white p-2 rounded-full bg-[#EFEFEF] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 transition cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
 
         <div className="flex items-center space-x-3">
-          <div className="p-3 rounded-2xl bg-orange-500/20 text-orange-400 border border-orange-500/40">
+          <div className="p-3 rounded-2xl bg-orange-50 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-500/40">
             <Zap className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="font-black text-lg text-white">Create Flash Event</h3>
-            <p className="text-xs text-neutral-400">D11 Events & Business Authority Protocol</p>
+            <h3 className="font-black text-lg text-[#050505] dark:text-white">Create Flash Event</h3>
+            <p className="text-xs text-[#65676B] dark:text-neutral-400">D11 Events & Business Authority Protocol</p>
           </div>
         </div>
 
         {!isAdmin && (
-          <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center space-x-2">
+          <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs flex items-center space-x-2">
             <Shield className="w-4 h-4 flex-shrink-0" />
             <span>Only verified Pro, Business or App Admin accounts can create Flash Events.</span>
           </div>
@@ -107,54 +107,54 @@ export const CreateFlashModal: React.FC<CreateFlashModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-neutral-300">Event Title</label>
+            <label className="text-xs font-bold uppercase tracking-wider text-[#262626] dark:text-neutral-300">Event Title</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Secret Pop-up Gallery"
-              className="w-full px-4 py-3 rounded-2xl bg-neutral-950 border border-neutral-800 text-white text-sm focus:outline-none focus:border-orange-500 transition"
+              className="w-full px-4 py-3 rounded-2xl bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 text-sm focus:outline-none focus:border-[#0866FF] dark:focus:border-orange-500 transition"
               required
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-neutral-300">Description & Rules</label>
+            <label className="text-xs font-bold uppercase tracking-wider text-[#262626] dark:text-neutral-300">Description & Rules</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="An exclusive underground installation..."
               rows={3}
-              className="w-full px-4 py-3 rounded-2xl bg-neutral-950 border border-neutral-800 text-white text-sm focus:outline-none focus:border-orange-500 transition resize-none"
+              className="w-full px-4 py-3 rounded-2xl bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 text-sm focus:outline-none focus:border-[#0866FF] dark:focus:border-orange-500 transition resize-none"
               required
             />
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="flash-start" className="text-xs font-bold uppercase tracking-wider text-neutral-300">Event Start Time</label>
+            <label htmlFor="flash-start" className="text-xs font-bold uppercase tracking-wider text-[#262626] dark:text-neutral-300">Event Start Time</label>
             <input id="flash-start" type="datetime-local" value={startsAtInput}
               onChange={e => setStartsAtInput(e.target.value)}
-              className="w-full px-4 py-3 rounded-2xl bg-neutral-950 border border-neutral-800 text-white text-sm"
+              className="w-full px-4 py-3 rounded-2xl bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-white text-sm focus:outline-none focus:border-[#0866FF]"
               required />
-            <p className="text-[11px] text-neutral-400">Scheduled events appear 60 minutes before their start and stay visible until they end.</p>
+            <p className="text-[11px] text-[#65676B] dark:text-neutral-400">Scheduled events appear 60 minutes before their start and stay visible until they end.</p>
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="flash-place" className="text-xs font-bold uppercase tracking-wider text-neutral-300">Event Place (optional)</label>
+            <label htmlFor="flash-place" className="text-xs font-bold uppercase tracking-wider text-[#262626] dark:text-neutral-300">Event Place (optional)</label>
             <select id="flash-place" value={placeId} onChange={e => setPlaceId(e.target.value)}
-              className="w-full px-4 py-3 rounded-2xl bg-neutral-950 border border-neutral-800 text-white text-sm">
+              className="w-full px-4 py-3 rounded-2xl bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-white text-sm focus:outline-none focus:border-[#0866FF]">
               <option value="">No linked place</option>
               {places.map(place => <option key={place.id} value={place.id}>{place.title}</option>)}
             </select>
-            <p className="text-[11px] text-neutral-400">A linked place supplies real event location and available media.</p>
+            <p className="text-[11px] text-[#65676B] dark:text-neutral-400">A linked place supplies real event location and available media.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-neutral-300">Category / Kind</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-[#262626] dark:text-neutral-300">Category / Kind</label>
               <select
                 value={kind}
                 onChange={(e) => setKind(e.target.value)}
-                className="w-full px-3 py-3 rounded-2xl bg-neutral-950 border border-neutral-800 text-white text-xs focus:outline-none focus:border-orange-500 transition"
+                className="w-full px-3 py-3 rounded-2xl bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-white text-xs focus:outline-none focus:border-[#0866FF] dark:focus:border-orange-500 transition"
               >
                 <option value="secret_party">Secret Party</option>
                 <option value="after_hours">After Hours</option>
@@ -165,11 +165,11 @@ export const CreateFlashModal: React.FC<CreateFlashModalProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-neutral-300">Duration (Minutes)</label>
+              <label className="text-xs font-bold uppercase tracking-wider text-[#262626] dark:text-neutral-300">Duration (Minutes)</label>
               <select
                 value={durationMins}
                 onChange={(e) => setDurationMins(e.target.value)}
-                className="w-full px-3 py-3 rounded-2xl bg-neutral-950 border border-neutral-800 text-white text-xs focus:outline-none focus:border-orange-500 transition"
+                className="w-full px-3 py-3 rounded-2xl bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 text-[#050505] dark:text-white text-xs focus:outline-none focus:border-[#0866FF] dark:focus:border-orange-500 transition"
               >
                 <option value="30">30 mins</option>
                 <option value="60">60 mins</option>
@@ -180,7 +180,7 @@ export const CreateFlashModal: React.FC<CreateFlashModalProps> = ({
           </div>
 
           {errorMsg && (
-            <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center space-x-2">
+            <div className="p-3 rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-400 text-xs flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -190,7 +190,7 @@ export const CreateFlashModal: React.FC<CreateFlashModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white font-semibold text-xs transition cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-[#EFEFEF] dark:bg-neutral-800 hover:bg-[#E4E6EB] dark:hover:bg-neutral-700 text-[#050505] dark:text-white font-semibold text-xs transition cursor-pointer"
             >
               Cancel
             </button>

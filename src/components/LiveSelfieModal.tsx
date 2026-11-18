@@ -150,22 +150,22 @@ export const LiveSelfieModal: React.FC<LiveSelfieModalProps> = ({
   };
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 dark:bg-black/85 backdrop-blur-md overflow-y-auto">
         <motion.div initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
-          className="bg-[#110F15] border border-white/10 rounded-3xl w-full max-w-lg max-h-[90dvh] overflow-y-auto text-left shadow-2xl relative flex flex-col">
-          <div className="bg-[#17141E] border-b border-white/10 p-4 flex items-center justify-between shrink-0">
+          className="bg-white dark:bg-[#110F15] border border-[#DBDBDB] dark:border-white/10 rounded-3xl w-full max-w-lg max-h-[90dvh] overflow-y-auto text-left shadow-2xl relative flex flex-col">
+          <div className="bg-[#FAFAFA] dark:bg-[#17141E] border-b border-[#E4E6EB] dark:border-white/10 p-4 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300">
+              <div className="w-8 h-8 rounded-xl bg-[#E7F3FF] dark:bg-purple-500/20 border border-[#0866FF]/20 dark:border-purple-500/30 flex items-center justify-center text-[#0866FF] dark:text-purple-300">
                 <Camera className="w-4 h-4" />
               </div>
-              <h3 className="text-sm font-extrabold text-white">
+              <h3 className="text-sm font-extrabold text-[#050505] dark:text-white">
                 {step === 'camera' ? 'Front-Camera Selfie' : 'Guardian Profile Details'}
               </h3>
             </div>
             <button type="button" aria-label="Close Guardian registration" onClick={onClose}
-              className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white cursor-pointer">
+              className="w-8 h-8 rounded-full bg-[#EFEFEF] dark:bg-white/5 hover:bg-[#E4E6EB] dark:hover:bg-white/10 flex items-center justify-center text-[#65676B] dark:text-zinc-400 hover:text-[#050505] dark:hover:text-white cursor-pointer transition">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -190,7 +190,7 @@ export const LiveSelfieModal: React.FC<LiveSelfieModalProps> = ({
               onRetakePhoto={retake} onSubmit={save} submitting={saving} error={error}
               proEligible={user?.accountType === 'pro'} />
           )}
-          {step === 'camera' && error && <p role="alert" className="text-xs text-red-400 px-5 pb-5">{error}</p>}
+          {step === 'camera' && error && <p role="alert" className="text-xs text-red-600 dark:text-red-400 px-5 pb-5">{error}</p>}
         </motion.div>
       </div>
     </AnimatePresence>

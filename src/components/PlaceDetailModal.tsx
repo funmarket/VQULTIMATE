@@ -247,9 +247,9 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-label={`${place.title} details`}
-        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+        className="fixed inset-0 z-50 bg-black/50 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
       >
-        <div className="relative w-full max-w-md bg-[#0d111a] border border-neutral-800 border-t-4 border-t-amber-400 rounded-[28px] overflow-hidden shadow-2xl text-white my-auto max-h-[92vh] flex flex-col">
+        <div className="relative w-full max-w-md bg-white dark:bg-[#0d111a] border border-[#DBDBDB] dark:border-neutral-800 border-t-4 border-t-[#0866FF] dark:border-t-amber-400 rounded-[28px] overflow-hidden shadow-2xl text-[#050505] dark:text-white my-auto max-h-[92vh] flex flex-col">
           {/* Scrollable Container */}
           <div className="overflow-y-auto overflow-x-hidden flex-1 overscroll-contain">
             {/* 1. Hero Image Banner */}
@@ -283,7 +283,7 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
               </div>
 
               {/* Subtle Gradient overlay on bottom of image */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0d111a] via-transparent to-black/30 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-black/30 dark:from-[#0d111a] dark:via-transparent dark:to-black/30 pointer-events-none" />
             </div>
 
             {/* 2. Modal Body */}
@@ -291,14 +291,14 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
               {/* Spot Identity: Icon + Legendary Spot Badge + Title */}
               <div>
                 <div className="flex items-center gap-2 mb-1.5">
-                  <span className="w-6 h-6 rounded-full bg-neutral-800/80 flex items-center justify-center text-sm shadow-inner">
+                  <span className="w-6 h-6 rounded-full bg-[#EFEFEF] dark:bg-neutral-800/80 flex items-center justify-center text-sm shadow-inner">
                     {getCategoryIcon(place.category)}
                   </span>
-                  <span className="px-2.5 py-0.5 rounded-md bg-[#13233c] text-[#60a5fa] border border-[#2563eb]/40 font-extrabold text-[11px] tracking-wider uppercase">
+                  <span className="px-2.5 py-0.5 rounded-md bg-[#E7F3FF] dark:bg-[#13233c] text-[#0866FF] dark:text-[#60a5fa] border border-[#0866FF]/20 dark:border-[#2563eb]/40 font-extrabold text-[11px] tracking-wider uppercase">
                     LEGENDARY SPOT
                   </span>
                 </div>
-                <h2 className="text-2xl font-black text-white tracking-tight leading-tight">
+                <h2 className="text-2xl font-black text-[#050505] dark:text-white tracking-tight leading-tight">
                   {place.title}
                 </h2>
               </div>
@@ -312,8 +312,8 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                   onClick={() => setActiveTab('info')}
                   className={`py-2 px-3.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition cursor-pointer ${
                     activeTab === 'info'
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                      : 'text-neutral-400 hover:text-white'
+                      ? 'bg-[#0866FF] dark:bg-blue-600 text-white shadow-md shadow-[#0866FF]/20 dark:shadow-blue-600/30'
+                      : 'text-[#65676B] dark:text-neutral-400 hover:bg-[#EFEFEF] dark:hover:bg-transparent hover:text-[#050505] dark:hover:text-white'
                   }`}
                 >
                   <span>ℹ️</span>
@@ -327,8 +327,8 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                   onClick={() => setActiveTab('mayor')}
                   className={`py-2 px-3 rounded-xl font-semibold text-xs flex items-center gap-1.5 transition cursor-pointer ${
                     activeTab === 'mayor'
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                      : 'text-neutral-400 hover:text-white'
+                      ? 'bg-[#0866FF] dark:bg-blue-600 text-white shadow-md shadow-[#0866FF]/20 dark:shadow-blue-600/30'
+                      : 'text-[#65676B] dark:text-neutral-400 hover:bg-[#EFEFEF] dark:hover:bg-transparent hover:text-[#050505] dark:hover:text-white'
                   }`}
                 >
                   <span>👑</span>
@@ -342,8 +342,8 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                   onClick={() => setActiveTab('meetups')}
                   className={`py-2 px-3 rounded-xl font-semibold text-xs flex items-center gap-1.5 transition cursor-pointer ${
                     activeTab === 'meetups'
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                      : 'text-neutral-400 hover:text-white'
+                      ? 'bg-[#0866FF] dark:bg-blue-600 text-white shadow-md shadow-[#0866FF]/20 dark:shadow-blue-600/30'
+                      : 'text-[#65676B] dark:text-neutral-400 hover:bg-[#EFEFEF] dark:hover:bg-transparent hover:text-[#050505] dark:hover:text-white'
                   }`}
                 >
                   <span>👥</span>
@@ -356,19 +356,19 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                 <div className="space-y-4 pt-1">
                   {/* Rating row: ⭐ 4.6 Out of 5.0 (31 reviews) */}
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-amber-400 text-base">⭐</span>
-                    <span className="text-amber-400 font-black text-base">
+                    <span className="text-amber-500 dark:text-amber-400 text-base">⭐</span>
+                    <span className="text-amber-600 dark:text-amber-400 font-black text-base">
                       {rating.toFixed(1)} Out of 5.0
                     </span>
-                    <span className="text-neutral-400 text-xs font-medium ml-1">
+                    <span className="text-[#65676B] dark:text-neutral-400 text-xs font-medium ml-1">
                       ({place.reviews_count !== undefined ? `${place.reviews_count} reviews` : `${displayCheckins} check-ins`})
                     </span>
                     {typeof place.open_now === 'boolean' && (
                       <span
                         className={`ml-auto text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
                           place.open_now
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                            : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                            ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30'
+                            : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30'
                         }`}
                       >
                         {place.open_now ? 'Open Now' : 'Closed'}
@@ -378,9 +378,9 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
 
                   {/* Vibe Confidence row: 🛡️ Vibe Confidence: Unrated (0 confirmations) or X% (Y confirmations) */}
                   <div className="flex items-center gap-2 text-xs sm:text-sm">
-                    <span className="text-blue-400">🛡️</span>
-                    <span className="text-white font-semibold">Vibe Confidence:</span>
-                    <span className="text-[#00e5a3] font-mono font-bold">
+                    <span className="text-[#0866FF] dark:text-blue-400">🛡️</span>
+                    <span className="text-[#050505] dark:text-white font-semibold">Vibe Confidence:</span>
+                    <span className="text-emerald-600 dark:text-[#00e5a3] font-mono font-bold">
                       {confirmationsCount === 0 || vibeConfidence === null
                         ? 'Unrated (0 confirmations)'
                         : `${vibeConfidence}% (${confirmationsCount} confirmation${confirmationsCount === 1 ? '' : 's'})`}
@@ -390,31 +390,31 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                   {/* Address row */}
                   <div className="space-y-1">
                     <div className="flex items-start gap-2">
-                      <span className="text-pink-400 mt-0.5">📍</span>
-                      <span className="text-white font-bold text-sm leading-snug">
+                      <span className="text-pink-500 dark:text-pink-400 mt-0.5">📍</span>
+                      <span className="text-[#050505] dark:text-white font-bold text-sm leading-snug">
                         {place.address}
                       </span>
                     </div>
-                    <p className="text-xs text-neutral-400 leading-relaxed pl-6">
+                    <p className="text-xs text-[#65676B] dark:text-neutral-400 leading-relaxed pl-6">
                       {distanceDisplay !== 'Unknown distance' ? `Located ${distanceDisplay} from your position.` : ''} Verified Google Places venue.
                     </p>
                   </div>
 
                   {/* 5. AI VIBE MATCH SCORE Card matching Reference */}
-                  <div className="rounded-2xl bg-[#111726]/90 border border-neutral-800/90 p-4 space-y-3 shadow-inner">
+                  <div className="rounded-2xl bg-[#F0F2F5] dark:bg-[#111726]/90 border border-[#E4E6EB] dark:border-neutral-800/90 p-4 space-y-3 shadow-inner">
                     {/* Card Header */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-fuchsia-400 font-black text-xs tracking-wider uppercase">
+                      <div className="flex items-center gap-1.5 text-fuchsia-600 dark:text-fuchsia-400 font-black text-xs tracking-wider uppercase">
                         <Sparkles className="w-3.5 h-3.5" />
                         <span>AI VIBE MATCH SCORE</span>
                       </div>
-                      <span className="text-fuchsia-300 font-black text-sm">
+                      <span className="text-fuchsia-700 dark:text-fuchsia-300 font-black text-sm">
                         {matchScore}% Match
                       </span>
                     </div>
 
                     {/* Gradient Progress Bar */}
-                    <div className="w-full h-2 rounded-full bg-neutral-800/80 overflow-hidden">
+                    <div className="w-full h-2 rounded-full bg-[#E4E6EB] dark:bg-neutral-800/80 overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-fuchsia-500 via-purple-500 to-indigo-400 rounded-full transition-all duration-700 ease-out"
                         style={{ width: `${Math.min(100, Math.max(10, matchScore))}%` }}
@@ -423,22 +423,22 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
 
                     {/* Match Relevance Breakdown */}
                     <div className="space-y-1.5 pt-1">
-                      <div className="text-[10px] font-bold text-neutral-400 tracking-wider uppercase">
+                      <div className="text-[10px] font-bold text-[#65676B] dark:text-neutral-400 tracking-wider uppercase">
                         MATCH RELEVANCE BREAKDOWN:
                       </div>
                       {breakdown.map((row, idx) => (
                         <div key={idx} className="flex items-center justify-between text-xs">
-                          <div className="flex items-center gap-1.5 text-neutral-300">
-                            <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-400" />
+                          <div className="flex items-center gap-1.5 text-[#262626] dark:text-neutral-300">
+                            <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 dark:bg-fuchsia-400" />
                             <span>{row.label}</span>
                           </div>
-                          <span className="text-neutral-300 font-bold">{row.delta}</span>
+                          <span className="text-[#050505] dark:text-neutral-300 font-bold">{row.delta}</span>
                         </div>
                       ))}
                     </div>
 
                     {/* Italic Engine Disclaimer */}
-                    <p className="text-[11px] text-neutral-400 italic leading-snug pt-1">
+                    <p className="text-[11px] text-[#65676B] dark:text-neutral-400 italic leading-snug pt-1">
                       Based on interests, active community circles, recent check-ins, and local lifestyle sync. Offline-resilient engine active.
                     </p>
                   </div>
@@ -454,13 +454,13 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                           disabled={isCheckedIn}
                           className={`w-full py-3.5 px-4 rounded-full font-black text-sm text-center transition cursor-pointer active:scale-98 shadow-sm flex items-center justify-center gap-2 ${
                             isCheckedIn
-                              ? 'border border-emerald-500/60 bg-emerald-900/50 text-emerald-300 cursor-default'
-                              : 'border border-emerald-500/40 bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-400'
+                              ? 'border border-emerald-300 dark:border-emerald-500/60 bg-emerald-50 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 cursor-default'
+                              : 'border border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400'
                           }`}
                         >
                           {isCheckedIn ? (
                             <>
-                              <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
                               <span>✅ Checked In & Vibe Validated</span>
                             </>
                           ) : (
@@ -471,9 +471,9 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                           )}
                         </button>
 
-                        <div className="flex items-center justify-between px-2 text-[11px] text-amber-400/90 font-medium">
+                        <div className="flex items-center justify-between px-2 text-[11px] text-amber-700 dark:text-amber-400/90 font-medium">
                           <span className="flex items-center gap-1">
-                            <Rocket className="w-3.5 h-3.5 text-amber-400" />
+                            <Rocket className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                             <span>Sponsored Pool: <strong>{remainingPool} VQ</strong> left</span>
                           </span>
                           <span>+{rewardPerCheckin} VQ / check-in</span>
@@ -483,7 +483,7 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                       <button
                         type="button"
                         onClick={handlePromoteClick}
-                        className="w-full py-3.5 px-4 rounded-full font-black text-sm text-center transition cursor-pointer active:scale-98 shadow-sm flex items-center justify-center gap-2 border border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400"
+                        className="w-full py-3.5 px-4 rounded-full font-black text-sm text-center transition cursor-pointer active:scale-98 shadow-sm flex items-center justify-center gap-2 border border-amber-300 dark:border-amber-500/50 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-amber-700 dark:text-amber-400"
                       >
                         <Rocket className="w-4 h-4" />
                         <span>🚀 Promote This Business (Fund Check-in Rewards)</span>
@@ -495,16 +495,16 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                       <button
                         type="button"
                         disabled
-                        className="w-full py-3 px-4 rounded-full border border-emerald-500/60 bg-emerald-900/50 text-emerald-300 font-bold text-xs text-center flex items-center justify-center gap-2 cursor-default shadow-sm"
+                        className="w-full py-3 px-4 rounded-full border border-emerald-300 dark:border-emerald-500/60 bg-emerald-50 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 font-bold text-xs text-center flex items-center justify-center gap-2 cursor-default shadow-sm"
                       >
-                        <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
                         <span>✅ Checked In & Vibe Validated</span>
                       </button>
                     ) : (place.distance_meters !== undefined && place.distance_meters <= 33) ? (
                       <button
                         type="button"
                         onClick={handleVibeValidateClick}
-                        className="w-full py-3 px-4 rounded-full border border-[#00e5a3]/50 bg-[#00e5a3]/10 hover:bg-[#00e5a3]/20 text-[#00e5a3] font-bold text-xs text-center transition cursor-pointer flex items-center justify-center gap-2 active:scale-98 shadow-sm"
+                        className="w-full py-3 px-4 rounded-full border border-emerald-400 dark:border-[#00e5a3]/50 bg-emerald-50 dark:bg-[#00e5a3]/10 hover:bg-emerald-100 dark:hover:bg-[#00e5a3]/20 text-emerald-700 dark:text-[#00e5a3] font-bold text-xs text-center transition cursor-pointer flex items-center justify-center gap-2 active:scale-98 shadow-sm"
                       >
                         <Shield className="w-3.5 h-3.5" />
                         <span>Check-in & Vibe Validate — Submit Live Status</span>
@@ -519,9 +519,9 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                             handleVibeValidateClick();
                           }
                         }}
-                        className="w-full py-3 px-4 rounded-full border border-neutral-800 bg-neutral-900/50 hover:bg-neutral-900 text-neutral-400 font-semibold text-xs text-center transition flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full py-3 px-4 rounded-full border border-[#DBDBDB] dark:border-neutral-800 bg-[#EFEFEF] dark:bg-neutral-900/50 hover:bg-[#E4E6EB] dark:hover:bg-neutral-900 text-[#65676B] dark:text-neutral-400 font-semibold text-xs text-center transition flex items-center justify-center gap-2 cursor-pointer"
                       >
-                        <Lock className="w-3.5 h-3.5 text-neutral-500" />
+                        <Lock className="w-3.5 h-3.5 text-[#65676B] dark:text-neutral-500" />
                         <span>Check-in & Vibe Validate (Locked — {place.distance_meters ?? 380}m away, must be within 33m)</span>
                       </button>
                     )}
@@ -530,7 +530,7 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                     <button
                       type="button"
                       onClick={handleViewMapClick}
-                      className="w-full py-3 px-4 rounded-full border border-blue-600/40 bg-blue-950/30 hover:bg-blue-900/40 text-blue-400 font-bold text-sm text-center transition cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+                      className="w-full py-3 px-4 rounded-full border border-[#0866FF]/25 dark:border-blue-600/40 bg-[#E7F3FF] dark:bg-blue-950/30 hover:bg-[#DCEBFF] dark:hover:bg-blue-900/40 text-[#0866FF] dark:text-blue-400 font-bold text-sm text-center transition cursor-pointer flex items-center justify-center gap-2 active:scale-98"
                     >
                       <Navigation className="w-4 h-4" />
                       <span>View Map & Directions</span>
@@ -540,7 +540,7 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                     <button
                       type="button"
                       onClick={onClose}
-                      className="w-full py-3 px-4 rounded-full border border-neutral-800 bg-neutral-900/60 hover:bg-neutral-800 text-white font-bold text-sm text-center transition cursor-pointer active:scale-98"
+                      className="w-full py-3 px-4 rounded-full border border-[#DBDBDB] dark:border-neutral-800 bg-[#EFEFEF] dark:bg-neutral-900/60 hover:bg-[#E4E6EB] dark:hover:bg-neutral-800 text-[#050505] dark:text-white font-bold text-sm text-center transition cursor-pointer active:scale-98"
                     >
                       Close Spot Details
                     </button>
@@ -551,19 +551,19 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
               {/* Tab 2: Mayor & Badges */}
               {activeTab === 'mayor' && (
                 <div className="space-y-4 pt-1">
-                  <div className="rounded-2xl bg-neutral-900/70 border border-neutral-800 p-4 space-y-3">
+                  <div className="rounded-2xl bg-[#FAFAFA] dark:bg-neutral-900/70 border border-[#E4E6EB] dark:border-neutral-800 p-4 space-y-3">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-xl shadow-md">
                         👑
                       </div>
                       <div>
-                        <div className="text-[10px] uppercase tracking-wider text-amber-400 font-bold">
+                        <div className="text-[10px] uppercase tracking-wider text-amber-600 dark:text-amber-400 font-bold">
                           District Sentinel / Mayor
                         </div>
-                        <div className="text-base font-black text-white">
+                        <div className="text-base font-black text-[#050505] dark:text-white">
                           @{place.created_by || 'zen_stroller'}
                         </div>
-                        <div className="text-xs text-neutral-400">
+                        <div className="text-xs text-[#65676B] dark:text-neutral-400">
                           Top check-in frequency ({displayCheckins > 0 ? displayCheckins : 14} visits this cycle)
                         </div>
                       </div>
@@ -571,22 +571,22 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                   </div>
 
                   <div className="space-y-2">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#65676B] dark:text-neutral-400">
                       Earnable Spot Badges
                     </h4>
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="rounded-xl bg-neutral-900/60 border border-neutral-800/80 p-3 flex items-center gap-2.5">
+                      <div className="rounded-xl bg-[#FAFAFA] dark:bg-neutral-900/60 border border-[#E4E6EB] dark:border-neutral-800/80 p-3 flex items-center gap-2.5">
                         <span className="text-xl">☕</span>
                         <div>
-                          <div className="text-xs font-bold text-white">Caffeine Pioneer</div>
-                          <div className="text-[10px] text-neutral-400">3 check-ins required</div>
+                          <div className="text-xs font-bold text-[#050505] dark:text-white">Caffeine Pioneer</div>
+                          <div className="text-[10px] text-[#65676B] dark:text-neutral-400">3 check-ins required</div>
                         </div>
                       </div>
-                      <div className="rounded-xl bg-neutral-900/60 border border-neutral-800/80 p-3 flex items-center gap-2.5">
+                      <div className="rounded-xl bg-[#FAFAFA] dark:bg-neutral-900/60 border border-[#E4E6EB] dark:border-neutral-800/80 p-3 flex items-center gap-2.5">
                         <span className="text-xl">🛡️</span>
                         <div>
-                          <div className="text-xs font-bold text-white">Vibe Validator</div>
-                          <div className="text-[10px] text-neutral-400">Verify spot hours</div>
+                          <div className="text-xs font-bold text-[#050505] dark:text-white">Vibe Validator</div>
+                          <div className="text-[10px] text-[#65676B] dark:text-neutral-400">Verify spot hours</div>
                         </div>
                       </div>
                     </div>
@@ -595,7 +595,7 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="w-full py-3 px-4 rounded-full border border-neutral-800 bg-neutral-900/60 hover:bg-neutral-800 text-white font-bold text-sm text-center transition cursor-pointer"
+                    className="w-full py-3 px-4 rounded-full border border-[#DBDBDB] dark:border-neutral-800 bg-[#EFEFEF] dark:bg-neutral-900/60 hover:bg-[#E4E6EB] dark:hover:bg-neutral-800 text-[#050505] dark:text-white font-bold text-sm text-center transition cursor-pointer"
                   >
                     Close Spot Details
                   </button>
@@ -606,29 +606,29 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
               {activeTab === 'meetups' && (
                 <div className="space-y-4 pt-1">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#65676B] dark:text-neutral-400">
                       Spot Gatherings & Circles
                     </h4>
                     <button
                       type="button"
                       onClick={() => setShowCreateMeetupModal(true)}
-                      className="text-xs font-bold text-blue-400 hover:text-blue-300 transition flex items-center gap-1 cursor-pointer"
+                      className="text-xs font-bold text-[#0866FF] dark:text-blue-400 hover:text-[#075CE5] dark:hover:text-blue-300 transition flex items-center gap-1 cursor-pointer"
                     >
                       + Host Meetup
                     </button>
                   </div>
 
                   {placeMeetups.length === 0 ? (
-                    <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800/80 p-6 text-center space-y-3">
-                      <Users className="w-8 h-8 text-neutral-500 mx-auto" />
-                      <h4 className="font-bold text-sm text-white">No active meetups scheduled</h4>
-                      <p className="text-xs text-neutral-400 max-w-xs mx-auto">
+                    <div className="rounded-2xl bg-[#FAFAFA] dark:bg-neutral-900/60 border border-[#E4E6EB] dark:border-neutral-800/80 p-6 text-center space-y-3">
+                      <Users className="w-8 h-8 text-[#65676B] dark:text-neutral-500 mx-auto" />
+                      <h4 className="font-bold text-sm text-[#050505] dark:text-white">No active meetups scheduled</h4>
+                      <p className="text-xs text-[#65676B] dark:text-neutral-400 max-w-xs mx-auto">
                         Be the first to rally the squad at {place.title}! Host an open hangout, casual study session, or coffee crawl.
                       </p>
                       <button
                         type="button"
                         onClick={() => setShowCreateMeetupModal(true)}
-                        className="py-2 px-4 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-500 transition shadow-md cursor-pointer"
+                        className="py-2 px-4 rounded-xl text-xs font-bold bg-[#0866FF] dark:bg-blue-600 text-white hover:bg-[#075CE5] dark:hover:bg-blue-500 transition shadow-md cursor-pointer"
                       >
                         + Organize Meetup at {place.title}
                       </button>
@@ -642,34 +642,34 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                         return (
                           <div
                             key={m.id}
-                            className="p-3.5 bg-neutral-900/80 border border-neutral-800 rounded-xl space-y-2"
+                            className="p-3.5 bg-[#FAFAFA] dark:bg-neutral-900/80 border border-[#E4E6EB] dark:border-neutral-800 rounded-xl space-y-2"
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div>
                                 <div className="flex items-center gap-1.5">
                                   {m.is_live_checkin && (
-                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">
                                       LIVE NOW
                                     </span>
                                   )}
-                                  <h5 className="text-sm font-bold text-white">{m.title}</h5>
+                                  <h5 className="text-sm font-bold text-[#050505] dark:text-white">{m.title}</h5>
                                 </div>
-                                <p className="text-xs text-neutral-400 mt-0.5">
-                                  Hosted by <span className="text-neutral-200 font-semibold">{m.host_name}</span>
+                                <p className="text-xs text-[#65676B] dark:text-neutral-400 mt-0.5">
+                                  Hosted by <span className="text-[#050505] dark:text-neutral-200 font-semibold">{m.host_name}</span>
                                   {!m.is_live_checkin && ` • ${new Date(m.scheduled_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`}
                                 </p>
                               </div>
-                              <span className="text-xs px-2 py-0.5 rounded-md bg-neutral-800 text-neutral-300 font-bold shrink-0">
+                              <span className="text-xs px-2 py-0.5 rounded-md bg-[#EFEFEF] dark:bg-neutral-800 text-[#050505] dark:text-neutral-300 font-bold shrink-0">
                                 {m.attendee_ids.length} going
                               </span>
                             </div>
 
                             {m.description && (
-                              <p className="text-xs text-neutral-300 italic">{m.description}</p>
+                              <p className="text-xs text-[#262626] dark:text-neutral-300 italic">{m.description}</p>
                             )}
 
                             <div className="flex items-center justify-between pt-1">
-                              <span className="text-[11px] text-neutral-500">
+                              <span className="text-[11px] text-[#65676B] dark:text-neutral-500">
                                 {isHost ? 'You are host' : isAttending ? 'You are attending' : 'Open to everyone'}
                               </span>
                               {!isHost && (
@@ -678,8 +678,8 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                                   onClick={() => handleRsvp(m.id)}
                                   className={`text-xs px-3 py-1 rounded-lg font-bold transition cursor-pointer ${
                                     isAttending
-                                      ? 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
-                                      : 'bg-blue-600 text-white hover:bg-blue-500 shadow-sm'
+                                      ? 'bg-[#EFEFEF] dark:bg-neutral-800 text-[#050505] dark:text-neutral-300 hover:bg-[#E4E6EB] dark:hover:bg-neutral-700'
+                                      : 'bg-[#0866FF] dark:bg-blue-600 text-white hover:bg-[#075CE5] dark:hover:bg-blue-500 shadow-sm'
                                   }`}
                                 >
                                   {isAttending ? 'Leave' : 'RSVP / Join'}
@@ -695,7 +695,7 @@ export const PlaceDetailModal: React.FC<PlaceDetailModalProps> = ({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="w-full py-3 px-4 rounded-full border border-neutral-800 bg-neutral-900/60 hover:bg-neutral-800 text-white font-bold text-sm text-center transition cursor-pointer"
+                    className="w-full py-3 px-4 rounded-full border border-[#DBDBDB] dark:border-neutral-800 bg-[#EFEFEF] dark:bg-neutral-900/60 hover:bg-[#E4E6EB] dark:hover:bg-neutral-800 text-[#050505] dark:text-white font-bold text-sm text-center transition cursor-pointer"
                   >
                     Close Spot Details
                   </button>

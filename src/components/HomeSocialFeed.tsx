@@ -169,40 +169,40 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, o
       <VibeFlashBoard onToast={onToast} />
 
       {/* Social Feed Tabs matching reference image */}
-      <div className="border-b border-neutral-800 pb-1 flex items-center space-x-6 text-sm">
+      <div className="border-b border-[#DBDBDB] dark:border-neutral-800 pb-1 flex items-center space-x-6 text-sm">
         <button
           onClick={() => setActiveTab('network')}
           className={`pb-2.5 font-black uppercase tracking-wider transition relative cursor-pointer ${
-            activeTab === 'network' ? 'text-amber-400 font-extrabold' : 'text-neutral-400 hover:text-white'
+            activeTab === 'network' ? 'text-[#0866FF] dark:text-amber-400 font-extrabold' : 'text-[#65676B] hover:text-[#050505] dark:text-neutral-400 dark:hover:text-white'
           }`}
         >
           <span>MY NETWORK</span>
           {activeTab === 'network' && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-400 rounded-full" />
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0866FF] dark:bg-amber-400 rounded-full" />
           )}
         </button>
 
         <button
           onClick={() => setActiveTab('local')}
           className={`pb-2.5 font-black uppercase tracking-wider transition relative cursor-pointer ${
-            activeTab === 'local' ? 'text-amber-400 font-extrabold' : 'text-neutral-400 hover:text-white'
+            activeTab === 'local' ? 'text-[#0866FF] dark:text-amber-400 font-extrabold' : 'text-[#65676B] hover:text-[#050505] dark:text-neutral-400 dark:hover:text-white'
           }`}
         >
           <span>LOCAL VIBES</span>
           {activeTab === 'local' && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-400 rounded-full" />
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0866FF] dark:bg-amber-400 rounded-full" />
           )}
         </button>
 
         <button
           onClick={() => setActiveTab('for_you')}
           className={`pb-2.5 font-black uppercase tracking-wider transition relative cursor-pointer ${
-            activeTab === 'for_you' ? 'text-amber-400 font-extrabold' : 'text-neutral-400 hover:text-white'
+            activeTab === 'for_you' ? 'text-[#0866FF] dark:text-amber-400 font-extrabold' : 'text-[#65676B] hover:text-[#050505] dark:text-neutral-400 dark:hover:text-white'
           }`}
         >
           <span>FOR YOU</span>
           {activeTab === 'for_you' && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-400 rounded-full" />
+            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0866FF] dark:bg-amber-400 rounded-full" />
           )}
         </button>
       </div>
@@ -212,8 +212,8 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, o
         {/* Active Spot Meetups Cross-Feed Propagation */}
         {activeTab !== 'for_you' && meetups.length > 0 && (
           <div className="space-y-2.5 pb-1">
-            <div className="flex items-center justify-between text-xs font-bold text-neutral-400 uppercase tracking-wider px-1">
-              <span className="flex items-center gap-1.5 text-blue-400 font-black">
+            <div className="flex items-center justify-between text-xs font-bold text-[#65676B] dark:text-neutral-400 uppercase tracking-wider px-1">
+              <span className="flex items-center gap-1.5 text-[#0866FF] dark:text-blue-400 font-black">
                 <Users className="w-3.5 h-3.5" />
                 <span>Active Spot Meetups ({meetups.length})</span>
               </span>
@@ -252,10 +252,10 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, o
             });
 
             return (
-              <div key={post.id} className="rounded-3xl bg-[#131116] border border-neutral-800 overflow-hidden shadow-xl p-4 space-y-3.5">
+              <div key={post.id} className="rounded-3xl bg-white dark:bg-[#131116] border border-[#DBDBDB] dark:border-neutral-800 overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-xl p-4 space-y-3.5">
                 {/* 1. Media Section */}
                 {post.image_url && post.image_url.trim() !== '' ? (
-                  <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-950">
+                  <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-[#F0F2F5] dark:bg-neutral-950">
                     <img src={post.image_url} alt="Scene" className="w-full h-full object-cover" />
                     <div className="absolute bottom-3 left-3 bg-neutral-950/90 text-white font-bold text-xs px-3 py-1.5 rounded-full flex items-center space-x-1.5 border border-neutral-800 shadow">
                       <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
@@ -263,13 +263,13 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, o
                     </div>
                   </div>
                 ) : (
-                  <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-950/85 p-6 flex flex-col justify-center items-center text-center">
-                    <div className="absolute top-3 left-3 bg-neutral-950/90 text-white font-bold text-xs px-3 py-1.5 rounded-full flex items-center space-x-1.5 border border-neutral-800 shadow">
-                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-[#F0F2F5] dark:bg-neutral-950/85 p-6 flex flex-col justify-center items-center text-center border border-[#E4E6EB] dark:border-transparent">
+                    <div className="absolute top-3 left-3 bg-white dark:bg-neutral-950/90 text-[#050505] dark:text-white font-bold text-xs px-3 py-1.5 rounded-full flex items-center space-x-1.5 border border-[#DBDBDB] dark:border-neutral-800 shadow-sm">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400 animate-pulse" />
                       <span>COZY</span>
                     </div>
-                    <Sparkles className="w-10 h-10 text-amber-400/60 mb-2" />
-                    <p className="text-sm font-bold text-white">VibeQuest Wavelength Broadcast</p>
+                    <Sparkles className="w-10 h-10 text-[#0866FF]/70 dark:text-amber-400/60 mb-2" />
+                    <p className="text-sm font-bold text-[#050505] dark:text-white">VibeQuest Wavelength Broadcast</p>
                   </div>
                 )}
 
@@ -282,32 +282,32 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, o
                     <img
                       src={post.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
                       alt={post.username}
-                      className="w-10 h-10 rounded-full object-cover border border-amber-500/40 shadow group-hover:scale-105 transition"
+                      className="w-10 h-10 rounded-full object-cover border border-[#DBDBDB] dark:border-amber-500/40 shadow-sm group-hover:scale-105 transition"
                     />
                     <div>
-                      <h4 className="font-bold text-sm text-amber-300 group-hover:underline">@{post.username}</h4>
-                      <p className="text-[11px] text-neutral-400">{formattedDate}</p>
+                      <h4 className="font-bold text-sm text-[#050505] dark:text-amber-300 group-hover:underline">@{post.username}</h4>
+                      <p className="text-[11px] text-[#65676B] dark:text-neutral-400">{formattedDate}</p>
                     </div>
                   </div>
-                  <div className="px-2.5 py-1 rounded-lg bg-amber-950/40 border border-amber-500/40 text-amber-400 font-black text-[10px] tracking-wider shadow">
+                  <div className="px-2.5 py-1 rounded-lg bg-[#E7F3FF] border border-[#0866FF]/20 text-[#0866FF] dark:bg-amber-950/40 dark:border-amber-500/40 dark:text-amber-400 font-black text-[10px] tracking-wider shadow-sm">
                     VERIFIED SYNC
                   </div>
                 </div>
 
                 {/* 3. Caption */}
                 {post.caption && (
-                  <p className="text-xs sm:text-sm text-neutral-200 leading-relaxed font-medium">
+                  <p className="text-xs sm:text-sm text-[#262626] dark:text-neutral-200 leading-relaxed font-medium">
                     {post.caption}
                   </p>
                 )}
 
                 {/* 4. Action Row */}
-                <div className="pt-3 border-t border-neutral-800 flex items-center justify-between text-neutral-400 text-xs">
+                <div className="pt-3 border-t border-[#E4E6EB] dark:border-neutral-800 flex items-center justify-between text-[#65676B] dark:text-neutral-400 text-xs">
                   <button
                     type="button"
                     onClick={() => handleToggleLike(post.id)}
                     className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl transition cursor-pointer ${
-                      isLiked ? 'text-rose-500 bg-rose-500/10' : 'hover:text-white hover:bg-neutral-800'
+                      isLiked ? 'text-rose-500 bg-rose-500/10' : 'hover:text-[#050505] hover:bg-[#F0F2F5] dark:hover:text-white dark:hover:bg-neutral-800'
                     }`}
                   >
                     <Heart className={`w-4 h-4 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
@@ -317,7 +317,7 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, o
                   <button
                     type="button"
                     onClick={() => handleToggleComments(post.id)}
-                    className="flex items-center space-x-1.5 px-3 py-2 rounded-xl hover:text-white hover:bg-neutral-800 transition cursor-pointer"
+                    className="flex items-center space-x-1.5 px-3 py-2 rounded-xl hover:text-[#050505] hover:bg-[#F0F2F5] dark:hover:text-white dark:hover:bg-neutral-800 transition cursor-pointer"
                   >
                     <MessageCircle className="w-4 h-4" />
                     <span className="font-bold">{post.comments_count}</span>
@@ -326,7 +326,7 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, o
                   <button
                     type="button"
                     onClick={() => handleShare(post)}
-                    className="flex items-center space-x-1.5 px-3 py-2 rounded-xl hover:text-white hover:bg-neutral-800 transition cursor-pointer"
+                    className="flex items-center space-x-1.5 px-3 py-2 rounded-xl hover:text-[#050505] hover:bg-[#F0F2F5] dark:hover:text-white dark:hover:bg-neutral-800 transition cursor-pointer"
                   >
                     <Share2 className="w-4 h-4" />
                     <span>Share</span>
@@ -335,11 +335,11 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, o
 
                 {/* 5. Expanded Inline Comments Section */}
                 {isExpanded && (
-                  <div className="pt-3 border-t border-neutral-800/80 space-y-3 animate-fadeIn">
+                  <div className="pt-3 border-t border-[#E4E6EB] dark:border-neutral-800/80 space-y-3 animate-fadeIn">
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {commentsList.length > 0 ? (
                         commentsList.map(comm => (
-                          <div key={comm.id} className="flex space-x-2.5 items-start bg-neutral-950 p-2.5 rounded-2xl border border-neutral-800/80">
+                          <div key={comm.id} className="flex space-x-2.5 items-start bg-[#F0F2F5] dark:bg-neutral-950 p-2.5 rounded-2xl border border-[#E4E6EB] dark:border-neutral-800/80">
                             <img
                               src={comm.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'}
                               alt={comm.username}
@@ -349,20 +349,20 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, o
                               <div className="flex items-center justify-between">
                                 <span
                                   onClick={() => handleInspectAuthor('u-comm-' + comm.id, comm.username, comm.avatar_url, comm.created_at)}
-                                  className="font-bold text-xs text-amber-300 cursor-pointer hover:underline"
+                                  className="font-bold text-xs text-[#050505] dark:text-amber-300 cursor-pointer hover:underline"
                                 >
                                   @{comm.username}
                                 </span>
-                                <span className="text-[9px] text-neutral-500">
+                                <span className="text-[9px] text-[#65676B] dark:text-neutral-500">
                                   {new Date(comm.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               </div>
-                              <p className="text-xs text-neutral-300 mt-0.5">{comm.content}</p>
+                              <p className="text-xs text-[#262626] dark:text-neutral-300 mt-0.5">{comm.content}</p>
                             </div>
                           </div>
                         ))
                       ) : (
-                        <div className="text-center py-3 text-xs text-neutral-500 italic">
+                        <div className="text-center py-3 text-xs text-[#65676B] dark:text-neutral-500 italic">
                           No comments yet. Join the conversation!
                         </div>
                       )}
@@ -374,12 +374,12 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, o
                         value={commentInputs[post.id] || ''}
                         onChange={(e) => setCommentInputs({ ...commentInputs, [post.id]: e.target.value })}
                         placeholder="Write a comment..."
-                        className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
+                        className="flex-1 bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl px-3.5 py-2 text-xs text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-[#0866FF] dark:focus:border-teal-500"
                       />
                       <button
                         type="submit"
                         disabled={commentLoading[post.id]}
-                        className="p-2 rounded-xl bg-gradient-to-r from-orange-500 to-teal-500 text-white hover:opacity-90 transition cursor-pointer disabled:opacity-50"
+                        className="p-2 rounded-xl bg-[#0866FF] dark:bg-gradient-to-r dark:from-orange-500 dark:to-teal-500 text-white hover:opacity-90 transition cursor-pointer disabled:opacity-50"
                       >
                         <Send className="w-3.5 h-3.5" />
                       </button>
@@ -390,10 +390,10 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, o
             );
           })
         ) : (
-          <div className="rounded-2xl bg-neutral-900/60 border border-neutral-800 p-6 text-center space-y-2">
-            <Sparkles className="w-7 h-7 text-amber-400 mx-auto" />
-            <h4 className="font-bold text-xs text-white">No posts in {activeTab.replace('_', ' ')} feed</h4>
-            <p className="text-[11px] text-neutral-400">Share your district moment or follow explorers in Orbit.</p>
+          <div className="rounded-2xl bg-white dark:bg-neutral-900/60 border border-[#DBDBDB] dark:border-neutral-800 p-6 text-center space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
+            <Sparkles className="w-7 h-7 text-[#0866FF] dark:text-amber-400 mx-auto" />
+            <h4 className="font-bold text-xs text-[#050505] dark:text-white">No posts in {activeTab.replace('_', ' ')} feed</h4>
+            <p className="text-[11px] text-[#65676B] dark:text-neutral-400">Share your district moment or follow explorers in Orbit.</p>
           </div>
         )}
 
@@ -402,7 +402,7 @@ export const HomeSocialFeed: React.FC<HomeSocialFeedProps> = ({ user, onToast, o
             <button
               type="button"
               onClick={() => setShowAllSocial(v => !v)}
-              className="px-5 py-2.5 rounded-2xl bg-neutral-900 border border-neutral-700 text-xs font-bold text-amber-400 hover:bg-neutral-800 transition cursor-pointer shadow-lg"
+              className="px-5 py-2.5 rounded-2xl bg-white border border-[#DBDBDB] text-xs font-bold text-[#0866FF] hover:bg-[#F0F2F5] dark:bg-neutral-900 dark:border-neutral-700 dark:text-amber-400 dark:hover:bg-neutral-800 transition cursor-pointer shadow-sm dark:shadow-lg"
             >
               {showAllSocial ? 'Show Less' : `View All (${filteredPosts.length})`}
             </button>

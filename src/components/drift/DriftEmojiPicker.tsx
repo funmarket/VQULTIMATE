@@ -21,11 +21,11 @@ export const DriftEmojiPicker: React.FC<DriftEmojiPickerProps> = ({
   }, []);
 
   const categories = [
-    { id: 'animated', label: 'Animated', icon: Zap, color: 'text-amber-400' },
-    { id: 'smiles', label: 'Smiles', icon: Smile, color: 'text-yellow-400' },
-    { id: 'vibes', label: 'Vibes', icon: Heart, color: 'text-rose-400' },
-    { id: 'gestures', label: 'Gestures', icon: Hand, color: 'text-teal-400' },
-    { id: 'symbols', label: 'Symbols', icon: Sparkles, color: 'text-purple-400' },
+    { id: 'animated', label: 'Animated', icon: Zap, color: 'text-amber-500 dark:text-amber-400' },
+    { id: 'smiles', label: 'Smiles', icon: Smile, color: 'text-yellow-500 dark:text-yellow-400' },
+    { id: 'vibes', label: 'Vibes', icon: Heart, color: 'text-rose-500 dark:text-rose-400' },
+    { id: 'gestures', label: 'Gestures', icon: Hand, color: 'text-teal-600 dark:text-teal-400' },
+    { id: 'symbols', label: 'Symbols', icon: Sparkles, color: 'text-purple-600 dark:text-purple-400' },
   ] as const;
 
   const filteredEmojis = useMemo(() => {
@@ -58,22 +58,22 @@ export const DriftEmojiPicker: React.FC<DriftEmojiPickerProps> = ({
   };
 
   return (
-    <div className="w-80 bg-neutral-900/95 border border-neutral-800 rounded-3xl shadow-2xl backdrop-blur-xl flex flex-col overflow-hidden text-white animate-fadeIn select-none z-50">
+    <div className="w-80 bg-white/95 dark:bg-neutral-900/95 border border-[#DBDBDB] dark:border-neutral-800 rounded-3xl shadow-2xl backdrop-blur-xl flex flex-col overflow-hidden text-[#050505] dark:text-white animate-fadeIn select-none z-50">
       {/* Telegram-style top Search & Close */}
-      <div className="p-3 border-b border-neutral-800/80 flex items-center space-x-2">
+      <div className="p-3 border-b border-[#E4E6EB] dark:border-neutral-800/80 flex items-center space-x-2">
         <div className="relative flex-1">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-neutral-500" />
+          <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#65676B] dark:text-neutral-500" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search Telegram emojis..."
-            className="w-full bg-neutral-950 border border-neutral-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-teal-500"
+            className="w-full bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-[#0866FF] dark:focus:border-teal-500"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-2 text-neutral-500 hover:text-white"
+              className="absolute right-2.5 top-2 text-[#65676B] dark:text-neutral-500 hover:text-[#050505] dark:hover:text-white"
             >
               <X className="w-3 h-3" />
             </button>
@@ -81,7 +81,7 @@ export const DriftEmojiPicker: React.FC<DriftEmojiPickerProps> = ({
         </div>
         <button
           onClick={onClose}
-          className="p-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white cursor-pointer"
+          className="p-1.5 rounded-xl bg-[#EFEFEF] hover:bg-[#E4E6EB] dark:bg-neutral-800 dark:hover:bg-neutral-700 text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-white cursor-pointer"
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -89,7 +89,7 @@ export const DriftEmojiPicker: React.FC<DriftEmojiPickerProps> = ({
 
       {/* Telegram Category Tabs */}
       {!searchQuery && (
-        <div className="flex items-center justify-around px-2 py-1.5 border-b border-neutral-800/80 bg-neutral-950/50">
+        <div className="flex items-center justify-around px-2 py-1.5 border-b border-[#E4E6EB] dark:border-neutral-800/80 bg-[#FAFAFA] dark:bg-neutral-950/50">
           {categories.map((cat) => {
             const Icon = cat.icon;
             const isActive = activeCategory === cat.id;
@@ -99,8 +99,8 @@ export const DriftEmojiPicker: React.FC<DriftEmojiPickerProps> = ({
                 onClick={() => setActiveCategory(cat.id)}
                 className={`p-2 rounded-xl transition flex flex-col items-center cursor-pointer ${
                   isActive
-                    ? 'bg-neutral-800 text-white shadow-inner scale-105'
-                    : 'text-neutral-500 hover:text-neutral-300'
+                    ? 'bg-[#E7F3FF] text-[#0866FF] dark:bg-neutral-800 dark:text-white shadow-inner scale-105'
+                    : 'text-[#65676B] dark:text-neutral-500 hover:text-[#050505] dark:hover:text-neutral-300'
                 }`}
                 title={cat.label}
               >
@@ -122,7 +122,7 @@ export const DriftEmojiPicker: React.FC<DriftEmojiPickerProps> = ({
             onClick={() => onSelectEmoji(emoji.character)}
             onMouseEnter={() => setHoveredEmoji(emoji)}
             onMouseLeave={() => setHoveredEmoji(null)}
-            className="w-10 h-10 rounded-2xl hover:bg-neutral-800/80 flex items-center justify-center text-xl transition transform hover:scale-125 cursor-pointer relative group"
+            className="w-10 h-10 rounded-2xl hover:bg-[#F0F2F5] dark:hover:bg-neutral-800/80 flex items-center justify-center text-xl transition transform hover:scale-125 cursor-pointer relative group"
           >
             <span
               className={emoji.is_animated ? getAnimationClass(emoji.animation_type) : ''}
@@ -138,7 +138,7 @@ export const DriftEmojiPicker: React.FC<DriftEmojiPickerProps> = ({
       </div>
 
       {/* Bottom Preview Bar (Telegram-style preview of hovered emoji) */}
-      <div className="px-3 h-10 min-h-[40px] border-t border-neutral-800/80 bg-neutral-950/80 flex items-center justify-between text-xs">
+      <div className="px-3 h-10 min-h-[40px] border-t border-[#E4E6EB] dark:border-neutral-800/80 bg-[#FAFAFA] dark:bg-neutral-950/80 flex items-center justify-between text-xs">
         {hoveredEmoji ? (
           <div className="flex items-center space-x-2 truncate">
             <span
@@ -146,17 +146,17 @@ export const DriftEmojiPicker: React.FC<DriftEmojiPickerProps> = ({
             >
               {hoveredEmoji.character}
             </span>
-            <span className="text-[11px] font-bold text-neutral-300 truncate max-w-[170px]">
+            <span className="text-[11px] font-bold text-[#050505] dark:text-neutral-300 truncate max-w-[170px]">
               {hoveredEmoji.name}
             </span>
           </div>
         ) : (
-          <span className="text-[10px] text-neutral-500 tracking-wide uppercase font-semibold truncate">
+          <span className="text-[10px] text-[#65676B] dark:text-neutral-500 tracking-wide uppercase font-semibold truncate">
             {activeCategory === 'animated' ? '⚡ Tap animated emoji to send' : 'Telegram Emoji Vault'}
           </span>
         )}
 
-        <span className="text-[9px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold flex-shrink-0">
+        <span className="text-[9px] px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30 font-bold flex-shrink-0">
           Drift_emoji
         </span>
       </div>

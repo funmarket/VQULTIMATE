@@ -177,28 +177,28 @@ export const VibeFlashDetailModal: React.FC<VibeFlashDetailModalProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 dark:bg-black/85 backdrop-blur-md overflow-y-auto"
     >
-      <div className="relative w-full max-w-md bg-[#14101c] border border-fuchsia-500/50 rounded-[28px] overflow-hidden shadow-2xl text-white my-auto flex flex-col max-h-[92vh]">
+      <div className="relative w-full max-w-md bg-white dark:bg-[#14101c] border border-[#DBDBDB] dark:border-fuchsia-500/50 rounded-[28px] overflow-hidden shadow-2xl text-[#050505] dark:text-white my-auto flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="p-5 border-b border-neutral-800 flex items-center justify-between bg-gradient-to-r from-fuchsia-950/40 via-neutral-900 to-neutral-900">
+        <div className="p-5 border-b border-[#E4E6EB] dark:border-neutral-800 flex items-center justify-between bg-[#FAFAFA] dark:bg-gradient-to-r dark:from-fuchsia-950/40 dark:via-neutral-900 dark:to-neutral-900">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/40">
-              <Zap className="w-5 h-5 fill-fuchsia-400" />
+            <div className="p-2.5 rounded-xl bg-fuchsia-50 dark:bg-fuchsia-500/20 text-fuchsia-600 dark:text-fuchsia-400 border border-fuchsia-200 dark:border-fuchsia-500/40">
+              <Zap className="w-5 h-5 fill-fuchsia-500 dark:fill-fuchsia-400" />
             </div>
             <div>
-              <h3 className="text-base font-black text-white tracking-tight">
+              <h3 className="text-base font-black text-[#050505] dark:text-white tracking-tight">
                 {flash.title}
               </h3>
-              <p className="text-xs text-neutral-400 truncate max-w-[240px]">
-                Hosted by <span className="text-fuchsia-300 font-semibold">@{flash.creator_name}</span>
+              <p className="text-xs text-[#65676B] dark:text-neutral-400 truncate max-w-[240px]">
+                Hosted by <span className="text-fuchsia-600 dark:text-fuchsia-300 font-semibold">@{flash.creator_name}</span>
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800 transition cursor-pointer"
+            className="p-2 text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-white rounded-xl hover:bg-[#EFEFEF] dark:hover:bg-neutral-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -207,48 +207,48 @@ export const VibeFlashDetailModal: React.FC<VibeFlashDetailModalProps> = ({
         {/* Content Body */}
         <div className="p-5 space-y-4 overflow-y-auto flex-1 text-xs">
           {flash.photo_url && (
-            <div className="w-full h-52 rounded-2xl border border-neutral-800 shadow-lg overflow-hidden mb-2">
+            <div className="w-full h-52 rounded-2xl border border-[#E4E6EB] dark:border-neutral-800 shadow-lg overflow-hidden mb-2">
               <img src={flash.photo_url} alt={flash.title} className="w-full h-full object-cover" />
             </div>
           )}
 
           {gpsError && (
-            <div className="p-3 bg-red-950/60 border border-red-500/40 text-red-200 rounded-xl">
+            <div className="p-3 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-500/40 text-red-700 dark:text-red-200 rounded-xl">
               {gpsError}
             </div>
           )}
 
           {successClaimed && (
-            <div className="p-4 bg-emerald-950/60 border border-emerald-500/40 text-emerald-200 rounded-2xl text-center space-y-1">
-              <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto" />
+            <div className="p-4 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-200 rounded-2xl text-center space-y-1">
+              <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400 mx-auto" />
               <div className="font-black text-sm">LiveCheck Verified & Reward Claimed!</div>
-              <p className="text-[11px] text-emerald-300/80">+500 VQ credited to your Purse.</p>
+              <p className="text-[11px] text-emerald-700 dark:text-emerald-300/80">+500 VQ credited to your Purse.</p>
             </div>
           )}
 
-          <div className="rounded-2xl bg-neutral-900/80 border border-neutral-800 p-4 space-y-3">
-            <div className="flex items-center justify-between text-neutral-300">
+          <div className="rounded-2xl bg-[#FAFAFA] dark:bg-neutral-900/80 border border-[#E4E6EB] dark:border-neutral-800 p-4 space-y-3">
+            <div className="flex items-center justify-between text-[#050505] dark:text-neutral-300">
               <span className="flex items-center gap-1.5 font-bold">
-                <MapPin className="w-4 h-4 text-orange-400" />
+                <MapPin className="w-4 h-4 text-orange-500 dark:text-orange-400" />
                 <span>{flash.venue_name}</span>
               </span>
-              <span className="text-neutral-400 font-mono text-[11px]">{flash.address}</span>
+              <span className="text-[#65676B] dark:text-neutral-400 font-mono text-[11px]">{flash.address}</span>
             </div>
 
             {flash.description && (
-              <p className="text-neutral-300 leading-relaxed bg-neutral-950/60 p-3 rounded-xl border border-neutral-800">
+              <p className="text-[#262626] dark:text-neutral-300 leading-relaxed bg-white dark:bg-neutral-950/60 p-3 rounded-xl border border-[#E4E6EB] dark:border-neutral-800">
                 {flash.description}
               </p>
             )}
 
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-neutral-800">
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#E4E6EB] dark:border-neutral-800">
               <div>
-                <span className="text-[10px] text-neutral-500 uppercase font-bold">Entry Type</span>
-                <div className="font-bold text-white text-xs">{flash.entry_type} {flash.entry_price_tnd ? `(${flash.entry_price_tnd})` : ''}</div>
+                <span className="text-[10px] text-[#65676B] dark:text-neutral-500 uppercase font-bold">Entry Type</span>
+                <div className="font-bold text-[#050505] dark:text-white text-xs">{flash.entry_type} {flash.entry_price_tnd ? `(${flash.entry_price_tnd})` : ''}</div>
               </div>
               <div>
-                <span className="text-[10px] text-neutral-500 uppercase font-bold">Capacity</span>
-                <div className="font-bold text-fuchsia-300 text-xs">{flash.going_ids.length} / {flash.max_capacity} Going</div>
+                <span className="text-[10px] text-[#65676B] dark:text-neutral-500 uppercase font-bold">Capacity</span>
+                <div className="font-bold text-fuchsia-600 dark:text-fuchsia-300 text-xs">{flash.going_ids.length} / {flash.max_capacity} Going</div>
               </div>
             </div>
           </div>
@@ -260,8 +260,8 @@ export const VibeFlashDetailModal: React.FC<VibeFlashDetailModalProps> = ({
               onClick={handleToggleInterested}
               className={`py-3 px-4 rounded-xl font-bold transition cursor-pointer flex items-center justify-center gap-1.5 border ${
                 interested
-                  ? 'bg-amber-500/20 border-amber-400 text-amber-300'
-                  : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white'
+                  ? 'bg-amber-50 dark:bg-amber-500/20 border-amber-300 dark:border-amber-400 text-amber-700 dark:text-amber-300'
+                  : 'bg-[#EFEFEF] dark:bg-neutral-900 border-[#DBDBDB] dark:border-neutral-800 text-[#262626] dark:text-neutral-400 hover:bg-[#E4E6EB] dark:hover:text-white'
               }`}
             >
               <span>⭐ Interested ({flash.interested_ids.length})</span>
@@ -271,8 +271,8 @@ export const VibeFlashDetailModal: React.FC<VibeFlashDetailModalProps> = ({
               onClick={handleToggleGoing}
               className={`py-3 px-4 rounded-xl font-black transition cursor-pointer flex items-center justify-center gap-1.5 border ${
                 going
-                  ? 'bg-fuchsia-600 border-fuchsia-400 text-white shadow-lg shadow-fuchsia-600/30'
-                  : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white'
+                  ? 'bg-[#0866FF] dark:bg-fuchsia-600 border-[#0866FF] dark:border-fuchsia-400 text-white shadow-lg shadow-[#0866FF]/20 dark:shadow-fuchsia-600/30'
+                  : 'bg-[#EFEFEF] dark:bg-neutral-900 border-[#DBDBDB] dark:border-neutral-800 text-[#262626] dark:text-neutral-400 hover:bg-[#E4E6EB] dark:hover:text-white'
               }`}
             >
               <span>🔥 Going ({flash.going_ids.length})</span>
@@ -280,13 +280,13 @@ export const VibeFlashDetailModal: React.FC<VibeFlashDetailModalProps> = ({
           </div>
 
           {/* VQ Hunt & LiveCheck Verification Section */}
-          <div className="rounded-2xl bg-gradient-to-br from-amber-950/40 via-neutral-900 to-neutral-900 border border-amber-500/40 p-4 space-y-3">
+          <div className="rounded-2xl bg-amber-50/80 dark:bg-gradient-to-br dark:from-amber-950/40 dark:via-neutral-900 dark:to-neutral-900 border border-amber-200 dark:border-amber-500/40 p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-amber-400" />
+              <span className="font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                 <span>VQ Hunt & Arrival (≤33m)</span>
               </span>
-              <span className="font-mono text-amber-300 font-bold">+500 VQ Reward</span>
+              <span className="font-mono text-amber-700 dark:text-amber-300 font-bold">+500 VQ Reward</span>
             </div>
 
             {!proximityStatus ? (
@@ -300,7 +300,7 @@ export const VibeFlashDetailModal: React.FC<VibeFlashDetailModalProps> = ({
               </button>
             ) : proximityStatus.isWithin33m ? (
               <div className="space-y-2">
-                <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 font-bold text-center">
+                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-bold text-center">
                   🟢 Verified Inside 33m Zone ({proximityStatus.distance}m away) — Unlocked!
                 </div>
                 {!successClaimed && (
@@ -315,7 +315,7 @@ export const VibeFlashDetailModal: React.FC<VibeFlashDetailModalProps> = ({
                 )}
               </div>
             ) : (
-              <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 font-semibold text-center">
+              <div className="p-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 font-semibold text-center">
                 🔴 Outside 33m Zone ({proximityStatus.distance}m away). Move within 33 meters of {flash.venue_name} to claim hunt reward.
               </div>
             )}
@@ -323,21 +323,21 @@ export const VibeFlashDetailModal: React.FC<VibeFlashDetailModalProps> = ({
 
           {/* LiveCheck Camera Viewfinder Modal */}
           {showCamera && (
-            <div className="fixed inset-0 z-[60] bg-black/90 flex flex-col items-center justify-center p-4">
-              <div className="relative w-full max-w-md bg-neutral-900 rounded-3xl overflow-hidden border border-emerald-500/50 shadow-2xl space-y-4 p-4 text-center">
+            <div className="fixed inset-0 z-[60] bg-black/80 dark:bg-black/90 flex flex-col items-center justify-center p-4">
+              <div className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-3xl overflow-hidden border border-emerald-500/50 shadow-2xl space-y-4 p-4 text-center">
                 <div className="flex items-center justify-between">
-                  <span className="font-black text-emerald-400 text-xs uppercase tracking-wider">LiveCheck Camera Receipt Viewfinder</span>
+                  <span className="font-black text-emerald-700 dark:text-emerald-400 text-xs uppercase tracking-wider">LiveCheck Camera Receipt Viewfinder</span>
                   <button
                     onClick={() => {
                       streamRef.current?.getTracks().forEach(t => t.stop());
                       setShowCamera(false);
                     }}
-                    className="p-1 text-neutral-400 hover:text-white"
+                    className="p-1 text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-white"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
-                <div className="relative aspect-square w-full bg-black rounded-2xl overflow-hidden border border-neutral-800">
+                <div className="relative aspect-square w-full bg-black rounded-2xl overflow-hidden border border-[#DBDBDB] dark:border-neutral-800">
                   <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
                   <div className="absolute bottom-3 left-3 right-3 p-2 rounded-xl bg-black/60 backdrop-blur-md border border-white/10 text-[10px] text-emerald-300 font-mono">
                     📍 {flash.title} • Live GPS Verified (≤33m) • {new Date().toLocaleTimeString()}

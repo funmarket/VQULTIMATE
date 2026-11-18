@@ -194,52 +194,52 @@ export const VibeValidateModal: React.FC<VibeValidateModalProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-fade-in"
     >
-      <div className="relative w-full max-w-lg bg-[#0d111a] border border-neutral-800 rounded-3xl shadow-2xl overflow-hidden border-t-4 border-t-emerald-400">
+      <div className="relative w-full max-w-lg bg-white dark:bg-[#0d111a] border border-[#DBDBDB] dark:border-neutral-800 rounded-3xl shadow-2xl overflow-hidden border-t-4 border-t-emerald-500 dark:border-t-emerald-400">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-neutral-800/80">
+        <div className="flex items-center justify-between p-5 bg-[#FAFAFA] dark:bg-transparent border-b border-[#E4E6EB] dark:border-neutral-800/80">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/30">
+            <div className="p-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-2xl border border-emerald-200 dark:border-emerald-500/30">
               <Shield className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-black text-white tracking-wide">
+              <h3 className="text-base font-black text-[#050505] dark:text-white tracking-wide">
                 Vibe Validate Spot
               </h3>
-              <p className="text-xs text-neutral-400 truncate max-w-[280px]">
-                Real-world crowd verification for <span className="text-neutral-200 font-semibold">{place.title}</span>
+              <p className="text-xs text-[#65676B] dark:text-neutral-400 truncate max-w-[280px]">
+                Real-world crowd verification for <span className="text-[#050505] dark:text-neutral-200 font-semibold">{place.title}</span>
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             aria-label="Close vibe validate modal"
-            className="p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800 transition cursor-pointer"
+            className="p-2 text-[#65676B] dark:text-neutral-400 hover:text-[#050505] dark:hover:text-white rounded-xl hover:bg-[#EFEFEF] dark:hover:bg-neutral-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Live Presence Status Badges */}
-        <div className="px-5 py-3 bg-neutral-900/60 border-b border-neutral-800/80 flex items-center justify-between flex-wrap gap-2 text-xs">
+        <div className="px-5 py-3 bg-[#F0F2F5] dark:bg-neutral-900/60 border-b border-[#E4E6EB] dark:border-neutral-800/80 flex items-center justify-between flex-wrap gap-2 text-xs">
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1 font-semibold text-neutral-300">
-              <MapPin className="w-3.5 h-3.5 text-orange-400" />
+            <span className="flex items-center gap-1 font-semibold text-[#262626] dark:text-neutral-300">
+              <MapPin className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" />
               <span>{distanceDisplay} away</span>
             </span>
             <span
               className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
                 isWithin200m
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                  : 'bg-neutral-800 text-neutral-400 border border-neutral-700'
+                  ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/40'
+                  : 'bg-[#E4E6EB] dark:bg-neutral-800 text-[#65676B] dark:text-neutral-400 border border-[#DBDBDB] dark:border-neutral-700'
               }`}
             >
               {isWithin200m ? '📍 Within 200m Verified' : '📍 Proximity Sensor Active'}
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 text-amber-400 font-bold text-xs">
+          <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold text-xs">
             <Flame className="w-3.5 h-3.5" />
             <span>Streak {streak}x ({multiplier.toFixed(1)}x Multiplier)</span>
           </div>
@@ -248,22 +248,22 @@ export const VibeValidateModal: React.FC<VibeValidateModalProps> = ({
         {/* Content Body */}
         <div className="p-5 space-y-5">
           {errorMessage && (
-            <div className="p-3 text-xs bg-red-950/60 border border-red-500/40 text-red-200 rounded-2xl flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+            <div className="p-3 text-xs bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-500/40 text-red-700 dark:text-red-200 rounded-2xl flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {/* Success / Auto-dismiss Card */}
           {successResult ? (
-            <div className="p-6 text-center space-y-3 bg-neutral-900/80 rounded-2xl border border-neutral-800 animate-fadeIn">
+            <div className="p-6 text-center space-y-3 bg-[#FAFAFA] dark:bg-neutral-900/80 rounded-2xl border border-[#E4E6EB] dark:border-neutral-800 animate-fadeIn">
               <div
                 className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center border ${
                   successResult.type === 'yes'
-                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                    ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/40'
                     : successResult.type === 'no'
-                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                    : 'bg-neutral-800 text-neutral-400 border-neutral-700'
+                    ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/40'
+                    : 'bg-[#EFEFEF] dark:bg-neutral-800 text-[#65676B] dark:text-neutral-400 border-[#DBDBDB] dark:border-neutral-700'
                 }`}
               >
                 {successResult.type === 'yes' ? (
@@ -274,12 +274,12 @@ export const VibeValidateModal: React.FC<VibeValidateModalProps> = ({
                   <XCircle className="w-8 h-8" />
                 )}
               </div>
-              <h4 className="text-lg font-black text-white">{successResult.message}</h4>
-              <p className="text-xs text-neutral-300 max-w-sm mx-auto leading-relaxed">
+              <h4 className="text-lg font-black text-[#050505] dark:text-white">{successResult.message}</h4>
+              <p className="text-xs text-[#262626] dark:text-neutral-300 max-w-sm mx-auto leading-relaxed">
                 {successResult.subtext}
               </p>
               {successResult.points > 0 && (
-                <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-black border border-amber-500/30">
+                <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-black border border-amber-200 dark:border-amber-500/30">
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>+{successResult.points} PTS Awarded</span>
                 </div>
@@ -290,10 +290,10 @@ export const VibeValidateModal: React.FC<VibeValidateModalProps> = ({
               {/* Core Prompt Box: ARE YOU HERE RIGHT NOW? */}
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-neutral-300">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-[#262626] dark:text-neutral-300">
                     ARE YOU HERE RIGHT NOW?
                   </h4>
-                  <span className="text-[11px] text-neutral-500">
+                  <span className="text-[11px] text-[#65676B] dark:text-neutral-500">
                     Baseline from rating: {baselineConfidence}%
                   </span>
                 </div>
@@ -306,26 +306,26 @@ export const VibeValidateModal: React.FC<VibeValidateModalProps> = ({
                     onClick={() => handleSelectResponse('yes')}
                     className={`p-3.5 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between space-y-2 group active:scale-95 ${
                       selectedResponse === 'yes'
-                        ? 'border-emerald-500 bg-emerald-950/50 shadow-lg shadow-emerald-500/20 ring-1 ring-emerald-500'
-                        : 'border-emerald-500/30 bg-emerald-950/20 hover:border-emerald-500/60 hover:bg-emerald-950/30'
+                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 shadow-lg shadow-emerald-500/20 ring-1 ring-emerald-500'
+                        : 'border-emerald-300 dark:border-emerald-500/30 bg-emerald-50/60 dark:bg-emerald-950/20 hover:border-emerald-500 dark:hover:border-emerald-500/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <CheckCircle2
                         className={`w-5 h-5 ${
-                          selectedResponse === 'yes' ? 'text-emerald-400' : 'text-emerald-500/70'
+                          selectedResponse === 'yes' ? 'text-emerald-600 dark:text-emerald-400' : 'text-emerald-600/80 dark:text-emerald-500/70'
                         }`}
                       />
-                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-500/20">
                         +15%
                       </span>
                     </div>
                     <div>
-                      <div className="text-sm font-black text-white">Yes</div>
-                      <div className="text-[11px] text-emerald-300/80 font-medium">Matches reality</div>
+                      <div className="text-sm font-black text-[#050505] dark:text-white">Yes</div>
+                      <div className="text-[11px] text-emerald-700 dark:text-emerald-300/80 font-medium">Matches reality</div>
                     </div>
-                    <div className="text-[10px] text-neutral-400 pt-1 border-t border-emerald-500/20">
-                      Earn <strong className="text-emerald-300">+{yesReward} PTS</strong>
+                    <div className="text-[10px] text-[#65676B] dark:text-neutral-400 pt-1 border-t border-emerald-200 dark:border-emerald-500/20">
+                      Earn <strong className="text-emerald-700 dark:text-emerald-300">+{yesReward} PTS</strong>
                     </div>
                   </button>
 
@@ -335,26 +335,26 @@ export const VibeValidateModal: React.FC<VibeValidateModalProps> = ({
                     onClick={() => handleSelectResponse('no')}
                     className={`p-3.5 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between space-y-2 group active:scale-95 ${
                       selectedResponse === 'no'
-                        ? 'border-amber-500 bg-amber-950/50 shadow-lg shadow-amber-500/20 ring-1 ring-amber-500'
-                        : 'border-amber-500/30 bg-amber-950/20 hover:border-amber-500/60 hover:bg-amber-950/30'
+                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/50 shadow-lg shadow-amber-500/20 ring-1 ring-amber-500'
+                        : 'border-amber-300 dark:border-amber-500/30 bg-amber-50/60 dark:bg-amber-950/20 hover:border-amber-500 dark:hover:border-amber-500/60 hover:bg-amber-50 dark:hover:bg-amber-950/30'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <AlertTriangle
                         className={`w-5 h-5 ${
-                          selectedResponse === 'no' ? 'text-amber-400' : 'text-amber-500/70'
+                          selectedResponse === 'no' ? 'text-amber-600 dark:text-amber-400' : 'text-amber-600/80 dark:text-amber-500/70'
                         }`}
                       />
-                      <span className="text-[10px] font-black uppercase tracking-wider text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-500/20">
                         -25%
                       </span>
                     </div>
                     <div>
-                      <div className="text-sm font-black text-white">No</div>
-                      <div className="text-[11px] text-amber-300/80 font-medium">Something changed</div>
+                      <div className="text-sm font-black text-[#050505] dark:text-white">No</div>
+                      <div className="text-[11px] text-amber-800 dark:text-amber-300/80 font-medium">Something changed</div>
                     </div>
-                    <div className="text-[10px] text-neutral-400 pt-1 border-t border-amber-500/20">
-                      Earn <strong className="text-amber-300">+{noReward} PTS</strong>
+                    <div className="text-[10px] text-[#65676B] dark:text-neutral-400 pt-1 border-t border-amber-200 dark:border-amber-500/20">
+                      Earn <strong className="text-amber-700 dark:text-amber-300">+{noReward} PTS</strong>
                     </div>
                   </button>
 
@@ -362,19 +362,19 @@ export const VibeValidateModal: React.FC<VibeValidateModalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleSelectResponse('abstain')}
-                    className="p-3.5 rounded-2xl border border-neutral-800 bg-neutral-900/40 hover:border-neutral-700 hover:bg-neutral-900/70 text-left transition cursor-pointer flex flex-col justify-between space-y-2 group active:scale-95"
+                    className="p-3.5 rounded-2xl border border-[#DBDBDB] dark:border-neutral-800 bg-[#F0F2F5] dark:bg-neutral-900/40 hover:border-[#65676B] dark:hover:border-neutral-700 hover:bg-[#E4E6EB] dark:hover:bg-neutral-900/70 text-left transition cursor-pointer flex flex-col justify-between space-y-2 group active:scale-95"
                   >
                     <div className="flex items-center justify-between">
-                      <XCircle className="w-5 h-5 text-neutral-400" />
-                      <span className="text-[10px] font-bold text-neutral-500 bg-neutral-800 px-2 py-0.5 rounded-md">
+                      <XCircle className="w-5 h-5 text-[#65676B] dark:text-neutral-400" />
+                      <span className="text-[10px] font-bold text-[#65676B] dark:text-neutral-500 bg-[#E4E6EB] dark:bg-neutral-800 px-2 py-0.5 rounded-md">
                         Abstain
                       </span>
                     </div>
                     <div>
-                      <div className="text-sm font-black text-white">Not here</div>
-                      <div className="text-[11px] text-neutral-400 font-medium">Abstain from voting</div>
+                      <div className="text-sm font-black text-[#050505] dark:text-white">Not here</div>
+                      <div className="text-[11px] text-[#65676B] dark:text-neutral-400 font-medium">Abstain from voting</div>
                     </div>
-                    <div className="text-[10px] text-neutral-500 pt-1 border-t border-neutral-800">
+                    <div className="text-[10px] text-[#65676B] dark:text-neutral-500 pt-1 border-t border-[#DBDBDB] dark:border-neutral-800">
                       0 PTS • Auto-dismiss
                     </div>
                   </button>
@@ -383,9 +383,9 @@ export const VibeValidateModal: React.FC<VibeValidateModalProps> = ({
 
               {/* Detail Enrichment (Shown when Yes or No is selected) */}
               {selectedResponse === 'yes' && (
-                <form onSubmit={handleSubmit} className="p-4 bg-neutral-900/60 rounded-2xl border border-neutral-800 space-y-3.5 animate-fadeIn">
+                <form onSubmit={handleSubmit} className="p-4 bg-[#FAFAFA] dark:bg-neutral-900/60 rounded-2xl border border-[#E4E6EB] dark:border-neutral-800 space-y-3.5 animate-fadeIn">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
                       <Check className="w-3.5 h-3.5" />
                       <span>Live Situation Pills (1-Tap Selection)</span>
                     </label>
@@ -399,8 +399,8 @@ export const VibeValidateModal: React.FC<VibeValidateModalProps> = ({
                             onClick={() => toggleTag(tag)}
                             className={`text-xs px-2.5 py-1 rounded-xl border font-semibold transition cursor-pointer ${
                               isSelected
-                                ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300 shadow-sm'
-                                : 'bg-neutral-950/60 border-neutral-800 text-neutral-400 hover:text-white'
+                                ? 'bg-emerald-50 dark:bg-emerald-500/20 border-emerald-500 dark:border-emerald-400 text-emerald-700 dark:text-emerald-300 shadow-sm'
+                                : 'bg-white dark:bg-neutral-950/60 border-[#DBDBDB] dark:border-neutral-800 text-[#262626] dark:text-neutral-400 hover:bg-[#EFEFEF] dark:hover:text-white'
                             }`}
                           >
                             {tag}
@@ -411,7 +411,7 @@ export const VibeValidateModal: React.FC<VibeValidateModalProps> = ({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-neutral-400">
+                    <label className="text-[11px] font-bold text-[#65676B] dark:text-neutral-400">
                       Live Field Note (Optional)
                     </label>
                     <input
@@ -420,7 +420,7 @@ export const VibeValidateModal: React.FC<VibeValidateModalProps> = ({
                       onChange={(e) => setComment(e.target.value)}
                       placeholder="e.g. Plenty of open tables, great music playlist..."
                       maxLength={120}
-                      className="w-full px-3 py-2 text-xs bg-neutral-950 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 text-xs bg-white dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
                     />
                   </div>
 
@@ -436,9 +436,9 @@ export const VibeValidateModal: React.FC<VibeValidateModalProps> = ({
               )}
 
               {selectedResponse === 'no' && (
-                <form onSubmit={handleSubmit} className="p-4 bg-neutral-900/60 rounded-2xl border border-neutral-800 space-y-3.5 animate-fadeIn">
+                <form onSubmit={handleSubmit} className="p-4 bg-[#FAFAFA] dark:bg-neutral-900/60 rounded-2xl border border-[#E4E6EB] dark:border-neutral-800 space-y-3.5 animate-fadeIn">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
                       <AlertTriangle className="w-3.5 h-3.5" />
                       <span>What Changed? (Select all that apply)</span>
                     </label>
@@ -452,8 +452,8 @@ export const VibeValidateModal: React.FC<VibeValidateModalProps> = ({
                             onClick={() => toggleTag(tag)}
                             className={`text-xs px-2.5 py-1 rounded-xl border font-semibold transition cursor-pointer ${
                               isSelected
-                                ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-sm'
-                                : 'bg-neutral-950/60 border-neutral-800 text-neutral-400 hover:text-white'
+                                ? 'bg-amber-50 dark:bg-amber-500/20 border-amber-500 dark:border-amber-400 text-amber-800 dark:text-amber-300 shadow-sm'
+                                : 'bg-white dark:bg-neutral-950/60 border-[#DBDBDB] dark:border-neutral-800 text-[#262626] dark:text-neutral-400 hover:bg-[#EFEFEF] dark:hover:text-white'
                             }`}
                           >
                             {tag}
@@ -464,7 +464,7 @@ export const VibeValidateModal: React.FC<VibeValidateModalProps> = ({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-neutral-400">
+                    <label className="text-[11px] font-bold text-[#65676B] dark:text-neutral-400">
                       What is the situation? (Optional)
                     </label>
                     <input
@@ -473,7 +473,7 @@ export const VibeValidateModal: React.FC<VibeValidateModalProps> = ({
                       onChange={(e) => setComment(e.target.value)}
                       placeholder="e.g. Venue closed for private event today..."
                       maxLength={120}
-                      className="w-full px-3 py-2 text-xs bg-neutral-950 border border-neutral-800 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500"
+                      className="w-full px-3 py-2 text-xs bg-white dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-xl text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-amber-500"
                     />
                   </div>
 
