@@ -214,7 +214,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           {user && <>
           {/* Edit Profile is accessible directly from the profile sidebar. */}
           <button type="button" onClick={() => setAuthPanel('edit')}
-            className="w-full rounded-xl border border-[#0866FF]/30 dark:border-vibe-primary/30 bg-[#E7F3FF] dark:bg-vibe-primary/10 p-3 text-left text-sm font-semibold text-[#0866FF] dark:text-white cursor-pointer">
+            className="w-full rounded-xl border border-[#0866FF]/30 dark:border-zinc-800 bg-[#E7F3FF] dark:bg-black/90 hover:bg-[#DCEBFF] dark:hover:bg-zinc-900 dark:hover:border-zinc-700 p-3 text-left text-sm font-semibold text-[#0866FF] dark:text-white transition-colors cursor-pointer">
             Edit Profile
           </button>
           </>}
@@ -485,13 +485,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 onOpenAdmin();
                 onClose();
               }}
-              className="w-full hover:bg-[#E7F3FF] dark:hover:bg-zinc-900 rounded-xl p-3 flex items-center justify-between transition-colors text-left cursor-pointer border border-[#0866FF]/30 dark:border-vibe-primary/30 bg-[#E7F3FF]/60 dark:bg-vibe-primary/5 shadow-sm dark:shadow-md"
+              className="w-full hover:bg-[#E7F3FF] dark:hover:bg-zinc-900 rounded-xl p-3 flex items-center justify-between transition-colors text-left cursor-pointer border border-[#0866FF]/30 dark:border-zinc-800 dark:hover:border-zinc-700 bg-[#E7F3FF]/60 dark:bg-black/90 shadow-sm dark:shadow-md"
             >
               <div className="flex items-center gap-3">
-                <ShieldCheck className="w-4 h-4 text-[#0866FF] dark:text-vibe-primary" />
+                <ShieldCheck className="w-4 h-4 text-[#0866FF] dark:text-orange-400" />
                 <span className="text-[14px] font-semibold uppercase tracking-wider text-[#050505] dark:text-white">{t('profile.adminDashboard')}</span>
               </div>
-              <span className="bg-[#0866FF] dark:bg-vibe-primary text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+              <span className="bg-[#0866FF] dark:bg-orange-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
                 System
               </span>
             </button>

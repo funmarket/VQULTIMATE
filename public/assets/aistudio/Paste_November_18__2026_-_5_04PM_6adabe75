@@ -1,0 +1,919 @@
+# VQULTIMATE — ADD A PLACE IMPLEMENTATION COMMAND V3
+## ACME Engineering Protocol | Source Truth | Real Integration | No Drift
+
+**PROJECT:** `funmarket/VQULTIMATE`  
+**FEATURE:** Explore / Vibe Orbit → Add a Place  
+**MODE:** ISOLATED IMPLEMENTATION AND VERIFICATION  
+**RELEASE AUTHORIZATION:** NOT GRANTED  
+**PRIORITY:** HIGH
+
+## 0. MANDATORY ENGINEERING WORKFLOWS
+
+Use the following capabilities whenever they are genuinely available in the execution environment:
+
+- Coder: Websites, Apps & Agents
+- Superpowers
+- Build Web Apps
+- Understand
+- Evidence-First Execution
+- Applicable GitHub, Supabase, React, TypeScript, MapLibre and security engineering workflows
+
+Load and apply the relevant engineering instructions before modifying source code.
+
+**Do not claim to have invoked a tool, plugin or skill that is unavailable.** Identify unavailable capabilities and use only verified alternatives within the authorized implementation scope.
+
+This command is an executable engineering assignment, not a request for another conceptual plan.
+
+The objective is to deliver a real, reviewable **Add a Place** implementation inside the existing VQULTIMATE Explore page, without losing existing functionality or introducing fake data, fake persistence or unauthorized architectural changes.
+
+Follow:
+
+**INSPECT → PREFLIGHT → BASELINE → IMPLEMENT → TEST → RECONCILE → INDEPENDENT REVIEW → REPORT**
+
+Do not use green TypeScript output, successful compilation or a convincing UI screenshot as substitutes for actual feature verification.
+
+---
+
+## 1. ESTABLISH CURRENT SOURCE TRUTH
+
+Before implementation, identify the actual repository, branch, HEAD, working tree, remote state and deployed revision.
+
+### Historical reference
+
+Previously inspected on November 18, 2026:
+
+- Repository: `https://github.com/funmarket/VQULTIMATE`
+- Branch: `main`
+- Commit: `6d89800f2ef02b170a7860872f1d9e3bf623f5d7`
+- Production URL: `https://vqultimate.vercel.app/`
+- Vercel deployment: `dpl_ECkXob4Cq3sjcCxPTcefJh1eWPPW`
+- Deployment state: READY
+- Deployed commit matched the GitHub reference SHA
+- Live browser interactions were not independently verified
+
+This is historical evidence, NOT permission to work against a stale revision.
+
+Refresh every relevant fact before editing.
+
+Identify and review current governing project documents, applicable owner decisions, dependencies, relevant source files, migrations, Edge Functions and existing tests.
+
+Verify whether another agent has concurrent or unsynchronized work.
+
+Do not overwrite another agent's changes.
+
+### Current implementation leads
+
+The previously inspected application used:
+
+- React, TypeScript, Vite and Tailwind
+- Supabase for backend integration
+- MapLibre for Explore's map
+- `src/App.tsx` for the application shell
+- `src/components/ExploreTab.tsx` for Explore composition
+- `src/domains/d03_vibe_orbit` for location and discovery APIs
+- A 23-km discovery scope
+- CARTO Positron in Light Mode
+- CARTO Dark Matter in Dark Mode
+- Existing device-location acquisition and a continuous GPS watcher
+
+The Add a Place insertion point is directly after the existing Explore category chips and before the MapLibre radar.
+
+Reverify all paths and behavior before relying on them.
+
+---
+
+## 2. LOCKED PRODUCT OBJECTIVE
+
+Implement one compact **Add a Place** control within the existing Explore page.
+
+Initially, only the collapsed control is visible.
+
+Selecting it expands an inline place-contribution interface.
+
+The expanded interface has precisely these two tabs, in this order:
+
+**Off-Grid Pin | Paste Link**
+
+**Off-Grid Pin is selected by default.**
+
+Preserve all current Explore features, including:
+
+- MapLibre map
+- Existing map markers and category filters
+- Nearby place discovery
+- Place detail navigation
+- Vibe Flash Board
+- Vibe Trails
+- Guardians
+- Guardian and Trail interactions
+- Current location controls
+- Existing five-tab navigation
+- Light and Dark Mode
+- EN/FR/AR localization and RTL behavior where supported
+- Mobile scrolling, gestures and responsive layout
+
+Do not redesign unrelated parts of the application.
+
+Do not remove existing functionality merely because its backend is temporarily unavailable.
+
+---
+
+## 3. MANDATORY SOURCE AND PROTOTYPE RECOVERY
+
+Before implementing either tab, inspect the original available materials:
+
+1. Current VQULTIMATE Explore source.
+2. Current MapLibre setup and marker management.
+3. Current theme and profile/auth architecture.
+4. Current domain APIs and types.
+5. Previous `AddPlaceCard.tsx` reference.
+6. Previous `placeLookupClient.ts` reference.
+7. `VibeQuest_OSM_Photo_Details_Match_Guard.zip`.
+8. Its `server/placeService.mjs` and `server/vitePlaceApi.mjs` implementations.
+9. Original resolver regression fixtures and tests.
+10. Previous Add a Place mobile designs and the newer Off-Grid Pin-first design references.
+11. Current approved product, database and ownership contracts.
+
+Determine which materials are actually available in the coding workspace.
+
+Produce a recovered-feature inventory distinguishing:
+
+- Verified original behavior
+- Verified current behavior
+- Approved new requirements
+- Unverified historical claims
+- Missing reference materials
+
+**Never invent an allegedly recovered implementation or regression test.**
+
+If a prototype artifact is unavailable, identify the exact missing material and block only the affected compatibility claim.
+
+Do not silently replace missing original functionality with a simplified imitation.
+
+The prototype ZIP is a functional reference, not production architecture.
+
+---
+
+## 4. CRITICAL ARCHITECTURE CONTRACT — KEEP EXPLORE MODULAR
+
+`ExploreTab.tsx` already coordinates multiple independent experiences.
+
+**Do not turn it into the implementation owner of every Add a Place operation.**
+
+Preserve Explore as the integration/composition layer.
+
+Separate responsibilities appropriately:
+
+- Add a Place presentation and tabs
+- Editable place-draft state
+- Map draft-pin interaction
+- GPS snapshot acquisition
+- Place lookup and candidate resolution
+- Photo selection and attribution
+- Submission validation and transport
+- Authentication handoff
+- Published-place reading
+
+Use bounded components, hooks, utilities and canonical domain APIs consistent with current repository conventions.
+
+Choose exact file boundaries after inspecting existing ownership.
+
+Do not create extra abstraction layers merely to increase file count.
+
+Do not create:
+
+- A second MapLibre map
+- A duplicate marker manager
+- A second place catalog
+- A new global state system without demonstrated need
+- A parallel authentication mechanism
+- A new business-domain owner for existing place records
+
+Keep one authoritative business writer per persistent record.
+
+A shared interface may coordinate several domain responsibilities, but it must not become a second writer of business state.
+
+Show the final render-tree integration and source-to-destination ownership mapping.
+
+---
+
+## 5. OFF-GRID PIN — FULLY INDEPENDENT MANUAL CONTRIBUTION
+
+**This is a hard product requirement.**
+
+Off-Grid Pin must function independently of:
+
+- Google Maps
+- OpenStreetMap lookup
+- Photon
+- Nominatim
+- Wikimedia
+- The existing `nearby-places` discovery provider
+- Availability of a third-party photograph
+
+A user must be able to contribute a genuinely new place that is absent from online directories.
+
+### Required fields and interactions
+
+- Place name
+- Existing VQULTIMATE place category
+- Address or location description
+- Editable latitude and longitude
+- Optional phone number
+- Vibe Note explaining why people visit
+- Optional photo selection/upload
+- Map tap-to-place
+- Draggable contribution pin
+- Editable final review
+- Clear validation errors
+- Honest submission status
+
+A missing external place match must not prevent manual contribution.
+
+A missing photograph must not invalidate an otherwise legitimate place.
+
+Do not fabricate place identities, addresses, photographs, ratings or reviews.
+
+**The form's local usability must not depend on external lookup success.** Actual publication still requires the verified authorized backend contract.
+
+---
+
+## 6. MAPLIBRE — ONE MAP, INDEPENDENT MARKER OWNERSHIP
+
+Keep the existing MapLibre instance and container.
+
+Preserve the existing discovery-marker collection and user-location beacon.
+
+The new contribution draft marker must have separate ownership and cleanup.
+
+### Draft marker rules
+
+The contribution pin:
+
+- Exists only while a contribution draft requires it.
+- Uses the existing MapLibre instance.
+- Supports map-tap placement.
+- Supports dragging.
+- Updates the editable draft coordinates.
+- Does not enter the discovery-marker collection.
+- Is not removed by ordinary discovery refreshes.
+- Is not repositioned by continuous GPS watching.
+- Survives category switching.
+- Survives Light/Dark basemap changes.
+- Preserves draft coordinates when the form collapses.
+- Restores correctly when the form expands.
+- Is removed on explicit draft reset or appropriate component teardown.
+- Never becomes a permanent discovery marker before verified publication.
+
+Map-click placement must be active only in contribution mode.
+
+Ordinary map clicking, dragging, zooming, existing marker selection and map controls must remain functional.
+
+Avoid event listener leaks and duplicate callbacks.
+
+Verify whether basemap style changes preserve the custom marker and restore it safely if necessary.
+
+If the map container changes dimensions because the form expands or collapses, ensure MapLibre renders correctly without creating another instance.
+
+Test all lifecycle transitions.
+
+---
+
+## 7. USE MY LOCATION — EXPLICIT SNAPSHOT
+
+The Explore page already observes device location.
+
+Do not bind the draft pin directly to that continuously updated value.
+
+Maintain separate state for:
+
+**Device observation:** Actual browser/device coordinates and reported accuracy.
+
+**Contribution draft position:** Coordinates intentionally selected for the place being submitted.
+
+### Required workflow
+
+1. User presses **Use My Location**.
+2. Invoke the existing verified permission/capability flow.
+3. Obtain an actual fresh location snapshot.
+4. Check reported accuracy and validity.
+5. Position the draft marker.
+6. Attempt verified reverse geocoding.
+7. Fill available address details without inventing a business name.
+8. Allow the user to correct coordinates, address and marker position.
+9. Preserve later manual edits against older asynchronous responses.
+
+A new explicit Use My Location action may intentionally replace the prior draft position, with clear feedback.
+
+Ordinary watcher updates must never move the draft pin.
+
+Use request-generation guards or cancellation to prevent stale GPS and geocoding responses from overwriting newer user actions.
+
+Test:
+
+- Permission granted
+- Permission denied
+- Permission revoked
+- Unavailable geolocation
+- Timeout
+- Inaccurate coordinates
+- Reverse-geocoding failure
+- Offline provider
+- Manual pin movement
+- Stale asynchronous results
+
+Do not use hardcoded city-center coordinates as fake GPS.
+
+Do not automatically publish or retain a user's continuous location history.
+
+---
+
+## 8. PASTE LINK — PRESERVE ORIGINAL REAL FUNCTIONALITY
+
+Implement the original Paste Link experience from verified reference materials.
+
+Required behavior:
+
+- Google Maps shared links
+- Supported opaque short links
+- Original metadata-resolution fallback chain
+- Manual place-name fallback search
+- OSM/Photon candidate search
+- Candidate selection
+- Ambiguity warnings
+- Identity and category matching
+- OSM detail retrieval
+- Wikimedia Commons/Wikidata photo discovery
+- Verified photo source, author and license attribution
+- Manual photo selection/upload
+- Editable extracted draft
+- Manual coordinate correction
+- Honest diagnostics
+
+### Critical identity rule
+
+A similarly named café must not be silently accepted as the restaurant the user requested.
+
+A candidate match must not become verified merely because its name resembles the search query.
+
+Retain candidate uncertainty and manual correction where the evidence is insufficient.
+
+### Photo rule
+
+A real place with no reusable photograph remains a valid place.
+
+Do not substitute a random stock photograph or an unrelated establishment's photo.
+
+Do not assume Google Maps images can be copied into community storage.
+
+### Provider restrictions
+
+Verify current provider documentation and usage contracts.
+
+Protect lookup infrastructure against:
+
+- SSRF
+- Private-network redirects
+- Arbitrary outbound destinations
+- Unbounded redirect chains
+- Excessive payload sizes
+- Excessive request duration
+- Provider abuse
+- Unsafe caching
+- Inappropriate image redistribution
+
+Respect public Nominatim usage restrictions, including application-wide rate limits and caching obligations.
+
+Do not build an unsupported public Nominatim autocomplete service.
+
+Use a production-compatible lookup transport rather than assuming standalone Vite middleware routes exist in Vercel production.
+
+A dedicated Supabase Edge Function is a possible implementation, not an automatically approved architecture.
+
+Inspect the current canonical backend owner and runtime before choosing the transport.
+
+---
+
+## 9. REAL BACKEND — AUTHENTICATED CONTRIBUTIONS
+
+Identify the current authoritative place-writing owner, auth/profile linkage, database schema and installed security policies.
+
+Previously reported findings include:
+
+- Existing Supabase `places` table.
+- An insert policy requiring authentication without proving submitted creator ownership.
+- No verified deployed community submission workflow.
+- Existing `nearby-places` provider returning HTTP 503 for venue discovery.
+
+Recheck the actual hosted state before relying on these historical observations.
+
+### Required backend safeguards
+
+- Guests may explore and prepare a draft.
+- Guests cannot persist community contributions.
+- The backend determines the authenticated creator.
+- Client-supplied creator identity is not trusted.
+- Server-side validation of fields and coordinates.
+- Category validation against current supported categories.
+- Safe media ownership and rights handling.
+- Idempotent submission retries.
+- Conflicting idempotency-key replay rejection.
+- No client-authoritative ratings, check-ins, VQ rewards or confidence metrics.
+- No fake defaults represented as real community activity.
+- No swallowed write or upload failures.
+- No duplicate canonical place writer.
+- No implicit publication before backend confirmation.
+
+If schema or RLS changes are necessary, prepare narrowly scoped migration artifacts and run them only in a verified authorized isolated environment.
+
+**Do not apply hosted production migrations.**
+
+Do not automatically introduce a moderation system.
+
+First reconcile the approved publication policy from current governing source.
+
+If the publication policy remains genuinely unresolved, identify the exact decision and stop only the dependent publication design.
+
+Continue independently authorized UI and lookup work.
+
+---
+
+## 10. EXPLICIT SUBMISSION STATE MACHINE
+
+Implement truthful states:
+
+**DRAFT**
+
+Local editable state. No remote persistence is claimed.
+
+**SUBMITTING**
+
+An authorized request is in progress.
+
+**PENDING REVIEW**
+
+Displayed only when the actual backend persists that approved state.
+
+**PUBLISHED**
+
+Displayed only after the backend confirms publication and the authorized read/detail path can retrieve the place.
+
+**FAILED**
+
+No successful save is claimed. Preserve the recoverable draft and show a meaningful error.
+
+A successful insert response alone is not sufficient proof of public availability.
+
+Do not display a success toast if the actual state is unknown.
+
+Do not inject a temporary local marker into the permanent discovery collection and label it published.
+
+---
+
+## 11. PRESERVE DRAFT THROUGH AUTHENTICATION
+
+Guests may prepare a contribution.
+
+When a guest submits:
+
+1. Preserve the draft.
+2. Open the existing application authentication flow.
+3. Do not introduce another login system.
+4. Restore the draft after successful sign-in.
+5. Let the user review it again.
+6. Require an explicit submission action.
+7. Preserve the draft if authentication fails or is cancelled.
+
+Handle component unmount/remount correctly.
+
+Use the smallest safe existing application-owned state mechanism.
+
+Do not persist sensitive precise-location information indefinitely without an approved policy.
+
+If selected browser files cannot survive navigation or reload, preserve other draft data and clearly request photo reselection.
+
+Test successful login, cancelled login, expired session and remount behavior.
+
+---
+
+## 12. DISCOVERY — DIFFERENTIATE EMPTY FROM BROKEN
+
+Current `fetchNearbyPlaces` source can represent provider failure as an empty list.
+
+The new integration must distinguish:
+
+- Loading
+- Successful results
+- Genuine zero results
+- Provider unavailable
+- Request failure
+- Location unavailable
+
+Use narrowly compatible typed API changes.
+
+Do not disrupt existing D03 consumers.
+
+Do not replace the existing discovery provider merely to implement community contributions.
+
+### Community-place read path
+
+Published community places must use a verified authorized read path.
+
+Preserve the existing place contracts and `onSelectPlace` interaction.
+
+Combine eligible source results according to the confirmed ownership and identity rules, preventing duplicate visible places where supported identity evidence establishes equivalence.
+
+Apply category and 23-km filtering correctly.
+
+A published place outside the local discovery radius must remain accessible through an appropriate confirmed record/detail path.
+
+If the legacy provider fails but the community reader succeeds, display available community places with truthful partial-failure information.
+
+If both fail, do not present a successful zero-results state.
+
+Do not invent activity metrics to satisfy UI types.
+
+---
+
+## 13. MAP MARKER CONTENT SECURITY
+
+The previously inspected `ExploreTab.tsx` interpolated `place.title` directly into an `innerHTML` marker template.
+
+Verify this is still present.
+
+Before user-contributed place names reach the map, replace unsafe user-text interpolation with safe DOM text insertion or another demonstrably secure equivalent.
+
+Preserve existing marker styling and behavior.
+
+Test:
+
+- HTML-like text
+- Quotes
+- Unicode
+- Arabic
+- Long names
+- Unexpected text encoding
+
+Do not redesign the entire marker renderer.
+
+---
+
+## 14. VISUAL AND CROSS-HOST REQUIREMENTS
+
+Match current VQULTIMATE UI conventions rather than blindly copying the previous dark-only prototype.
+
+### Light Mode
+
+Maintain current white/light-gray/blue styling, typography, surfaces and controls.
+
+### Dark Mode
+
+Preserve existing premium dark styling and orange active accents.
+
+Do not rewrite the theme system.
+
+### Responsive verification
+
+Test:
+
+- 320px
+- 375px
+- 390px
+- 430px
+- Desktop viewport
+
+Verify:
+
+- No horizontal overflow
+- Correct scrolling
+- Accessible fields
+- Stable keyboard interactions
+- Touch-friendly controls
+- Map gestures
+- Pin dragging
+- Tab semantics
+- Visible focus indicators
+- Error/status announcements
+- EN/FR/AR and applicable RTL behavior
+
+Where supported by the actual app, test browser, Android, iOS Safari and Telegram host behavior.
+
+Do not assume Telegram's permission model is identical to a desktop browser.
+
+If a physical device or host cannot be tested, report it as NOT VERIFIED.
+
+---
+
+## 15. EXECUTION GATES — COMPLETE THE AUTHORIZED WORK WITHOUT PERMISSION LOOPS
+
+These gates are acceptance checkpoints within one authorized Add a Place outcome.
+
+They are **not** new approval requests after every ordinary edit or test.
+
+Proceed with mechanically necessary in-scope work when its prerequisites are satisfied.
+
+### GATE 0 — PREFLIGHT
+
+Read-only verification of:
+
+- Repository and HEAD
+- Working tree and remote status
+- Concurrent PRs or agent changes
+- Governing documents and domain ownership
+- Existing Explore/map implementation
+- Supabase schema, RLS and Edge Functions
+- Production serving metadata
+- Available original ZIP and design references
+- Existing test baseline
+- Exact proposed changed-file allowlist
+
+**Exit:** Evidence-supported implementation scope.
+
+### GATE 1 — MAP-SAFE FRONTEND
+
+Implement:
+
+- Collapsed Add a Place control
+- Inline form
+- Off-Grid Pin / Paste Link tabs
+- Modular feature boundaries
+- Independent draft pin
+- Map tap and drag behavior
+- GPS snapshot
+- Manual form editing
+- Authentication draft preservation
+- Narrow marker-text security correction
+
+**Exit:** Focused tests and verified rendered UI.
+
+### GATE 2 — REAL LOOKUP
+
+Implement:
+
+- Production-compatible lookup transport
+- Supported shared-link resolution
+- Candidate search
+- OSM identity checks
+- Details
+- Reverse geocoding
+- Licensed photo metadata
+- Provider failure handling
+
+Preserve original regression fixtures.
+
+**Exit:** Resolver regression evidence and authorized real-provider integration checks.
+
+### GATE 3 — SECURE SUBMISSION
+
+Implement authorized source and backend contracts for:
+
+- Authentication
+- Creator binding
+- Field validation
+- Idempotency
+- Media ownership
+- Submission outcomes
+- Narrow required migrations/RLS artifacts
+
+Use an isolated authorized test database where possible.
+
+**Exit:** Security, persistence and submission-state verification.
+
+Production migration remains unauthorized.
+
+### GATE 4 — PUBLISHED DISCOVERY
+
+Implement:
+
+- Authorized community-place reads
+- Correct publication visibility
+- 23-km/category filtering
+- Place detail integration
+- Partial-provider failures
+- No fake metrics or duplicate canonical writers
+
+**Exit:** Isolated real persistence-to-read verification.
+
+### GATE 5 — INDEPENDENT ACCEPTANCE
+
+Run and reconcile:
+
+- TypeScript
+- Lint
+- Build
+- Focused feature tests
+- Original resolver regressions
+- Backend authorization tests
+- Map lifecycle tests
+- Responsive browser tests
+- Existing Explore regression tests
+- Complete changed-file diff
+
+**Exit:** Reviewable implementation candidate and truthful acceptance report.
+
+### Gate progression rule
+
+A missing production migration authorization must not automatically terminate independent frontend, lookup, source and isolated-backend work.
+
+Continue valid in-scope work and classify unavailable production acceptance separately.
+
+If a genuine ownership contradiction, unresolved product policy, unavailable critical source or unauthorized external action blocks a gate, stop only affected dependent work.
+
+Do not construct fake providers or fake records to make blocked tests appear to pass.
+
+Do not independently change architecture to bypass a blocker.
+
+---
+
+## 16. NON-NEGOTIABLE TEST MATRIX
+
+Verify the following individually:
+
+1. Existing Explore functionality remains intact.
+2. Correct Add a Place insertion point.
+3. Collapsed default state.
+4. Correct tab order and Off-Grid default.
+5. Full manual contribution without external lookup.
+6. Valid editable coordinates.
+7. One MapLibre instance.
+8. Isolated draggable draft marker.
+9. Draft survives category changes.
+10. Draft survives basemap style changes.
+11. Draft survives collapse/reopen.
+12. GPS watcher cannot overwrite manual edits.
+13. Stale reverse-geocoding responses are ignored.
+14. Correct permission-denied and timeout handling.
+15. Draft survives authentication.
+16. Google shared links and supported short-link behavior.
+17. Correct OSM candidate matching.
+18. Restaurant/café mismatch protection.
+19. Missing-photo behavior.
+20. Accurate photo attribution and rights.
+21. Actual secure upload where supported.
+22. Discovery failures distinguished from empty results.
+23. Guest persistence rejection.
+24. Server-bound contributor identity.
+25. RLS allow and deny enforcement.
+26. Duplicate retry idempotency.
+27. Conflicting replay rejection.
+28. Truthful pending/published/failed states.
+29. Published place retrievable after save.
+30. Correct radius/category filtering.
+31. Existing detail selection works.
+32. User-controlled marker text rendered safely.
+33. Existing Trails and Guardians unaffected.
+34. Existing Vibe Flash Board unaffected.
+35. Existing map controls and GPS location beacon unaffected.
+36. Existing five-tab navigation unaffected.
+37. Light and Dark Mode remain functional.
+38. Responsive layouts and supported hosts verified.
+
+Use actual available project scripts.
+
+Do not invent npm scripts or claim tests passed without executing them.
+
+Mocked-provider tests must be labeled as such.
+
+A mock-only success does not count as production integration proof.
+
+---
+
+## 17. AUTHORIZATION AND RELEASE BOUNDARIES
+
+### Authorized
+
+- Read-only inspection
+- Isolated source development
+- Bounded frontend/domain changes
+- Focused test additions
+- Verified isolated test execution
+- Reviewable migration artifacts
+- Complete local diff review
+- An isolated candidate branch or patch within the established workflow
+
+### Not authorized
+
+- Direct mutation of `main`
+- Merge to `main`
+- Production deployment
+- Hosted production SQL migration
+- Broad RLS rewrites
+- Force push
+- Deletion of existing production data
+- Changes to unrelated product domains
+- Replacement of the MapLibre instance
+- Disabling failing tests
+- Fake data or simulated persistence
+- Silent replacement of the original resolver
+- Unauthorized external scraping or provider operations
+
+If the environment only supports committing directly to `main`, do not use that capability.
+
+Produce a reviewable candidate patch instead.
+
+Do not run destructive rollback/reset/recovery actions after unexpected drift without separate authorization.
+
+---
+
+## 18. FINAL EVIDENCE AND HANDOFF
+
+Return the following sections.
+
+### A. Current Source State
+
+Exact repository, branch, HEAD, working tree, concurrent changes and deployment revision.
+
+### B. Governing Contracts
+
+Relevant approved requirements, actual implementation ownership and genuinely unresolved decisions.
+
+### C. Prototype Recovery
+
+Exact reference materials inspected, recovered behaviors, original tests and unavailable artifacts.
+
+### D. Implementation
+
+Full changed-file inventory, responsibilities, complete diff and integration paths.
+
+### E. Test Evidence
+
+Exact commands, execution environments, exit codes, real logs, test counts and failures.
+
+### F. Runtime Verification
+
+Separate evidence for:
+
+- React UI
+- MapLibre
+- Browser GPS
+- Link providers
+- Supabase Edge Functions
+- Database writes
+- RLS/security
+- Public reads
+- Media storage
+- Mobile/Telegram host behavior
+
+Do not merge these distinct proof categories.
+
+### G. Regression Audit
+
+Existing features preserved, independent test results and unverified areas.
+
+### H. Unresolved Blockers
+
+Exact missing prerequisites, unsupported providers, pending production migrations and decisions requiring owner authorization.
+
+### I. Final Acceptance Matrix
+
+For every requirement, assign:
+
+- PASS
+- FAIL
+- BLOCKED
+- NOT TESTED
+
+Include the precise supporting evidence for each PASS.
+
+### J. Final Disposition
+
+Use an accurate result such as:
+
+- IMPLEMENTED IN SOURCE — NOT DEPLOYED
+- TESTED IN ISOLATION — PRODUCTION ACCEPTANCE OPEN
+- PARTIALLY IMPLEMENTED — SPECIFIC DEPENDENCIES BLOCKED
+- STOPPED ON MATERIAL DRIFT
+
+Never describe a feature as live without actual production deployment and runtime evidence.
+
+---
+
+## 19. FINAL ENGINEERING DIRECTIVE
+
+Implement the complete authorized Add a Place feature as a genuine, reviewable engineering candidate.
+
+Do not stop at a design document.
+
+Do not stop at a disconnected component.
+
+Do not replace backend functionality with localStorage or a fake success toast.
+
+Do not remove original functionality.
+
+Do not turn Explore into a monolithic component.
+
+Do not introduce another map instance.
+
+Do not make Off-Grid Pin dependent on external discovery providers.
+
+Do not claim persistence without verified backend storage and authorized readback.
+
+Do not claim production readiness from local tests.
+
+Do not ask for repeated approval for ordinary in-scope engineering mechanics.
+
+**DONE WHEN:** The authorized source implementation, tests, integration boundaries and evidence have been completed as far as verified prerequisites permit; a reviewable candidate is available; existing Explore behavior has been preserved; and every outstanding release or production condition is explicitly identified.
+
+**PRESERVE THE PRODUCT. BUILD THE REAL FEATURE. VERIFY THE RESULT.**
+
+**NO DRIFT. NO FAKE SAVES. NO SECOND MAP. NO UNSUPPORTED SUCCESS CLAIMS.**

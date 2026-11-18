@@ -40,6 +40,7 @@ import { HireHandshakeModal } from './HireHandshakeModal';
 import { HireGuardianForTrailModal } from './HireGuardianForTrailModal';
 import { TourReservationModal } from './TourReservationModal';
 import { useTheme } from '../lib/theme';
+import { AddPlaceCard } from './AddPlaceCard';
 
 interface ExploreTabProps {
   user?: UserProfile | null;
@@ -58,6 +59,9 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
   const mapInstance = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const userMarkerRef = useRef<any>(null);
+  const draftMarkerRef = useRef<any>(null);
+  const [draftCoords, setDraftCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [isDraftModeActive, setIsDraftModeActive] = useState(false);
   const hasInitiallyCenteredRef = useRef<boolean>(false);
 
   const trailsScrollRef = useRef<HTMLDivElement>(null);
@@ -357,18 +361,35 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         dotBg = 'bg-pink-400';
       }
 
-      const rewardBadge = place.is_promoted && place.vq_reward
-        ? `<span class="text-amber-300 font-bold">+${place.vq_reward} PTS</span>`
-        : `<span class="text-amber-400/90 font-medium text-[9px]">📍 Spot</span>`;
+      const pill = document.createElement('div');
+      pill.className = `px-2.5 py-1 rounded-xl bg-gradient-to-br ${orbBg} backdrop-blur-md border ${orbBorder} text-[10px] font-bold text-white shadow-xl flex items-center space-x-1.5 transition-transform duration-300 group-hover:scale-110`;
+      pill.style.boxShadow = `0 4px 14px ${orbGlow}`;
 
-      orbEl.innerHTML = `
-        <div class="px-2.5 py-1 rounded-xl bg-gradient-to-br ${orbBg} backdrop-blur-md border ${orbBorder} text-[10px] font-bold text-white shadow-xl flex items-center space-x-1.5 transition-transform duration-300 group-hover:scale-110" style="box-shadow: 0 4px 14px ${orbGlow}">
-          <span class="w-2 h-2 rounded-full ${dotBg} animate-pulse"></span>
-          <span class="truncate max-w-[110px]">${place.title}</span>
-          ${rewardBadge}
-        </div>
-        <div class="w-3.5 h-3.5 rounded-full ${dotBg} ring-4 ring-white/20 mt-1 shadow-lg transition-transform group-hover:scale-125"></div>
-      `;
+      const dot = document.createElement('span');
+      dot.className = `w-2 h-2 rounded-full ${dotBg} animate-pulse`;
+      pill.appendChild(dot);
+
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'truncate max-w-[110px]';
+      titleSpan.textContent = place.title; // Safe against XSS
+      pill.appendChild(titleSpan);
+
+      if (place.is_promoted && place.vq_reward) {
+        const badge = document.createElement('span');
+        badge.className = 'text-amber-300 font-bold';
+        badge.textContent = `+${place.vq_reward} PTS`;
+        pill.appendChild(badge);
+      } else {
+        const badge = document.createElement('span');
+        badge.className = 'text-amber-400/90 font-medium text-[9px]';
+        badge.textContent = '📍 Spot';
+        pill.appendChild(badge);
+      }
+      orbEl.appendChild(pill);
+
+      const dotBottom = document.createElement('div');
+      dotBottom.className = `w-3.5 h-3.5 rounded-full ${dotBg} ring-4 ring-white/20 mt-1 shadow-lg transition-transform group-hover:scale-125`;
+      orbEl.appendChild(dotBottom);
 
       orbEl.onclick = (e) => {
         e.stopPropagation();
@@ -391,6 +412,54 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
       markersRef.current = [];
     };
   }, [places, locationState.coords]);
+
+  // Render Draft Contribution Marker on MapLibre when active
+  useEffect(() => {
+    const map = mapInstance.current;
+    const maplibregl = (window as any).maplibregl;
+    if (!map || !maplibregl) return;
+
+    if (draftMarkerRef.current) {
+      draftMarkerRef.current.remove();
+      draftMarkerRef.current = null;
+    }
+
+    if (draftCoords) {
+      const draftEl = document.createElement('div');
+      draftEl.className = 'relative flex items-center justify-center cursor-pointer';
+      draftEl.innerHTML = `
+        <div class="w-10 h-10 rounded-full bg-amber-500/30 animate-ping absolute"></div>
+        <div class="w-6 h-6 rounded-full bg-amber-400 ring-4 ring-amber-500/40 absolute shadow-lg"></div>
+        <div class="w-3.5 h-3.5 rounded-full bg-white z-10"></div>
+      `;
+
+      const marker = new maplibregl.Marker({ element: draftEl, draggable: true })
+        .setLngLat([draftCoords.lng, draftCoords.lat])
+        .addTo(map);
+
+      marker.on('dragend', () => {
+        const lngLat = marker.getLngLat();
+        setDraftCoords({ lat: lngLat.lat, lng: lngLat.lng });
+      });
+
+      draftMarkerRef.current = marker;
+    }
+  }, [draftCoords]);
+
+  // Map click listener to place/move draft pin ONLY when draft mode is active
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!map) return;
+    const handleMapClick = (e: any) => {
+      if (!isDraftModeActive) return;
+      const { lng, lat } = e.lngLat;
+      setDraftCoords({ lat, lng });
+    };
+    map.on('click', handleMapClick);
+    return () => {
+      map.off('click', handleMapClick);
+    };
+  }, [isDraftModeActive]);
 
   const handleSaveTrail = async (trailId: string) => {
     if (!user) { onRequireAuth?.(); return; }
@@ -590,6 +659,22 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
           </button>
         ))}
       </div>
+
+      {/* Add a Place Component */}
+      <AddPlaceCard
+        user={user ?? null}
+        userCoords={locationState.coords}
+        onPlaceAdded={(newPlace) => {
+          setPlaces(prev => [newPlace, ...prev]);
+          setDraftCoords(null);
+          setIsDraftModeActive(false);
+        }}
+        onToast={showToast}
+        onRequireAuth={() => onRequireAuth?.()}
+        draftCoords={draftCoords}
+        onUpdateDraftCoords={setDraftCoords}
+        onDraftModeChange={setIsDraftModeActive}
+      />
 
       {/* Vibe Orbit Radar Container / Map View */}
       <div className={`relative rounded-3xl overflow-hidden border border-[#DBDBDB] dark:border-neutral-800 bg-[#EFEFEF] dark:bg-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-2xl ${isFullScreen ? 'h-[70vh]' : 'h-[380px]'}`}>
