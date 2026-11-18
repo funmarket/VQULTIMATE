@@ -340,12 +340,46 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
   ];
 
   const subTabs = [
-    { id: 'gossip', label: 'GOSSIP' },
-    { id: 'drift', label: 'DRIFT' },
-    { id: 'vibes', label: 'VIBES', badge: confirmedVibes.length ? confirmedVibes.length.toString() : undefined },
-    { id: 'orbit', label: 'ORBIT', badge: orbitProfiles.length ? orbitProfiles.length.toString() : undefined },
-    { id: 'echo', label: 'ECHO', badge: echoProfiles.length ? echoProfiles.length.toString() : undefined },
-    { id: 'pulls', label: 'PULLS', badge: pendingPulls.length ? pendingPulls.length.toString() : undefined },
+    {
+      id: 'gossip',
+      label: 'GOSSIP',
+      darkActive: 'dark:bg-[#2dd4bf]/[0.08] dark:text-[#2dd4bf] dark:border-[#2dd4bf] dark:shadow-lg dark:shadow-[#2dd4bf]/20',
+      darkBadge: 'dark:bg-[#2dd4bf]/20 dark:text-[#2dd4bf] dark:border-[#2dd4bf]/40',
+    },
+    {
+      id: 'drift',
+      label: 'DRIFT',
+      darkActive: 'dark:bg-[#fb923c]/[0.08] dark:text-[#fb923c] dark:border-[#fb923c] dark:shadow-lg dark:shadow-[#fb923c]/20',
+      darkBadge: 'dark:bg-[#fb923c]/20 dark:text-[#fb923c] dark:border-[#fb923c]/40',
+    },
+    {
+      id: 'vibes',
+      label: 'VIBES',
+      badge: confirmedVibes.length ? confirmedVibes.length.toString() : undefined,
+      darkActive: 'dark:bg-[#22d3ee]/[0.08] dark:text-[#22d3ee] dark:border-[#22d3ee] dark:shadow-lg dark:shadow-[#22d3ee]/20',
+      darkBadge: 'dark:bg-[#22d3ee]/20 dark:text-[#22d3ee] dark:border-[#22d3ee]/40',
+    },
+    {
+      id: 'orbit',
+      label: 'ORBIT',
+      badge: orbitProfiles.length ? orbitProfiles.length.toString() : undefined,
+      darkActive: 'dark:bg-[#60a5fa]/[0.08] dark:text-[#60a5fa] dark:border-[#60a5fa] dark:shadow-lg dark:shadow-[#60a5fa]/20',
+      darkBadge: 'dark:bg-[#60a5fa]/20 dark:text-[#60a5fa] dark:border-[#60a5fa]/40',
+    },
+    {
+      id: 'echo',
+      label: 'ECHO',
+      badge: echoProfiles.length ? echoProfiles.length.toString() : undefined,
+      darkActive: 'dark:bg-[#a7f3d0]/[0.08] dark:text-[#a7f3d0] dark:border-[#a7f3d0] dark:shadow-lg dark:shadow-[#a7f3d0]/20',
+      darkBadge: 'dark:bg-[#a7f3d0]/20 dark:text-[#a7f3d0] dark:border-[#a7f3d0]/40',
+    },
+    {
+      id: 'pulls',
+      label: 'PULLS',
+      badge: pendingPulls.length ? pendingPulls.length.toString() : undefined,
+      darkActive: 'dark:bg-[#fca5a5]/[0.08] dark:text-[#fca5a5] dark:border-[#fca5a5] dark:shadow-lg dark:shadow-[#fca5a5]/20',
+      darkBadge: 'dark:bg-[#fca5a5]/20 dark:text-[#fca5a5] dark:border-[#fca5a5]/40',
+    },
   ];
 
   return (
@@ -455,22 +489,24 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
 
       {/* 6 Tabs: GOSSIP, DRIFT, VIBES, ORBIT, ECHO, PULLS */}
       <div className="space-y-1.5">
-        <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none" role="tablist">
           {subTabs.map((tab) => {
             const isActive = activeSubTab === tab.id;
             return (
               <button
                 key={tab.id}
+                role="tab"
+                aria-selected={isActive}
                 onClick={() => setActiveSubTab(tab.id as any)}
                 className={`px-4 py-2 rounded-xl text-xs font-black tracking-wider whitespace-nowrap transition-all duration-300 flex items-center space-x-1.5 cursor-pointer ${
                   isActive
-                    ? 'bg-[#E7F3FF] text-[#0866FF] border border-[#0866FF]/30 shadow-sm dark:bg-neutral-900 dark:text-teal-400 dark:border-teal-500/60 dark:shadow-lg dark:shadow-teal-500/20'
+                    ? `bg-[#E7F3FF] text-[#0866FF] border border-[#0866FF]/30 shadow-sm ${tab.darkActive}`
                     : 'bg-white text-[#65676B] border border-[#DBDBDB] hover:text-[#050505] dark:bg-neutral-900/60 dark:text-neutral-400 dark:border-neutral-800 dark:hover:text-white'
                 }`}
               >
                 <span>{tab.label}</span>
                 {tab.badge && (
-                  <span className="w-4 h-4 rounded-full bg-[#0866FF]/15 text-[#0866FF] dark:bg-teal-500/20 dark:text-teal-300 text-[9px] font-bold flex items-center justify-center border border-[#0866FF]/30 dark:border-teal-500/40">
+                  <span className={`w-4 h-4 rounded-full bg-[#0866FF]/15 text-[#0866FF] border border-[#0866FF]/30 text-[9px] font-bold flex items-center justify-center ${tab.darkBadge}`}>
                     {tab.badge}
                   </span>
                 )}
