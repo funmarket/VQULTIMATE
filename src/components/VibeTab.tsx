@@ -739,7 +739,7 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
             {wavelengths.map((w) => {
               const isTuned = tunedWavelength === w.id;
               const soulCount = roomSoulCounts[w.id] ?? (isTuned ? 1 : 0);
@@ -754,31 +754,31 @@ export const VibeTab: React.FC<VibeTabProps> = ({ user, onNavigateShare }) => {
                 <div
                   key={w.id}
                   onClick={() => handleEnterDriftRoom(matchingRoom)}
-                  className={`rounded-2xl bg-white dark:bg-neutral-900 border p-4 space-y-2 transition flex flex-col justify-between cursor-pointer shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none ${
+                  className={`rounded-2xl bg-white dark:bg-neutral-900 border p-3.5 sm:p-4 transition flex flex-col justify-between gap-3 cursor-pointer shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none min-w-0 h-full ${
                     isTuned ? 'border-[#0866FF] dark:border-teal-400/80 ring-1 ring-[#0866FF]/20 dark:ring-0 dark:shadow-lg dark:shadow-teal-500/10' : 'border-[#DBDBDB] hover:border-[#0866FF] dark:border-neutral-800 dark:hover:border-teal-500/50'
                   }`}
                 >
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-sm text-[#050505] dark:text-white font-serif">{w.name}</h4>
-                      <span className={`w-2.5 h-2.5 rounded-full ${w.color} animate-pulse`} />
+                  <div className="min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="font-bold text-[13px] sm:text-sm text-[#050505] dark:text-white font-serif leading-tight truncate">{w.name}</h4>
+                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${w.color}`} />
                     </div>
-                    <p className="text-xs text-[#65676B] dark:text-neutral-400 mt-1 leading-relaxed">{w.desc}</p>
+                    <p className="text-[11px] sm:text-xs text-[#65676B] dark:text-neutral-400 mt-1.5 leading-snug sm:leading-relaxed">{w.desc}</p>
                   </div>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleEnterDriftRoom(matchingRoom);
                     }}
-                    className={`w-full mt-2 py-2 rounded-xl text-[11px] font-bold transition cursor-pointer flex items-center justify-center space-x-1.5 ${
+                    className={`w-full py-2 px-2 rounded-xl text-[10.5px] sm:text-[11px] font-bold transition cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${
                       isTuned
                         ? 'bg-[#E7F3FF] border border-[#0866FF]/30 text-[#0866FF] dark:bg-teal-500/20 dark:border-teal-500/50 dark:text-teal-300'
                         : 'bg-[#EFEFEF] border border-[#DBDBDB] hover:border-[#0866FF] text-[#050505] dark:bg-neutral-950 dark:border-neutral-800 dark:hover:border-teal-500/50 dark:text-neutral-300'
                     }`}
                   >
                     {isTuned ? (
-                      <span className="flex items-center space-x-1.5 text-[#0866FF] dark:text-emerald-300 font-bold">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
+                      <span className="flex items-center gap-1.5 text-[#0866FF] dark:text-emerald-300 font-bold">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 shrink-0" />
                         <span>Active Souls: {soulCount}</span>
                       </span>
                     ) : (
