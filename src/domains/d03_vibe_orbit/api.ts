@@ -6,7 +6,6 @@ import {
   UserCoordinates
 } from './types';
 
-export const DISCOVERY_RADIUS_METERS = 23000; // 23 km leisure discovery scope
 
 /**
  * Calculates great-circle distance between two coordinates in meters (Haversine formula).
@@ -172,7 +171,6 @@ export async function fetchNearbyPlaces(
       body: {
         lat: targetCoords.lat,
         lng: targetCoords.lng,
-        radius: DISCOVERY_RADIUS_METERS,
         category: selectedCategory
       }
     });
@@ -266,7 +264,7 @@ export async function fetchNearbyPlaces(
       };
     });
 
-    return places;
+    return places.sort((a, b) => a.distance_meters - b.distance_meters);
   } catch (err) {
     console.warn('fetchNearbyPlaces failure:', err);
     return [];
