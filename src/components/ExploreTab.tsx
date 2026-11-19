@@ -128,10 +128,12 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
   // 1. Acquire real device location via watchPosition / getCurrentPosition
   useEffect(() => {
     let unwatch: (() => void) | null = null;
+    let cancelled = false;
 
     setLocationState({ status: 'requesting', coords: null });
 
     getDeviceLocation().then((initialState) => {
+      if (cancelled) return;
       setLocationState(initialState);
       if (initialState.coords) {
         prevCoordsRef.current = { lat: initialState.coords.lat, lng: initialState.coords.lng };
@@ -139,6 +141,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
       // Start continuous GPS watch (filtered by >= 20m movement)
       unwatch = watchDeviceLocation((updatedState) => {
+        if (cancelled) return;
         if (updatedState.coords) {
           const prev = prevCoordsRef.current;
           if (!prev || calculateDistanceMeters(prev.lat, prev.lng, updatedState.coords.lat, updatedState.coords.lng) >= 20) {
@@ -150,6 +153,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     });
 
     return () => {
+      cancelled = true;
       if (unwatch) unwatch();
     };
   }, []);
@@ -323,7 +327,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
 
     // Add cultural orb markers for places within 23 km
     places.forEach((place) => {
-      if (!place.lng || !place.lat || isNaN(place.lng) || isNaN(place.lat)) return;
+      if (!Number.isFinite(place.lat) || !Number.isFinite(place.lng) || Math.abs(place.lat) > 90 || Math.abs(place.lng) > 180) return;
 
       const orbEl = document.createElement('div');
       orbEl.className = 'cursor-pointer group flex flex-col items-center select-none';
@@ -419,9 +423,17 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
     const maplibregl = (window as any).maplibregl;
     if (!map || !maplibregl) return;
 
+    if (!draftCoords) {
+      if (draftMarkerRef.current) {
+        draftMarkerRef.current.remove();
+        draftMarkerRef.current = null;
+      }
+      return;
+    }
+
     if (draftMarkerRef.current) {
-      draftMarkerRef.current.remove();
-      draftMarkerRef.current = null;
+      draftMarkerRef.current.setLngLat([draftCoords.lng, draftCoords.lat]);
+      return;
     }
 
     if (draftCoords) {
@@ -436,6 +448,27 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
       const marker = new maplibregl.Marker({ element: draftEl, draggable: true })
         .setLngLat([draftCoords.lng, draftCoords.lat])
         .addTo(map);
+
+      // Preserve the amber custom marker while supporting keyboard-only pin placement.
+      draftEl.tabIndex = 0;
+      draftEl.setAttribute('role', 'button');
+      draftEl.setAttribute('aria-label', 'Draft place pin. Use arrow keys to move the pin.');
+      draftEl.addEventListener('keydown', (event: KeyboardEvent) => {
+        const step = event.shiftKey ? 0.001 : 0.0001;
+        const delta = event.key === 'ArrowUp' ? { lat: step, lng: 0 }
+          : event.key === 'ArrowDown' ? { lat: -step, lng: 0 }
+          : event.key === 'ArrowRight' ? { lat: 0, lng: step }
+          : event.key === 'ArrowLeft' ? { lat: 0, lng: -step }
+          : null;
+        if (!delta) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const current = marker.getLngLat();
+        setDraftCoords({
+          lat: Math.max(-90, Math.min(90, current.lat + delta.lat)),
+          lng: Math.max(-180, Math.min(180, current.lng + delta.lng))
+        });
+      });
 
       marker.on('dragend', () => {
         const lngLat = marker.getLngLat();
@@ -720,13 +753,13 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
             {places.length} Places in 23 km
           </span>
         </div>
-      </div>
+        <div className="absolute top-2 left-2 z-10 flex flex-wrap items-center gap-x-1 max-w-[calc(100%-4rem)] rounded-lg bg-white/90 dark:bg-neutral-950/90 px-2 py-1 text-[9px] text-[#65676B] dark:text-neutral-300 shadow-sm" aria-label="Map attribution">
+          <span>MapLibre |</span>
+          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#050505] dark:hover:text-neutral-300">© OpenStreetMap contributors</a>
+          <span>©</span>
+          <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#050505] dark:hover:text-neutral-300">CARTO</a>
+        </div>
 
-      <div className="text-[10px] text-[#65676B] dark:text-neutral-500 flex flex-wrap justify-end gap-x-1 px-2 -mt-4" aria-label="Map attribution">
-        <span>MapLibre |</span>
-        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#050505] dark:hover:text-neutral-300">© OpenStreetMap contributors</a>
-        <span>©</span>
-        <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#050505] dark:hover:text-neutral-300">CARTO</a>
       </div>
 
       {/* Nearby Vibe Waypoints (23 km Discovery Scope) */}
