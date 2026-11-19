@@ -282,9 +282,6 @@ Deno.serve(async (request: Request) => {
     const lat = Number(body?.lat);
     const lng = Number(body?.lng);
     const requestedCategory = normalizeCategory(body?.category);
-    const requestedRadius = Number(body?.radius);
-    const radiusMeters = Number.isFinite(requestedRadius) && requestedRadius > 0 ? Math.min(requestedRadius, 25000) : 23000;
-    const maxCutoffMeters = Math.max(radiusMeters, 23000);
 
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
       return new Response(JSON.stringify({ places: [], error: 'Valid lat and lng required' }), {
@@ -294,14 +291,13 @@ Deno.serve(async (request: Request) => {
     }
 
     // Only paid-provider calls were removed. Preserve the existing
-    // category classification, leisure filtering, radius and distance
+    // category classification, leisure filtering, and distance
     // helpers for the next venue data provider.
     return new Response(JSON.stringify({
       places: [],
       error: 'Venue discovery is temporarily unavailable while an open-data provider is configured.',
       code: 'VENUE_DISCOVERY_UNAVAILABLE',
-      requested_category: requestedCategory,
-      radius_meters: radiusMeters
+      requested_category: requestedCategory
     }), { status: 503, headers: { ...cors, 'Content-Type': 'application/json' } });
   } catch (err: any) {
     console.error('nearby-places edge function error:', err);

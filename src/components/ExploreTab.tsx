@@ -12,7 +12,6 @@ import {
   VibePlace,
   VibeCategory,
   DeviceLocationState,
-  DISCOVERY_RADIUS_METERS,
   recordCategoryClick,
   computeAiVibeMatch,
   fetchActivePromotions
@@ -321,7 +320,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
       }
     }
 
-    // Add cultural orb markers for places within 23 km
+    // Add cultural orb markers for all returned places
     places.forEach((place) => {
       if (!place.lng || !place.lat || isNaN(place.lng) || isNaN(place.lat)) return;
 
@@ -614,7 +613,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between animate-fadeIn">
           <div className="flex items-center space-x-2.5">
             <AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
-            <span>Location permission was denied. Please allow browser location access to scan the 23 km discovery orbit around your device.</span>
+            <span>Location permission was denied. Please allow browser location access to discover places near your device.</span>
           </div>
           <button
             onClick={handleManualCalibrate}
@@ -699,7 +698,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
               CULTURAL DISCOVERY RADAR
             </span>
             <span className="text-[7px] text-[#0866FF]/80 dark:text-teal-400/80 font-mono mt-0.5">
-              23 KM SCOPE
+              NEAREST FIRST
             </span>
           </div>
         </div>
@@ -717,7 +716,7 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
             </span>
           </div>
           <span className="text-[11px] text-[#65676B] dark:text-neutral-400 font-medium">
-            {places.length} Places in 23 km
+            {places.length} Places
           </span>
         </div>
       </div>
@@ -729,16 +728,16 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#050505] dark:hover:text-neutral-300">CARTO</a>
       </div>
 
-      {/* Nearby Vibe Waypoints (23 km Discovery Scope) */}
+      {/* Nearby Vibe Waypoints, ordered by device distance */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-bold flex items-center space-x-2 text-[#050505] dark:text-white">
             <Flame className="w-4 h-4 text-[#0866FF] dark:text-orange-400" />
-            <span>Nearby Vibe Waypoints (23 km Scope: {places.length})</span>
+            <span>Nearby Vibe Waypoints ({places.length})</span>
           </h3>
           {locationState.coords && (
             <span className="text-[11px] text-[#0866FF] dark:text-teal-400 font-mono">
-              Radius: 23,000 m
+              Nearest first
             </span>
           )}
         </div>
@@ -846,10 +845,10 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         ) : (
           <div className="rounded-2xl bg-white dark:bg-neutral-900/60 border border-[#DBDBDB] dark:border-neutral-800/80 p-6 text-center space-y-2 shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-none">
             <Compass className="w-8 h-8 text-[#0866FF]/60 dark:text-orange-400/60 mx-auto" />
-            <h4 className="font-bold text-sm text-[#050505] dark:text-white">No cultural waypoints within 23 km</h4>
+            <h4 className="font-bold text-sm text-[#050505] dark:text-white">No cultural waypoints available</h4>
             <p className="text-xs text-[#65676B] dark:text-neutral-400 max-w-sm mx-auto">
               {locationState.coords
-                ? `No certified places or secrets were returned in your 23 km discovery orbit (${locationState.coords.lat.toFixed(4)}, ${locationState.coords.lng.toFixed(4)}). Zero mock fallback is active.`
+                ? `No places were returned for your current location (${locationState.coords.lat.toFixed(4)}, ${locationState.coords.lng.toFixed(4)}). Zero mock fallback is active.`
                 : 'Awaiting device location coordinates to scan for nearby cultural waypoints.'}
             </p>
           </div>

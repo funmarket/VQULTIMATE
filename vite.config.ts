@@ -3,13 +3,15 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { defineConfig } from 'vite';
+// @ts-ignore Original ZIP local middleware is an unmodified ESM .mjs file.
+import { placeApiPlugin } from './server/vitePlaceApi.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), placeApiPlugin()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
