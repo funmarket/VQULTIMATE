@@ -3,6 +3,18 @@ import { Plus, MapPin, Camera, Link as LinkIcon, Compass, Search, Sparkles, Chec
 import { VibeCategory, VibePlace, UserCoordinates } from '../domains/d03_vibe_orbit';
 import { supabase } from '../lib/supabase';
 import { UserProfile } from '../domains/d01_auth';
+import { resolvePlaceLink, readOsmPlaceDetails, searchLicensedPlacePhotos } from '../domains/places/resolver';
+import type { OSMCandidate, OsmRef, LicensedPhoto } from '../domains/places/resolver';
+
+// Match the accepted ZIP's venue-kind classification. Do not guess identity from a map camera.
+function mapToVibeCategory(value: string, title = ''): VibeCategory {
+  const text = `${value || ''} ${title || ''}`.toLowerCase();
+  if (/restaurant|cafe|café|barbecue|bakery|pizza|food|deli|bistro|pub|ice_cream/.test(text)) return 'Food';
+  if (/nightclub|night club|lounge|bar|music_venue/.test(text)) return 'Night Owl';
+  if (/gallery|art|theatre|theater|cinema|sculpture/.test(text)) return 'Art';
+  if (/museum|historic|heritage|palace|archaeolog|monument|memorial|castle|culture/.test(text)) return 'Culture';
+  return 'Spots';
+}
 
 interface AddPlaceCardProps {
   user: UserProfile | null;
@@ -60,6 +72,19 @@ export const AddPlaceCard: React.FC<AddPlaceCardProps> = ({
   const [linkInput, setLinkInput] = useState('');
   const [extracting, setExtracting] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
+  const [lookupCandidates, setLookupCandidates] = useState<OSMCandidate[]>([]);
+  const [lookupNotice, setLookupNotice] = useState('');
+  const [lookupNeedsName, setLookupNeedsName] = useState(false);
+  const [lookupName, setLookupName] = useState('');
+  const [lookupArea, setLookupArea] = useState('');
+  const [selectedOsmRef, setSelectedOsmRef] = useState<OsmRef | null>(null);
+  const [matchedPhoto, setMatchedPhoto] = useState<LicensedPhoto | null>(null);
+  const [selectedWarning, setSelectedWarning] = useState<string | null>(null);
+  const [loadingMatch, setLoadingMatch] = useState(false);
+  const [photoOptions, setPhotoOptions] = useState<LicensedPhoto[]>([]);
+  const [searchingPhotos, setSearchingPhotos] = useState(false);
+  const selectedCandidateRef = useRef<string | null>(null);
+  const [photoNotice, setPhotoNotice] = useState('');
 
   const categories: VibeCategory[] = ['Food', 'Culture', 'Art', 'Night Owl', 'Spots'];
 
@@ -134,79 +159,119 @@ export const AddPlaceCard: React.FC<AddPlaceCardProps> = ({
     }
   };
 
-  // Verified URL Resolution & Paste Link handler without generalized mocks or fake fallbacks
+  // Share-link resolution is a read-only D05 command. It never publishes a place.
+  // The original ZIP's server-side redirect / metadata / Photon resolver is reused.
   const handleExtractLink = async () => {
     if (!linkInput.trim()) {
-      onToast('Please enter a valid URL or OSM search query.');
+      setLookupError('Paste a place link or enter a venue name.');
       return;
     }
-
-    let searchTerm = linkInput.trim();
-
-    // Parse Google Maps URLs correctly if provided according to V3 contract
-    if (searchTerm.includes('goo.gl') || searchTerm.includes('maps.app.goo.gl') || searchTerm.includes('google.com/maps')) {
-      const atMatch = searchTerm.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (atMatch && atMatch[1] && atMatch[2]) {
-        const gLat = parseFloat(atMatch[1]);
-        const gLng = parseFloat(atMatch[2]);
-        if (!isNaN(gLat) && !isNaN(gLng)) {
-          setLat(gLat.toFixed(6));
-          setLng(gLng.toFixed(6));
-          onUpdateDraftCoords({ lat: gLat, lng: gLng });
-          setAddress('Resolved from Google Maps link coordinates');
-          onToast('Successfully extracted coordinates from Google Maps link!');
-          return;
-        }
-      }
-      const queryMatch = searchTerm.match(/[?&]q=([^&]+)/);
-      if (queryMatch && queryMatch[1]) {
-        searchTerm = decodeURIComponent(queryMatch[1].replace(/\+/g, ' '));
-      } else {
-        setLookupError('Could not extract direct coordinates or location query from Google Maps link. Please enter location manually.');
-        onToast('Could not resolve Google Maps link.');
-        return;
-      }
-    }
-
     setExtracting(true);
     setLookupError(null);
+    setLookupNotice('');
+    setLookupNeedsName(false);
+    setLookupCandidates([]);
+    selectedCandidateRef.current = null;
+    setSelectedOsmRef(null);
+    setMatchedPhoto(null);
+    setSelectedWarning(null);
     try {
-      const query = encodeURIComponent(searchTerm);
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`, {
-        headers: {
-          'Accept-Language': 'en',
-          'User-Agent': 'VQUltimate-CommunityMap/1.0'
-        }
-      });
-      if (!res.ok) {
-        throw new Error(`Nominatim lookup failed with status ${res.status}`);
-      }
-      const data = await res.json();
-      if (!Array.isArray(data) || data.length === 0) {
-        setLookupError('No matching venue found via OSM provider. Please enter details manually.');
-        onToast('No venue found. Enter details manually.');
+      const result = await resolvePlaceLink(linkInput.trim(), lookupArea.trim(), lookupName.trim());
+      setLookupCandidates(result.candidates || []);
+      setLookupNotice(result.notice);
+      setLookupNeedsName(result.needsName);
+      if (result.needsName) {
+        onToast('This short link did not reveal a place name. Enter the venue name and city to search OSM.');
+      } else if (result.directPlace && result.candidates?.[0]) {
+        // Original ZIP: an exact OSM object is selected immediately and its tags are loaded.
+        await chooseOsmCandidate(result.candidates[0]);
+      } else if (!result.candidates?.length) {
+        onToast('No OSM candidates found. Refine the name or choose a manual map pin.');
       } else {
-        const item = data[0];
-        const resolvedLat = parseFloat(item.lat);
-        const resolvedLng = parseFloat(item.lon);
-
-        if (isNaN(resolvedLat) || isNaN(resolvedLng) || resolvedLat < -90 || resolvedLat > 90 || resolvedLng < -180 || resolvedLng > 180) {
-          throw new Error('Invalid coordinates returned from lookup provider.');
-        }
-
-        setPlaceName(item.display_name.split(',')[0] || 'Discovered Place');
-        setAddress(item.display_name);
-        setLat(resolvedLat.toFixed(6));
-        setLng(resolvedLng.toFixed(6));
-        onUpdateDraftCoords({ lat: resolvedLat, lng: resolvedLng });
-        onToast('Successfully resolved venue from link!');
+        onToast(`Found ${result.candidates.length} OSM candidate(s). Choose the correct venue.`);
       }
-    } catch (err) {
-      setLookupError(err instanceof Error ? err.message : 'Lookup failed.');
-      onToast('External lookup failed. Enter details manually.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Venue lookup unavailable.';
+      setLookupError(message);
+      onToast(message);
     } finally {
       setExtracting(false);
     }
+  };
+
+  // A user-selected OSM object is the evidence for details, not the Google map camera.
+  const chooseOsmCandidate = async (candidate: OSMCandidate, confirmedMismatch = false) => {
+    if (candidate.matchWarning && !confirmedMismatch) {
+      setSelectedWarning(`${candidate.osmRef.type}/${candidate.osmRef.id}`);
+      return;
+    }
+    const token = `${candidate.osmRef.type}/${candidate.osmRef.id}`;
+    selectedCandidateRef.current = token;
+    setLoadingMatch(true);
+    setLookupError(null);
+    setSelectedWarning(null);
+    try {
+      const details = await readOsmPlaceDetails(candidate.osmRef, candidate);
+      if (selectedCandidateRef.current !== token) return;
+      const candidateLat = Number.isFinite(details.lat) ? details.lat : candidate.lat;
+      const candidateLng = Number.isFinite(details.lng) ? details.lng : candidate.lng;
+      if (!Number.isFinite(candidateLat) || !Number.isFinite(candidateLng) || Math.abs(candidateLat) > 90 || Math.abs(candidateLng) > 180) {
+        throw new Error('Selected OSM object did not provide legal geographic coordinates.');
+      }
+      setPlaceName(details.title || candidate.title);
+      setCategory(mapToVibeCategory(details.kind || candidate.kind, details.title || candidate.title));
+      setAddress(details.address || candidate.address || '');
+      setPhone(details.phone || '');
+      if (details.description) setVibeNote(details.description);
+      setLat(candidateLat.toFixed(6));
+      setLng(candidateLng.toFixed(6));
+      onUpdateDraftCoords({ lat: candidateLat, lng: candidateLng });
+      setSelectedOsmRef(candidate.osmRef);
+      setMatchedPhoto(details.photo || null);
+      setPhotoOptions([]);
+      if (!details.photo) {
+        // Working ZIP behavior: automatically suggest licensed Commons photos but NEVER auto-assign identity.
+        setPhotoNotice('No verified linked photo. Looking for Commons suggestions (subject must be confirmed).');
+        setSearchingPhotos(true);
+        void searchLicensedPlacePhotos(details.title || candidate.title).then(results => {
+          if (selectedCandidateRef.current !== token) return;
+          setPhotoOptions(results.photos || []);
+          setPhotoNotice(results.photos?.length
+            ? 'Commons suggestions are not verified venue photos. Inspect the actual image and license before selecting.'
+            : 'No reusable Commons photos found. Your own photograph remains optional.');
+        }).catch(err => {
+          if (selectedCandidateRef.current === token)
+            setPhotoNotice(err instanceof Error ? err.message : 'Commons suggestions unavailable. Photo remains optional.');
+        }).finally(() => {
+          if (selectedCandidateRef.current === token) setSearchingPhotos(false);
+        });
+      } else setPhotoNotice(`OSM-linked Wikimedia image: ${details.photo.credit} — ${details.photo.license}`);
+      setLookupNotice(`Selected OpenStreetMap ${candidate.osmRef.type} ${candidate.osmRef.id}. Check the pin and details before publishing.`);
+      onToast('OSM candidate selected. Review its name, location and optional details.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Selected OSM details unavailable.';
+      setLookupError(message);
+      onToast('OSM details could not load. No unverified business identity was adopted.');
+    } finally {
+      setLoadingMatch(false);
+    }
+  };
+
+  // The ZIP's Commons image search presents suggestions, never identity-verified photos.
+  const findCommonsPhotos = async () => {
+    const query = placeName.trim() || lookupName.trim();
+    if (!query) { setPhotoNotice('Select a venue or enter its name first.'); return; }
+    setSearchingPhotos(true);
+    setPhotoNotice('Checking Wikimedia Commons image licenses...');
+    try {
+      const result = await searchLicensedPlacePhotos(`${query} ${lookupArea}`.trim());
+      setPhotoOptions(result.photos || []);
+      setPhotoNotice(result.photos?.length
+        ? 'Suggestions are not proof the picture depicts this exact venue. Inspect the source before selecting.'
+        : 'No licensed Commons photos found; photo remains optional.');
+    } catch (error) {
+      setPhotoNotice(error instanceof Error ? error.message : 'Commons photo lookup unavailable.');
+    } finally { setSearchingPhotos(false); }
   };
 
   const handleSavePlace = async (e: React.FormEvent) => {
@@ -372,7 +437,7 @@ export const AddPlaceCard: React.FC<AddPlaceCardProps> = ({
                   <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#65676B] dark:text-neutral-400" />
                   <input
                     type="text"
-                    placeholder="Paste Google Maps URL or OSM search query..."
+                    placeholder="Paste share.google, Google Maps, OSM link or place name..."
                     value={linkInput}
                     onChange={(e) => setLinkInput(e.target.value)}
                     className="w-full pl-9 pr-3 py-2.5 bg-[#F0F2F5] dark:bg-neutral-950 border border-[#DBDBDB] dark:border-neutral-800 rounded-2xl text-xs text-[#050505] dark:text-white placeholder-[#65676B] dark:placeholder-neutral-500 focus:outline-none focus:border-[#0866FF]"
@@ -388,6 +453,58 @@ export const AddPlaceCard: React.FC<AddPlaceCardProps> = ({
                   <span>{extracting ? 'Resolving...' : 'Resolve Link'}</span>
                 </button>
               </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <input type="text" value={lookupName} onChange={e => setLookupName(e.target.value)}
+                  placeholder="Venue name if link is opaque (optional)" aria-label="Venue name to identify an opaque share link"
+                  className="w-full px-3 py-2.5 rounded-xl text-xs bg-[#F0F2F5] dark:bg-neutral-950 text-[#050505] dark:text-white border border-[#DBDBDB] dark:border-neutral-800" />
+                <input type="text" value={lookupArea} onChange={e => setLookupArea(e.target.value)}
+                  placeholder="City / area for accurate matching" aria-label="Search city or area"
+                  className="w-full px-3 py-2.5 rounded-xl text-xs bg-[#F0F2F5] dark:bg-neutral-950 text-[#050505] dark:text-white border border-[#DBDBDB] dark:border-neutral-800" />
+              </div>
+              {lookupNotice && <p role="status" className="text-xs text-[#65676B] dark:text-neutral-300">{lookupNotice}</p>}
+              {lookupNeedsName && <p role="status" className="text-xs font-semibold text-amber-700 dark:text-amber-300">This share link hides the venue name. Type its name and city above, then resolve again. The link token is not a venue name.</p>}
+              {lookupCandidates.length > 0 && (
+                <div className="space-y-2" aria-label="OpenStreetMap venue candidates">
+                  <p className="text-xs font-bold text-[#050505] dark:text-white">Select the correct OSM venue — results are suggestions, not verified matches</p>
+                  {lookupCandidates.map(candidate => {
+                    const key = `${candidate.osmRef.type}/${candidate.osmRef.id}`;
+                    return <div key={key} className="p-3 rounded-xl border border-[#DBDBDB] dark:border-neutral-700 bg-white dark:bg-neutral-950 space-y-1.5">
+                      <p className="font-bold text-xs text-[#050505] dark:text-white">{candidate.title}</p>
+                      <p className="text-[11px] text-[#65676B] dark:text-neutral-400">{candidate.kind} · {candidate.address}</p>
+                      {candidate.matchWarning && <p role="alert" className="text-[11px] text-amber-700 dark:text-amber-300">{candidate.matchWarning}</p>}
+                      <div className="flex gap-2 flex-wrap items-center">
+                        <button type="button" disabled={loadingMatch} onClick={() => chooseOsmCandidate(candidate,selectedWarning===key)}
+                          className="bg-[#0866FF] dark:bg-orange-600 text-white rounded-lg py-1.5 px-3 font-bold text-xs disabled:opacity-50">
+                          {selectedWarning === key ? 'Confirm different venue type' : selectedOsmRef?.type===candidate.osmRef.type && selectedOsmRef?.id===candidate.osmRef.id ? 'Selected' : 'Use this OSM match'}
+                        </button>
+                        <a href={candidate.osmUrl} target="_blank" rel="noopener noreferrer" className="underline text-[11px] text-[#0866FF] dark:text-orange-400">Inspect OSM record</a>
+                      </div>
+                    </div>;
+                  })}
+                </div>
+              )}
+              {selectedOsmRef && <div className="space-y-2">
+                <button type="button" disabled={searchingPhotos} onClick={findCommonsPhotos}
+                  className="px-3 py-2 rounded-lg border border-[#DBDBDB] dark:border-neutral-700 text-xs font-bold text-[#0866FF] dark:text-orange-400 disabled:opacity-50">
+                  {searchingPhotos ? 'Searching licensed photos...' : 'Find licensed Wikimedia Commons photos'}
+                </button>
+                {photoNotice && <p role="status" className="text-[11px] text-[#65676B] dark:text-neutral-300">{photoNotice}</p>}
+                {photoOptions.length > 0 && <div aria-label="Wikimedia Commons photo choices" className="grid grid-cols-2 gap-2">
+                  {photoOptions.map(photo => <div key={photo.pageUrl} className="p-2 space-y-1 rounded-xl border border-[#DBDBDB] dark:border-neutral-700">
+                    <img src={photo.url} alt={photo.title || 'Commons suggestion'} className="w-full h-24 object-contain" loading="lazy" />
+                    <p className="text-[10px] text-[#65676B] dark:text-neutral-300">{photo.credit} — {photo.license}</p>
+                    <a href={photo.pageUrl} target="_blank" rel="noopener noreferrer" className="text-[11px] underline text-[#0866FF] dark:text-orange-400">Check actual image source</a>
+                    <button type="button" onClick={() => { setMatchedPhoto(photo); setPhotoOptions([]); setPhotoNotice('Selected Commons image as a preview. Confirm it really shows this place.'); }}
+                      className="block text-[11px] font-bold text-[#0866FF] dark:text-orange-400">Preview this image</button>
+                  </div>)}
+                </div>}
+              </div>}
+              {matchedPhoto && <div className="p-3 rounded-xl border border-[#DBDBDB] dark:border-neutral-700 text-xs space-y-1">
+                <img src={matchedPhoto.url} alt="Licensed image linked to the selected OSM object" className="w-full h-28 object-contain rounded-lg" />
+                <p className="text-[#65676B] dark:text-neutral-300">Wikimedia Commons: {matchedPhoto.credit} · {matchedPhoto.license} (preview only; not automatically attached to your publication)</p>
+                <a href={matchedPhoto.pageUrl} target="_blank" rel="noopener noreferrer" className="underline text-[#0866FF] dark:text-orange-400">Image source and attribution</a>
+              </div>}
 
               {lookupError && (
                 <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-2xl text-xs text-red-800 dark:text-red-300 flex items-center space-x-2">
