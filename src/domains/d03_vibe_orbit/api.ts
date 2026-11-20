@@ -264,7 +264,7 @@ export async function fetchNearbyPlaces(
       };
     });
 
-    return places.sort((a, b) => a.distance_meters - b.distance_meters);
+    return places.sort((a, b) => (a.distance_meters ?? Infinity) - (b.distance_meters ?? Infinity));
   } catch (err) {
     console.warn('fetchNearbyPlaces failure:', err);
     return [];

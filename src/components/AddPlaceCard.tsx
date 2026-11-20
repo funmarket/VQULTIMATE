@@ -24,6 +24,7 @@ interface AddPlaceCardProps {
   onRequireAuth: () => void;
   draftCoords: { lat: number; lng: number } | null;
   onUpdateDraftCoords: (coords: { lat: number; lng: number } | null) => void;
+  onFocusDraftCoords?: (coords: { lat: number; lng: number }) => void;
   onDraftModeChange?: (active: boolean) => void;
 }
 
@@ -35,6 +36,7 @@ export const AddPlaceCard: React.FC<AddPlaceCardProps> = ({
   onRequireAuth,
   draftCoords,
   onUpdateDraftCoords,
+  onFocusDraftCoords,
   onDraftModeChange
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -226,6 +228,7 @@ export const AddPlaceCard: React.FC<AddPlaceCardProps> = ({
       setLat(candidateLat.toFixed(6));
       setLng(candidateLng.toFixed(6));
       onUpdateDraftCoords({ lat: candidateLat, lng: candidateLng });
+      onFocusDraftCoords?.({ lat: candidateLat, lng: candidateLng });
       setSelectedOsmRef(candidate.osmRef);
       setMatchedPhoto(details.photo || null);
       setPhotoOptions([]);
@@ -305,8 +308,7 @@ export const AddPlaceCard: React.FC<AddPlaceCardProps> = ({
       const validImageUrl = imageUrl && !imageUrl.startsWith('blob:') ? imageUrl.trim() : null;
 
       const placePayload = {
-        id: 'place_' + Date.now(),
-        title: placeName.trim(),
+        name: placeName.trim(),
         category,
         description: vibeNote.trim() || 'Community contributed local secret & gathering spot.',
         image_url: validImageUrl,
@@ -339,7 +341,7 @@ export const AddPlaceCard: React.FC<AddPlaceCardProps> = ({
       // Verified readback verification test query confirming public visibility and refresh survival
       const { data: verifyData, error: verifyError } = await supabase
         .from('places')
-        .select('id, title, created_by, lat, lng, image_url')
+        .select('id, name, created_by, lat, lng, image_url')
         .eq('id', data.id)
         .single();
 
@@ -347,8 +349,8 @@ export const AddPlaceCard: React.FC<AddPlaceCardProps> = ({
         throw new Error('Database readback verification failed.');
       }
 
-      onPlaceAdded(data);
-      onToast(`Successfully published & verified "${data.title}" on community map!`);
+      onPlaceAdded({ ...data, title: data.name, image_url: data.image_url ?? '' } as VibePlace);
+      onToast(`Successfully published & verified "${data.name}" on community map!`);
       setPlaceName('');
       setAddress('');
       setPhone('');

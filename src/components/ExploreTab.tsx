@@ -672,6 +672,18 @@ export const ExploreTab: React.FC<ExploreTabProps> = ({
         onRequireAuth={() => onRequireAuth?.()}
         draftCoords={draftCoords}
         onUpdateDraftCoords={setDraftCoords}
+        onFocusDraftCoords={({ lat, lng }) => {
+          // The chosen OSM object is a deliberate focus action; ordinary GPS/draft drags
+          // do not recenter the user's map viewport.
+          if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+          const map = mapInstance.current;
+          if (!map) return;
+          map.flyTo({
+            center: [lng, lat],
+            zoom: 14,
+            essential: true
+          });
+        }}
         onDraftModeChange={setIsDraftModeActive}
       />
 

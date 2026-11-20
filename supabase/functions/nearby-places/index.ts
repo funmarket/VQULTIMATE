@@ -283,22 +283,67 @@ Deno.serve(async (request: Request) => {
     const lng = Number(body?.lng);
     const requestedCategory = normalizeCategory(body?.category);
 
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
       return new Response(JSON.stringify({ places: [], error: 'Valid lat and lng required' }), {
         status: 400,
         headers: { ...cors, 'Content-Type': 'application/json' }
       });
     }
 
-    // Only paid-provider calls were removed. Preserve the existing
-    // category classification, leisure filtering, and distance
-    // helpers for the next venue data provider.
+    // D03 discovery reads the existing, RLS-governed community place catalog.
+    // The D05 OSM/Photon link resolver is intentionally a separate read-only flow.
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    if (!supabaseUrl || !anonKey) throw new Error('Supabase catalog configuration unavailable');
+
+    const pageSize = 1000;
+    const catalog: any[] = [];
+    let offset = 0;
+    while (true) {
+      const url = new URL(`${supabaseUrl.replace(/\/$/, '')}/rest/v1/places`);
+      url.searchParams.set('select', '*');
+      url.searchParams.set('order', 'id.asc');
+      url.searchParams.set('limit', String(pageSize));
+      url.searchParams.set('offset', String(offset));
+      const response = await fetch(url, {
+        headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` }
+      });
+      if (!response.ok) {
+        throw new Error(`Community place catalog returned HTTP ${response.status}`);
+      }
+      const page = await response.json();
+      if (!Array.isArray(page)) throw new Error('Invalid community place catalog response');
+      catalog.push(...page);
+      if (page.length < pageSize) break;
+      offset += pageSize;
+    }
+
+    const allowedCategories = new Set<VibeCategory>(['Food', 'Art', 'Spots', 'Culture', 'Night Owl']);
+    const places = catalog
+      .filter((item: any) => {
+        if (!item?.id || typeof item.name !== 'string' || !item.name.trim()) return false;
+        if (!allowedCategories.has(item.category)) return false;
+        if (requestedCategory !== 'All' && item.category !== requestedCategory) return false;
+        const placeLat = Number(item.lat);
+        const placeLng = Number(item.lng);
+        return Number.isFinite(placeLat) && Number.isFinite(placeLng) && Math.abs(placeLat) <= 90 && Math.abs(placeLng) <= 180;
+      })
+      .map((item: any) => ({
+        ...item,
+        title: item.name,
+        image_url: item.image_url ?? '',
+        description: item.description ?? '',
+        lat: Number(item.lat),
+        lng: Number(item.lng),
+        distance_meters: calculateHaversineMeters(lat, lng, Number(item.lat), Number(item.lng))
+      }))
+      .sort((a: any, b: any) => a.distance_meters - b.distance_meters);
+
     return new Response(JSON.stringify({
-      places: [],
-      error: 'Venue discovery is temporarily unavailable while an open-data provider is configured.',
-      code: 'VENUE_DISCOVERY_UNAVAILABLE',
+      places,
+      source: 'community_places',
       requested_category: requestedCategory
-    }), { status: 503, headers: { ...cors, 'Content-Type': 'application/json' } });
+    }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
   } catch (err: any) {
     console.error('nearby-places edge function error:', err);
     return new Response(JSON.stringify({ places: [], error: err?.message || 'Server error' }), {
